@@ -51,7 +51,7 @@ class DaskBaseFunctions():
             _search = search[0]
         else:
             regex=True
-            _search = "|".join(search)
+            _search = ('|'.join(map(re.escape, search)))
         
         if len(replace_by) <= 1:
             _r = replace_by[0]
