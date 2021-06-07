@@ -243,8 +243,7 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
         le = preprocessing.LabelEncoder()
         return index_to_string(df, input_cols, output_cols, le)
 
-    @staticmethod
-    def _unnest(dfd, input_col, final_columns, separator, splits, mode, output_cols):
+    def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols):
         if mode == "string":
             dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits)
 

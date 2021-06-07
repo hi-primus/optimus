@@ -1875,8 +1875,7 @@ class BaseColumns(ABC):
     def nest(input_cols, separator="", output_col=None, drop=False, shape="string"):
         pass
 
-    @staticmethod
-    def _unnest(dfd, input_col, final_columns, separator, splits, mode, output_cols):
+    def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols):
         
         if separator is not None:
             separator = re.escape(separator)
@@ -1896,7 +1895,7 @@ class BaseColumns(ABC):
                 dfd_new = dfd[input_col].apply(pd.Series)
 
         else:
-            dfd_new = dfd
+            RaiseIt.value_error(mode, ["string", "array"])
 
         return dfd_new
 
