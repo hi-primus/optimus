@@ -1,3 +1,4 @@
+import re
 import dask
 
 from optimus.engines.base.functions import Functions
