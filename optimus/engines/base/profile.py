@@ -66,7 +66,7 @@ class BaseProfile(ABC):
 
         if columns or flush:
             columns = parse_columns(df, columns) if columns else []
-            transformations = Meta.get(meta, "transformations")
+            transformations = Meta.get(meta, "transformations") or []
 
             calculate = False
 
