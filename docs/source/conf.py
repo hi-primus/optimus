@@ -131,7 +131,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'Optimus.tex', 'Optimus Documentation',
-     'Favio Vazquez', 'manual'),
+     'Argenis Leon', 'manual'),
 ]
 
 

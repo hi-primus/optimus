@@ -5,7 +5,7 @@ package:
   version: {{ version }}
 
 source:
-  git_url: https://github.com/ironmussa/Optimus
+  git_url: https://github.com/hi-primus/optimus
   git_rev: develop-3.0
   git_depth: 1 # (Defaults to -1/not shallow)
 
@@ -34,10 +34,10 @@ requirements:
     - nltk                  3.4.5
 
 about:
-  home: https://github.com/ironmussa/optimuspyspark
+  home: https://github.com/hi-primus/pyoptimus
   license: MIT
   summary: 'Agile Data Science Workflows made easy with Pyspark, Dask, cuDF, and dask-cuDF'
   description: Agile Data Science Workflows made easy with Pyspark, Dask, cuDF, and dask-cuDF
-  dev_url: https://github.com/ironmussa/Optimus
-  doc_url: https://pypi.python.org/pypi/optimuspyspark
-  doc_source_url: https://github.com/ironmussa/optimuspyspark/blob/master/README.rst
+  dev_url: https://github.com/hi-primus/optimus
+  doc_url: https://pypi.python.org/pypi/pyoptimus
+  doc_source_url: https://github.com/hi-primus/pyoptimus/blob/master/README.rst

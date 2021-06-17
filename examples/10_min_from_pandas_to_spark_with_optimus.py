@@ -18,7 +18,7 @@
 
 # # Hi, Are you in Google Colab?
 # In Google colab you can easily run Optimus. If you not you may want to go here
-# https://colab.research.google.com/github/ironmussa/Optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb
+# https://colab.research.google.com/github/hi-primus/optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb
 
 # Install Optimus all the dependencies.
 
@@ -30,7 +30,7 @@ if 'google.colab' in sys.modules:
   !apt-get install openjdk-8-jdk-headless -qq > /dev/null
   !wget -q https://archive.apache.org/dist/spark/spark-2.4.1/spark-2.4.1-bin-hadoop2.7.tgz
   !tar xf spark-2.4.1-bin-hadoop2.7.tgz
-  !pip install optimuspyspark
+  !pip install pyoptimus
 
 # ## Restart Runtime
 # Before you continue, please go to the 'Runtime' Menu above, and select 'Restart Runtime (Ctrl + M + .)'.
@@ -60,11 +60,11 @@ sys.path.append(repo_path)
 #
 # from command line:
 #
-# `pip install optimuspyspark`
+# `pip install pyoptimus`
 #
 # from a notebook you can use:
 #
-# `!pip install optimuspyspark`
+# `!pip install pyoptimus`
 
 # ## Import Optimus and start it
 
@@ -348,10 +348,10 @@ df.display()
 # + {"inputHidden": false, "outputHidden": false}
 op.profiler.run(df, "height", infer=True)
 # -
-df_csv = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv").limit(5)
+df_csv = op.load.csv("https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.csv").limit(5)
 df_csv.table()
 
-df_json = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json").limit(5)
+df_json = op.load.json("https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.json").limit(5)
 df_json.table()
 
 df_csv.save.csv("test.csv")
@@ -360,7 +360,7 @@ df.display()
 
 # ## Enrichment
 
-df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+df = op.load.json("https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.json")
 
 df.display()
 

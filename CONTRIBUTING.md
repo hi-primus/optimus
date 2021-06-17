@@ -19,7 +19,7 @@ Please note we have a code of conduct, please follow it in all your interactions
 
 ### Developer and administrator
 
-[Favio Vázquez](https://github.com/faviovazquez)
+[Argenis León](https://github.com/argenisleon)
 
 ### Attribution
 

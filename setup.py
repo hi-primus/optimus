@@ -6,10 +6,6 @@ from setuptools import setup, find_packages
 
 from functools import reduce
 
-
-
-# from optimus.version import __version__
-
 # Get version without importing, which avoids dependency issues
 def get_version():
     with open('optimus/version.py') as version_file:
@@ -58,11 +54,11 @@ if 'nosetests' in sys.argv[1:]:
     setup_requirements.append('nose')
 
 setup(
-    name='optimuspyspark',
+    name='pyoptimus',
     version=get_version(),
     author='Argenis Leon',
     author_email='argenisleon@gmail.com',
-    url='https://github.com/ironmussa/Optimus/',
+    url='https://github.com/hi-primus/optimus/',
     description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion.'),
     long_description=readme(),
     long_description_content_type='text/markdown',
@@ -89,5 +85,5 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-    keywords=['datacleaner', 'apachespark', 'spark', 'pyspark', 'data-wrangling', 'data-cleansing', 'data-profiling'],
+    keywords=['datacleaner', 'data-wrangling', 'data-cleansing', 'data-profiling'],
 )

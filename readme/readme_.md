@@ -13,16 +13,16 @@ jupyter:
     name: python3
 ---
 
-[![Logo Optimus](https://raw.githubusercontent.com/ironmussa/Optimus/master/images/logoOptimus.png)](https://hioptimus.com) 
+[![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/master/images/logoOptimus.png)](https://hioptimus.com) 
 
 
-[![PyPI version](https://badge.fury.io/py/optimuspyspark.svg)](https://badge.fury.io/py/optimuspyspark) [![Build Status](https://travis-ci.org/ironmussa/Optimus.svg?branch=master)](https://travis-ci.org/ironmussa/Optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-ironmussa/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/ironmussa/Optimus/shield.svg)](https://pyup.io/repos/github/ironmussa/Optimus/)  [![GitHub release](https://img.shields.io/github/release/ironmussa/optimus.svg)](https://github.com/ironmussa/Optimus/) 
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/02b3ba0fe2b64d6297c6b8320f8b15a7)](https://www.codacy.com/app/argenisleon/Optimus?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ironmussa/Optimus&amp;utm_campaign=Badge_Grade)
-[![Coverage Status](https://coveralls.io/repos/github/ironmussa/Optimus/badge.svg?branch=master)](https://coveralls.io/github/ironmussa/Optimus?branch=master) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience)![Discord](https://img.shields.io/discord/579030865468719104.svg)
+[![PyPI version](https://badge.fury.io/py/pyoptimus.svg)](https://badge.fury.io/py/pyoptimus) [![Build Status](https://travis-ci.org/hi-primus/optimus.svg?branch=master)](https://travis-ci.org/hi-primus/optimus) [![Documentation Status](https://readthedocs.org/projects/optimus-hi-primus/badge/?version=latest)](http://optimus-ironmussa.readthedocs.io/en/latest/?badge=latest)  [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/hi-primus/optimus/shield.svg)](https://pyup.io/repos/github/hi-primus/optimus/)  [![GitHub release](https://img.shields.io/github/release/hi-primus/optimus.svg)](https://github.com/hi-primus/optimus/) 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/02b3ba0fe2b64d6297c6b8320f8b15a7)](https://www.codacy.com/app/argenisleon/Optimus?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hi-primus/optimus&amp;utm_campaign=Badge_Grade)
+[![Coverage Status](https://coveralls.io/repos/github/hi-primus/optimus/badge.svg?branch=master)](https://coveralls.io/github/hi-primus/optimus?branch=master) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience)![Discord](https://img.shields.io/discord/579030865468719104.svg)
 
-[![Downloads](https://pepy.tech/badge/optimuspyspark)](https://pepy.tech/project/optimuspyspark)
-[![Downloads](https://pepy.tech/badge/optimuspyspark/month)](https://pepy.tech/project/optimuspyspark/month)
-[![Downloads](https://pepy.tech/badge/optimuspyspark/week)](https://pepy.tech/project/optimuspyspark/week)
+[![Downloads](https://pepy.tech/badge/pyoptimus)](https://pepy.tech/project/pyoptimus)
+[![Downloads](https://pepy.tech/badge/pyoptimus/month)](https://pepy.tech/project/pyoptimus/month)
+[![Downloads](https://pepy.tech/badge/pyoptimus/week)](https://pepy.tech/project/pyoptimus/week)
 
 ```python
 !python --version
@@ -35,8 +35,8 @@ nltk.__version__
 
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/ironmussa/Optimus/master)
-[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ironmussa/Optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/master)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hi-primus/optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb)
 
 PyOptimus is the missing framework to profile, clean, process and plot small and big data. PyOptimus run over pandas, Dask, cuDF, Dask-cuDF, Spark, Vaex so you can use any of this librearies withou changing your code.
 
@@ -61,11 +61,11 @@ Every engine has
 
 ## Examples 
 
-You can go to the 10 minutes to Optimus [notebook](https://github.com/ironmussa/Optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb) where you can find the basic to start working. 
+You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/optimus/blob/master/examples/10_min_from_spark_to_pandas_with_optimus.ipynb) where you can find the basic to start working. 
 
 Also you can go to the [examples](examples/) folder to found specific notebooks about data cleaning, data wrangling, profiling and how to create ML.
 
-Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/ironmussa/Optimus/blob/master/docs/cheatsheet/optimus_cheat_sheet.html) 
+Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/master/docs/cheatsheet/optimus_cheat_sheet.html) 
 
 
 ## Documentation
@@ -75,7 +75,7 @@ Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.co
 ## Feedback 
 Feedback is what drive Optimus future, so please take a couple of minutes to help shape the Optimus' Roadmap:  http://bit.ly/optimus_survey  
 
-Also if you want to a suggestion or feature request use https://github.com/ironmussa/optimus/issues
+Also if you want to a suggestion or feature request use https://github.com/hi-primus/optimus/issues
  
 ## Start Optimus
 
@@ -116,7 +116,7 @@ df = op.load.csv("../examples/data/foo.csv")
 df = op.load.json("../examples/data/foo.json")
 
 # Use a url
-df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+df = op.load.json("https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.json")
 
 # parquet
 df = op.load.parquet("../examples/data/foo.parquet")
@@ -353,7 +353,7 @@ Just run `df.profile("*")` to profile all the columns. For more info about the p
 Let's load a "big" dataset
 
 ```python
-df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/Meteorite_Landings.csv").ext.h_repartition()
+df = op.load.csv("https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/Meteorite_Landings.csv").ext.h_repartition()
 ```
 
 ### Numeric
@@ -519,7 +519,7 @@ You can connect to any external API to enrich your data using Optimus. Optimus u
 Let's load a tiny dataset we can enrich
 
 ```python
-df = op.load.json("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+df = op.load.json("https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.json")
 ```
 
 ```python
@@ -634,7 +634,7 @@ One of the best "tree" models for machine learning is Random Forest. What about 
 one line? With Optimus is really easy.
 
 ```python
-df_cancer = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
+df_cancer = op.load.csv("https://raw.githubusercontent.com/hi-primus/optimus/master/tests/data_cancer.csv")
 ```
 
 ```python
@@ -660,10 +660,10 @@ The rf_model variable contains the Random Forest model for analysis.
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions   
 including:  
   
-* [Documentation](https://github.com/ironmussa/Optimus/tree/master/docs/source) updates, enhancements, designs, or   bugfixes.  
+* [Documentation](https://github.com/hi-primus/optimus/tree/master/docs/source) updates, enhancements, designs, or   bugfixes.  
 * Spelling or grammar fixes.  
 * README.md corrections or redesigns.  
-* Adding unit, or functional [tests](https://github.com/ironmussa/Optimus/tree/master/tests)   
+* Adding unit, or functional [tests](https://github.com/hi-primus/optimus/tree/master/tests)   
 * Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.  
 * [Searching #optimusdata on twitter](https://twitter.com/search?q=optimusdata) and helping someone else who needs help.  
 * [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/)   about Optimus and its many features.  
@@ -683,7 +683,7 @@ Argenis Leon and Luis Aguirre
 
 ## License:  
   
-Apache 2.0 © [Iron](https://github.com/ironmussa)  
+Apache 2.0 © [Hi-Primus](https://github.com/hi-primus)  
   
 [![Logo Iron](https://iron-ai.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)  
   

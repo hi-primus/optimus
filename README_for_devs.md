@@ -13,7 +13,7 @@ Download anaconda from https://www.anaconda.com/download/ and run the file
 Go to the folder you want to download de repo and run:
 
 ```
-git clone https://github.com/ironmussa/Optimus.git
+git clone https://github.com/hi-primus/optimus.git
 ```
 
 The install the requirements
@@ -91,17 +91,17 @@ python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
 Now install from test.pypi.org
 ```
-!pip install --index-url https://test.pypi.org/simple optimuspyspark
+!pip install --index-url https://test.pypi.org/simple pyoptimus
 ```
 
-Upload to optimuspyspark
+Upload to pyoptimus
 ```
 twine upload dist/*
 ```
 ### Installing from github
 
 ```
-pip3 install --upgrade --no-deps --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop
+pip3 install --upgrade --no-deps --force-reinstall git+https://github.com/hi-primus/optimus.git@develop
 ```
 Install infer date format library
 ```
@@ -127,7 +127,7 @@ Because GPUs are not very common you may want to use some external server like A
 Here the workflow.
 
 ```
-https://github.com/ironmussa/Optimus.git
+https://github.com/hi-primus/optimus.git
 cd Optimus
 git checkout develop-3.0
 ```
@@ -152,7 +152,7 @@ On Digital Ocean
 sudo apt-get update
 sudo apt-get install -y python3-pip
 sudo apt install libz-dev libssl-dev libcurl4-gnutls-dev libexpat1-dev gettext cmake gcc
-pip3 install --upgrade --force-reinstall git+https://github.com/ironmussa/Optimus.git@develop-3.0
+pip3 install --upgrade --force-reinstall git+https://github.com/hi-primus/optimus.git@develop-3.0
 
 pip3 install dask[complete]
 
@@ -170,7 +170,7 @@ dask worker 127.0.0.0.1 --nthreads=8
 
 Be sure to install the external libraries in the remote server. You can clone the repo
 ```
-git clone https://github.com/ironmussa/Optimus.git
+git clone https://github.com/hi-primus/optimus.git
 ```
 and run
 ```
@@ -314,7 +314,7 @@ If you want to upgrade a RAPIDS use `conda install` and remove the create channe
 `conda env remove --name project-env`
  
 ###
-python -m pip install git+https://github.com/ironmussa/url_parser
+python -m pip install git+https://github.com/hi-primus/url_parser
 
 ## About apply
 

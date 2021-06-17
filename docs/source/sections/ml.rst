@@ -166,7 +166,7 @@ Let's download it with Optimus and save it into a DF:
 .. code-block:: python
 
     # Downloading and creating Spark DF
-    df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/tests/data_cancer.csv")
+    df = op.load.url("https://raw.githubusercontent.com/hi-primus/optimus/master/tests/data_cancer.csv")
 
 ml.random_forest(df, columns, input_col)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -28,7 +28,7 @@ Prepare, process and explore your Big Data with fastest open source library on t
    sections/feature
    sections/ml
 
-Library maintained by `Favio Vazquez`_ and `Argenis Leon`_
+Library maintained by `Luis Aguirre`_ and `Argenis Leon`_
 ------------------------------------------
-.. _Favio Vazquez: https://github.com/faviovazquez
 .. _Argenis Leon: https://github.com/argenisleon
+.. Luis Aguirre: https://github.com/luis11011

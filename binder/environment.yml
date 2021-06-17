@@ -4,4 +4,4 @@ channels:
 dependencies:
   - java-jdk
   - pip:
-    - optimuspyspark
+    - pyoptimus
