@@ -1,7 +1,7 @@
 [![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-3.0/images/logoOptimus.png)](https://hi-optimus.com) 
 
 
-[![PyPI version](https://badge.fury.io/py/pyoptimus.svg)](https://badge.fury.io/py/pyoptimus) [![built_by iron](https://img.shields.io/badge/built_by-iron-FF69A4.svg)](http://ironmussa.com) [![Updates](https://pyup.io/repos/github/hi-primus/optimus/shield.svg)](https://pyup.io/repos/github/hi-primus/optimus/)  [![GitHub release](https://img.shields.io/github/release/hi-primus/optimus.svg)](https://github.com/hi-primus/optimus/) 
+[![PyPI version](https://badge.fury.io/py/pyoptimus.svg)](https://badge.fury.io/py/pyoptimus) [![Updates](https://pyup.io/repos/github/hi-primus/optimus/shield.svg)](https://pyup.io/repos/github/hi-primus/optimus/)  [![GitHub release](https://img.shields.io/github/release/hi-primus/optimus.svg)](https://github.com/hi-primus/optimus/) 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/02b3ba0fe2b64d6297c6b8320f8b15a7)](https://www.codacy.com/app/argenisleon/Optimus?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hi-primus/optimus&amp;utm_campaign=Badge_Grade)
 [![Coverage Status](https://coveralls.io/repos/github/hi-primus/optimus/badge.svg?branch=develop-3.0)](https://coveralls.io/github/hi-primus/optimus?branch=develop-3.0) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience) ![Discord](https://img.shields.io/discord/579030865468719104.svg)
 
@@ -173,7 +173,5 @@ https://github.com/hi-primus/optimus/graphs/contributors
 ## License  
   
 Apache 2.0 © [Primus](https://github.com/hi-primus)  
-  
-[![Logo Iron](https://iron-ai.com/wp-content/uploads/2017/08/iron-svg-2.png)](https://ironmussa.com)  
 
 [![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/hi_optimus)
