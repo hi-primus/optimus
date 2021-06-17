@@ -37,7 +37,7 @@ RUN conda install -c conda-forge jupyterlab && \
     conda install -c conda-forge jupyter_kernel_gateway && \
     conda clean -afy
 
-RUN echo "Version 3.0.0-beta2"
+RUN echo "Version 3.0.0-beta3"
 
 RUN pip install cytoolz --no-cache-dir && \
     pip install git+https://github.com/hi-primus/dateinfer.git --no-cache-dir && \
