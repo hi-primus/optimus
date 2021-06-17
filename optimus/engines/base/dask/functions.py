@@ -1,3 +1,4 @@
+import re
 import dask
 
 from optimus.engines.base.functions import Functions
@@ -45,7 +46,21 @@ class DaskBaseFunctions():
         return int((self._to_float(series).values == 0).sum())
 
     def replace_chars(self, series, search, replace_by):
+        regex=False
         replace_by = val_to_list(replace_by)
-        for i, j in zip(search, replace_by):
-            series = self.to_string_accessor(series).replace(i, j)
+        if len(search) == 1:
+            _search = search[0]
+        else:
+            regex=True
+            _search = ('|'.join(map(re.escape, search)))
+        
+        if len(replace_by) <= 1:
+            _r = replace_by[0]
+        else:
+            regex=True
+            _map = {s: r for s, r in zip(search, replace_by)}
+            def _r(value):
+                return _map.get(value[0], "ERROR")
+
+        series = self.to_string_accessor(series).replace(_search, _r, regex=regex)
         return series

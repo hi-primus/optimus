@@ -1,16 +1,31 @@
+from abc import abstractmethod
 from functools import reduce
 
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
-from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import Actions
 
 
-class DataFrameBaseColumns(BaseColumns):
+class DataFrameBaseColumns():
 
-    def __init__(self, df):
-        super(DataFrameBaseColumns, self).__init__(df)
+    def _names(self):
+        return list(self.root.data.columns)
+
+    @abstractmethod
+    def _pd(self):
+        pass
+
+    def append(self, dfs):
+        """
+
+        :param dfs:
+        :return:
+        """
+
+        df = self.root
+        dfd = self._pd.concat([df.data.reset_index(drop=True), *[_df.data.reset_index(drop=True) for _df in dfs]], axis=1)
+        return self.root.new(dfd)
 
     @staticmethod
     def qcut(columns, num_buckets, handle_invalid="skip"):

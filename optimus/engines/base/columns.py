@@ -474,7 +474,7 @@ class BaseColumns(ABC):
             if arg in func_map.keys():
                 df = getattr(df.cols, func_map[arg])(input_col, output_col)
             else:
-                RaiseIt.value_error(arg, func_map.keys())
+                RaiseIt.value_error(arg, list(func_map.keys()))
 
         return df
 
@@ -801,7 +801,6 @@ class BaseColumns(ABC):
             new_columns.append(all_columns.pop(all_columns.index(col_name)))  # delete
         # Move the column to the new place
         for col_name in new_columns[::-1]:
-            print("col_name", col_name, new_index)
             all_columns.insert(new_index, col_name)  # insert and delete a element
             # new_index = new_index + 1
         return df[all_columns]
@@ -937,11 +936,11 @@ class BaseColumns(ABC):
         return df.cols.agg_exprs(columns, self.F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
 
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def kurtosis(self, columns="*", tidy=True, compute=False):
+    def kurtosis(self, columns="*", tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.kurtosis, tidy=tidy, compute=compute)
 
-    def skew(self, columns="*", tidy=True, compute=False):
+    def skew(self, columns="*", tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(columns, self.F.skew, tidy=tidy, compute=compute)
 
@@ -1601,17 +1600,19 @@ class BaseColumns(ABC):
 
         if is_dict(input_cols):
             for col, replace in input_cols.items():
+                _search = []
+                _replace_by = []
                 for replace_by, search in replace.items():
-                    df = df.cols._replace(col, search, replace_by)
+                    _replace_by.append(replace_by)
+                    _search.append(search)
+                df = df.cols._replace(col, _search, _replace_by)
 
         else:
-            if is_list(replace_by):
-                search = val_to_list(search)
-                replace_by = val_to_list(replace_by)
-                for _search, _replace_by in zip(search, replace_by):
-                    df = df.cols._replace(input_cols, _search, _replace_by, search_by, ignore_case, output_cols)
-            else:
-                df = df.cols._replace(input_cols, search, replace_by, search_by, ignore_case, output_cols)
+            search = val_to_list(search)
+            replace_by = val_to_list(replace_by)
+            if len(replace_by) == 1:
+                replace_by = replace_by[0]
+            df = df.cols._replace(input_cols, search, replace_by, search_by, ignore_case, output_cols)
 
         return df
 
@@ -1629,6 +1630,7 @@ class BaseColumns(ABC):
         """
 
         search = val_to_list(search)
+        replace_by = one_list_to_val(replace_by)
 
         if search_by == "full" and (not is_list_of_str(search) or not is_list_of_str(replace_by)):
             search_by = "values"
@@ -1639,15 +1641,12 @@ class BaseColumns(ABC):
         elif search_by == "words":
             func = self.F.replace_words
             func_return_type = str
-            replace_by = replace_by
         elif search_by == "full":
             func = self.F.replace_full
             func_return_type = str
-            replace_by = replace_by
         elif search_by == "values":
             func = self.F.replace_values
             func_return_type = None
-            replace_by = replace_by
         else:
             RaiseIt.value_error(search_by, ["chars", "words", "full", "values"])
 
@@ -1876,6 +1875,30 @@ class BaseColumns(ABC):
     def nest(input_cols, separator="", output_col=None, drop=False, shape="string"):
         pass
 
+    def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols):
+        
+        if separator is not None:
+            separator = re.escape(separator)
+
+        if mode == "string":
+            dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits-1)
+
+        elif mode == "array":
+            if is_dask_dataframe(dfd):
+                def func(value):
+                    pdf = value.apply(pd.Series)
+                    pdf.columns = final_columns
+                    return pdf
+
+                dfd_new = dfd[input_col].map_partitions(func, meta={c: object for c in final_columns})
+            else:
+                dfd_new = dfd[input_col].apply(pd.Series)
+
+        else:
+            RaiseIt.value_error(mode, ["string", "array"])
+
+        return dfd_new
+
     def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string"):
 
         """
@@ -1890,9 +1913,6 @@ class BaseColumns(ABC):
         :param mode:
         """
         df = self.root
-
-        if separator is not None:
-            separator = re.escape(separator)
 
         input_cols = parse_columns(df, input_cols)
 
@@ -1917,22 +1937,16 @@ class BaseColumns(ABC):
             else:
                 final_columns = [output_cols + "_" + str(i) for i in range(splits)]
 
-            if mode == "string":
-                dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
-
-            elif mode == "array":
-                if is_dask_dataframe(dfd):
-                    def func(value):
-                        pdf = value.apply(pd.Series)
-                        pdf.columns = final_columns
-                        return pdf
-
-                    dfd_new = dfd[input_col].map_partitions(func, meta={c: object for c in final_columns})
-                else:
-                    dfd_new = dfd[input_col].apply(pd.Series)
+            dfd_new = self._unnest(dfd, input_col, final_columns, separator, splits, mode, output_cols)
 
             # If columns split is shorter than the number of splits
-            dfd_new.columns = final_columns[:len(dfd_new.columns)]
+            new_columns = list(dfd_new.columns)
+            
+            if len(final_columns) < len(new_columns):
+                dfd_new = dfd_new.drop(columns=new_columns[0:len(final_columns)])
+                new_columns = list(dfd_new.columns)
+
+            dfd_new.columns = final_columns[:len(new_columns)]
             df_new = df.new(dfd_new)
             if final_index:
                 df_new = df_new.cols.select(final_index[idx])

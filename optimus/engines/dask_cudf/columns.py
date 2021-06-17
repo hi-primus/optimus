@@ -3,15 +3,17 @@ import fastnumbers
 from dask_ml import preprocessing
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, impute
+from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.engines.base.cudf.columns import CUDFBaseColumns
 from optimus.helpers.columns import parse_columns
+from optimus.helpers.raiseit import RaiseIt
 from optimus.profiler.functions import fill_missing_var_types
 
 
-class Cols(CUDFBaseColumns, DaskBaseColumns):
+class Cols(CUDFBaseColumns, DaskBaseColumns, BaseColumns):
     def __init__(self, df):
-        super(DaskBaseColumns, self).__init__(df)
+        super().__init__(df)
 
     def _series_to_pandas(self, series):
         return series.compute().to_pandas()
@@ -110,25 +112,19 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
 
         return {"hist": _res}
 
-    # def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string"):
-    #
-    #     """
-    #     Split an array or string in different columns
-    #     :param input_cols: Columns to be un-nested
-    #     :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2),
-    #     (output_col_2_1, output_col_2]
-    #     :param separator: char or regex
-    #     :param splits: Number of columns splits.
-    #     :param index: Return a specific index per columns. [1,2]
-    #     :param drop:
-    #     :param mode:
-    #     """
-    #     df = self.root
-    #     dfd = self.root.data
-    #     input_cols = parse_columns(df, input_cols)
-    #
-    #     for input_col in input_cols:
-    #         a= dfd[input_col].str.split(separator, splits, expand=True)
-    #         a.o
-    #     return a
-    #     # return df
+    def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols):
+
+        modes = {
+            "string": lambda series: series.astype(str).str.split(separator, expand=True, n=splits-1),
+            "array": lambda series: series.apply(pd.Series)
+        }
+
+        if mode in list(modes.keys()):
+            partitions = self.F.to_delayed(dfd[input_col])
+            partitions = [modes[mode](part) for part in partitions]
+            dfd_new = self.F.from_delayed(partitions)
+            
+        else:
+            RaiseIt.value_error(mode, list(modes.keys()))
+
+        return dfd_new

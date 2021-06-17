@@ -2,6 +2,7 @@ import dask.array as da
 from dask_ml import preprocessing
 
 from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string
+from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.helpers.columns import parse_columns
 import dask
@@ -9,9 +10,9 @@ import dask
 from optimus.profiler.constants import MAX_BUCKETS
 
 
-class Cols(DaskBaseColumns):
+class Cols(DaskBaseColumns, BaseColumns):
     def __init__(self, df):
-        super(DaskBaseColumns, self).__init__(df)
+        super().__init__(df)
 
     def _series_to_pandas(self, series):
         return series.compute()

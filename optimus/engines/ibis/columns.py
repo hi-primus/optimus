@@ -6,6 +6,7 @@ from sklearn import preprocessing
 
 from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
+from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, prepare_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.converter import format_dict
@@ -15,9 +16,9 @@ from optimus.infer import is_str, is_tuple, is_dict
 DataFrame = TableExpr
 
 
-class Cols(DataFrameBaseColumns):
+class Cols(DataFrameBaseColumns, BaseColumns):
     def __init__(self, df):
-        super(DataFrameBaseColumns, self).__init__(df)
+        super().__init__(df)
 
     def _names(self):
         return list(self.root.data.columns)

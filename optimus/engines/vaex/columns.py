@@ -1,10 +1,11 @@
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
+from optimus.engines.base.columns import BaseColumns
 
 
 # @vaex.register_dataframe_accessor('cols', override=True)
-class Cols(DataFrameBaseColumns):
+class Cols(DataFrameBaseColumns, BaseColumns):
     def __init__(self, df):
-        super(DataFrameBaseColumns, self).__init__(df)
+        super().__init__(df)
 
     def _map(self, df, input_col, output_col, func, *args):
         return df.apply(func, arguments=(df[input_col], *args,), vectorize=False)
