@@ -41,6 +41,7 @@ RUN echo "Version 3.0.0-beta3"
 
 RUN pip install cytoolz --no-cache-dir && \
     pip install git+https://github.com/hi-primus/dateinfer.git --no-cache-dir && \
+    pip install git+https://github.com/hi-primus/url_parser.git --no-cache-dir && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-3.0 --no-cache-dir
 
 CMD jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
