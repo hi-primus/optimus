@@ -32,11 +32,12 @@ class Rows(BaseRows):
         df = self.root
 
         if is_list_value(rows):
-            rows = pd.DataFrame(rows)
+            rows = self.root.new(pd.DataFrame(rows))
         # Can not concatenate dataframe with not string columns names
 
         rows.columns = df.cols.names()
-        df = pd.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
+        df.data.reset_index(drop=True)
+        df = pd.concat([df.data.reset_index(drop=True), rows.data.reset_index(drop=True)], axis=0)
         return self.root.new(df)
 
     def _sort(self, dfd, col_name, ascending):
