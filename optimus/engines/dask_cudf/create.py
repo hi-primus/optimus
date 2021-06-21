@@ -5,7 +5,7 @@ class Create:
     def __init__(self, root):
         self.root = root
 
-    def dataframe(self, dict, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
+    def dataframe(self, dict=None, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
         """
         Helper to create dataframe:
         :param dict:
@@ -20,6 +20,8 @@ class Create:
             cdf = cudf.DataFrame(dict)
         elif pdf:
             cdf = cudf.from_pandas(pdf)
+        else:
+            cdf = cudf.DataFrame(kwargs)
 
         df = self.root.dataframe(cdf, n_partitions)
         return df

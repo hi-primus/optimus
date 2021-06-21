@@ -8,7 +8,7 @@ class Create:
     def __init__(self, root):
         self.root = root
 
-    def dataframe(self, dict, cols=None, rows=None, infer_schema=True, pdf=None):
+    def dataframe(self, dict=None, cols=None, rows=None, infer_schema=True, pdf=None, *args, **kwargs):
         """
         Helper to create a Spark dataframe:
         :param dict:
@@ -57,7 +57,11 @@ class Create:
         #         specs.append([col_name, var_type, nullable])
         #
         #     struct_fields = list(map(lambda x: StructField(*x), specs))
-        pdf = pd.DataFrame(dict)
+        if dict:
+            pdf = pd.DataFrame(dict)
+        elif not pdf:
+            pdf = pd.DataFrame(kwargs)
+            
         df = Spark.instance.spark.createDataFrame(pdf)
 
         df = SparkDataFrame(df)
