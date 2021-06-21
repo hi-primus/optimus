@@ -18,13 +18,49 @@ import humanize
 import pandas as pd
 import six
 from fastnumbers import isint, isfloat
-from string_grouper import match_strings
 
 from optimus import ROOT_DIR
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_url
+
+def _variables(ins, namespace=None):
+    
+    if not namespace:
+        try:
+            import IPython
+            namespace = IPython.get_ipython().user_global_ns
+        except:
+            pass
+
+    return [obj for obj in namespace if isinstance(namespace[obj], ins) and not obj.startswith("_")]
+
+
+def dataframes(namespace=None):
+    from optimus.engines.base.basedataframe import BaseDataFrame
+    return _variables(BaseDataFrame, namespace)
+
+
+def clusters(namespace=None):
+    from optimus.engines.base.stringclustering import Clusters
+    return _variables(Clusters, namespace)
+
+
+def connections(namespace=None):
+    from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
+    from optimus.engines.base.io.connect import Connection
+    return _variables((Connection, DaskBaseJDBC), namespace)
+
+
+def file_connections(namespace=None):
+    from optimus.engines.base.io.connect import Connection
+    return _variables(Connection, namespace)
+
+
+def database_connections(namespace=None):
+    from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
+    return _variables(DaskBaseJDBC, namespace)
 
 
 def random_int(n=5):
@@ -230,6 +266,8 @@ def infer_dataframes_keys(df_left: pd.DataFrame, df_right: pd.DataFrame):
     :param df_right: 
     :return: 
     """
+    from string_grouper import match_strings
+
     result = []
 
     df_left = df_left.dropna().astype(str)
