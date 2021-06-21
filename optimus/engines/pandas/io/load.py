@@ -23,7 +23,7 @@ class Load(BaseLoad):
         self.op = op
 
     @staticmethod
-    def json(path, multiline=False, n_rows=-1, *args, **kwargs):
+    def json(path, multiline=False, n_rows=False, *args, **kwargs):
         """
         Return a dataframe from a json file.
         :param path: path or location of the file.
@@ -31,25 +31,32 @@ class Load(BaseLoad):
 
         :return:
         """
+        if n_rows:
+            kwargs["n_rows"] = n_rows
+            kwargs["lines"] = True
 
-        path = unquote_path(path)
+        if is_str(path):
+            try:
+                path = unquote_path(path)
+                local_file_names = prepare_path(path, "json")
+                df_list = []
 
-        local_file_names = prepare_path(path, "json")
-        try:
-            df_list = []
+                for file_name, j in local_file_names:
+                    df = pd.read_json(file_name, lines=multiline, *args, **kwargs)
+                    df_list.append(df)
+                df = pd.concat(df_list, axis=0, ignore_index=True)
+                df = PandasDataFrame(df)
+                df.meta = Meta.set(df.meta, "file_name", local_file_names[0])
+            except IOError as error:
+                logger.print(error)
+                raise
 
-            for file_name, j in local_file_names:
-                df = pd.read_json(file_name, lines=multiline, nrows=n_rows, *args, **kwargs)
-                df_list.append(df)
-
-            df = pd.concat(df_list, axis=0, ignore_index=True)
+        else:
+            df = pd.read_json(path, lines=multiline, *args, **kwargs)
             df = PandasDataFrame(df)
-            df.meta = Meta.set(df.meta, "file_name", local_file_names[0])
 
-        except IOError as error:
-            logger.print(error)
-            raise
         return df
+
 
     @staticmethod
     def tsv(path, header=True, infer_schema=True, *args, **kwargs):
@@ -64,6 +71,7 @@ class Load(BaseLoad):
         """
 
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
+
 
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
@@ -144,6 +152,7 @@ class Load(BaseLoad):
 
         return df
 
+
     @staticmethod
     def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
         """
@@ -173,6 +182,7 @@ class Load(BaseLoad):
 
         return df
 
+
     @staticmethod
     def avro(path, storage_options=None, conn=None, *args, **kwargs):
         """
@@ -201,6 +211,7 @@ class Load(BaseLoad):
             raise
 
         return df
+
 
     @staticmethod
     def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
@@ -243,6 +254,7 @@ class Load(BaseLoad):
 
         return df
 
+
     @staticmethod
     def orc(path, columns, storage_options=None, conn=None, *args, **kwargs):
         """
@@ -271,9 +283,9 @@ class Load(BaseLoad):
 
         return df
 
+
     @staticmethod
     def zip(zip_path, filename, dest=None, merge=False, storage_options=None, conn=None, *args, **kwargs):
-
         if dest is None:
             dest = str(uuid.uuid4()) + "/"
 
