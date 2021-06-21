@@ -90,25 +90,31 @@ class BaseRows(ABC):
         dfd = self.root.data
         return self.root.new(dfd[self.root.mask.missing(input_col)])
 
-    def mismatch(self, input_col, dtype):
+    def mismatch(self, input_col="*", dtype=None):
         """
         Return mismatches values
         :param input_col:
         :param dtype:
         :return:
         """
-        dfd = self.root.data
-        return self.root.new(dfd[self.root.mask.mismatch(input_col, dtype)])
+        df = self.root
+        return df[df.mask.mismatch(input_col, dtype)]
 
-    def match(self, col_name, dtype):
+        # dfd = self.root.data
+        # return self.root.new(dfd[self.root.mask.mismatch(input_col, dtype).get_series()])
+
+    def match(self, col_name="*", dtype=None):
         """
         Return Match values
         :param col_name:
         :param dtype:
         :return:
         """
-        dfd = self.root.data
-        return self.root.new(dfd[self.root.mask.match(col_name, dtype)])
+        df = self.root
+        return df[df.mask.match(col_name, dtype)]
+
+        # dfd = self.root.data
+        # return self.root.new(dfd[self.root.mask.match(col_name, dtype).get_series()])
 
     def apply(self, func, args=None, output_cols=None):
         """
