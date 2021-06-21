@@ -1,12 +1,11 @@
 from abc import abstractmethod, ABC
 
-from optimus.engines.base.commons.functions import is_string
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
-    regex_credit_card_number, regex_zip_code, regex_gender, regex_url, regex_ip, regex_email, \
+    regex_credit_card_number, regex_zip_code, regex_gender, regex_ip, regex_email, \
     is_datetime, is_list, is_bool, is_object, regex_full_url
 
 
@@ -74,10 +73,12 @@ class Mask(ABC):
         columns = one_list_to_val(parse_columns(df, columns))
 
         if dtype is None:
-            dtype = df.profile.dtypes(columns)
-
-        if dtype is None:
-            RaiseIt.value_error(dtype, ProfilerDataTypes.list(), "dtype not found in cache. Need to passed as dtype param")
+            profiled_dtype = df.profile.dtypes(columns)
+            if profiled_dtype is None:
+                RaiseIt.value_error(dtype, ProfilerDataTypes.list(),
+                                    "dtype not found in cache. Need to passed as dtype param")
+            else:
+                dtype = profiled_dtype
 
         if is_list(dtype):
             mask_match = None
