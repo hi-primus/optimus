@@ -215,7 +215,7 @@ class BaseColumns(ABC):
         for input_col, output_col in columns:
             if mode == "vectorized":
                 # kw_columns[output_col] = self.F.delayed(func)(part, *args)
-                kw_columns[output_col] = func(dfd[input_col], *args)
+                kw_columns[output_col] = func(dfd[input_col], *args).values
 
             elif mode == "partitioned":
 
