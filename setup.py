@@ -25,23 +25,23 @@ def readme():
 # Requirements
 try:
     import google.colab
-
     IN_COLAB = True
 except ImportError:
     IN_COLAB = False
 
+requirements_file = 'requirements.txt'
+
 if "DATABRICKS_RUNTIME_VERSION" in os.environ:
-    with open('requirements-databricks.txt') as f:
-        required = f.read().splitlines()
+    requirements_file = 'requirements-databricks.txt'
 elif IN_COLAB:
-    with open('requirements-google-colab.txt') as f:
-        required = f.read().splitlines()
-else:
-    with open('requirements.txt') as f:
-        required = f.read().splitlines()
+    requirements_file = 'requirements-google-colab.txt'
+
+with open(requirements_file) as f:
+    required = f.read().splitlines()
 
 extras_requirements_keys = ['spark', 'dask', 'vaex', 'cudf', 'ai', 'db']
 extras_requirements = {}
+
 for extra in extras_requirements_keys:
     with open('requirements-'+extra+'.txt') as f:
         extras_requirements[extra] = f.read().splitlines()
@@ -52,6 +52,7 @@ dependency_links = []
 setup_requirements = ['pytest-runner']
 if 'nosetests' in sys.argv[1:]:
     setup_requirements.append('nose')
+
 
 setup(
     name='pyoptimus',
@@ -69,7 +70,7 @@ setup(
     setup_requires=setup_requirements,
     extras_require={
         'test': test_requirements,
-        'all': test_requirements + reduce(lambda x, key: x + extras_requirements[key], extras_requirements, []),
+        'all': reduce(lambda x, key: x + extras_requirements[key], extras_requirements, []),
         'docs': ['sphinx'] + test_requirements,
         'lint': lint_requirements,
         **extras_requirements
