@@ -53,9 +53,11 @@ class BaseRows(ABC):
         pass
 
     def greater_than(self, input_col, value):
-
-        dfd = self.root.data
-        return self.root.new(dfd[self.root.greather_than(input_col, value)])
+        df = self.root
+        return df[df.mask.greater_than(input_col, value)]
+        # dfd = self.root.data
+        #
+        # return self.root.new(dfd[self.root.mask.greater_than(input_col, value).get_series()])
 
     def greater_than_equal(self, input_col, value):
 
@@ -176,7 +178,7 @@ class BaseRows(ABC):
                 expr = eval(expr)
         elif expr:
             expr = expr.get_series()
-            dfd = dfd[expr]
+        dfd = dfd[expr]
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 
         df = self.root.new(dfd, meta=meta)
