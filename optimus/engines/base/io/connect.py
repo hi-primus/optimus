@@ -78,7 +78,7 @@ class S3(Connection):
         schema_result = re.search(regex_full_url, endpoint_url)
 
         if schema_result is not None:
-            schema = schema_result[2]
+            schema = schema_result[1]
             endpoint_url = endpoint_url[len(schema + "://"):]  # removes schema from endpoint_url
 
         schema = schema if schema else "https"
