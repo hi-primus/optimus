@@ -2222,9 +2222,10 @@ class BaseColumns(ABC):
 
         return stats
 
-    def names(self, col_names="*", by_dtypes=None, invert=False):
+    def names(self, col_names="*", by_dtypes=None, invert=False, is_regex=False):
 
-        columns = parse_columns(self.root, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
+        columns = parse_columns(self.root, col_names, filter_by_column_dtypes=by_dtypes, invert=invert,
+                                is_regex=is_regex)
         return columns
 
     def count_zeros(self, columns="*", tidy=True, compute=True):
