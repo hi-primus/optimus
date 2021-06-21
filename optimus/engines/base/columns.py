@@ -34,7 +34,7 @@ from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, is_str, is_list_value, is_one_element, \
-    is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int
+    is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int, is_
 from optimus.profiler.constants import MAX_BUCKETS
 
 TOTAL_PREVIEW_ROWS = 30
@@ -239,6 +239,7 @@ class BaseColumns(ABC):
         df = self.root.new(dfd, meta=meta)
 
         if kw_columns:
+
             df = df.cols.assign(kw_columns)
         # Dataframe to Optimus dataframe
         df = df.cols.select(output_ordered_columns)
@@ -695,6 +696,9 @@ class BaseColumns(ABC):
 
         :return:
         """
+        # if not is_(df_right, BaseDataFrame):
+        #     RaiseIt.type_error(df_right, ["BaseDataFrame"])
+
         suffix_left = "_left"
         suffix_right = "_right"
 
@@ -882,7 +886,7 @@ class BaseColumns(ABC):
 
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute) for
-                          col_name in columns } for func in funcs}
+                                          col_name in columns} for func in funcs}
             # agg_result = [{func.__name__: {self.exec_agg({col_name: func(df.data[col_name], *args)}, compute)}} for
             #               col_name in columns for func in funcs]
 
@@ -1876,12 +1880,12 @@ class BaseColumns(ABC):
         pass
 
     def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols):
-        
+
         if separator is not None:
             separator = re.escape(separator)
 
         if mode == "string":
-            dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits-1)
+            dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
 
         elif mode == "array":
             if is_dask_dataframe(dfd):
@@ -1941,7 +1945,7 @@ class BaseColumns(ABC):
 
             # If columns split is shorter than the number of splits
             new_columns = list(dfd_new.columns)
-            
+
             if len(final_columns) < len(new_columns):
                 dfd_new = dfd_new.drop(columns=new_columns[0:len(final_columns)])
                 new_columns = list(dfd_new.columns)
@@ -1983,7 +1987,6 @@ class BaseColumns(ABC):
         _min = df.cols.min(columns, compute=True, tidy=False)
         _max = df.cols.max(columns, compute=True, tidy=False)
         _bins = _bins_col(columns, _min, _max)
-
 
         @self.F.delayed
         def _hist(pdf, col_name, _bins):
@@ -2094,7 +2097,6 @@ class BaseColumns(ABC):
         sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS).to_optimus_pandas()
         rows_count = sample.rows.count()
         sample_dtypes = sample.cols.infer_dtypes().cols.frequency()
-
 
         _unique_counts = sample.cols.count_uniques()
 
