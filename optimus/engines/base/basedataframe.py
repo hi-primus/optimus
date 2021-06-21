@@ -14,7 +14,7 @@ from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes, RELATIVE_ERROR
-from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
@@ -65,6 +65,7 @@ class BaseDataFrame(ABC):
             return self.rows.select(item)
 
     def __setitem__(self, key, value):
+
         df = self.cols.assign({key: value})
         self.data = df.data
         self.buffer = df.buffer
@@ -124,7 +125,7 @@ class BaseDataFrame(ABC):
         :param dtype:
         :return:
         """
-        if (not isinstance(df1, (BaseDataFrame,)) or not isinstance(df2, (BaseDataFrame,))):
+        if not isinstance(df1, (BaseDataFrame,)) or not isinstance(df2, (BaseDataFrame,)):
             multiple_columns = True
         else:
             multiple_columns = df1.cols.names() == df2.cols.names()
@@ -585,6 +586,7 @@ class BaseDataFrame(ABC):
         df = self
         if not columns:
             columns = "*"
+
         limit = min(limit, df.rows.approx_count())
         return tabulate(df.rows.limit(limit + 1).cols.select(columns).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
@@ -701,7 +703,7 @@ class BaseDataFrame(ABC):
 
                 # Extract the columns with cells larger thatn
                 max_cell_length = getattr(df.meta, "max_cell_length", None)
-                
+
                 if max_cell_length:
                     for i, j in max_cell_length.items():
                         if i in freq_cols:
@@ -719,14 +721,15 @@ class BaseDataFrame(ABC):
 
                 if len(sliced_cols) > 0:
                     # print("sliced_cols", sliced_cols)
-                    sliced_freq = df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins, count_uniques=True,
-                                                                         compute=False)
+                    sliced_freq = df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins,
+                                                                                   count_uniques=True,
+                                                                                   compute=False)
 
                 profiler_time["frequency"] = {"columns": freq_cols, "elapsed_time": time.process_time() - _t}
 
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
                 _c = {}
-                
+
                 _hist = {} if _hist is None else _hist["hist"]
                 _freq = {} if _freq is None else _freq["frequency"]
 

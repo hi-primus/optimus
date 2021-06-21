@@ -1,20 +1,20 @@
 from pandas import DataFrame as PandasDataFrame
+
 from optimus.engines.base.basedataframe import BaseDataFrame
 
 MAX_TIMEOUT = 600
 
+
 class RemoteDummyAttribute:
-    
+
     def __init__(self, name, names, dummy_id, op):
         self.__names = [*names, name]
         self.__op = op
         self.__id = dummy_id
-        
-    
+
     def __getattr__(self, item):
         return RemoteDummyAttribute(item, self.__names, self.__id, self.__op)
-    
-    
+
     def __call__(self, *args, **kwargs):
 
         if kwargs.get("client_submit"):
@@ -48,7 +48,7 @@ class RemoteDummyVariable:
     def __init__(self, op, unique_id, *args, **kwargs):
         self.op = op
         self.id = unique_id
-    
+
     def __getattr__(self, item):
         if item.startswith('_'):
             raise AttributeError(item)
@@ -67,7 +67,6 @@ class RemoteDummyVariable:
 
 
 class RemoteDummyDataFrame(RemoteDummyVariable):
-
     print = BaseDataFrame.print
     table = BaseDataFrame.table
     display = BaseDataFrame.display
@@ -92,6 +91,7 @@ class RemoteDummyDataFrame(RemoteDummyVariable):
 
         return self.op.remote_run(_get_attr, self.id, "meta")
 
+
 class RemoteOptimusInterface:
     op = {}
     _vars = {}
@@ -101,13 +101,12 @@ class RemoteOptimusInterface:
         if not engine:
             from optimus.optimus import Engine
             engine = Engine.DASK.value
-        
+
         self.client = client
         self.engine = engine
 
         future = self._create_actor(self.engine)
         future.result(MAX_TIMEOUT)
-
 
     def _create_actor(self, engine):
         self.engine = engine
@@ -127,7 +126,7 @@ class RemoteOptimusInterface:
             return actor.submit(_func, *args, **kwargs)
 
         kwargs.update({"pure": False})
-        
+
         return self.client.submit(_remote, func, *args, **kwargs)
 
     def run(self, func, *args, **kwargs):
@@ -144,7 +143,7 @@ class RemoteOptimusInterface:
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.list_vars()
-        
+
         return self.client.submit(_list_vars, pure=False).result(client_timeout)
 
     def clear_vars(self, keep=[], client_timeout=MAX_TIMEOUT):
@@ -152,7 +151,7 @@ class RemoteOptimusInterface:
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.clear_vars(keep)
-        
+
         return self.client.submit(_clear_vars, keep, pure=False).result(client_timeout)
 
     def update_vars(self, values, client_timeout=MAX_TIMEOUT):
@@ -160,7 +159,7 @@ class RemoteOptimusInterface:
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.update_vars(values)
-        
+
         return self.client.submit(_update_vars, values, pure=False).result(client_timeout)
 
     def del_var(self, name, client_timeout=MAX_TIMEOUT):
@@ -168,7 +167,7 @@ class RemoteOptimusInterface:
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.del_var(name)
-        
+
         return self.client.submit(_del_var, name, pure=False).result(client_timeout)
 
     def set_var(self, name, value, client_timeout=MAX_TIMEOUT):
@@ -176,7 +175,7 @@ class RemoteOptimusInterface:
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.set_var(name, value)
-        
+
         return self.client.submit(_set_var, name, value, pure=False).result(client_timeout)
 
     def get_var(self, name, client_timeout=MAX_TIMEOUT):
@@ -184,9 +183,8 @@ class RemoteOptimusInterface:
             from dask.distributed import get_worker
             op = get_worker().actor.op
             return op.get_var(name)
-        
+
         return self.client.submit(_get_var, name, pure=False).result(client_timeout)
-            
 
 
 class RemoteOptimus:
@@ -214,17 +212,16 @@ class RemoteOptimus:
         import numpy as np
         if engine == Engine.DASK_CUDF.value:
             import cupy as cp
-            self.allowed_types =  (str, bool, int, float, complex, np.generic, cp.generic)
+            self.allowed_types = (str, bool, int, float, complex, np.generic, cp.generic)
         else:
-            self.allowed_types =  (str, bool, int, float, complex, np.generic)
-            
+            self.allowed_types = (str, bool, int, float, complex, np.generic)
 
     def list_vars(self):
         return list(self._vars.keys())
 
     def clear_vars(self, keep=[]):
         keep = keep + ["_load", "_create"]
-        self._vars = { k: self._vars[k] for k in keep }
+        self._vars = {k: self._vars[k] for k in keep}
         return list(self._vars.keys())
 
     def update_vars(self, values):
