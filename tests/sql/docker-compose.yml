@@ -59,7 +59,7 @@ services:
     command: /bin/bash -c "sleep 60 && echo loading cassandra keyspace && cqlsh cassandra -f /main.cql"
 
   oracle:
-    image: ironmussa/optimus:oracle_19.3.0-ee
+    image: hi-primus/optimus:oracle_19.3.0-ee
     environment:
       - ORACLE_PWD=sA123456
     volumes:

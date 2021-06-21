@@ -599,7 +599,7 @@ df.cols.nest(["animals", "two strings", "num 2"], output_col="col_nested", shape
 
 # ## Histograms
 
-df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
+df = op.load.csv("https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.csv")
 
 df.display()
 

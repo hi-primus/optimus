@@ -5,7 +5,7 @@ class Create:
     def __init__(self, root):
         self.root = root
 
-    def dataframe(self, dict, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
+    def dataframe(self, dict=None, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
         """
         Helper to create dataframe:
         :param dict:
@@ -18,6 +18,8 @@ class Create:
         
         if dict:
             pdf = pd.DataFrame(dict)
+        elif not pdf:
+            pdf = pd.DataFrame(kwargs)
 
         df = self.root.dataframe(pdf, n_partitions)
         return df

@@ -5,7 +5,7 @@ In your terminal just type:
 
 .. code:: bash
 
-  pip install optimuspyspark
+  pip install pyoptimus
 
 
 Requirements

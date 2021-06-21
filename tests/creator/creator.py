@@ -731,7 +731,7 @@ nan = np.nan
 import datetime
 
 # +
-actual_df = op.load.json('https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json')
+actual_df = op.load.json('https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.json')
 expected_df = op.create.df(
     [('billingId', LongType(), True), ('birth', StringType(), True), ('dummyCol', StringType(), True),
      ('firstName', StringType(), True), ('id', LongType(), True), ('lastName', StringType(), True),
@@ -771,7 +771,7 @@ rows = [
      None)
 ]
 
-df = op.load.url("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
+df = op.load.url("https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.csv")
 
 t = Test(op, source_df, "op_io", imports=["from pyspark.ml.linalg import Vectors, VectorUDT, DenseVector",
                                           "import numpy as np",
@@ -783,13 +783,13 @@ t.create(op, "load.csv", "local_csv", "df", "../../examples/data/foo.csv")
 t.create(op, "load.json", "local_json", "df", "../../examples/data/foo.json")
 t.create(op, "load.parquet", "local_parquet", "df", "../../examples/data/foo.parquet")
 t.create(op, "load.csv", "remote_csv", "df",
-         "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
+         "https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.csv")
 
 t.create(op, "load.json", "remote_json", "df",
-         "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json")
+         "https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.json")
 
 t.create(op, "load.parquet", "remote_parquet", "df",
-         "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.parquet")
+         "https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.parquet")
 
 # +
 from optimus.profiler.profiler import Profiler

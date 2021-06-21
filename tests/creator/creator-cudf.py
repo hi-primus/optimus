@@ -691,7 +691,7 @@ nan = np.nan
 import datetime
 
 # +
-actual_df = op.load.json('https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json', multiline=True)
+actual_df = op.load.json('https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.json', multiline=True)
 
 # expected_df = op.create.df(
 #     [('billingId', LongType(), True), ('birth', StringType(), True), ('dummyCol', StringType(), True),
@@ -727,7 +727,7 @@ rows = [
      None)
 ]
 
-df = op.load.csv("https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
+df = op.load.csv("https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.csv")
 
 t = Test(op, source_df, "op_io_dask", imports=["import numpy as np",
                                           "nan = np.nan",
@@ -737,17 +737,17 @@ t.create(op, "load.csv", "local_csv", "df", None, "../../examples/data/foo.csv")
 t.create(op, "load.json", "local_json", "df",None,"../../examples/data/foo.json", multiline=True)
 # t.create(op, "load.parquet", "local_parquet", "df", None, "../../examples/data/foo.parquet")
 t.create(op, "load.csv", "remote_csv", "df", None,
-         "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv")
+         "https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.csv")
 
 t.create(op, "load.json", "remote_json", "df", None,
-         "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.json", multiline= True)
+         "https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.json", multiline= True)
 
 # +
 # # !pip install pyarrow
 
 # +
 # t.create(op, "load.parquet", "remote_parquet", "df", None,
-#          "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.parquet")
+#          "https://raw.githubusercontent.com/hi-primus/optimus/master/examples/data/foo.parquet")
 
 # +
 from optimus.profiler.profiler import Profiler

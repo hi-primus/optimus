@@ -27,6 +27,6 @@
 #
 #         for notebook in notebooks:
 #             pm.execute_notebook(
-#                 "/home/travis/build/ironmussa/Optimus/examples/" + notebook,
+#                 "/home/travis/build/hi-primus/optimus/examples/" + notebook,
 #                 output
 #             )

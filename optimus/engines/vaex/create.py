@@ -8,7 +8,7 @@ class Create:
     def __init__(self, root):
         self.root = root
 
-    def dataframe(self, data, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
+    def dataframe(self, dict=None, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
         """
         Helper to create dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
@@ -18,8 +18,10 @@ class Create:
         :return: Dataframe
         """
 
-        if is_dict(data):
-            data = pd.DataFrame(data)
+        if is_dict(dict):
+            pdf = pd.DataFrame(dict)
+        elif not pdf:
+            pdf = pd.DataFrame(kwargs)
 
-        df = VaexDataFrame(data)
+        df = VaexDataFrame(pdf)
         return df

@@ -1197,7 +1197,7 @@ Let's download a sample data using our amazing `read_url` function.
     # Instance of Utilities class
     tools = op.Utilities()
     # Reading df from web
-    url = "https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/impute_data.csv"
+    url = "https://raw.githubusercontent.com/hi-primus/optimus/master/examples/impute_data.csv"
     df = tools.read_url(path=url)
 
 If we examine this DF we see that there are some missing values.

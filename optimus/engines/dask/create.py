@@ -11,7 +11,7 @@ class Create:
     def __init__(self, root):
         self.root = root
 
-    def dataframe(self, data, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
+    def dataframe(self, dict=None, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
         """
         Helper to create dataframe:
         :param cols: List of Tuple with name, data type and a flag to accept null
@@ -21,10 +21,12 @@ class Create:
         :return: Dataframe
         """
 
-        if is_dict(data):
-            data = pd.DataFrame(data)
-        # elif is_pandas_dataframe(data):
-        data = pandas_to_dask_dataframe(data, n_partitions)
-        df = DaskDataFrame(data)
+        if is_dict(dict):
+            pdf = pd.DataFrame(dict)
+        elif not pdf:
+            pdf = pd.DataFrame(kwargs)
+
+        ddf = pandas_to_dask_dataframe(pdf, n_partitions)
+        df = DaskDataFrame(ddf)
         df.meta = Meta.set(df.meta, value={"max_cell_length": df.cols.len("*").cols.max()})
         return df

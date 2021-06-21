@@ -40,7 +40,7 @@ Project maintainers who do not follow or enforce the Code of Conduct in good fai
 
 ## Developer & Administrator
 
-[Favio Vázquez](https://github.com/faviovazquez)
+[Argenis Leon](https://github.com/argenisleon)
 
 ## Attribution
 
