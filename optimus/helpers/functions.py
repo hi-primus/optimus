@@ -37,6 +37,11 @@ def _variables(ins, namespace=None):
     return [obj for obj in namespace if isinstance(namespace[obj], ins) and not obj.startswith("_")]
 
 
+def engines(namespace=None):
+    from optimus.engines.base.engine import BaseEngine
+    return _variables(BaseEngine, namespace)
+
+
 def dataframes(namespace=None):
     from optimus.engines.base.basedataframe import BaseDataFrame
     return _variables(BaseDataFrame, namespace)
