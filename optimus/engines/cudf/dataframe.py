@@ -56,19 +56,20 @@ class CUDFDataFrame(DataFrameBaseDataFrame, BaseDataFrame):
     def to_pandas(self):
         return self.data.to_pandas()
 
-    def to_dict(self, orient="records", index=True):
+    def to_dict(self, n=10, orient="list"):
         """
         Create a dict
+        :param n:
         :param orient:
-        :param index: Return the series index
         :return:
         """
 
-        series = self.data
-        if index is True:
-            return series.to_pandas().to_dict(orient)
+        if not n or n==-1:
+            series = self.to_pandas()
         else:
-            return series.to_pandas().to_list()
+            series = self.buffer_window("*", 0, n).data
+            
+        return series.to_pandas().to_dict(orient)
 
     def repartition(self, n=None, *args, **kwargs):
         return self.root

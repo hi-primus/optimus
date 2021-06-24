@@ -293,13 +293,19 @@ class BaseDataFrame(ABC):
 
         return json.dumps(self.cols.select(columns).to_dict(), ensure_ascii=False, default=json_converter)
 
-    def to_dict(self, orient="records"):
+    def to_dict(self, n=10, orient="list"):
         """
             Return a dict from a Collect result
-            [(col_name, row_value),(col_name_1, row_value_2),(col_name_3, row_value_3),(col_name_4, row_value_4)]
+            :param n:
+            :param orient:
             :return:
         """
-        return self.to_pandas().to_dict(orient)
+        if not n or n==-1:
+            series = self.to_pandas()
+        else:
+            series = self.buffer_window("*", 0, n).data
+            
+        return series.to_dict(orient)
 
     @staticmethod
     @abstractmethod

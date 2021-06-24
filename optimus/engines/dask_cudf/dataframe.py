@@ -78,13 +78,3 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
 
     def to_optimus_cudf(self):
         return CUDFDataFrame(self.root.to_pandas())
-
-    def to_dict(self, orient="records", limit=None):
-        """
-        Create a dict
-        :param orient:
-        :param limit:
-        :return:
-        """
-        series = self.root
-        return series.compute().to_pandas().to_dict(orient)

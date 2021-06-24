@@ -220,19 +220,20 @@ class DaskBaseDataFrame(BaseDataFrame):
 
         raise NotImplementedError
 
-    def to_dict(self, orient="records", index=True):
+    def to_dict(self, n=10, orient="list"):
         """
         Create a dict
+        :param n:
         :param orient:
-        :param index: Return the series index
         :return:
         """
 
-        series = self.data
-        if index is True:
-            return series.compute().to_dict(orient)
+        if not n or n==-1:
+            series = self.to_pandas()
         else:
-            return series.compute().to_list()
+            series = self.buffer_window("*", 0, n).data
+            
+        return series.to_dict(orient)
 
     def to_pandas(self):
         return self.data.compute()
