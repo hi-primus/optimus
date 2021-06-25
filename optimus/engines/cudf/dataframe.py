@@ -64,7 +64,7 @@ class CUDFDataFrame(DataFrameBaseDataFrame, BaseDataFrame):
         :return:
         """
 
-        if not n or n==-1:
+        if n=="all":
             series = self.to_pandas()
         else:
             series = self.buffer_window("*", 0, n).data

@@ -291,7 +291,7 @@ class BaseDataFrame(ABC):
         :return:
         """
 
-        return json.dumps(self.cols.select(columns).to_dict(), ensure_ascii=False, default=json_converter)
+        return json.dumps(self.cols.select(columns).to_dict(n="all", orient="records"), ensure_ascii=False, default=json_converter)
 
     def to_dict(self, n=10, orient="list"):
         """
@@ -300,7 +300,7 @@ class BaseDataFrame(ABC):
             :param orient:
             :return:
         """
-        if not n or n==-1:
+        if n=="all":
             series = self.to_pandas()
         else:
             series = self.buffer_window("*", 0, n).data
@@ -531,10 +531,10 @@ class BaseDataFrame(ABC):
 
         if limit == "all":
             limit = total_rows
-            data = df.cols.select(columns).to_dict()
+            data = df.cols.select(columns).to_dict(n="all", orient="records")
         else:
             limit = min(limit, total_rows)
-            data = df.cols.select(columns).rows.limit(limit + 1).to_dict()
+            data = df.cols.select(columns).rows.limit(limit + 1).to_dict(n="all", orient="records")
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
         template_env = jinja2.Environment(loader=template_loader, autoescape=True)
