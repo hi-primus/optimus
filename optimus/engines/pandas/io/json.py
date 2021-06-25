@@ -85,9 +85,8 @@ class JSON:
 
         data = []
         _profile(self.schema(), [], data)
-        df = pd.DataFrame(data, columns=['key', 'count', 'dtype', 'path', COL_DEPTH])
-        df = df.sort_values(by=["count", COL_DEPTH], ascending=[False, True]).rows.limit(n).to_dict(orient='row')
-        return df
+        pdf = pd.DataFrame(data, columns=['key', 'count', 'dtype', 'path', COL_DEPTH])
+        return pdf.sort_values(by=["count", COL_DEPTH], ascending=[False, True]).rows.limit(n).to_dict(orient='row')
 
     def flatten(self, path):
         """
