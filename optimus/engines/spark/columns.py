@@ -1625,11 +1625,11 @@ class Cols(BaseColumns):
         df = df.cols.nest(input_cols, "vector", output_col=output_col)
 
         # Correlation can not handle null values. Check if exist ans warn the user.
-        cols = {x: y for x, y in df.cols.count_na(input_cols).items() if y != 0}
+        cols_na = {x: y for x, y in df.cols.count_na(input_cols).items() if y != 0}
 
-        if cols:
+        if cols_na:
             message = "Correlation can not handle nulls. " + " and ".join(
-                {str(x) + " has " + str(y) + " null(s)" for x, y in cols.items()})
+                {str(x) + " has " + str(y) + " null(s)" for x, y in cols_na.items()})
             RaiseIt.message(ValueError, message)
 
         corr = Correlation.corr(df, output_col, method).head()[0].toArray()

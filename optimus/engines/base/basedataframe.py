@@ -682,8 +682,8 @@ class BaseDataFrame(ABC):
             profiler_time["count_mismatch"] = {"columns": cols_dtypes, "elapsed_time": time.process_time() - _t}
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
-            cols = cols_dtypes.items()
-            for col_name, properties in cols:
+            cols_properties = cols_dtypes.items()
+            for col_name, properties in cols_properties:
                 if properties.get("categorical") is True \
                         or properties.get("dtype") == ProfilerDataTypes.EMAIL.value \
                         or properties.get("dtype") == ProfilerDataTypes.URL.value \
