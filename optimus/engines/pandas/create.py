@@ -19,7 +19,7 @@ class Create:
 
         if dict:
             pdf = pd.DataFrame(dict)
-        elif not pdf:
+        elif pdf is None:
             pdf = pd.DataFrame(kwargs)
 
         df = PandasDataFrame(pdf)

@@ -59,7 +59,7 @@ class Create:
         #     struct_fields = list(map(lambda x: StructField(*x), specs))
         if dict:
             pdf = pd.DataFrame(dict)
-        elif not pdf:
+        elif pdf is None:
             pdf = pd.DataFrame(kwargs)
             
         df = Spark.instance.spark.createDataFrame(pdf)

@@ -23,7 +23,7 @@ class Create:
 
         if is_dict(dict):
             pdf = pd.DataFrame(dict)
-        elif not pdf:
+        elif pdf is None:
             pdf = pd.DataFrame(kwargs)
 
         ddf = pandas_to_dask_dataframe(pdf, n_partitions)
