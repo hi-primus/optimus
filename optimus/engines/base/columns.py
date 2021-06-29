@@ -28,6 +28,7 @@ from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
+from optimus.helpers.types import DataFrameType, StringsList, StringsListNone
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions, PROFILER_CATEGORICAL_DTYPES, \
     CONTRACTIONS
 from optimus.helpers.converter import format_dict
@@ -1349,8 +1350,8 @@ class BaseColumns(ABC):
         return self.apply(input_cols, self.F.match, args=(regex,), func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.MATCH.value, mode="vectorized", func_type="column_expr")
 
-    def lower(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.lower, func_return_type=str, output_cols=output_cols,
+    def lower(self, cols: StringsList="*", output_cols: StringsListNone=None) -> DataFrameType:
+        return self.apply(cols, self.F.lower, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
 
     def infer_dtypes(self, input_cols="*", output_cols=None):

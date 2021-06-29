@@ -1,3 +1,4 @@
+from optimus.helpers.types import DataFrameType
 import pandas as pd
 
 
@@ -5,7 +6,7 @@ class Create:
     def __init__(self, root):
         self.root = root
 
-    def dataframe(self, dict=None, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
+    def dataframe(self, dict: dict=None, cols=None, rows=None, pdf: pd.DataFrame=None, n_partitions: int=1, *args, **kwargs) -> DataFrameType:
         """
         Helper to create dataframe:
         :param dict:
