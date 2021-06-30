@@ -125,7 +125,7 @@ class DaskBaseColumns():
     # TODO: Check if we must use * to select all the columns
 
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
-        df = self.df
+        df = self.root.data
         columns = parse_columns(df, columns)
         columns_dtypes = df.cols.dtypes()
 
