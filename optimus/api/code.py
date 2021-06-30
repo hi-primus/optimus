@@ -7,7 +7,7 @@ from optimus.engines.base.basedataframe import BaseDataFrame as dataframe_class
 from optimus.helpers.types import DataFrameType, ConnectionType, ClustersType
 from optimus.helpers.core import val_to_list, one_list_to_val
 
-from .alias import use_alias
+from .prepare import prepare
 
 from optimus.engines.base.engine import BaseEngine as engine_class
 from optimus.engines.base.stringclustering import Clusters as clusters_class
@@ -249,7 +249,7 @@ def generate_code(body=None, variables=[], **kwargs):
 
     for operation in body:
         
-        operation = use_alias(operation)
+        operation = prepare(operation)
         operation_code, operation_updated = _generate_code(operation, [*updated, *variables])
         updated.append(operation_updated)
         code.append(operation_code)

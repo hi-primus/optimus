@@ -289,3 +289,33 @@ def use_alias(body: dict):
             body.update(found)
 
     return body
+
+
+def default_to_engine(body: dict):
+    
+    if (not "operation" in body) and ("engine" in body):
+        body["operation"] = "Optimus"
+        
+    return body
+
+
+def default_to_display(body: dict):
+    
+    if (not "operation" in body) and ("source" in body):
+        body["operation"] = "to_dict"
+        
+    return body
+
+
+preparers = [
+    default_to_engine,
+    default_to_display,
+    use_alias
+]
+
+
+def prepare(body: dict):
+    for preparer in preparers:
+        body = preparer(body)
+
+    return body
