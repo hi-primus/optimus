@@ -3,15 +3,42 @@ import inspect
 from inspect import signature
 from pprint import pformat
 
-from optimus.engines.base.columns import BaseColumns as cols_class
-from optimus.engines.base.rows import BaseRows as rows_class
 from optimus.engines.base.basedataframe import BaseDataFrame as dataframe_class
-from optimus.engines.base.engine import BaseEngine as engine_class
-from optimus.engines.base.create import Create as create_class
 from optimus.helpers.types import DataFrameType, ConnectionType, ClustersType
 from optimus.helpers.core import val_to_list, one_list_to_val
 
 from .alias import use_alias
+
+from optimus.engines.base.engine import BaseEngine as engine_class
+from optimus.engines.base.stringclustering import Clusters as clusters_class
+
+from optimus.engines.base.create import Create as create_class
+from optimus.engines.base.io.load import BaseLoad as load_class
+from optimus.engines.base.io.save import BaseSave as save_class
+from optimus.engines.base.io.connect import Connect as connect_class
+
+from optimus.engines.base.columns import BaseColumns as cols_class
+from optimus.engines.base.rows import BaseRows as rows_class
+from optimus.engines.base.mask import Mask as mask_class
+from optimus.plots.plots import Plot as plots_class
+from optimus.outliers.outliers import Outliers as outliers_class
+
+engine_accessors = {
+    "create": create_class,
+    "load": load_class,
+    "save": save_class,
+    "connect": connect_class
+}
+
+dataframe_accessors = {
+    "cols": cols_class,
+    "rows": rows_class,
+    "mask": mask_class,
+    "plot": plots_class,
+    "outliers": outliers_class
+}
+
+accessors = {**engine_accessors, **dataframe_accessors}
 
 def _create_new_variable(base_name, names):
     while base_name in names:
@@ -75,6 +102,7 @@ def _generate_code_engine(body, properties, variables):
     return _generate_code_target(body, properties, target)
 
 def _get_generator(func_properties, method_root_type):
+
     if method_root_type == "dataframe":
     
         if DataFrameType == func_properties.return_annotation:
@@ -96,6 +124,10 @@ def _get_generator(func_properties, method_root_type):
     elif method_root_type == "optimus":
         
         return _generate_code_engine
+    
+    elif method_root_type == "clusters":
+    
+        return _generate_code_output
         
 
 def method_properties(func, method_root_type):
@@ -120,17 +152,6 @@ def method_properties(func, method_root_type):
         "returns": signature(func).return_annotation,
         "generator": _get_generator(func_properties, method_root_type)
     }
-
-engine_accessors = {
-    "create": create_class
-}
-
-dataframe_accessors = {
-    "cols": cols_class,
-    "rows": rows_class
-}
-
-accessors = {**engine_accessors, **dataframe_accessors}
 
 def _get_method_root_type(accessor):
     if accessor in engine_accessors:
@@ -205,6 +226,9 @@ def _generate_code(body=None, variables=[], **kwargs):
     elif getattr(engine_class, operation[0], None):
         method = engine_class
         method_root_type = "engine"
+    elif getattr(clusters_class, operation[0], None):
+        method = clusters_class
+        method_root_type = "clusters"
         
     for item in operation:
         method = getattr(method, item)
