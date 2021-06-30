@@ -34,7 +34,7 @@ def _variables(ins, namespace=None):
         except:
             pass
 
-    return [obj for obj in namespace if isinstance(namespace[obj], ins) and not obj.startswith("_")]
+    return [obj for obj in (namespace or []) if isinstance(namespace[obj], ins) and not obj.startswith("_")]
 
 
 def engines(namespace=None):
