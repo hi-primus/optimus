@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.css">
+  </link>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/codemirror.min.js">
+  </script>
+  <script type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.52.2/mode/javascript/javascript.min.js">
+  </script>
+  <title>Blurr Playground</title>
+  <style type="text/css">
+    body {
+      font-family: monospace;
+      box-sizing: content-box;
+      padding: 0;
+      margin: 0;
+      font-size: 14px;
+    }
+    .app {
+      padding: 24px;
+    }
+    .top {
+      width: 100%;
+      padding-bottom: 24px;
+      text-align: center;
+    }
+    .left {
+      padding-right: 36px;
+    }
+    .left, .right {
+      float: left;
+      width: calc(50vw - 48px);
+      min-width: 600px;
+    }
+    .content-label {
+      font-size: 14px;
+    }
+    .content-info {
+      font-size: 18px;
+    }
+    .code-textarea {
+      cursor: unset;
+      pointer-events: none;
+      min-height: 100px;
+    }
+    .CodeMirror {
+      min-height: 313px;
+    }
+    .CodeMirror, .code-textarea {
+      margin-top: 6px;
+      border: 1px solid black;
+      padding: 8px 6px;
+      width: 100%;
+      border-radius: 3px;
+      font-size: 14px;
+      resize: vertical;
+    }
+    .btn-submit {
+      margin-top: 4px;
+      border: none;
+      border-radius: 3px;
+      padding: 7px 10px 5px 10px;
+      background-color: black;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <script type="text/javascript">
+
+    console.log("Blurr");
+
+    async function postData(data) {
+      const response = await fetch("/run", {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: data
+      })
+      return response.json()
+    }
+
+    function showResponse(response) {
+
+      document.querySelector("#response-status").innerHTML = response.status || "";
+      let updated = response.updated;
+      if (Array.isArray(updated)) {
+        updated = updated.join(", ");
+      }
+      document.querySelector("#response-variables").innerHTML = updated || "";
+      let code = response.code;
+      if (Array.isArray(code)) {
+        code = code.join("\n");
+      }
+      document.querySelector("#response-code").innerHTML = code || "";
+      let content = response.result || response.error;
+      if (content && (Array.isArray(content) || typeof content === "object")) {
+        content = JSON.stringify(content);
+      }
+      document.querySelector("#response-content").innerHTML = content || "";
+    }
+
+    function onkeydown(event) {
+      if (event.ctrlKey && event.key === 'Enter') {
+        onsubmit();
+      }
+    }
+
+    async function onsubmit(event) {
+      if (event) { 
+        event.preventDefault();
+      }
+      let data = inputField.getDoc().getValue();
+      response = await postData(data);
+      console.log(response);
+      showResponse(response);
+    }
+
+    window.onload = () => {
+      document.querySelector("#input").onsubmit = onsubmit;
+    }
+
+  </script>
+  <div class="app">
+
+    <div class="top">
+    </div>
+    <div class="middle">
+      <div class="code-mirror"></div>
+      <div class="left">
+        <form id="input">
+          <div class="content-info content-request-container">
+            <span class="content-label">Request (JSON): </span>
+          </div>
+          <textarea name="input-content" id="input-content" form="input">[{
+  "operation": "Optimus",
+  "engine": "pandas",
+  "target": "op"
+},{
+  "source": "op",
+  "operation": "create.dataframe",
+  "names": ["hello", "world"],
+  "target": "df"
+},{
+  "source": "op",
+  "operation": "create.dataframe",
+  "names": [42, 43]
+},{
+  "source": "df",
+  "operation": "to_dict"
+}]</textarea>
+          <input type="submit" value="Submit" class="btn-submit">
+        </form>
+      </div>
+      <div class="right">
+        <div class="content-info content-content-container">
+          <span class="content-label">Result: </span>
+        </div>
+        <textarea class="code-textarea" name="content" id="response-content"></textarea>
+        <div class="content-info content-status-container">
+          <span class="content-label">Status: </span><span id="response-status"></span>
+        </div>
+        <div class="content-info content-variables-container">
+          <span class="content-label">Updated variables: </span><span id="response-variables"></span>
+        </div>
+        <div class="content-info content-code-container">
+          <span class="content-label">Code: </span>
+        </div>
+        <textarea class="code-textarea" name="content" id="response-code"></textarea>
+      </div>
+    </div>
+    <div class="bottom">
+    </div>
+  </div>
+  <script>
+    let inputField = CodeMirror.fromTextArea(document.getElementById("input-content"), {
+      mode:  {name: "javascript", json: true}
+    });
+    
+    inputField.getWrapperElement().event = onkeydown;
+  </script>
+</body>
+</html>
