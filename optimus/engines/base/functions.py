@@ -5,7 +5,7 @@ import jellyfish
 import numpy as np
 import pandas as pd
 from jsonschema._format import is_email
-from url_parser import UrlObject
+import url_parser
 
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
@@ -437,30 +437,35 @@ class Functions(ABC):
     def years_between(self, date_format=None):
         pass
 
-    def top_domain(self, value):
-        return UrlObject.parse_url(value)["domain"]
-
     def domain(self, value):
-        return UrlObject.parse_url(value)["domain"]
-        # return UrlObject.parse_url(value)["domain"]
+        return url_parser.parse_url(value)["domain"]
+
+    def top_domain(self, value):
+        return url_parser.parse_url(value)["top_domain"]
+
+    def sub_domain(self, value):
+        return url_parser.parse_url(value)["sub_domain"]
 
     def url_scheme(self, value):
-        return UrlObject.parse_url(value)["protocol"]
-
-    def url_params(self, value):
-        return UrlObject.parse_url(value)["params"]
+        return url_parser.parse_url(value)["protocol"]
 
     def url_path(self, value):
-        return UrlObject.parse_url(value)["path"]
+        return url_parser.parse_url(value)["path"]
+
+    def url_file(self, value):
+        return url_parser.parse_url(value)["file"]
 
     def url_query(self, value):
-        return UrlObject.parse_url(value)["query"]
+        return url_parser.parse_url(value)["query"]
+
+    def url_fragment(self, value):
+        return url_parser.parse_url(value)["fragment"]
+
+    def host(self, value):
+        return url_parser.parse_url(value)["host"]
 
     def port(self, value):
-        return UrlObject.parse_url(value)["port"]
-
-    def sub_domain(self, series):
-        return UrlObject.parse_url(value)["sub_domain"]
+        return url_parser.parse_url(value)["port"]
 
     def email_username(self, series):
         return series.str.split('@').str[0]

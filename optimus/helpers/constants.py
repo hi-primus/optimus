@@ -70,7 +70,6 @@ class Actions(Enum):
     TO_STRING = "to_string"
     YEAR = "years"
     APPEND = "append"
-    PORT = "port"
     COPY = "copy"
     RENAME = "rename"
     UNIQUE = "unique"
@@ -88,11 +87,15 @@ class Actions(Enum):
     # path	    /history
     # query	    ?era=darkages
     DOMAIN = "domain"
-    DOMAIN_SCHEME = "domain_scheme"
-    SUBDOMAIN = "subdomain"
+    TOP_DOMAIN = "top_domain"
+    SUB_DOMAIN = "sub_domain"
+    URL_SCHEME = "url_scheme"
+    URL_PATH = "url_path"
+    URL_FILE = "url_file"
+    URL_QUERY = "url_query"
+    URL_FRAGMENT = "url_fragment"
     HOST = "host"
-    DOMAIN_PARAMS = "domain_params"
-    DOMAIN_PATH = "domain_path"
+    PORT = "port"
 
     EMAIL_DOMAIN = "email_domain"
     EMAIL_USER = "email_user"

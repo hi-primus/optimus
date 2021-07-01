@@ -1360,7 +1360,7 @@ class BaseColumns(ABC):
                           output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
 
-    def upper(self, input_cols="*", output_cols=None):
+    def upper(self, input_cols="*", output_cols=None) -> DataFrameType:
         return self.apply(input_cols, self.F.upper, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.UPPER.value, mode="vectorized", func_type="column_expr")
 
@@ -2263,82 +2263,95 @@ class BaseColumns(ABC):
     def index_to_string(input_cols=None, output_cols=None, columns=None):
         pass
 
-    def top_domain(self, input_cols="*", output_cols=None):
-        """
-        From https://www.hi-bumblebee.com it returns hi-bumblebee.com
-        :param input_cols:
-        :param output_cols:
-        :return:
-        """
-
-        df = self.root
-        return df.cols.apply(input_cols, self.F.top_domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
-                             mode="vectorized")
-
     # URL methods
-    def domain(self, input_cols="*", output_cols=None):
+
+    def domain(self, cols="*", output_cols=None) -> DataFrameType:
         """
         From https://www.hi-bumblebee.com it returns hi-bumblebee.com
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
-                             mode="vectorized")
-
-    def url_scheme(self, input_cols="*", output_cols=None):
-        # From https://www.hi-bumblebee.com it returns https
-        df = self.root
-        return df.cols.apply(input_cols, self.F.url_scheme, output_cols=output_cols,
-                             meta_action=Actions.DOMAIN_SCHEME.value,
+        return df.cols.apply(cols, self.F.domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
                              mode="map")
 
-    def url_params(self, input_cols="*", output_cols=None):
+    def top_domain(self, cols="*", output_cols=None) -> DataFrameType:
+        """
+        From https://www.hi-bumblebee.com it returns hi-bumblebee.com
+        :param cols:
+        :param output_cols:
+        :return:
+        """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.url_params, output_cols=output_cols,
-                             meta_action=Actions.DOMAIN_PARAMS.value,
+        return df.cols.apply(cols, self.F.top_domain, output_cols=output_cols, meta_action=Actions.TOP_DOMAIN.value,
                              mode="map")
 
-    def url_path(self, input_cols="*", output_cols=None):
-
-        df = self.root
-        return df.cols.apply(input_cols, self.F.url_path, output_cols=output_cols,
-                             meta_action=Actions.DOMAIN_PATH.value,
-                             mode="map")
-
-    def port(self, input_cols="*", output_cols=None):
-
-        df = self.root
-        return df.cols.apply(input_cols, self.F.port, output_cols=output_cols, meta_action=Actions.PORT.value,
-                             mode="map")
-
-    def url_query(self, input_cols="*", output_cols=None):
-
-        df = self.root
-        return df.cols.apply(input_cols, self.F.url_query, output_cols=output_cols, meta_action=Actions.PORT.value,
-                             mode="map")
-
-    def subdomain(self, input_cols="*", output_cols=None):
+    def sub_domain(self, cols="*", output_cols=None) -> DataFrameType:
         # From https://www.hi-bumblebee.com:8080 it returns www
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.subdomain, output_cols=output_cols, meta_action=Actions.SUBDOMAIN.value,
-                             mode="vectorized")
+        return df.cols.apply(cols, self.F.sub_domain, output_cols=output_cols, meta_action=Actions.SUB_DOMAIN.value,
+                             mode="map")
 
-    # Email functions
-    def email_username(self, input_cols="*", output_cols=None):
+    def url_scheme(self, cols="*", output_cols=None) -> DataFrameType:
+        # From https://www.hi-bumblebee.com it returns https
+        df = self.root
+        return df.cols.apply(cols, self.F.url_scheme, output_cols=output_cols,
+                             meta_action=Actions.URL_SCHEME.value,
+                             mode="map")
+
+    def url_path(self, cols="*", output_cols=None) -> DataFrameType:
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.email_username, output_cols=output_cols,
+        return df.cols.apply(cols, self.F.url_path, output_cols=output_cols,
+                             meta_action=Actions.URL_PATH.value,
+                             mode="map")
+
+    def url_file(self, cols="*", output_cols=None) -> DataFrameType:
+
+        df = self.root
+        return df.cols.apply(cols, self.F.url_file, output_cols=output_cols,
+                             meta_action=Actions.URL_FILE.value,
+                             mode="map")
+
+    def url_query(self, cols="*", output_cols=None) -> DataFrameType:
+
+        df = self.root
+        return df.cols.apply(cols, self.F.url_query, output_cols=output_cols, meta_action=Actions.URL_QUERY.value,
+                             mode="map")
+
+    def url_fragment(self, cols="*", output_cols=None) -> DataFrameType:
+
+        df = self.root
+        return df.cols.apply(cols, self.F.url_fragment, output_cols=output_cols, meta_action=Actions.URL_FRAGMENT.value,
+                             mode="map")
+
+    def host(self, cols="*", output_cols=None) -> DataFrameType:
+
+        df = self.root
+        return df.cols.apply(cols, self.F.host, output_cols=output_cols, meta_action=Actions.HOST.value,
+                             mode="map")
+
+    def port(self, cols="*", output_cols=None) -> DataFrameType:
+
+        df = self.root
+        return df.cols.apply(cols, self.F.port, output_cols=output_cols, meta_action=Actions.PORT.value,
+                             mode="map")
+
+    # Email functions
+    def email_username(self, cols="*", output_cols=None) -> DataFrameType:
+
+        df = self.root
+        return df.cols.apply(cols, self.F.email_username, output_cols=output_cols,
                              meta_action=Actions.EMAIL_USER.value,
                              mode="vectorized")
 
-    def email_domain(self, input_cols="*", output_cols=None):
+    def email_domain(self, cols="*", output_cols=None) -> DataFrameType:
         df = self.root
-        return df.cols.apply(input_cols, self.F.email_domain, output_cols=output_cols,
+        return df.cols.apply(cols, self.F.email_domain, output_cols=output_cols,
                              meta_action=Actions.EMAIL_DOMAIN.value,
                              mode="vectorized")
 
