@@ -2379,6 +2379,10 @@ class BaseColumns(ABC):
     def missing(self, cols="*", output_cols=None) -> DataFrameType:
         return self._mask(cols, "missing", output_cols)
 
+    def mismatch(self, cols="*", output_cols=None, dtype=None) -> DataFrameType:
+        rename_func = lambda n: f"{dtype}_mismatch_{n}"
+        return self._mask(cols, "mismatch", output_cols, rename_func, dtype=dtype)
+
     # String clustering algorithms
     def fingerprint(self, input_cols, output_cols=None):
         """
