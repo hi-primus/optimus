@@ -306,7 +306,7 @@ class BaseColumns(ABC):
     def rename(self, columns_old_new=None, func=None):
         """"
         Changes the name of a column(s) dataFrame.
-        :param columns_old_new: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
+        :param columns_old_new: List of tuples or list of strings. Each tuple has de following form: (oldColumnName, newColumnName).
         :param func: can be lower, upper or any string transformation function
         """
 
@@ -317,22 +317,29 @@ class BaseColumns(ABC):
         # Apply a transformation function
         if is_list_of_tuples(columns_old_new):
             validate_columns_names(df, columns_old_new)
-            for col_name in columns_old_new:
+        elif is_list_of_str(columns_old_new):
+            validate_columns_names(df, columns_old_new)
+            columns_old_new = [ (col, col) for col in columns_old_new ]
+        else:
+            columns_old_new = [ (col, col) for col in df.cols.names() ]
 
-                old_col_name = col_name[0]
-                if is_int(old_col_name):
-                    old_col_name = df.cols.names()[old_col_name]
-                if func:
-                    old_col_name = func(old_col_name)
+        for col_name in columns_old_new:
 
-                # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
-                # TODO: this seems to the only change in this function compare to pandas. Maybe this can
-                #  be moved to a base class
+            old_col_name = col_name[0]
+            new_col_name = col_name[1]
 
-                new_col_name = col_name[1]
-                if old_col_name != col_name:
-                    dfd = dfd.rename(columns={old_col_name: new_col_name})
-                    meta = Meta.action(meta, Actions.RENAME.value, (old_col_name, new_col_name))
+            if is_int(old_col_name):
+                old_col_name = df.cols.names()[old_col_name]
+            if func:
+                new_col_name = func(new_col_name)
+
+            # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
+            # TODO: this seems to the only change in this function compare to pandas. Maybe this can
+            #  be moved to a base class
+
+            if old_col_name != new_col_name:
+                dfd = dfd.rename(columns={old_col_name: new_col_name})
+                meta = Meta.action(meta, Actions.RENAME.value, (old_col_name, new_col_name))
 
         return self.root.new(dfd, meta=meta)
 
