@@ -91,7 +91,7 @@ python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
 Now install from test.pypi.org
 ```
-!pip install --index-url https://test.pypi.org/simple pyoptimus
+pip install --index-url https://test.pypi.org/simple pyoptimus --no-deps
 ```
 
 Upload to pyoptimus
