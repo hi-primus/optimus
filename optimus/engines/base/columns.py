@@ -2363,8 +2363,21 @@ class BaseColumns(ABC):
                              mode="vectorized")
 
     # Mask functions
-    def missing(self, input_cols, output_cols=None):
-        return self.append(self.root.mask.missing())
+    def _mask(self, cols="*", method: str=None, output_cols=None, rename_func=None, *args, **kwargs) -> DataFrameType:
+
+        append_df = getattr(self.root.mask, method)(cols, *args, **kwargs)
+
+        if output_cols:
+            append_df = append_df.cols.rename(cols, output_cols)
+        else:
+            if not rename_func:
+                rename_func = lambda n: f"{method}_{n}"
+            append_df = append_df.cols.rename(rename_func)
+
+        return self.append(append_df)
+
+    def missing(self, cols="*", output_cols=None) -> DataFrameType:
+        return self._mask(cols, "missing", output_cols)
 
     # String clustering algorithms
     def fingerprint(self, input_cols, output_cols=None):
