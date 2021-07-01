@@ -13,12 +13,13 @@ jupyter:
     name: python3
 ---
 
-[![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-3.0/images/logoOptimus.png)](https://hi-optimus.com) 
+[![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.8/images/logoOptimus.png)](https://hi-optimus.com) 
 
 
 [![PyPI version](https://badge.fury.io/py/pyoptimus.svg)](https://badge.fury.io/py/pyoptimus) [![Updates](https://pyup.io/repos/github/hi-primus/optimus/shield.svg)](https://pyup.io/repos/github/hi-primus/optimus/)  [![GitHub release](https://img.shields.io/github/release/hi-primus/optimus.svg)](https://github.com/hi-primus/optimus/) 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/02b3ba0fe2b64d6297c6b8320f8b15a7)](https://www.codacy.com/app/argenisleon/Optimus?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hi-primus/optimus&amp;utm_campaign=Badge_Grade)
-[![Coverage Status](https://coveralls.io/repos/github/hi-primus/optimus/badge.svg?branch=develop-3.0)](https://coveralls.io/github/hi-primus/optimus?branch=develop-3.0) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience) ![Discord](https://img.shields.io/discord/579030865468719104.svg)
+[![Coverage Status](https://coveralls.io/repos/github/hi-primus/optimus/badge.svg?branch=develop-21.8)](https://coveralls.io/github/hi-primus/optimus?branch=develop-21.8) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience) ![Discord](https://img.shields.io/discord/579030865468719104.svg)
+[![CalVer](https://img.shields.io/badge/calver-YY.MM.MICRO-22bfda.svg)](http://calver.org)
 
 [![Downloads](https://pepy.tech/badge/pyoptimus)](https://pepy.tech/project/pyoptimus)
 [![Downloads](https://pepy.tech/badge/pyoptimus/month)](https://pepy.tech/project/pyoptimus/month)
@@ -27,8 +28,8 @@ jupyter:
 
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-3.0)
-[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hi-primus/optimus/blob/develop-3.0/examples/10_min_from_spark_to_pandas_with_optimus.ipynb)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-21.8)
+[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hi-primus/optimus/blob/develop-21.8/examples/10_min_from_spark_to_pandas_with_optimus.ipynb)
 
 Optimus is the missing framework to profile, clean, process and do ML in a distributed fashion using Apache Spark(PySpark).
 
@@ -41,11 +42,11 @@ In your terminal just type  ```pip install pyoptimus```
 
 ## Examples 
 
-You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/optimus/blob/develop-3.0/examples/10_min_from_pandas_to_spark_with_optimus.ipynb) where you can find the basic to start working. 
+You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/optimus/blob/develop-21.8/examples/10_min_from_pandas_to_spark_with_optimus.ipynb) where you can find the basic to start working. 
 
 Also you can go to the [examples](examples/) folder to found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
-Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-3.0/docs/cheatsheet/optimus_cheat_sheet.html) 
+Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-21.8/docs/cheatsheet/optimus_cheat_sheet.html) 
  
  
 ## Feedback 
@@ -74,7 +75,7 @@ df = op.load.csv("../examples/data/foo.csv")
 df = op.load.json("../examples/data/foo.json")
 
 # using a url
-df = op.load.json("https://raw.githubusercontent.com/hi-primus/optimus/develop-3.0/examples/data/foo.json")
+df = op.load.json("https://raw.githubusercontent.com/hi-primus/optimus/develop-21.8/examples/data/foo.json")
 
 # parquet
 df = op.load.parquet("../examples/data/foo.parquet")
@@ -155,10 +156,10 @@ https://anaconda.org/conda-forge/libmagic
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions   
 including:  
   
-* [Documentation](https://github.com/hi-primus/optimus/tree/develop-3.0/docs/source) updates, enhancements, designs, or   bugfixes.  
+* [Documentation](https://github.com/hi-primus/optimus/tree/develop-21.8/docs/source) updates, enhancements, designs, or   bugfixes.  
 * Spelling or grammar fixes.  
 * README.md corrections or redesigns.  
-* Adding unit, or functional [tests](https://github.com/hi-primus/optimus/tree/develop-3.0/tests)   
+* Adding unit, or functional [tests](https://github.com/hi-primus/optimus/tree/develop-21.8/tests)   
 * Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.  
 * [Searching #optimusdata on twitter](https://twitter.com/search?q=optimusdata) and helping someone else who needs help.  
 * [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/)   about Optimus and its many features.  

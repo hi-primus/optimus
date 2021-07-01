@@ -101,13 +101,16 @@ twine upload dist/*
 ### Installing from github
 
 ```
-pip3 install --upgrade --no-deps --force-reinstall git+https://github.com/hi-primus/optimus.git@develop
+pip install --upgrade --no-deps --force-reinstall git+https://github.com/hi-primus/optimus.git@develop-21.8
 ```
 Install infer date format library
 ```
-pip install git+https://github.com/dimagalat/dateinfer
+pip install git+https://github.com/hi-primus/dateinfer.git
 ```
-
+Install infer url_parser library
+```
+pip install git+https://github.com/hi-primus/url_parser.git
+```
 ### Compiling redis .jar file
 This file can not be found to download and must be compiled.
 
@@ -129,7 +132,7 @@ Here the workflow.
 ```
 https://github.com/hi-primus/optimus.git
 cd Optimus
-git checkout develop-3.0
+git checkout develop-21.8
 ```
 From PyCharm create a Deployment using a private key and point it to you Optimus folder in the server
 Be sure to create a mapping so you can sync the local files with the remote server
@@ -152,9 +155,9 @@ On Digital Ocean
 sudo apt-get update
 sudo apt-get install -y python3-pip
 sudo apt install libz-dev libssl-dev libcurl4-gnutls-dev libexpat1-dev gettext cmake gcc
-pip3 install --upgrade --force-reinstall git+https://github.com/hi-primus/optimus.git@develop-3.0
+pip install --upgrade --force-reinstall git+https://github.com/hi-primus/optimus.git@develop-21.8
 
-pip3 install dask[complete]
+pip install dask[complete]
 
 ```
 
@@ -174,7 +177,7 @@ git clone https://github.com/hi-primus/optimus.git
 ```
 and run
 ```
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 
@@ -255,14 +258,14 @@ conda-build optimus -c rapidsai -c nvidia -c conda-forge -c defaults -c h2oai
 
 Search for the message 
 ```
-anaconda upload C:\Users\argenisleon\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-3.0.0-py_0.tar.bz2
+anaconda upload C:\Users\argenisleon\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-21.8.0-py_0.tar.bz2
 ```
 
 then upload the package to Anaconda
 ```
 conda install anaconda-client
 anaconda login
-anaconda upload -u optimus xxxxxx\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-3.0.0-py_0.tar.bz2
+anaconda upload -u optimus xxxxxx\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-21.8.0-py_0.tar.bz2
 ```
 use your anaconda credentials for https://anaconda.org/
 

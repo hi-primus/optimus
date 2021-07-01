@@ -13,4 +13,4 @@ RUN pip install aiohttp --no-cache-dir && \
     pip install cupy-cuda102 --no-cache-dir && \
     pip install dask-cuda --no-cache-dir && \
     pip install git+https://github.com/hi-primus/dateinfer.git --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-3.0 --no-cache-dir
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.8 --no-cache-dir
