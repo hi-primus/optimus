@@ -5,6 +5,7 @@ from dask import delayed
 from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.meta import Meta
+from optimus.helpers.core import val_to_list
 from optimus.helpers.columns import parse_columns, get_output_cols, name_col
 from optimus.helpers.constants import Actions
 from optimus.infer import is_list_value
@@ -37,8 +38,7 @@ class DaskBaseColumns():
         :return:
         """
 
-        if not is_list_value(dfs):
-            dfs = [dfs]
+        dfs = val_to_list(dfs)
 
         df = self.root
         dfd = dd.concat([df.data.reset_index(drop=True), *[_df.data.reset_index(drop=True) for _df in dfs]], axis=1)

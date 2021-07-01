@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from functools import reduce
+from optimus.helpers.core import val_to_list
 
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
@@ -22,6 +23,8 @@ class DataFrameBaseColumns():
         :param dfs:
         :return:
         """
+
+        dfs = val_to_list(dfs)
 
         df = self.root
         dfd = self._pd.concat([df.data.reset_index(drop=True), *[_df.data.reset_index(drop=True) for _df in dfs]], axis=1)
