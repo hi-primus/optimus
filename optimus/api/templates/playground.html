@@ -45,12 +45,10 @@
       font-size: 18px;
     }
     .code-textarea {
-      cursor: unset;
-      pointer-events: none;
-      min-height: 100px;
+      min-height: 110px;
     }
     .CodeMirror {
-      min-height: 313px;
+      min-height: 312px;
     }
     .CodeMirror, .code-textarea {
       margin-top: 6px;
@@ -143,21 +141,21 @@
             <span class="content-label">Request (JSON): </span>
           </div>
           <textarea name="input-content" id="input-content" form="input">[{
-  "operation": "Optimus",
+  "operation": "engine",
   "engine": "pandas",
   "target": "op"
 },{
   "source": "op",
-  "operation": "create.dataframe",
+  "operation": "createDataframe",
   "names": ["hello", "world"],
   "target": "df"
 },{
   "source": "op",
-  "operation": "create.dataframe",
+  "operation": "createDataframe",
   "names": [42, 43]
 },{
   "source": "df",
-  "operation": "to_dict"
+  "operation": "display"
 }]</textarea>
           <input type="submit" value="Submit" class="btn-submit">
         </form>
@@ -166,7 +164,7 @@
         <div class="content-info content-content-container">
           <span class="content-label">Result: </span>
         </div>
-        <textarea class="code-textarea" name="content" id="response-content"></textarea>
+        <textarea readonly class="code-textarea" name="content" id="response-content"></textarea>
         <div class="content-info content-status-container">
           <span class="content-label">Status: </span><span id="response-status"></span>
         </div>
@@ -176,7 +174,7 @@
         <div class="content-info content-code-container">
           <span class="content-label">Code: </span>
         </div>
-        <textarea class="code-textarea" name="content" id="response-code"></textarea>
+        <textarea readonly class="code-textarea" name="content" id="response-code"></textarea>
       </div>
     </div>
     <div class="bottom">
