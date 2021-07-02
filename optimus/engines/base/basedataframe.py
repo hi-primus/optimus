@@ -736,8 +736,8 @@ class BaseDataFrame(ABC):
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
                 _c = {}
 
-                _hist = {} if _hist is None else _hist["hist"]
-                _freq = {} if _freq is None else _freq["frequency"]
+                _hist = {} if _hist is None else _hist.get("hist", {})
+                _freq = {} if _freq is None else _freq.get("frequency", {})
 
                 for _col_name in _columns:
                     _c[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
