@@ -65,7 +65,7 @@ class Cols(DataFrameBaseColumns, BaseColumns):
 
             # _dtype = df.cols.dtypes(col_name)[col_name]
 
-            mismatches_count = df.cols.is_match(col_name, dtype).value_counts().to_dict().get(False)
+            mismatches_count = df.cols.match_dtype(col_name, dtype).data.value_counts().to_dict().get(False)
             mismatches_count = 0 if mismatches_count is None else mismatches_count
             result[col_name] = {"match": df_len - na_count, "missing": na_count,
                                 "mismatch": mismatches_count - na_count}
