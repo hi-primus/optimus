@@ -66,63 +66,63 @@ def escape_columns(columns):
     return escaped_columns
 
 
-def get_output_cols(input_cols, output_cols, merge=False, auto_increment=False):
+def get_output_cols(cols, output_cols=None, merge=False, auto_increment=False):
     """
     Construct output columns taking the input columns.
     If it receive a list of input columns and on output column the function will append the output_col name to the input cols list
 
     If
-    intput_cols = ['col1'] to output_cols = None
-    intput_cols = ['col1'] to output_cols = ['col1']
+    cols = ['col1'] to output_cols = None
+    cols = ['col1'] to output_cols = ['col1']
 
 
     If merge is True
 
     For 1 column
-    intput_cols = ['col1'] to output_cols = 'new'
+    cols = ['col1'] to output_cols = 'new'
     Result:
-    intput_cols = ['col1'] to output_cols = ['col1_new']
+    cols = ['col1'] to output_cols = ['col1_new']
 
     For multiple columns
-    intput_cols = ['col1', 'col2'...'col3'] to output_cols = 'new'
+    cols = ['col1', 'col2'...'col3'] to output_cols = 'new'
     Result:
-    intput_cols = ['col1', 'col2',...'col3'] to output_cols = ['col1_new', 'col2_new',...'col3_new']
+    cols = ['col1', 'col2',...'col3'] to output_cols = ['col1_new', 'col2_new',...'col3_new']
 
     else merge is False
     For 1 column
-    intput_cols = ['col1'] to output_cols = 'new'
-    intput_cols = ['col1'] to output_cols = ['new']
+    cols = ['col1'] to output_cols = 'new'
+    cols = ['col1'] to output_cols = ['new']
 
-    :param input_cols:
+    :param cols:
     :param output_cols:
     :param merge:
     :param auto_increment:
     :return:
     """
 
-    output_cols = val_to_list(output_cols)
-
-    # if is_list(input_cols) and is_list(output_cols):
-    #     if len(input_cols) != len(output_cols):
-    #         RaiseIt.length_error(input_cols, output_cols)
+    # if is_list(cols) and is_list(output_cols):
+    #     if len(cols) != len(output_cols):
+    #         RaiseIt.length_error(cols, output_cols)
 
     if output_cols is None:
-        output_cols = val_to_list(input_cols)
+        output_cols = val_to_list(cols)
+    elif callable(output_cols):
+        output_cols = list(map(output_cols, cols))
     else:
         output_cols = val_to_list(output_cols)
 
         # if auto_increment is not None:
 
     if auto_increment is True:
-        # input_cols = input_cols * auto_increment
+        # cols = cols * auto_increment
         # output_cols = val_to_list(output_cols)
-        # print("LEAN @", len(input_cols)/auto_increment)
-        # r = int(len(input_cols) / auto_increment)
+        # print("LEAN @", len(cols)/auto_increment)
+        # r = int(len(cols) / auto_increment)
         r = list(range(auto_increment)) * 2
-        output_cols = [col_name + "_" + str(i) for i, col_name in zip(r, input_cols)]
+        output_cols = [col_name + "_" + str(i) for i, col_name in zip(r, cols)]
     elif merge is True:
         output_cols = val_to_list(output_cols)
-        output_cols = list([name_col(input_col, output_cols) for input_col in input_cols])
+        output_cols = list([name_col(input_col, output_cols) for input_col in cols])
 
     return output_cols
 
