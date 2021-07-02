@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../optimus')
 
-from optimus.helpers.core import one_list_to_val
+from optimus.helpers.core import val_to_list
 
 alias_map_list = [
   
@@ -276,7 +276,7 @@ alias_map_list = [
 alias_map = {}
 
 for alias_group, value in alias_map_list:
-    for alias in one_list_to_val(alias_group):
+    for alias in val_to_list(alias_group):
         alias_map.update({alias: value})
 
 def use_alias(body: dict):
