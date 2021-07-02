@@ -3,6 +3,7 @@ import string
 import time
 from abc import abstractmethod, ABC
 from functools import reduce
+from typing import Union
 
 import jellyfish as jellyfish
 import nltk
@@ -28,7 +29,7 @@ from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
-from optimus.helpers.types import DataFrameType, StringsList, StringsListNone
+from optimus.helpers.types import DataFrameType, InternalDataFrameType, StringsList, StringsListNone
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions, PROFILER_CATEGORICAL_DTYPES, \
     CONTRACTIONS
 from optimus.helpers.converter import format_dict
@@ -70,10 +71,10 @@ class BaseColumns(ABC):
     def append(self, dfs) -> DataFrameType:
         pass
 
-    def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
+    def select(self, cols="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> DataFrameType:
         """
         Select columns using index, column name, regex to data type
-        :param columns:
+        :param cols:
         :param regex: Regular expression to filter the columns
         :param data_type: Data type to be filtered for
         :param invert: Invert the selection
@@ -82,18 +83,18 @@ class BaseColumns(ABC):
         """
 
         df = self.root
-        columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
+        cols = parse_columns(df, cols, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
                                 accepts_missing_cols=accepts_missing_cols)
         meta = df.meta
         dfd = df.data
-        if columns is not None:
-            dfd = dfd[columns]
+        if cols is not None:
+            dfd = dfd[cols]
         return self.root.new(dfd, meta=meta)
 
-    def copy(self, input_cols, output_cols=None, columns=None):
+    def copy(self, cols="*", output_cols=None, columns=None) -> DataFrameType:
         """
         Copy one or multiple columns
-        :param input_cols: Source column to be copied
+        :param cols: Source column to be copied
         :param output_cols: Destination column
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
@@ -102,16 +103,16 @@ class BaseColumns(ABC):
         output_ordered_columns = df.cols.names()
 
         if columns is None:
-            input_cols = parse_columns(df, input_cols)
-            if is_list_value(input_cols) or is_one_element(input_cols):
-                output_cols = get_output_cols(input_cols, output_cols)
+            cols = parse_columns(df, cols)
+            if is_list_value(cols) or is_one_element(cols):
+                output_cols = get_output_cols(cols, output_cols)
 
         if columns:
-            input_cols = list([c[0] for c in columns])
+            cols = list([c[0] for c in columns])
             output_cols = list([c[1] for c in columns])
-            output_cols = get_output_cols(input_cols, output_cols)
+            output_cols = get_output_cols(cols, output_cols)
 
-        for input_col, output_col in zip(input_cols, output_cols):
+        for input_col, output_col in zip(cols, output_cols):
             if input_col != output_col:
                 col_index = output_ordered_columns.index(input_col) + 1
                 output_ordered_columns[col_index:col_index] = [output_col]
@@ -121,7 +122,7 @@ class BaseColumns(ABC):
         dfd = df.data
         meta = df.meta
 
-        for input_col, output_col in zip(input_cols, output_cols):
+        for input_col, output_col in zip(cols, output_cols):
             kw_columns[output_col] = dfd[input_col]
             meta = Meta.action(meta, Actions.COPY.value, (input_col, output_col))
 
@@ -129,10 +130,10 @@ class BaseColumns(ABC):
 
         return df.cols.select(output_ordered_columns)
 
-    def drop(self, columns=None, regex=None, data_type=None):
+    def drop(self, cols=None, regex=None, data_type=None) -> DataFrameType:
         """
         Drop a list of columns
-        :param columns: Columns to be dropped
+        :param cols: Columns to be dropped
         :param regex: Regex expression to select the columns
         :param data_type:
         :return:
@@ -140,65 +141,66 @@ class BaseColumns(ABC):
         df = self.root
         if regex:
             r = re.compile(regex)
-            columns = [c for c in list(df.cols.names()) if re.match(r, c)]
+            cols = [c for c in list(df.cols.names()) if re.match(r, c)]
 
-        columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
-        check_column_numbers(columns, "*")
+        cols = parse_columns(df, cols, filter_by_column_dtypes=data_type)
+        check_column_numbers(cols, "*")
 
-        dfd = df.data.drop(columns=columns)
-        meta = Meta.action(df.meta, Actions.DROP.value, columns)
+        dfd = df.data.drop(columns=cols)
+        meta = Meta.action(df.meta, Actions.DROP.value, cols)
 
         return self.root.new(dfd, meta=meta)
 
-    def keep(self, columns=None, regex=None):
+    def keep(self, cols=None, regex=None) -> DataFrameType:
         """
         Drop a list of columns
-        :param columns: Columns to be dropped
+        :param cols: Columns to be dropped
         :param regex: Regex expression to select the columns
         :return:
         """
         df = self.root
         dfd = df.data
-        _columns = parse_columns(df, "*")
+        _cols = parse_columns(df, "*")
         if regex:
             # r = re.compile(regex)
-            columns = [c for c in _columns if re.match(regex, c)]
+            cols = [c for c in _cols if re.match(regex, c)]
 
-        columns = parse_columns(df, columns)
-        check_column_numbers(columns, "*")
+        cols = parse_columns(df, cols)
+        check_column_numbers(cols, "*")
 
-        dfd = dfd.drop(columns=list(set(_columns) - set(columns)))
+        dfd = dfd.drop(columns=list(set(_cols) - set(cols)))
 
-        df.meta = Meta.action(df.meta, Actions.KEEP.value, columns)
+        df.meta = Meta.action(df.meta, Actions.KEEP.value, cols)
 
         return self.root.new(dfd, meta=df.meta)
 
-    def word_count(self, input_cols, output_cols=None):
+    def word_count(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Count words by column element wise
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
         df = self.root
         dfd = df.data
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
+        
+        for input_col, output_col in zip(cols, output_cols):
             dfd[output_col] = dfd[input_col].str.split().str.len()
         return self.root.new(dfd)
 
     @staticmethod
     @abstractmethod
-    def to_timestamp(input_cols, date_format=None, output_cols=None):
+    def to_timestamp(cols, date_format=None, output_cols=None):
         pass
 
-    def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
+    def apply(self, cols="*", func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, mode="vectorized", set_index=False, default=None, **kwargs):
+              meta_action=Actions.APPLY_COLS.value, mode="vectorized", set_index=False, default=None, **kwargs) -> DataFrameType:
 
-        columns = prepare_columns(self.root, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+        columns = prepare_columns(self.root, cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
 
         kw_columns = {}
@@ -444,7 +446,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def cast(self, input_cols="*", dtype=None, output_cols=None, columns=None):
+    def cast(self, cols="*", dtype=None, output_cols=None, columns=None) -> DataFrameType:
         """
         NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
         trnasformation like string to number in which should output nan.
@@ -456,7 +458,7 @@ class BaseColumns(ABC):
         Cast the elements inside a column or a list of columns to a specific data type.
         Unlike 'cast' this not change the columns data type
 
-        :param input_cols: Columns names to be casted
+        :param cols: Columns names to be casted
         :param output_cols:
         :param dtype: final data type
         :param columns: List of tuples of column names and types to be casted. This variable should have the
@@ -468,7 +470,7 @@ class BaseColumns(ABC):
 
         df = self.root
 
-        columns = prepare_columns(df, input_cols, output_cols, args=dtype)
+        columns = prepare_columns(df, cols, output_cols, args=dtype)
 
         func_map = {
             "float": "to_float",
@@ -492,7 +494,7 @@ class BaseColumns(ABC):
     def astype(*args, **kwargs):
         pass
 
-    def pattern(self, input_cols="*", output_cols=None, mode=0):
+    def pattern(self, cols="*", output_cols=None, mode=0) -> DataFrameType:
         """
         Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
         c = Any alpha char in lower or upper case
@@ -502,7 +504,7 @@ class BaseColumns(ABC):
         # = Any numeric
         ! = Any punctuation
 
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :param mode:
         0: Identify lower, upper, digits. Except spaces and special chars.
@@ -513,7 +515,7 @@ class BaseColumns(ABC):
         """
 
         df = self.root
-        columns = prepare_columns(df, input_cols, output_cols)
+        columns = prepare_columns(df, cols, output_cols)
 
         def split(word):
             return [char for char in word]
@@ -562,11 +564,11 @@ class BaseColumns(ABC):
         return self.root.new(self.root._assign(kw_columns), meta=meta)
 
     # TODO: Consider implement lru_cache for caching
-    def calculate_pattern_counts(self, input_cols, n=10, mode=0, flush=False):
+    def calculate_pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> DataFrameType:
         """
         Counts how many equal patterns there are in a column. Uses a cache to trigger the operation only if necessary. 
         Saves the result to meta and returns the same dataframe
-        :param input_cols:
+        :param cols:
         :param n: Top n matches
         :param mode:
         :param flush: Flushes the cache to process again
@@ -576,8 +578,8 @@ class BaseColumns(ABC):
         df = self.root
 
         result = {}
-        input_cols = parse_columns(df, input_cols)
-        for input_col in input_cols:
+        cols = parse_columns(df, cols)
+        for input_col in cols:
             column_modified_time = Meta.get(df.meta, f"profile.columns.{input_col}.modified")
             patterns_update_time = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.updated")
             if column_modified_time is None:
@@ -611,23 +613,23 @@ class BaseColumns(ABC):
 
         return df
 
-    def correlation(self, columns, method="pearson", output="json"):
+    def correlation(self, cols="*", method="pearson", output="json"):
         """
 
-        :param columns:
+        :param cols:
         :param method:
         :param output:
         :return:
         """
         df = self.root
         dfd = self.root.data
-        columns = parse_columns(df, columns)
-        return dfd[columns].corr(method).to_dict()
+        cols = parse_columns(df, cols)
+        return dfd[cols].corr(method).to_dict()
 
-    def pattern_counts(self, input_cols, n=10, mode=0, flush=False):
+    def pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> dict:
         """
         Get how many equal patterns there are in a column. Triggers the operation only if necessary
-        :param input_cols:
+        :param cols:
         :param n: Top n matches
         :param mode:
         :param flush: Flushes the cache to process again
@@ -637,11 +639,11 @@ class BaseColumns(ABC):
         df = self.root
 
         result = {}
-        input_cols = parse_columns(df, input_cols)
+        cols = parse_columns(df, cols)
 
         calculate = flush
 
-        for input_col in input_cols:
+        for input_col in cols:
             patterns_values = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.values")
             patterns_more = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.more")
 
@@ -661,11 +663,11 @@ class BaseColumns(ABC):
                 break
 
         if calculate:
-            df = df.cols.calculate_pattern_counts(input_cols, n, mode, flush)
+            df = df.cols.calculate_pattern_counts(cols, n, mode, flush)
             profile = Meta.get(df.meta, "profile")
             self.meta = df.meta
 
-        for input_col in input_cols:
+        for input_col in cols:
             result[input_col] = Meta.get(df.meta, f"profile.columns.{input_col}.patterns")
             if len(result[input_col]["values"]) > n:
                 result[input_col].update({"more": True})
@@ -673,7 +675,7 @@ class BaseColumns(ABC):
 
         return result
 
-    def groupby(self, by, agg):
+    def groupby(self, by, agg) -> DataFrameType:
         """
         This helper function aims to help managing columns name in the aggregation output.
         Also how to handle ordering columns because dask can order columns
@@ -692,7 +694,7 @@ class BaseColumns(ABC):
         df = self.root.new(df)
         return df
 
-    def join(self, df_right, how="left", on=None, left_on=None, right_on=None, key_middle=False):
+    def join(self, df_right, how="left", on=None, left_on=None, right_on=None, key_middle=False) -> DataFrameType:
         """
         Join 2 dataframes SQL style
         :param df_right:
@@ -753,7 +755,7 @@ class BaseColumns(ABC):
 
         return df
 
-    # def is_match(self, columns, dtype, invert=False):
+    # def is_match(self, cols="*", dtype, invert=False):
     #     """
     #     Find the rows that match a data type
     #     :param columns:
@@ -772,7 +774,7 @@ class BaseColumns(ABC):
     #             dfd = ~dfd if invert is True else dfd
     #     return self.root.new(dfd)
 
-    def move(self, column, position, ref_col=None):
+    def move(self, column, position, ref_col=None) -> DataFrameType:
         """
         Move a column to specific position
         :param column: Column to be moved
@@ -817,7 +819,7 @@ class BaseColumns(ABC):
             # new_index = new_index + 1
         return df[all_columns]
 
-    def sort(self, order: [str, list] = "asc", columns=None):
+    def sort(self, order: Union[str, list] = "asc", columns=None) -> DataFrameType:
         """
         Sort data frames columns in asc or desc order
         :param order: 'asc' or 'desc' accepted
@@ -839,7 +841,7 @@ class BaseColumns(ABC):
 
         return df.cols.select(columns)
 
-    def dtypes(self, columns="*"):
+    def dtypes(self, columns="*") -> dict:
         """
         Return the column(s) data type as string
         :param columns: Columns to be processed
@@ -867,10 +869,10 @@ class BaseColumns(ABC):
                 result[col_name] = np.dtype(dfd[col_name]).type
         return format_dict(result)
 
-    def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True, parallel=False):
+    def agg_exprs(self, cols="*", funcs=None, *args, compute=True, tidy=True, parallel=False):
         """
         Create and run aggregation
-        :param columns: Column over with to apply the aggregations
+        :param cols: Column over with to apply the aggregations
         :param funcs: Aggregation list
         :param args:Aggregations params
         :param compute: Compute the result or return a delayed function
@@ -879,7 +881,7 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
 
         if args is None:
             args = []
@@ -889,14 +891,14 @@ class BaseColumns(ABC):
         funcs = val_to_list(funcs)
 
         if parallel:
-            all_funcs = [getattr(df[columns].data, func.__name__)() for func in funcs]
+            all_funcs = [getattr(df[cols].data, func.__name__)() for func in funcs]
             agg_result = {func.__name__: self.exec_agg(all_funcs, compute) for func in funcs}
 
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute) for
-                                          col_name in columns} for func in funcs}
+                                          col_name in cols} for func in funcs}
             # agg_result = [{func.__name__: {self.exec_agg({col_name: func(df.data[col_name], *args)}, compute)}} for
-            #               col_name in columns for func in funcs]
+            #               col_name in cols for func in funcs]
 
             result = {}
 
@@ -915,83 +917,82 @@ class BaseColumns(ABC):
         except Exception:
             return exprs
 
-    def mad(self, columns="*", relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
+    def mad(self, cols="*", relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
+        return df.cols.agg_exprs(cols, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
 
-    def min(self, columns="*", tidy=True, compute=True):
-
+    def min(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=tidy, parallel=True)
+        return df.cols.agg_exprs(cols, self.F.min, compute=compute, tidy=tidy, parallel=True)
 
-    def max(self, columns="*", tidy=True, compute=True):
+    def max(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.max, compute=compute, tidy=tidy, parallel=True)
+        return df.cols.agg_exprs(cols, self.F.max, compute=compute, tidy=tidy, parallel=True)
 
-    def mode(self, columns="*", tidy=True, compute=True):
+    def mode(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.mode, compute=compute, tidy=tidy)
+        return df.cols.agg_exprs(cols, self.F.mode, compute=compute, tidy=tidy)
 
-    def range(self, columns="*", tidy=True, compute=True):
+    def range(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.range, compute=compute, tidy=tidy)
+        return df.cols.agg_exprs(cols, self.F.range, compute=compute, tidy=tidy)
 
-    def percentile(self, columns="*", values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
+    def percentile(self, cols="*", values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.root
 
         if values is None:
             values = [0.25, 0.5, 0.75]
-        return df.cols.agg_exprs(columns, self.F.percentile, values, relative_error, tidy=tidy, compute=True)
+        return df.cols.agg_exprs(cols, self.F.percentile, values, relative_error, tidy=tidy, compute=True)
 
-    def median(self, columns="*", relative_error=RELATIVE_ERROR, tidy=True, compute=True):
+    def median(self, cols="*", relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
+        return df.cols.agg_exprs(cols, self.F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
 
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def kurtosis(self, columns="*", tidy=True, compute=True):
+    def kurtosis(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.kurtosis, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.kurtosis, tidy=tidy, compute=compute)
 
-    def skew(self, columns="*", tidy=True, compute=True):
+    def skew(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.skew, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.skew, tidy=tidy, compute=compute)
 
-    def mean(self, columns="*", tidy=True, compute=True):
+    def mean(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.mean, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.mean, tidy=tidy, compute=compute)
 
-    def sum(self, columns="*", tidy=True, compute=True):
+    def sum(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.sum, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.sum, tidy=tidy, compute=compute)
 
-    def cumsum(self, columns="*", tidy=True, compute=True):
+    def cumsum(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.cumsum, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.cumsum, tidy=tidy, compute=compute)
 
-    def cumprod(self, columns="*", tidy=True, compute=True):
+    def cumprod(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.cumprod, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.cumprod, tidy=tidy, compute=compute)
 
-    def cummax(self, columns="*", tidy=True, compute=True):
+    def cummax(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.new(df.cols.agg_exprs(columns, self.F.cummax, tidy=tidy, compute=compute))
+        return df.new(df.cols.agg_exprs(cols, self.F.cummax, tidy=tidy, compute=compute))
 
-    def cummin(self, columns="*", tidy=True, compute=True):
+    def cummin(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.cummin, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.cummin, tidy=tidy, compute=compute)
 
-    def var(self, columns="*", tidy=True, compute=True):
+    def var(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.var, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.var, tidy=tidy, compute=compute)
 
-    def std(self, columns="*", tidy=True, compute=True):
+    def std(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.std, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.std, tidy=tidy, compute=compute)
 
-    def item(self, input_cols="*", n=None, output_cols=None, mode="list"):
+    def item(self, cols="*", n=None, output_cols=None, mode="list") -> DataFrameType:
         """
         Get items from list
-        :param input_cols:
+        :param cols:
         :param n:
         :param output_cols:
         :param mode:
@@ -1001,13 +1002,13 @@ class BaseColumns(ABC):
         def func(value, keys):
             return value.str[keys]
 
-        return self.apply(input_cols, func, args=(n,), output_cols=output_cols, meta_action=Actions.ITEM.value,
+        return self.apply(cols, func, args=(n,), output_cols=output_cols, meta_action=Actions.ITEM.value,
                           mode="vectorized")
 
-    def get(self, input_cols="*", keys=None, output_cols=None):
+    def get(self, cols="*", keys=None, output_cols=None) -> DataFrameType:
         """
         Get items from dicts
-        :param input_cols:
+        :param cols:
         :param keys:
         :param output_cols:
         :param mode:
@@ -1017,372 +1018,380 @@ class BaseColumns(ABC):
         def func(value, keys):
             return glom(value, keys, skip_exc=KeyError)
 
-        return self.apply(input_cols, func, args=(keys,), output_cols=output_cols, meta_action=Actions.GET.value,
+        return self.apply(cols, func, args=(keys,), output_cols=output_cols, meta_action=Actions.GET.value,
                           mode="map")
 
     # Math Operations
-    def abs(self, input_cols="*", output_cols=None):
+    def abs(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply abs to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
 
-        return self.apply(input_cols, self.F.abs, output_cols=output_cols, meta_action=Actions.ABS.value,
+        return self.apply(cols, self.F.abs, output_cols=output_cols, meta_action=Actions.ABS.value,
                           mode="vectorized")
 
-    def exp(self, input_cols="*", output_cols=None):
+    def exp(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Returns Euler's number, e (~2.718) raised to a power.
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
 
-        return self.apply(input_cols, self.F.exp, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return self.apply(cols, self.F.exp, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
-    def mod(self, input_cols="*", divisor=2, output_cols=None):
+    def mod(self, cols="*", divisor=2, output_cols=None) -> DataFrameType:
         """
         Apply mod to column
-        :param input_cols:
+        :param cols:
         :param divisor:
         :param output_cols:
         :return:(
         """
 
-        return self.apply(input_cols, self.F.mod, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return self.apply(cols, self.F.mod, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized", args=divisor)
 
-    def log(self, input_cols="*", base=10, output_cols=None):
+    def log(self, cols="*", base=10, output_cols=None) -> DataFrameType:
         """
         Apply mod to column
-        :param input_cols:
+        :param cols:
         :param base:
         :param output_cols:
         :return:(
         """
 
-        return self.apply(input_cols, self.F.log, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return self.apply(cols, self.F.log, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized", args=base)
 
-    def ln(self, input_cols="*", output_cols=None):
+    def ln(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply mod to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
-        return self.apply(input_cols, self.F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return self.apply(cols, self.F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
-    def pow(self, input_cols="*", power=2, output_cols=None):
+    def pow(self, cols="*", power=2, output_cols=None) -> DataFrameType:
         """
         Apply mod to column
         :param power:
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.pow, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.pow, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized", args=power)
 
-    def sqrt(self, input_cols="*", output_cols=None):
+    def sqrt(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply sqrt to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
-        return self.apply(input_cols, self.F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return self.apply(cols, self.F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
-    def reciprocal(self, input_cols="*", output_cols=None):
+    def reciprocal(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply sqrt to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
-        return self.apply(input_cols, self.F.reciprocal, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return self.apply(cols, self.F.reciprocal, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
-    def round(self, input_cols="*", decimals=0, output_cols=None):
+    def round(self, cols="*", decimals=0, output_cols=None) -> DataFrameType:
         """
 
-        :param input_cols:
+        :param cols:
         :param decimals:
         :param output_cols:
         :return:
         """
         df = self.root
-        return df.cols.apply(input_cols, self.F.round, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.round, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized", args=decimals)
 
-    def floor(self, input_cols="*", output_cols=None):
+    def floor(self, cols="*", output_cols=None) -> DataFrameType:
         """
 
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
         df = self.root
-        return df.cols.apply(input_cols, self.F.floor, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.floor, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def ceil(self, input_cols="*", output_cols=None):
+    def ceil(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply ceil to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.ceil, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.ceil, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
     # Trigonometric
-    def sin(self, input_cols="*", output_cols=None):
+    def sin(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply sin to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.sin, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.sin, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def cos(self, input_cols="*", output_cols=None):
+    def cos(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply cos to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.cos, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.cos, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def tan(self, input_cols="*", output_cols=None):
+    def tan(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply cos to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.tan, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.tan, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def asin(self, input_cols="*", output_cols=None):
+    def asin(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply cos to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.asin, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.asin, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def acos(self, input_cols="*", output_cols=None):
+    def acos(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply cos to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.acos, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.acos, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def atan(self, input_cols="*", output_cols=None):
+    def atan(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply cos to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.atan, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.atan, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def sinh(self, input_cols="*", output_cols=None):
+    def sinh(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply sin to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.sinh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.sinh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def cosh(self, input_cols="*", output_cols=None):
+    def cosh(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply cos to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.cosh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.cosh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def tanh(self, input_cols="*", output_cols=None):
+    def tanh(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply cos to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.tanh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.tanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def asinh(self, input_cols="*", output_cols=None):
+    def asinh(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply sin to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.asinh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.asinh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def acosh(self, input_cols="*", output_cols=None):
+    def acosh(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply cos to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.acosh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.acosh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def atanh(self, input_cols="*", output_cols=None):
+    def atanh(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Apply cos to column
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:(
         """
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
+        return df.cols.apply(cols, self.F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def extract(self, input_cols, regex, output_cols=None):
+    def extract(self, cols, regex, output_cols=None) -> DataFrameType:
 
-        return self.apply(input_cols, self.F.extract, args=(regex,), func_return_type=str,
+        return self.apply(cols, self.F.extract, args=(regex,), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.EXTRACT.value, mode="vectorized")
 
-        # def replace_regex(input_cols, regex=None, value=None, output_cols=None):
+        # def replace_regex(cols, regex=None, value=None, output_cols=None):
 
-    def slice(self, input_cols, start, stop, step=None, output_cols=None):
+    def slice(self, cols, start, stop, step=None, output_cols=None) -> DataFrameType:
         def _slice(value, _start, _stop, _step):
             return self.F.slice(value, _start, _stop, _step)
 
-        return self.apply(input_cols, _slice, args=(start, stop, step), func_return_type=str,
+        return self.apply(cols, _slice, args=(start, stop, step), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.SLICE.value, mode="vectorized")
 
-    def left(self, input_cols, n, output_cols=None):
+    def left(self, cols, n, output_cols=None) -> DataFrameType:
 
-        df = self.apply(input_cols, self.F.left, args=(n,), func_return_type=str,
+        df = self.apply(cols, self.F.left, args=(n,), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.LEFT.value, mode="vectorized")
         return df
 
-    def right(self, input_cols, n, output_cols=None):
-        df = self.apply(input_cols, self.F.right, args=(n,), func_return_type=str,
+    def right(self, cols, n, output_cols=None) -> DataFrameType:
+        df = self.apply(cols, self.F.right, args=(n,), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.RIGHT.value, mode="vectorized")
         return df
 
-    def mid(self, input_cols, start=0, n=1, output_cols=None):
-        df = self.apply(input_cols, self.F.mid, args=(start, n), func_return_type=str,
+    def mid(self, cols, start=0, n=1, output_cols=None) -> DataFrameType:
+        df = self.apply(cols, self.F.mid, args=(start, n), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
 
-    def to_float(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.to_float, func_return_type=float,
+    def to_float(self, cols, output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.to_float, func_return_type=float,
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
 
-    def to_integer(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.to_integer, func_return_type=int,
+    def to_integer(self, cols, output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.to_integer, func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="vectorized")
 
-    def to_boolean(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.to_boolean, func_return_type=int,
+    def to_boolean(self, cols, output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.to_boolean, func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="map")
 
-    def to_string(self, input_cols="*", output_cols=None):
+    def to_string(self, cols="*", output_cols=None) -> DataFrameType:
         filtered_columns = []
         df = self.root
 
-        input_cols = parse_columns(df, input_cols)
-        for col_name in input_cols:
+        cols = parse_columns(df, cols)
+        for col_name in cols:
             dtype = df.cols.dtypes(col_name)
 
             if dtype != np.object:
                 filtered_columns.append(col_name)
 
         if len(filtered_columns) > 0:
-            return self.apply(input_cols, self.F.to_string, func_return_type=str,
+            return self.apply(cols, self.F.to_string, func_return_type=str,
                               output_cols=output_cols, meta_action=Actions.TO_STRING.value, mode="vectorized",
                               func_type="column_expr")
         else:
             return df
 
-    def match(self, input_cols="*", regex="", output_cols=None):
-        return self.apply(input_cols, self.F.match, args=(regex,), func_return_type=str, output_cols=output_cols,
+    def match(self, cols="*", regex=None, dtype=None, output_cols=None, drop=True) -> DataFrameType:
+        if dtype is None:
+            return self.match_regex(cols=cols, regex=regex, output_cols=output_cols)
+        else:
+            return self.match_dtype(cols=cols, dtype=dtype, output_cols=output_cols, drop=drop)
+
+
+    def match_regex(self, cols="*", regex="", output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.match, args=(regex,), func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.MATCH.value, mode="vectorized", func_type="column_expr")
 
-    def lower(self, cols: StringsList="*", output_cols: StringsListNone=None) -> DataFrameType:
+    def lower(self, cols="*", output_cols=None) -> DataFrameType:
         return self.apply(cols, self.F.lower, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
 
-    def infer_dtypes(self, input_cols="*", output_cols=None):
-        dtypes = self.root[input_cols].cols.dtypes()
-        return self.apply(input_cols, self.F.infer_dtypes, args=(dtypes,), func_return_type=str,
+    
+    def infer_dtypes(self, cols="*", output_cols=None) -> DataFrameType:
+        dtypes = self.root[cols].cols.dtypes()
+        return self.apply(cols, self.F.infer_dtypes, args=(dtypes,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
 
-    def upper(self, input_cols="*", output_cols=None) -> DataFrameType:
-        return self.apply(input_cols, self.F.upper, func_return_type=str, output_cols=output_cols,
+    def upper(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.upper, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.UPPER.value, mode="vectorized", func_type="column_expr")
 
-    def title(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.title, func_return_type=str,
+    def title(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.title, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
                           func_type="column_expr")
 
-    def capitalize(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.capitalize, func_return_type=str,
+    def capitalize(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.capitalize, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
                           func_type="column_expr")
 
-    def proper(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.proper, func_return_type=str,
+    def proper(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.proper, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
                           func_type="column_expr")
 
@@ -1395,69 +1404,74 @@ class BaseColumns(ABC):
     #     # "apply" from pandas method will help to all the decode text in the csv
     #     df['title'] = df.title.apply(title_parse)
 
-    def pad(self, input_cols="*", width=0, fillchar="0", side="left", output_cols=None, ):
+    def pad(self, cols="*", width=0, fillchar="0", side="left", output_cols=None) -> DataFrameType:
 
-        return self.apply(input_cols, self.F.pad, args=(width, side, fillchar,), func_return_type=str,
+        return self.apply(cols, self.F.pad, args=(width, side, fillchar,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.PAD.value, mode="vectorized")
 
-    def trim(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.trim, func_return_type=str,
+    def trim(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.trim, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
-    def strip_html(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.strip_html, func_return_type=str,
+    def strip_html(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.strip_html, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="map")
 
-    def date_format(self, input_cols, current_format=None, output_format=None, output_cols=None):
+    def date_format(self, cols="*", current_format=None, output_format=None, output_cols=None) -> DataFrameType:
 
-        return self.apply(input_cols, self.F.date_format, args=(current_format, output_format), func_return_type=str,
+        return self.apply(cols, self.F.date_format, args=(current_format, output_format), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="partitioned",
                           set_index=False)
 
-    def word_tokenizer(self, input_cols="*", output_cols=None):
+    def word_tokenizer(self, cols="*", output_cols=None) -> DataFrameType:
 
-        return self.apply(input_cols, self.F.word_tokenize, func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, self.F.word_tokenize, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.WORD_TOKENIZE.value, mode="map")
 
-    def word_count(self, input_cols="*", output_cols=None):
+    def word_count(self, cols="*", output_cols=None) -> DataFrameType:
+        
+        df = self.root
 
-        return self.word_tokenizer(input_cols, output_cols).cols.len(output_cols)
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
 
-    def len(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.len, func_return_type=str, output_cols=output_cols,
+        return df.cols.word_tokenizer(cols, output_cols).cols.len(output_cols)
+
+    def len(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.len, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LENGTH.value, mode="vectorized")
 
-    def expand_contrated_words(self, input_cols="*", output_cols=None):
+    def expand_contrated_words(self, cols="*", output_cols=None) -> DataFrameType:
         i, j = zip(*CONTRACTIONS)
-        df = self.replace(input_cols, i, j, search_by="words")
+        df = self.replace(cols, i, j, search_by="words")
         return df
 
     @staticmethod
     @abstractmethod
-    def reverse(input_cols, output_cols=None):
+    def reverse(cols="*", output_cols=None) -> DataFrameType:
         pass
 
-    def remove(self, input_cols, search=None, search_by="chars", output_cols=None):
-        return self.replace(input_cols=input_cols, search=search, replace_by="", search_by=search_by,
+    def remove(self, cols="*", search=None, search_by="chars", output_cols=None) -> DataFrameType:
+        return self.replace(cols=cols, search=search, replace_by="", search_by=search_by,
                             output_cols=output_cols)
 
-    def normalize_chars(self, input_cols="*", output_cols=None):
+    def normalize_chars(self, cols="*", output_cols=None):
         """
         Remove diacritics from a dataframe
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
 
-        return self.apply(input_cols, self.F.normalize_chars, func_return_type=str,
+        return self.apply(cols, self.F.normalize_chars, func_return_type=str,
                           meta_action=Actions.REMOVE_ACCENTS.value,
                           output_cols=output_cols, mode="vectorized")
 
-    def remove_numbers(self, input_cols, output_cols=None):
+    def remove_numbers(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Remove numbers from a dataframe
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
@@ -1465,24 +1479,24 @@ class BaseColumns(ABC):
         def _remove_numbers(value):
             return value.astype(str).str.replace(r'\d+', '')
 
-        return self.apply(input_cols, _remove_numbers, func_return_type=str,
+        return self.apply(cols, _remove_numbers, func_return_type=str,
                           output_cols=output_cols, mode="vectorized", set_index=True)
 
-    def remove_white_spaces(self, input_cols="*", output_cols=None):
+    def remove_white_spaces(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Remove all white spaces from a dataframe
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
 
-        return self.apply(input_cols, self.F.remove_white_spaces, func_return_type=str,
+        return self.apply(cols, self.F.remove_white_spaces, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
-    def remove_stopwords(self, input_cols="*", language="english", output_cols=None):
+    def remove_stopwords(self, cols="*", language="english", output_cols=None) -> DataFrameType:
         """
         Remove extra whitespace between words and trim whitespace from the beginning and the end of each string.
-        :param input_cols:
+        :param cols:
         :param language: specify the stopwords language
         :param output_cols:
         :return:
@@ -1490,116 +1504,120 @@ class BaseColumns(ABC):
 
         stop = stopwords.words(language)
         df = self.root
-        return df.cols.lower(input_cols).cols.replace("*", stop, "", "words").cols.normalize_spaces()
 
-    def remove_urls(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, self.F.remove_urls, func_return_type=str,
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
+
+        return df.cols.lower(cols, output_cols).cols.replace(output_cols, stop, "", "words").cols.normalize_spaces(output_cols)
+
+    def remove_urls(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, self.F.remove_urls, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
-    def normalize_spaces(self, input_cols="*", output_cols=None):
+    def normalize_spaces(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Remove extra whitespace between words and trim whitespace from the beginning and the end of each string.
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
 
-        return self.apply(input_cols, self.F.normalize_spaces, func_return_type=str,
+        return self.apply(cols, self.F.normalize_spaces, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
-    def remove_special_chars(self, input_cols="*", output_cols=None):
+    def remove_special_chars(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Remove special chars from a dataframe
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
         df = self.root
-        return df.cols.replace(input_cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
+        return df.cols.replace(cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
 
-    def to_datetime(self, input_cols, format, output_cols=None):
+    def to_datetime(self, cols="*", format=None, output_cols=None) -> DataFrameType:
         """
 
-        :param input_cols:
+        :param cols:
         :param format:
         :param output_cols:
         :return:
         """
-        return self.apply(input_cols, self.F.to_datetime, func_return_type=str,
+        return self.apply(cols, self.F.to_datetime, func_return_type=str,
                           output_cols=output_cols, args=format, mode="partitioned")
 
-    def year(self, input_cols, format=None, output_cols=None):
+    def year(self, cols="*", format=None, output_cols=None) -> DataFrameType:
         """
 
-        :param input_cols:
+        :param cols:
         :param format:
         :param output_cols:
         :return:
         """
 
-        return self.apply(input_cols, self.F.year, args=format, output_cols=output_cols,
+        return self.apply(cols, self.F.year, args=format, output_cols=output_cols,
                           meta_action=Actions.YEAR.value,
                           mode="vectorized", set_index=True)
 
-    def month(self, input_cols, format=None, output_cols=None):
+    def month(self, cols="*", format=None, output_cols=None) -> DataFrameType:
         """
 
-        :param input_cols:
+        :param cols:
         :param format:
         :param output_cols:
         :return:
         """
 
-        return self.apply(input_cols, self.F.month(), args=format, output_cols=output_cols, mode="vectorized",
+        return self.apply(cols, self.F.month, args=format, output_cols=output_cols, mode="vectorized",
                           set_index=True)
 
-    def day(self, input_cols, format=None, output_cols=None):
+    def day(self, cols="*", format=None, output_cols=None) -> DataFrameType:
 
-        return self.apply(input_cols, self.F.day, args=format, output_cols=output_cols, mode="vectorized",
+        return self.apply(cols, self.F.day, args=format, output_cols=output_cols, mode="vectorized",
                           set_index=True)
 
-    def hour(self, input_cols, format=None, output_cols=None):
+    def hour(self, cols="*", format=None, output_cols=None) -> DataFrameType:
 
         def _hour(value, _format):
             return self.F.hour(value, _format)
 
-        return self.apply(input_cols, _hour, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
+        return self.apply(cols, _hour, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
-    def minute(self, input_cols, format=None, output_cols=None):
+    def minute(self, cols="*", format=None, output_cols=None) -> DataFrameType:
 
         def _minute(value, _format):
             return self.F.minute(value, _format)
 
-        return self.apply(input_cols, _minute, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
+        return self.apply(cols, _minute, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
-    def second(self, input_cols, format=None, output_cols=None):
+    def second(self, cols="*", format=None, output_cols=None) -> DataFrameType:
 
         def _second(value, _format):
             return self.F.second(value, _format)
 
-        return self.apply(input_cols, _second, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
+        return self.apply(cols, _second, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
-    def weekday(self, input_cols, format=None, output_cols=None):
+    def weekday(self, cols="*", format=None, output_cols=None) -> DataFrameType:
 
         def _second(value, _format):
             return self.F.weekday(value, _format)
 
-        return self.apply(input_cols, _second, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
+        return self.apply(cols, _second, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
-    def years_between(self, input_cols, date_format=None, output_cols=None):
+    def years_between(self, cols="*", date_format=None, output_cols=None) -> DataFrameType:
 
         def _years_between(value, args):
             return self.F.years_between(value, *args)
 
-        return self.apply(input_cols, _years_between, args=[date_format], func_return_type=str,
+        return self.apply(cols, _years_between, args=[date_format], func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True)
 
-    def replace(self, input_cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
-                output_cols=None):
+    def replace(self, cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
+                output_cols=None) -> DataFrameType:
         """
         Replace a value, list of values by a specified string
-        :param input_cols: '*', list of columns names or a single column name.
+        :param cols: '*', list of columns names or a single column name.
         :param search: Values to look at to be replaced
         :param replace_by: New value to replace the old one. Supports an array when searching by characters.
         :param search_by: Can be "full","words","chars" or "values".
@@ -1610,8 +1628,8 @@ class BaseColumns(ABC):
 
         df = self.root
 
-        if is_dict(input_cols):
-            for col, replace in input_cols.items():
+        if is_dict(cols):
+            for col, replace in cols.items():
                 _search = []
                 _replace_by = []
                 for replace_by, search in replace.items():
@@ -1624,15 +1642,15 @@ class BaseColumns(ABC):
             replace_by = val_to_list(replace_by)
             if len(replace_by) == 1:
                 replace_by = replace_by[0]
-            df = df.cols._replace(input_cols, search, replace_by, search_by, ignore_case, output_cols)
+            df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
 
         return df
 
-    def _replace(self, input_cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
-                 output_cols=None):
+    def _replace(self, cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
+                 output_cols=None) -> DataFrameType:
         """
         Replace a value, list of values by a specified string
-        :param input_cols: '*', list of columns names or a single column name.
+        :param cols: '*', list of columns names or a single column name.
         :param search: Values to look at to be replaced
         :param replace_by: New value to replace the old one. Supports an array when searching by characters.
         :param search_by: Can be "full","words","chars" or "values".
@@ -1665,15 +1683,15 @@ class BaseColumns(ABC):
         # Cudf raise and exception if both param are not the same type
         # For example [] ValueError: Cannot convert value of type list  to cudf scalar
 
-        return self.apply(input_cols, func, args=(search, replace_by), func_return_type=func_return_type,
+        return self.apply(cols, func, args=(search, replace_by), func_return_type=func_return_type,
                           output_cols=output_cols, meta_action=Actions.REPLACE.value, mode="vectorized")
 
     @staticmethod
     @abstractmethod
-    def replace_regex(input_cols, regex=None, value=None, output_cols=None):
+    def replace_regex(cols, regex=None, value=None, output_cols=None) -> DataFrameType:
         pass
 
-    def num_to_words(self, input_cols="*", language="en", output_cols=None):
+    def num_to_words(self, cols="*", language="en", output_cols=None) -> DataFrameType:
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
 
         def _num_to_words(text):
@@ -1684,9 +1702,9 @@ class BaseColumns(ABC):
                 result = [num2words(w, lang=language) if str_to_int(w) else w for w in text]
             return result
 
-        return self.apply(input_cols, _num_to_words, output_cols=output_cols, mode="map")
+        return self.apply(cols, _num_to_words, output_cols=output_cols, mode="map")
 
-    def lemmatize_verbs(self, input_cols="*", output_cols=None):
+    def lemmatize_verbs(self, cols="*", output_cols=None) -> DataFrameType:
 
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
         lemmatizer = nltk.stem.WordNetLemmatizer()
@@ -1694,9 +1712,9 @@ class BaseColumns(ABC):
         def lemmatize_text(text):
             return " ".join([lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)])
 
-        return self.apply(input_cols, lemmatize_text, output_cols=output_cols, mode="map")
+        return self.apply(cols, lemmatize_text, output_cols=output_cols, mode="map")
 
-    def stem_verbs(self, input_cols="*", stemmer="porter", language="english", output_cols=None, ):
+    def stem_verbs(self, cols="*", stemmer="porter", language="english", output_cols=None) -> DataFrameType:
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
 
         if stemmer == "snowball":
@@ -1709,24 +1727,24 @@ class BaseColumns(ABC):
         def stemmer_text(text):
             return " ".join([stemming.stem(w) for w in w_tokenizer.tokenize(text)])
 
-        return self.apply(input_cols, stemmer_text, output_cols=output_cols, mode="map")
+        return self.apply(cols, stemmer_text, output_cols=output_cols, mode="map")
 
     @staticmethod
     @abstractmethod
-    def impute(input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
+    def impute(cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None) -> DataFrameType:
         pass
 
-    def fill_na(self, input_cols, value=None, output_cols=None):
+    def fill_na(self, cols="*", value=None, output_cols=None) -> DataFrameType:
         """
         Replace null data with a specified value
-        :param input_cols: '*', list of columns names or a single column name.
+        :param cols: '*', list of columns names or a single column name.
         :param output_cols:
         :param value: value to replace the nan/None values
         :return:
         """
         df = self.root
 
-        columns = prepare_columns(df, input_cols, output_cols)
+        columns = prepare_columns(df, cols, output_cols)
 
         kw_columns = {}
 
@@ -1736,135 +1754,129 @@ class BaseColumns(ABC):
 
         return df.cols.assign(kw_columns)
 
-    def is_na(self, input_cols, output_cols=None):
-        """
-        Replace null values with True and non null with False
-        :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :return:
-        """
-
-        def _is_na(value):
-            return value.isnull()
-
-        df = self.root
-        return df.cols.apply(input_cols, _is_na, output_cols=output_cols, mode="vectorized")
-
-    def count(self):
+    def count(self) -> int:
         df = self.root
         return len(df.cols.names())
 
-    def count_na(self, columns="*", tidy=True, compute=True):
+    def count_na(self, cols="*", tidy=True, compute=True) -> int:
         """
         Return the NAN and Null count in a Column
-        :param columns: '*', list of columns names or a single column name.
+        :param cols: '*', list of columns names or a single column name.
         :param tidy:
         :param compute:
         :return:
         """
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.count_na, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.count_na, tidy=tidy, compute=compute)
 
-    def unique(self, columns="*", values=None, estimate=True, tidy=True, compute=True):
+    def unique(self, cols="*", values=None, estimate=True, tidy=True, compute=True) -> list:
 
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.unique, values, estimate, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.unique, values, estimate, tidy=tidy, compute=compute)
 
-    def count_uniques(self, columns="*", values=None, estimate=True, tidy=True, compute=True):
+    def count_uniques(self, cols="*", values=None, estimate=True, tidy=True, compute=True) -> int:
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
-    def _math(self, columns, operator, output_col):
+    def _math(self, cols="*", operator=None, output_col=None) -> DataFrameType:
 
         """
         Helper to process arithmetic operation between columns. If a
-        :param columns: Columns to be used to make the calculation
+        :param cols: Columns to be used to make the calculation
         :param operator: A lambda function
         :return:
         """
         df = self.root
-        columns = parse_columns(df, columns)
-        expr = reduce(operator, [df[col_name].cols.fill_na("*", 0).cols.to_float() for col_name in columns])
+        cols = parse_columns(df, cols)
+        expr = reduce(operator, [df[col_name].cols.fill_na("*", 0).cols.to_float() for col_name in cols])
         return df.cols.assign({output_col: expr})
 
-    def add(self, columns, output_col="sum"):
+    def add(self, cols="*", output_col=None) -> DataFrameType:
         """
         Add two or more columns
-        :param columns: '*', list of columns names or a single column name
+        :param cols: '*', list of columns names or a single column name
         :param output_col:
         :return:
         """
-        return self._math(columns, lambda x, y: x + y, output_col)
+        if not output_col:
+            output_col = "sum_"+"_".join(cols)
+        return self._math(cols, lambda x, y: x + y, output_col)
 
-    def sub(self, columns, output_col="sub"):
+    def sub(self, cols="*", output_col=None) -> DataFrameType:
         """
         Subs two or more columns
-        :param columns: '*', list of columns names or a single column name
+        :param cols: '*', list of columns names or a single column name
         :param output_col:
         :return:
         """
-        return self._math(columns, lambda x, y: x - y, output_col)
+        if not output_col:
+            output_col = "sub_"+"_".join(cols)
+        return self._math(cols, lambda x, y: x - y, output_col)
 
-    def mul(self, columns, output_col="mul"):
+    def mul(self, cols="*", output_col=None) -> DataFrameType:
         """
         Multiply two or more columns
-        :param columns: '*', list of columns names or a single column name
+        :param cols: '*', list of columns names or a single column name
         :param output_col:
         :return:
         """
-        return self._math(columns, lambda x, y: x * y, output_col)
+        if not output_col:
+            output_col = "mul_"+"_".join(cols)
+        return self._math(cols, lambda x, y: x * y, output_col)
 
-    def div(self, columns, output_col="div"):
+    def div(self, cols="*", output_col=None) -> DataFrameType:
         """
         Divide two or more columns
         :param columns: '*', list of columns names or a single column name
         :param output_col:
         :return:
         """
-        return self._math(columns, lambda x, y: x / y, output_col)
+        if not output_col:
+            output_col = "div_"+"_".join(cols)
+        return self._math(cols, lambda x, y: x / y, output_col)
 
-    def z_score(self, input_cols="*", output_cols=None):
+    def z_score(self, cols="*", output_cols=None) -> DataFrameType:
 
         df = self.root
-        return df.cols.apply(input_cols, self.F.z_score, func_return_type=float, output_cols=output_cols,
+        return df.cols.apply(cols, self.F.z_score, func_return_type=float, output_cols=output_cols,
                              meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
-    def modified_z_score(self, input_cols="*", output_cols=None):
+    def modified_z_score(self, cols="*", output_cols=None) -> DataFrameType:
         df = self.root
-        return df.cols.apply(input_cols, self.F.modified_z_score, func_return_type=float, output_cols=output_cols,
+        return df.cols.apply(cols, self.F.modified_z_score, func_return_type=float, output_cols=output_cols,
                              meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
     @staticmethod
     @abstractmethod
-    def min_max_scaler(input_cols, output_cols=None):
+    def min_max_scaler(cols="*", output_cols=None) -> DataFrameType:
         pass
 
     @staticmethod
     @abstractmethod
-    def standard_scaler(input_cols, output_cols=None):
+    def standard_scaler(cols="*", output_cols=None) -> DataFrameType:
         pass
 
     @staticmethod
     @abstractmethod
-    def max_abs_scaler(input_cols, output_cols=None):
+    def max_abs_scaler(cols="*", output_cols=None) -> DataFrameType:
         pass
 
-    def iqr(self, columns, more=None, relative_error=RELATIVE_ERROR):
+    def iqr(self, cols="*", more=None, relative_error=RELATIVE_ERROR):
         """
         Return the column Inter Quartile Range
-        :param columns:
+        :param cols:
         :param more: Return info about q1 and q3
         :param relative_error:
         :return:
         """
         df = self.root
         iqr_result = {}
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
 
-        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)[
+        quartile = df.cols.percentile(cols, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)[
             "percentile"]
         # print("quantile",quartile)
-        for col_name in columns:
+        for col_name in cols:
             if is_null(quartile[col_name]):
                 iqr_result[col_name] = np.nan
             else:
@@ -1884,10 +1896,10 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def nest(input_cols, separator="", output_col=None, drop=False, shape="string"):
+    def nest(cols, separator="", output_col=None, drop=False, shape="string") -> DataFrameType:
         pass
 
-    def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols):
+    def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols) -> InternalDataFrameType:
 
         if separator is not None:
             separator = re.escape(separator)
@@ -1911,11 +1923,11 @@ class BaseColumns(ABC):
 
         return dfd_new
 
-    def unnest(self, input_cols, separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string"):
+    def unnest(self, cols="*", separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string") -> DataFrameType:
 
         """
         Split an array or string in different columns
-        :param input_cols: Columns to be un-nested
+        :param cols: Columns to be un-nested
         :param output_cols: Resulted on or multiple columns after the unnest operation [(output_col_1_1,output_col_1_2),
         (output_col_2_1, output_col_2]
         :param separator: char or regex
@@ -1926,14 +1938,14 @@ class BaseColumns(ABC):
         """
         df = self.root
 
-        input_cols = parse_columns(df, input_cols)
+        cols = parse_columns(df, cols)
 
         index = val_to_list(index)
         output_ordered_columns = df.cols.names()
 
         dfd = df.data
 
-        for idx, input_col in enumerate(input_cols):
+        for idx, input_col in enumerate(cols):
 
             if is_list_of_tuples(index):
                 final_index = index[idx]
@@ -1966,22 +1978,22 @@ class BaseColumns(ABC):
 
         df.meta = Meta.action(df.meta, Actions.UNNEST.value, final_columns)
 
-        df = df.cols.move(df_new.cols.names(), "after", input_cols)
+        df = df.cols.move(df_new.cols.names(), "after", cols)
 
         if drop is True:
             if output_cols is not None:
-                columns = [col for col in input_cols if col not in output_cols]
+                columns = [col for col in cols if col not in output_cols]
             else:
-                columns = input_cols
+                columns = cols
             df = df.cols.drop(columns)
 
         return df
 
     @abstractmethod
-    def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
+    def heatmap(self, col_x, col_y, bins_x=10, bins_y=10) -> dict:
         pass
 
-    def hist(self, columns="*", buckets=MAX_BUCKETS, compute=True):
+    def hist(self, columns="*", buckets=MAX_BUCKETS, compute=True) -> dict:
 
         df = self.root
         columns = parse_columns(df, columns)
@@ -2033,7 +2045,7 @@ class BaseColumns(ABC):
             result = d.compute()
         return result
 
-    def count_mismatch(self, columns_type: dict = None, compute=True):
+    def count_mismatch(self, columns_type: dict = None, compute=True) -> dict:
         """
         Count mismatches values in columns
         :param columns_type:
@@ -2074,42 +2086,42 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
+    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None) -> dict:
         pass
 
-    def quality(self, columns="*"):
+    def quality(self, cols="*") -> dict:
         """
         Infer the datatype and return the match. mismatch and profiler datatype  for every column.
         In case of date it returns also the format datatype
-        :param columns:
+        :param cols:
         :return:
         """
         df = self.root
-        a = df.cols.infer_profiler_dtypes(columns)
+        a = df.cols.infer_profiler_dtypes(cols)
         return df.cols.count_mismatch(a)
 
-    def infer_profiler_dtypes(self, columns="*"):
+    def infer_profiler_dtypes(self, cols="*") -> dict:
         """
         Infer datatypes in a dataframe from a sample. First it identify the data type of every value in every cell.
         After that it takes all ghe values apply som heuristic to try to better identify the datatype.
         This function use Pandas no matter the engine you are using.
 
-        :param columns: Columns in which you want to infer the datatype.
+        :param cols: Columns in which you want to infer the datatype.
         :return:Return a dict with the column and the inferred data type
         """
         df = self.root
 
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
 
         # Infer the data type from every element in a Series.
-        sample = df.cols.select(columns).rows.limit(INFER_PROFILER_ROWS).to_optimus_pandas()
+        sample = df.cols.select(cols).rows.limit(INFER_PROFILER_ROWS).to_optimus_pandas()
         rows_count = sample.rows.count()
         sample_dtypes = sample.cols.infer_dtypes().cols.frequency()
 
         _unique_counts = sample.cols.count_uniques()
 
         cols_and_inferred_dtype = {}
-        for col_name in columns:
+        for col_name in cols:
             infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
             # Common datatype in a column
             dtype = infer_value_counts[0]["value"]
@@ -2153,10 +2165,10 @@ class BaseColumns(ABC):
 
         return cols_and_inferred_dtype
 
-    def frequency(self, columns="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
-                  compute=True, tidy=False):
+    def frequency(self, cols="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
+                  compute=True, tidy=False) -> dict:
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
 
         @self.F.delayed
         def series_to_dict(_series, _total_freq_count=None):
@@ -2182,7 +2194,7 @@ class BaseColumns(ABC):
 
             return _value_counts
 
-        value_counts = [df.data[col_name].value_counts() for col_name in columns]
+        value_counts = [df.data[col_name].value_counts() for col_name in cols]
         n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
 
         if count_uniques is True:
@@ -2206,22 +2218,22 @@ class BaseColumns(ABC):
 
         return result
 
-    def boxplot(self, columns):
+    def boxplot(self, cols) -> dict:
         """
         Output the boxplot in python dict format
-        :param columns: Columns to be processed
+        :param cols: Columns to be processed
         :return:
         """
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         stats = {}
 
-        for col_name in columns:
+        for col_name in cols:
             iqr = df.cols.iqr(col_name, more=True)
             lb = iqr["q1"] - (iqr["iqr"] * 1.5)
             ub = iqr["q3"] + (iqr["iqr"] * 1.5)
 
-            _mean = df.cols.mean(columns)
+            _mean = df.cols.mean(cols)
 
             query = ((df[col_name] < lb) | (df[col_name] > ub))
             # Fliers are outliers points
@@ -2232,42 +2244,42 @@ class BaseColumns(ABC):
 
         return stats
 
-    def names(self, col_names="*", by_dtypes=None, invert=False, is_regex=False):
+    def names(self, col_names="*", by_dtypes=None, invert=False, is_regex=False) -> list:
 
-        columns = parse_columns(self.root, col_names, filter_by_column_dtypes=by_dtypes, invert=invert,
+        cols = parse_columns(self.root, col_names, filter_by_column_dtypes=by_dtypes, invert=invert,
                                 is_regex=is_regex)
-        return columns
+        return cols
 
-    def count_zeros(self, columns="*", tidy=True, compute=True):
+    def count_zeros(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(columns, self.F.count_zeros, tidy=True, compute=True)
+        return df.cols.agg_exprs(cols, self.F.count_zeros, tidy=True, compute=True)
 
     @staticmethod
     @abstractmethod
-    def qcut(columns, num_buckets, handle_invalid="skip"):
+    def qcut(cols, num_buckets, handle_invalid="skip"):
         pass
 
-    def cut(self, input_cols, bins, labels=None, default=None, output_cols=None):
+    def cut(self, cols="*", bins=None, labels=None, default=None, output_cols=None) -> DataFrameType:
 
-        return self.apply(input_cols, self.F.cut, output_cols=output_cols, args=(bins, labels, default),
+        return self.apply(cols, self.F.cut, output_cols=output_cols, args=(bins, labels, default),
                           meta_action=Actions.CUT.value,
                           mode="vectorized")
 
-    def clip(self, input_cols, lower_bound, upper_bound, output_cols=None):
+    def clip(self, cols="*", lower_bound=None, upper_bound=None, output_cols=None) -> DataFrameType:
 
         def _clip(value):
             return self.F.clip(value, lower_bound, upper_bound)
 
-        return self.apply(input_cols, _clip, output_cols=output_cols, meta_action=Actions.CLIP.value, mode="vectorized")
+        return self.apply(cols, _clip, output_cols=output_cols, meta_action=Actions.CLIP.value, mode="vectorized")
 
     @staticmethod
     @abstractmethod
-    def string_to_index(input_cols=None, output_cols=None, columns=None):
+    def string_to_index(cols=None, output_cols=None, columns=None) -> DataFrameType:
         pass
 
     @staticmethod
     @abstractmethod
-    def index_to_string(input_cols=None, output_cols=None, columns=None):
+    def index_to_string(cols=None, output_cols=None, columns=None) -> DataFrameType:
         pass
 
     # URL methods
@@ -2363,32 +2375,39 @@ class BaseColumns(ABC):
                              mode="vectorized")
 
     # Mask functions
-    def _mask(self, cols="*", method: str=None, output_cols=None, rename_func=None, *args, **kwargs) -> DataFrameType:
+    def _mask(self, cols="*", method: str=None, output_cols=None, rename_func=True, *args, **kwargs) -> DataFrameType:
 
         append_df = getattr(self.root.mask, method)(cols, *args, **kwargs)
 
         if output_cols:
             append_df = append_df.cols.rename(cols, output_cols)
-        else:
-            if not rename_func:
+        elif rename_func:
+            if rename_func == True:
                 rename_func = lambda n: f"{method}_{n}"
             append_df = append_df.cols.rename(rename_func)
 
         return self.append(append_df)
 
-    def missing(self, cols="*", output_cols=None) -> DataFrameType:
-        return self._mask(cols, "missing", output_cols)
+    def missing(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "missing", output_cols, rename_func=not drop)
 
-    def mismatch(self, cols="*", output_cols=None, dtype=None) -> DataFrameType:
-        rename_func = lambda n: f"{dtype}_mismatch_{n}"
+    def nulls(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "nulls", output_cols, rename_func=not drop)
+
+    def mismatch(self, cols="*", dtype=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{dtype}_mismatch_{n}"
         return self._mask(cols, "mismatch", output_cols, rename_func, dtype=dtype)
 
+    def match_dtype(self, cols="*", dtype=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{dtype}_match_{n}"
+        return self._mask(cols, "match", output_cols, rename_func, dtype=dtype)
+
     # String clustering algorithms
-    def fingerprint(self, input_cols, output_cols=None):
+    def fingerprint(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Create the fingerprint for a column
         :param df: Dataframe to be processed
-        :param input_cols: Column to be processed
+        :param cols: Column to be processed
         :return:
         """
 
@@ -2409,10 +2428,10 @@ class BaseColumns(ABC):
             # join the tokens back together
             return " ".join(split_key)
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
 
-        for input_col, output_col in zip(input_cols, output_cols):
+        for input_col, output_col in zip(cols, output_cols):
             df = (df
                   .cols.trim(input_col, output_col)
                   .cols.lower(output_col)
@@ -2425,11 +2444,11 @@ class BaseColumns(ABC):
 
         return df
 
-    def pos(self, input_cols, output_cols=None):
+    def pos(self, cols="*", output_cols=None) -> DataFrameType:
         df = self.root
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
 
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
 
@@ -2438,39 +2457,39 @@ class BaseColumns(ABC):
                 text = w_tokenizer.tokenize(text)
             return nltk.pos_tag(text)
 
-        for input_col, output_col in zip(input_cols, output_cols):
-            df = df.cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
+        for input_col, output_col in zip(cols, output_cols):
+            df = df.cols.apply(input_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
         return df
 
-    def ngrams(self, input_cols, n_size=2, output_cols=None):
+    def ngrams(self, cols="*", n_size=2, output_cols=None) -> DataFrameType:
         """
             Calculate the ngram for a fingerprinted string
             :param df: Dataframe to be processed
-            :param input_cols: Columns to be processed
+            :param cols: Columns to be processed
             :param n_size:
             :return:
             """
 
         df = self.root
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
 
         def calculate_ngrams(value):
             return list(map("".join, list(ngrams(value, n_size))))
 
-        for input_col, output_col in zip(input_cols, output_cols):
+        for input_col, output_col in zip(cols, output_cols):
             df = df.cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
 
         df.meta = Meta.action(df.meta, Actions.NGRAMS.value, output_cols)
 
         return df
 
-    def ngram_fingerprint(self, input_cols, n_size=2, output_cols=None):
+    def ngram_fingerprint(self, cols="*", n_size=2, output_cols=None) -> DataFrameType:
         """
         Calculate the ngram for a fingerprinted string
         :param df: Dataframe to be processed
-        :param input_cols: Columns to be processed
+        :param cols: Columns to be processed
         :param n_size:
         :return:
         """
@@ -2485,10 +2504,10 @@ class BaseColumns(ABC):
 
             return _result
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
 
-        for input_col, output_col in zip(input_cols, output_cols):
+        for input_col, output_col in zip(cols, output_cols):
             df = (df
                   .cols.copy(input_col, output_col)
                   .cols.lower(output_col)
@@ -2502,43 +2521,42 @@ class BaseColumns(ABC):
 
         return df
 
-    def metaphone(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, jellyfish.metaphone, func_return_type=str, output_cols=output_cols,
+    def metaphone(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, jellyfish.metaphone, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
 
-    def double_metaphone(self, input_cols="*", output_cols=None):
-
-        return self.apply(input_cols, doublemetaphone, func_return_type=str, output_cols=output_cols,
+    def double_metaphone(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, doublemetaphone, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.DOUBLE_METAPHONE.value, mode="map", func_type="column_expr")
 
     def levenshtein(self, col_A, col_B, output_cols=None):
-        return self.apply(input_cols, self.F.levenshtein, args=(col_A, col_B,), func_return_type=str,
+        return self.apply(cols, self.F.levenshtein, args=(col_A, col_B,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
 
-    def nysiis(self, input_cols="*", output_cols=None):
+    def nysiis(self, cols="*", output_cols=None) -> DataFrameType:
         """
         NYSIIS (New York State Identification and Intelligence System)
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :return:
         """
-        return self.apply(input_cols, jellyfish.nysiis, func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, jellyfish.nysiis, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.NYSIIS.value, mode="map", func_type="column_expr")
 
-    def match_rating_codex(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, jellyfish.match_rating_codex, func_return_type=str, output_cols=output_cols,
+    def match_rating_codex(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, jellyfish.match_rating_codex, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.MATCH_RATING_CODEX.value, mode="map", func_type="column_expr")
 
-    def double_methaphone(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, jellyfish.dou, func_return_type=str, output_cols=output_cols,
+    def double_methaphone(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, jellyfish.dou, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.DOUBLE_METAPHONE.value, mode="map", func_type="column_expr")
 
-    def soundex(self, input_cols="*", output_cols=None):
-        return self.apply(input_cols, jellyfish.soundex, func_return_type=str, output_cols=output_cols,
+    def soundex(self, cols="*", output_cols=None) -> DataFrameType:
+        return self.apply(cols, jellyfish.soundex, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.SOUNDEX.value, mode="map", func_type="column_expr")
 
-    def tf_idf(self, features):
+    def tf_idf(self, features) -> DataFrameType:
 
         df = self.root
         vectorizer = TfidfVectorizer()
@@ -2550,7 +2568,7 @@ class BaseColumns(ABC):
         denselist = dense.tolist()
         return self.root.new(pd.DataFrame(denselist, columns=feature_names))
 
-    def bag_of_words(self, features, analyzer="word", ngram_range=2):
+    def bag_of_words(self, features, analyzer="word", ngram_range=2) -> DataFrameType:
         """
 
         :param features:
