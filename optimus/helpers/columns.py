@@ -221,9 +221,9 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, ac
     return cols_params
 
 
-def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None, is_regex=None,
+def prepare_columns(df, cols: [str, list], output_cols: [str, list] = None, is_regex=None,
                     filter_by_column_dtypes=None, accepts_missing_cols=False, invert: bool = False, default=None,
-                    columns=None, auto_increment=False, args=None):
+                    cols_dict=None, auto_increment=False, args=None):
     """
     One input columns- > Same output column. lower(), upper()
     One input column -> One output column. copy()
@@ -236,22 +236,22 @@ def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None
 
     Accepts Return an iterator with input and output columns
     :param df: dataframe against to check that the input columns are valid
-    :param input_cols: intput columns names
+    :param cols: intput columns names
     :param output_cols: output columns names
     :param is_regex: input columns is a regex
     :param filter_by_column_dtypes: filter column selection by data type
     :param accepts_missing_cols: dont check the input columns exist
     :param invert: Invert selection
     :param default: Default column name if output_cols is not provider
-    :param columns: In case you have a input output dictionary already defined. {incol:outcol1 , incol2:outcol2}
+    :param cols_dict: In case you have a input output dictionary already defined. {incol:outcol1 , incol2:outcol2}
     :param auto_increment:
     :param merge:
     :return:
     """
-    if columns:
-        result = zip(*columns)
+    if cols_dict:
+        result = zip(*cols_dict)
     else:
-        input_cols = parse_columns(df, input_cols, is_regex, filter_by_column_dtypes,
+        cols = parse_columns(df, cols, is_regex, filter_by_column_dtypes,
                                    accepts_missing_cols, invert)
         merge = False
         if output_cols is None and default is not None:
@@ -259,21 +259,21 @@ def prepare_columns(df, input_cols: [str, list], output_cols: [str, list] = None
             merge = True
 
         elif auto_increment is not False:
-            input_cols = input_cols * auto_increment
+            cols = cols * auto_increment
 
-        if output_cols is not None and (len(input_cols) != len(val_to_list(output_cols))):
+        if output_cols is not None and (len(cols) != len(val_to_list(output_cols))):
             merge = True
 
-        output_cols = get_output_cols(input_cols, output_cols, merge=merge, auto_increment=auto_increment)
+        output_cols = get_output_cols(cols, output_cols, merge=merge, auto_increment=auto_increment)
 
         if args is None:
-            result = zip(input_cols, output_cols)
+            result = zip(cols, output_cols)
         else:
             args = val_to_list(args)
             if len(args) == 1:
-                args = args * len(input_cols)
+                args = args * len(cols)
 
-            result = zip(input_cols, output_cols, args)
+            result = zip(cols, output_cols, args)
     return result
 
 
