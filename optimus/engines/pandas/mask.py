@@ -4,14 +4,14 @@ from optimus.engines.base.mask import Mask
 
 class PandasMask(Mask):
 
-    def str(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_string)
+    def str(self, cols="*"):
+        return self.root.cols.apply(cols, is_string)
 
-    def int(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_integer)
+    def int(self, cols="*"):
+        return self.root.cols.apply(cols, is_integer)
 
-    def float(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_float)
+    def float(self, cols="*"):
+        return self.root.cols.apply(cols, is_float)
 
-    def numeric(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_numeric)
+    def numeric(self, cols="*"):
+        return self.root.cols.apply(cols, is_numeric)

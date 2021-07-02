@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+from optimus.helpers.types import MaskDataFrameType
 
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import ProfilerDataTypes
@@ -13,67 +14,83 @@ class Mask(ABC):
     def __init__(self, root):
         self.root = root
 
-    def greater_than(self, col_name, value):
-        df = self.root
-        return df[col_name] > value
+    @abstractmethod
+    def str(self, cols="*") -> MaskDataFrameType:
+        pass
 
-    def greater_than_equal(self, col_name, value):
-        df = self.root
-        return df[col_name] >= value
+    @abstractmethod
+    def int(self, cols) -> MaskDataFrameType:
+        pass
 
-    def less_than(self, col_name, value):
-        df = self.root
-        return df[col_name] < value
+    @abstractmethod
+    def float(self, cols) -> MaskDataFrameType:
+        pass
 
-    def less_than_equal(self, col_name, value):
-        df = self.root
-        return df[col_name] <= value
+    @abstractmethod
+    def numeric(self, cols) -> MaskDataFrameType:
+        pass
 
-    def equal(self, col_name, value):
+    def greater_than(self, cols, value) -> MaskDataFrameType:
         df = self.root
-        return df[col_name] == value
+        return df[cols] > value
 
-    def not_equal(self, col_name, value):
+    def greater_than_equal(self, cols, value) -> MaskDataFrameType:
         df = self.root
-        return df[col_name] != value
+        return df[cols] >= value
 
-    def missing(self, col_name):
+    def less_than(self, cols, value) -> MaskDataFrameType:
+        df = self.root
+        return df[cols] < value
+
+    def less_than_equal(self, cols, value) -> MaskDataFrameType:
+        df = self.root
+        return df[cols] <= value
+
+    def equal(self, cols, value) -> MaskDataFrameType:
+        df = self.root
+        return df[cols] == value
+
+    def not_equal(self, cols, value) -> MaskDataFrameType:
+        df = self.root
+        return df[cols] != value
+
+    def missing(self, cols) -> MaskDataFrameType:
         """
         Return missing values
-        :param col_name:
+        :param cols:
         :return:
         """
         df = self.root
 
-        return df.mask.nulls(col_name)
+        return df.mask.nulls(cols)
 
-    def mismatch(self, columns="*", dtype=None):
+    def mismatch(self, cols="*", dtype=None) -> MaskDataFrameType:
         """
         Return missing values
-        :param columns:
+        :param cols:
         :param dtype:
         :return:
         """
 
         df = self.root
-        columns = one_list_to_val(parse_columns(df, columns))
+        cols = one_list_to_val(parse_columns(df, cols))
 
-        mask_match = df[columns].mask.match(columns, dtype)
-        mask_null = df[columns].mask.nulls(columns)
+        mask_match = df[cols].mask.match(cols, dtype)
+        mask_null = df[cols].mask.nulls(cols)
         return ~(mask_match | mask_null)
 
-    def match(self, columns="*", dtype=None):
+    def match(self, cols="*", dtype=None) -> MaskDataFrameType:
         """
         Return values that match with a datatype
-        :param columns:
+        :param cols:
         :param dtype:
         :return:
         """
         df = self.root
-        columns = one_list_to_val(parse_columns(df, columns))
+        cols = one_list_to_val(parse_columns(df, cols))
 
         if dtype is None:
-            profiled_dtype = df.profile.dtypes(columns)
+            profiled_dtype = df.profile.dtypes(cols)
             if profiled_dtype is None:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list(),
                                     "dtype not found in cache. Need to passed as dtype param")
@@ -82,40 +99,40 @@ class Mask(ABC):
 
         if is_list(dtype):
             mask_match = None
-            for i, j in zip(columns, dtype):
+            for i, j in zip(cols, dtype):
                 if mask_match is None:
                     mask_match = getattr(df[i].mask, j)(i)
                 else:
                     mask_match[i] = getattr(df[i].mask, j)(i)
         else:
-            mask_match = getattr(df[columns].mask, dtype)(columns)
+            mask_match = getattr(df[cols].mask, dtype)(cols)
 
         return mask_match
 
-    def values_in(self, col_name, values):
+    def values_in(self, cols, values) -> MaskDataFrameType:
         values = val_to_list(values)
-        mask = self.root.data[col_name].isin(values)
+        mask = self.root.data[cols].isin(values)
         return self.root.new(mask.to_frame())
 
-    def pattern(self):
+    def pattern(self) -> MaskDataFrameType:
         pass
 
-    def starts_with(self, col_name, value):
-        mask = self.root.data[col_name].str.startswith(value, na=False)
+    def starts_with(self, cols, value) -> MaskDataFrameType:
+        mask = self.root.data[cols].str.startswith(value, na=False)
         return self.root.new(mask.to_frame())
 
-    def ends_with(self, col_name, value):
-        mask = self.root.data[col_name].str.endswith(value, na=False)
+    def ends_with(self, cols, value) -> MaskDataFrameType:
+        mask = self.root.data[cols].str.endswith(value, na=False)
         return self.root.new(mask.to_frame())
 
-    def contains(self, col_name, value, case=True, flags=0, na=False, regex=False):
+    def contains(self, cols, value, case=True, flags=0, na=False, regex=False) -> MaskDataFrameType:
         if is_list(value):
             value = "|".join(value)
             regex = True
-        mask = self.root.data[col_name].str.contains(value, case=case, flags=flags, na=na, regex=regex)
+        mask = self.root.data[cols].str.contains(value, case=case, flags=flags, na=na, regex=regex)
         return self.root.new(mask.to_frame())
 
-    def find(self, input_col="*", value=None, output_col=None):
+    def find(self, input_col="*", value=None) -> MaskDataFrameType:
         dfd = self.root.data
         if is_str(value):
             mask = self.root.data[input_col].astype(str).str.match(value, na=False)
@@ -123,30 +140,18 @@ class Mask(ABC):
             mask = dfd[input_col] == value
         return self.root.new(mask.to_frame())
 
-    @abstractmethod
-    def int(self, col_name):
-        pass
-
-    @abstractmethod
-    def float(self, col_name):
-        pass
-
-    @abstractmethod
-    def numeric(self, col_name):
-        pass
-
-    def nulls(self, columns="*", how="any"):
+    def nulls(self, cols="*", how="any") -> MaskDataFrameType:
         """
         Find the rows that have null values
         :param how:
-        :param columns:
+        :param cols:
         :return:
         """
         df = self.root
         dfd = self.root.data
 
-        if columns is not None:
-            subset = parse_columns(df, columns)
+        if cols is not None:
+            subset = parse_columns(df, cols)
             subset_df = dfd[subset]
         else:
             subset_df = dfd
@@ -158,82 +163,78 @@ class Mask(ABC):
 
         return self.root.new(mask)
 
-    def duplicated(self, columns, keep="first"):
+    def duplicated(self, cols="*", keep="first") -> MaskDataFrameType:
         """
         Find the rows that have duplicated values
 
         :param keep:
-        :param columns:
+        :param cols:
         :return:
         """
 
         dfd = self.root.data
 
-        if columns is not None:
-            subset = val_to_list(columns)
+        if cols is not None:
+            subset = val_to_list(cols)
             subset_df = dfd[subset]
         else:
             subset_df = dfd
 
-        mask = subset_df.duplicated(keep=keep, subset=columns)
+        mask = subset_df.duplicated(keep=keep, subset=cols)
 
         return self.root.new(mask)
 
-    def empty(self, col_name):
+    def empty(self, cols) -> MaskDataFrameType:
         """
         Find the rows that do not have any info
 
-        :param col_name:
+        :param cols:
         :return:
         """
-        mask = self.root.data[col_name] == ""
+        mask = self.root.data[cols] == ""
         return self.root.new(mask)
 
-    @abstractmethod
-    def str(self, col_name="*"):
-        pass
+    def email(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.to_string().cols.match(cols, regex_email)
 
-    def email(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_email)
+    def ip(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.to_string().cols.match(cols, regex_ip)
 
-    def ip(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_ip)
+    def url(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.to_string().cols.match(cols, regex_full_url)
 
-    def url(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_full_url)
+    def gender(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.to_string().cols.match(cols, regex_gender)
 
-    def gender(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_gender)
+    def boolean(self, cols="*") -> MaskDataFrameType:
+        return self.root.cols.apply(cols, is_bool)
+        # return self.root[cols].cols.to_string().cols.match(cols, regex_boolean)
 
-    def boolean(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_bool)
-        # return self.root[col_name].cols.to_string().cols.match(col_name, regex_boolean)
+    def zip_code(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.to_string().cols.match(cols, regex_zip_code)
 
-    def zip_code(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_zip_code)
+    def credit_card_number(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.to_string().cols.match(cols, regex_credit_card_number)
 
-    def credit_card_number(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_credit_card_number)
-
-    def datetime(self, col_name="*"):
+    def datetime(self, cols="*") -> MaskDataFrameType:
         # df = self.root
-        # if df[col_name].cols.dtype  == df.constants.
-        return self.root.cols.apply(col_name, is_datetime)
-        # return self.root[col_name].cols.to_string().cols.match(col_name, regex_date)
+        # if df[cols].cols.dtype  == df.constants.
+        return self.root.cols.apply(cols, is_datetime)
+        # return self.root[cols].cols.to_string().cols.match(cols, regex_date)
 
-    def object(self, col_name="*"):
-        return self.root[col_name].cols.apply(col_name, is_object)
-        # return self.root[col_name].cols.to_string().cols.match(col_name, is_object)
+    def object(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.apply(cols, is_object)
+        # return self.root[cols].cols.to_string().cols.match(cols, is_object)
 
-    def array(self, col_name="*"):
-        return self.root[col_name].cols.apply(col_name, is_list)
-        # return self.root[col_name].cols.to_string().cols.match(col_name, is_list_value)
+    def array(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.apply(cols, is_list)
+        # return self.root[cols].cols.to_string().cols.match(cols, is_list_value)
 
-    def phone_number(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_phone_number)
+    def phone_number(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.to_string().cols.match(cols, regex_phone_number)
 
-    def social_security_number(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_social_security_number)
+    def social_security_number(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.to_string().cols.match(cols, regex_social_security_number)
 
-    def http_code(self, col_name="*"):
-        return self.root[col_name].cols.to_string().cols.match(col_name, regex_http_code)
+    def http_code(self, cols="*") -> MaskDataFrameType:
+        return self.root[cols].cols.to_string().cols.match(cols, regex_http_code)

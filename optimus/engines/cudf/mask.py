@@ -4,14 +4,14 @@ from optimus.engines.base.mask import Mask
 
 class CUDFMask(Mask):
 
-    def numeric(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_numeric_cudf)
+    def numeric(self, cols="*"):
+        return self.root.cols.apply(cols, is_numeric_cudf)
 
-    def int(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_integer_cudf)
+    def int(self, cols="*"):
+        return self.root.cols.apply(cols, is_integer_cudf)
 
-    def float(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_float_cudf)
+    def float(self, cols="*"):
+        return self.root.cols.apply(cols, is_float_cudf)
 
-    def str(self, col_name="*"):
-        return self.root.cols.apply(col_name, is_string_cudf)
+    def str(self, cols="*"):
+        return self.root.cols.apply(cols, is_string_cudf)
