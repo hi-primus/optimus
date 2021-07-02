@@ -1,4 +1,6 @@
 from abc import abstractmethod, ABC
+from typing import Tuple
+from optimus.helpers.types import DataFrameType, DataFrameTypeList, InternalDataFrameType
 
 from multipledispatch import dispatch
 
@@ -18,10 +20,10 @@ class BaseRows(ABC):
 
     @staticmethod
     @abstractmethod
-    def _sort(df, col_name, ascending):
+    def _sort(df, col_name, ascending) -> DataFrameType:
         pass
 
-    def _sort_multiple(self, dfd, meta, col_sort):
+    def _sort_multiple(self, dfd, meta, col_sort) -> Tuple[InternalDataFrameType, dict]:
         """
         Sort rows taking into account multiple columns
         :param col_sort: column and sort type combination (col_name, "asc")
@@ -40,7 +42,7 @@ class BaseRows(ABC):
 
         return dfd, meta
 
-    def _reverse(self, dfd):
+    def _reverse(self, dfd) -> InternalDataFrameType:
         return dfd[::-1]
 
     @staticmethod
@@ -49,41 +51,41 @@ class BaseRows(ABC):
         pass
 
     @abstractmethod
-    def append(self, dfs, cols_map):
+    def append(self, dfs: DataFrameTypeList, cols_map) -> DataFrameType:
         pass
 
-    def greater_than(self, input_col, value):
+    def greater_than(self, input_col, value) -> DataFrameType:
         df = self.root
         return df[df.mask.greater_than(input_col, value)]
         # dfd = self.root.data
         #
         # return self.root.new(dfd[self.root.mask.greater_than(input_col, value).get_series()])
 
-    def greater_than_equal(self, input_col, value):
+    def greater_than_equal(self, input_col, value) -> DataFrameType:
 
         dfd = self.root.data
         return self.root.new(dfd[self.root.greater_than_equal(input_col, value)])
 
-    def less_than(self, input_col, value):
+    def less_than(self, input_col, value) -> DataFrameType:
 
         dfd = self.root.data
         return self.root.new(dfd[self.root.less_than(input_col, value)])
 
-    def less_than_equal(self, input_col, value):
+    def less_than_equal(self, input_col, value) -> DataFrameType:
 
         dfd = self.root.data
         return self.root.new(dfd[self.root.less_than_equal(input_col, value)])
 
-    def equal(self, input_col, value):
+    def equal(self, input_col, value) -> DataFrameType:
         dfd = self.root.data
         return self.root.new(dfd[self.root.mask.is_equal(input_col, value)])
 
-    def not_equal(self, input_col, value):
+    def not_equal(self, input_col, value) -> DataFrameType:
 
         dfd = self.root.data
         return self.root.new(dfd[self.root.mask.not_equal(input_col, value)])
 
-    def missing(self, input_col):
+    def missing(self, input_col) -> DataFrameType:
         """
         Return missing values
         :param input_col:
@@ -92,7 +94,7 @@ class BaseRows(ABC):
         dfd = self.root.data
         return self.root.new(dfd[self.root.mask.missing(input_col)])
 
-    def mismatch(self, input_col="*", dtype=None):
+    def mismatch(self, input_col="*", dtype=None) -> DataFrameType:
         """
         Return mismatches values
         :param input_col:
@@ -105,7 +107,7 @@ class BaseRows(ABC):
         # dfd = self.root.data
         # return self.root.new(dfd[self.root.mask.mismatch(input_col, dtype).get_series()])
 
-    def match(self, col_name="*", dtype=None):
+    def match(self, col_name="*", dtype=None) -> DataFrameType:
         """
         Return Match values
         :param col_name:
@@ -118,7 +120,7 @@ class BaseRows(ABC):
         # dfd = self.root.data
         # return self.root.new(dfd[self.root.mask.match(col_name, dtype).get_series()])
 
-    def apply(self, func, args=None, output_cols=None):
+    def apply(self, func, args=None, output_cols=None) -> DataFrameType:
         """
         This will aimed to handle vectorized and not vectorized operations
         :param output_cols:
@@ -135,7 +137,7 @@ class BaseRows(ABC):
 
         return df.cols.assign(kw_columns)
 
-    def find(self, where, output_col):
+    def find(self, where, output_col) -> DataFrameType:
         """
         Find rows and appends resulting mask to the dataset
         :param where: Mask, expression or name of the column to be taken as mask
@@ -154,7 +156,7 @@ class BaseRows(ABC):
 
         return df.cols.assign({output_col: where})
 
-    def select(self, expr=None, contains=None, case=None, flags=0, na=False, regex=False):
+    def select(self, expr=None, contains=None, case=None, flags=0, na=False, regex=False) -> DataFrameType:
         """
         :param expr: Expression used, For Ex: (df["A"] > 3) & (df["A"] <= 1000) or Column name "A"
         :param contains: List of string
@@ -200,7 +202,7 @@ class BaseRows(ABC):
             result = df.functions.delayed(len)(dfd)
         return result
 
-    def to_list(self, input_cols):
+    def to_list(self, input_cols) -> list:
         """
 
         :param input_cols:
@@ -213,40 +215,40 @@ class BaseRows(ABC):
         return value
 
     @dispatch(str)
-    def sort(self, input_col):
+    def sort(self, input_col) -> DataFrameType:
         df = self.root
         input_col = parse_columns(df, input_col)
         return df.rows.sort([(input_col, "desc",)])
 
     @dispatch(str, bool)
-    def sort(self, input_col, asc=False):
+    def sort(self, input_col, asc=False) -> DataFrameType:
         df = self.root
         input_col = parse_columns(df, input_col)
         return df.rows.sort([(input_col, "asc" if asc else "desc",)])
 
     @dispatch(str, str)
-    def sort(self, input_col, order="desc"):
+    def sort(self, input_col, order="desc") -> DataFrameType:
         df = self.root
         input_col = parse_columns(df, input_col)
         return df.rows.sort([(input_col, order,)])
 
     @dispatch(dict)
-    def sort(self, col_sort):
+    def sort(self, col_sort) -> DataFrameType:
         df = self.root
         return df.rows.sort([(k, v) for k, v in col_sort.items()])
 
     @dispatch(list, bool)
-    def sort(self, input_col, asc=False):
+    def sort(self, input_col, asc=False) -> DataFrameType:
         df = self.root
         return df.rows.sort(input_col, "asc" if asc else "desc")
 
     @dispatch(list)
-    def sort(self, input_col):
+    def sort(self, input_col) -> DataFrameType:
         df = self.root
         return df.rows.sort(input_col)
 
     @dispatch(list, str)
-    def sort(self, input_col, order="desc"):
+    def sort(self, input_col, order="desc") -> DataFrameType:
         """
         Sort rows taking into account multiple columns
         :param input_col: column and sort type combination (col_name, "asc")
@@ -268,7 +270,7 @@ class BaseRows(ABC):
 
         return self.root.new(dfd, meta=meta)
 
-    def reverse(self):
+    def reverse(self) -> DataFrameType:
         """
 
         :return:
@@ -276,7 +278,7 @@ class BaseRows(ABC):
         dfd = self._reverse(self.root.data)
         return self.root.new(dfd)
 
-    def drop(self, where):
+    def drop(self, where) -> DataFrameType:
         """
         Drop rows depending on a mask or an expression
         :param where: Mask, expression or name of the column to be taken as mask
@@ -297,15 +299,15 @@ class BaseRows(ABC):
     @staticmethod
     @abstractmethod
     def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
-                bounds=None):
+                bounds=None) -> DataFrameType:
         pass
 
     @staticmethod
     @abstractmethod
-    def drop_by_dtypes(input_cols, data_type=None):
+    def drop_by_dtypes(input_cols, data_type=None) -> DataFrameType:
         pass
 
-    def drop_na(self, subset=None, how="any", *args, **kwargs):
+    def drop_na(self, subset=None, how="any", *args, **kwargs) -> DataFrameType:
         """
         Removes rows with null values. You can choose to drop the row if 'all' values are nulls or if
         'any' of the values is null.
@@ -320,7 +322,7 @@ class BaseRows(ABC):
 
     @staticmethod
     @abstractmethod
-    def drop_duplicates(input_cols=None):
+    def drop_duplicates(input_cols=None) -> DataFrameType:
         """
         Drop duplicates values in a dataframe
         :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
@@ -330,7 +332,7 @@ class BaseRows(ABC):
         """
         pass
 
-    def limit(self, count=10):
+    def limit(self, count=10) -> DataFrameType:
         """
         Limit the number of rows
         :param count:
@@ -338,7 +340,7 @@ class BaseRows(ABC):
         """
         return self.root.new(self.root.data[:count])
 
-    def is_in(self, input_cols, values, output_cols=None):
+    def is_in(self, input_cols, values, output_cols=None) -> DataFrameType:
 
         def _is_in(value, *args):
             _values = args
@@ -349,10 +351,10 @@ class BaseRows(ABC):
 
     @staticmethod
     @abstractmethod
-    def unnest(input_cols):
+    def unnest(input_cols) -> DataFrameType:
         pass
 
-    def approx_count(self):
+    def approx_count(self) -> DataFrameType:
         """
         Aprox count
         :return:
