@@ -1,4 +1,5 @@
 import operator
+from optimus.helpers.types import DataFrameType, InternalDataFrameType
 import time
 from abc import abstractmethod, ABC
 
@@ -75,14 +76,14 @@ class BaseDataFrame(ABC):
     def __len__(self):
         return self.rows.count()
 
-    def new(self, dfd, meta=None):
+    def new(self, dfd, meta=None) -> DataFrameType:
         df = self.__class__(dfd)
         if meta is not None:
             df.meta = meta
         return df
 
     @staticmethod
-    def __operator__(df, dtype, multiple_columns=False):
+    def __operator__(df, dtype, multiple_columns=False) -> DataFrameType:
         if isinstance(df, (BaseDataFrame,)):
             col1 = "*" if multiple_columns else df.cols.names(0)[0]
 
@@ -97,14 +98,14 @@ class BaseDataFrame(ABC):
         return df
 
     @abstractmethod
-    def _base_to_dfd(self, pdf, n_partitions):
+    def _base_to_dfd(self, pdf, n_partitions) -> InternalDataFrameType:
         pass
 
     @abstractmethod
-    def to_optimus_pandas(self):
+    def to_optimus_pandas(self) -> DataFrameType:
         pass
 
-    def unary_operation(self, df, opb, dtype=None):
+    def unary_operation(self, df, opb, dtype=None) -> DataFrameType:
         """
         Helper to process binary operations
         :param df: Left
@@ -116,7 +117,7 @@ class BaseDataFrame(ABC):
 
         return self.new(opb(df))
 
-    def operation(self, df1, df2, opb, dtype=None):
+    def operation(self, df1, df2, opb, dtype=None) -> DataFrameType:
         """
         Helper to process binary operations
         :param df1: Left
@@ -154,79 +155,79 @@ class BaseDataFrame(ABC):
 
         return df
 
-    def __invert__(self):
+    def __invert__(self) -> DataFrameType:
         return self.unary_operation(self, operator.invert)
 
-    def __neg__(self):
+    def __neg__(self) -> DataFrameType:
         return self.unary_operation(self, operator.neg)
 
-    def __add__(self, df2):
+    def __add__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.add)
 
-    def __radd__(self, df2):
+    def __radd__(self, df2) -> DataFrameType:
         return self.operation(df2, self, operator.add)
 
-    def __sub__(self, df2):
+    def __sub__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.sub, "float")
 
-    def __rsub__(self, df2):
+    def __rsub__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.sub, "float")
 
-    def __mul__(self, df2):
+    def __mul__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.mul, "float")
 
-    def __rmul__(self, df2):
+    def __rmul__(self, df2) -> DataFrameType:
         return self.operation(df2, self, operator.mul, "float")
 
-    def __truediv__(self, df2):
+    def __truediv__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.truediv, "float")
 
-    def __rtruediv__(self, df2):
+    def __rtruediv__(self, df2) -> DataFrameType:
         return self.operation(df2, self, operator.truediv, "float")
 
-    def __floordiv__(self, df2):
+    def __floordiv__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.floordiv, "float")
 
-    def __rfloordiv__(self, df2):
+    def __rfloordiv__(self, df2) -> DataFrameType:
         return self.operation(df2, self, operator.floordiv, "float")
 
-    def __mod__(self, df2):
+    def __mod__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.mod, "float")
 
-    def __rmod__(self, df2):
+    def __rmod__(self, df2) -> DataFrameType:
         return self.operation(df2, self, operator.mod, "float")
 
-    def __pow__(self, df2):
+    def __pow__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.pow, "float")
 
-    def __rpow__(self, df2):
+    def __rpow__(self, df2) -> DataFrameType:
         return self.operation(df2, self, operator.pow, "float")
 
-    def __eq__(self, df2):
+    def __eq__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.eq)
 
-    def __gt__(self, df2):
+    def __gt__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.gt, "float")
 
-    def __lt__(self, df2):
+    def __lt__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.lt, "float")
 
-    def __ne__(self, df2):
+    def __ne__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.ne)
 
-    def __ge__(self, df2):
+    def __ge__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.ge, "float")
 
-    def __le__(self, df2):
+    def __le__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.le, "float")
 
-    def __and__(self, df2):
+    def __and__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.__and__, "bool")
 
-    def __or__(self, df2):
+    def __or__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.__or__, "bool")
 
-    def __xor__(self, df2):
+    def __xor__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.__xor__, "bool")
 
     def _to_values(self):
