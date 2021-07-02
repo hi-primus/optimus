@@ -39,7 +39,7 @@ elif IN_COLAB:
 with open(requirements_file) as f:
     required = f.read().splitlines()
 
-extras_requirements_keys = ['spark', 'dask', 'vaex', 'cudf', 'ai', 'db']
+extras_requirements_keys = ['spark', 'dask', 'vaex', 'cudf', 'ai', 'db', 'api']
 extras_requirements = {}
 
 for extra in extras_requirements_keys:
