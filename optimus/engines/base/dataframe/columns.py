@@ -27,7 +27,13 @@ class DataFrameBaseColumns():
         dfs = val_to_list(dfs)
 
         df = self.root
-        dfd = self._pd.concat([df.data.reset_index(drop=True), *[_df.data.reset_index(drop=True) for _df in dfs]], axis=1)
+        
+        dfd = df.data.reset_index(drop=True)
+        _dfd = self._pd.concat([_df.data.reset_index(drop=True) for _df in dfs], axis=1)
+
+        for col in _dfd.columns:
+            dfd[col] = _dfd[col]
+
         return self.root.new(dfd)
 
     @staticmethod
