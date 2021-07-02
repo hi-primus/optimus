@@ -4,7 +4,8 @@ from inspect import signature
 from pprint import pformat
 
 from optimus.engines.base.basedataframe import BaseDataFrame as dataframe_class
-from optimus.helpers.types import DataFrameType, ConnectionType, ClustersType
+from optimus.infer import is_list
+from optimus.helpers.types import DataFrameType, ConnectionType, ClustersType, MaskDataFrameType, is_any_optimus_type
 from optimus.helpers.core import val_to_list, one_list_to_val
 
 from .prepare import prepare
@@ -54,12 +55,35 @@ def _increment_variable_name(variable_name):
         variable_name = variable_name + "2"
     return variable_name
 
-def optimus_variables():
-    from optimus.helpers.functions import engines, dataframes, clusters, connections
-    return [ *engines(), *dataframes(), *clusters(), *connections() ]
+def _arguments(args, args_properties=None):
+    
+    args_list = []
+    
+    # It doesn't find properties or allows kwargs
+    if not args_properties or "kwargs" in args_properties:
+        args_list = list(args.keys())
+        for key in ["source", "target", "operation", "operation_options"]:
+            if key in args_list:
+                args_list.remove(key)
+    
+    # Properties from declaration
+    else:
+        args_list = args_properties.keys()
 
-def available_variable(name, variables):
-    return _create_new_variable(name, [*variables, *optimus_variables()])
+    # Formating
+    for arg in args_list:
+        # Variable names of list of variable names
+        if arg in args_properties and is_any_optimus_type(args_properties[arg].get("type", None)):
+            if is_list(args[arg]):
+                args[arg] = f"[{', '.join(args[arg])}]"
+            else:
+                args[arg] = args[arg]
+        # Native types
+        elif arg in args:
+            args[arg] = pformat(args[arg])
+
+        
+    return ", ".join([f'{arg}={args[arg]}' for arg in args_list if arg in args])
 
 def _generate_code_target(body, properties, target):
 
@@ -78,7 +102,10 @@ def _generate_code_dataframe_transformation(body, properties, variables):
     if options:
       if options.get("creates_new", False):
         target = available_variable("df", variables)
+    return _generate_code_target(body, properties, target)
 
+def _generate_code_dataframe_mask(body, properties, variables):
+    target = body.get("target", available_variable("mask", variables))
     return _generate_code_target(body, properties, target)
 
 def _generate_code_dataframe_clusters(body, properties, variables):    
@@ -105,8 +132,13 @@ def _get_generator(func_properties, method_root_type):
 
     if method_root_type == "dataframe":
     
+        # If the method returns a dataframe, it's a transformation
         if DataFrameType == func_properties.return_annotation:
             return _generate_code_dataframe_transformation
+        # TO-DO: should mask functions be treated as transformations? (MaskDataFrameType)
+        if MaskDataFrameType == func_properties.return_annotation:
+            return _generate_code_dataframe_mask
+        # If the method returns anything else, it's an output
         elif ClustersType == func_properties.return_annotation:
             return _generate_code_dataframe_clusters
         else:
@@ -129,50 +161,11 @@ def _get_generator(func_properties, method_root_type):
     
         return _generate_code_output
         
-
-def method_properties(func, method_root_type):
-    func_properties = signature(func)
-    arguments_list = list(func_properties.parameters.items())
-    arguments = {}
-    for key, arg in arguments_list:
-        
-        if arg.name in ['self', 'cls']:
-            continue
-        
-        arguments[arg.name] = {}
-        
-        if arg.annotation is not inspect._empty:
-            arguments[arg.name].update({"type": arg.annotation})
-            
-        if arg.default is not inspect._empty:
-            arguments[arg.name].update({"value": arg.default})
-                        
-    return {
-        "arguments": arguments, 
-        "returns": signature(func).return_annotation,
-        "generator": _get_generator(func_properties, method_root_type)
-    }
-
 def _get_method_root_type(accessor):
     if accessor in engine_accessors:
         return "engine"
     if accessor in dataframe_accessors:
         return "dataframe"
-
-def _arguments(args, args_properties=None):
-    
-    args_list = []
-    
-    if not args_properties or "kwargs" in args_properties:
-        args_list = list(args.keys())
-        for key in ["source", "target", "operation", "operation_options"]:
-            if key in args_list:
-                args_list.remove(key)
-    else:
-        args_list = args_properties.keys()
-        
-    return ", ".join([f'{arg}={pformat(args[arg])}' for arg in args_list if arg in args])
-
 
 def _init_methods(engine):
 
@@ -229,7 +222,7 @@ def _generate_code(body=None, variables=[], **kwargs):
     elif getattr(clusters_class, operation[0], None):
         method = clusters_class
         method_root_type = "clusters"
-        
+
     for item in operation:
         method = getattr(method, item)
         
@@ -239,7 +232,41 @@ def _generate_code(body=None, variables=[], **kwargs):
     
     return code, updated
 
+def optimus_variables():
+    from optimus.helpers.functions import engines, dataframes, clusters, connections
+    return [ *engines(), *dataframes(), *clusters(), *connections() ]
+
+def available_variable(name, variables):
+    return _create_new_variable(name, [*variables, *optimus_variables()])
+
+
+def method_properties(func, method_root_type):
+    func_properties = signature(func)
+    arguments_list = list(func_properties.parameters.items())
+    arguments = {}
+    for key, arg in arguments_list:
+        
+        if arg.name in ['self', 'cls']:
+            continue
+        
+        arguments[arg.name] = {}
+        
+        if arg.annotation is not inspect._empty:
+            arguments[arg.name].update({"type": arg.annotation})
+            
+        if arg.default is not inspect._empty:
+            arguments[arg.name].update({"value": arg.default})
+                        
+    return {
+        "arguments": arguments, 
+        "returns": signature(func).return_annotation,
+        "generator": _get_generator(func_properties, method_root_type)
+    }
+
 def generate_code(body=None, variables=[], **kwargs):
+
+    if not body:
+        body = kwargs
 
     body = val_to_list(body)
 

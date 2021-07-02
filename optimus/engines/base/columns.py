@@ -28,7 +28,7 @@ from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
-from optimus.helpers.types import DataFrameType, StringsList, StringsListNone
+from optimus.helpers.types import DataFrameType, DataFrameTypeList, StringsList, StringsListNone
 from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions, PROFILER_CATEGORICAL_DTYPES, \
     CONTRACTIONS
 from optimus.helpers.converter import format_dict
@@ -67,7 +67,7 @@ class BaseColumns(ABC):
         pass
 
     @abstractmethod
-    def append(self, dfs):
+    def append(self, dfs: DataFrameTypeList) -> DataFrameType:
         pass
 
     def select(self, columns="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False):
