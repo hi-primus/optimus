@@ -44,7 +44,7 @@ class BaseProfile(ABC):
 
         return one_list_to_val(dtype)
 
-    def __call__(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
+    def __call__(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False) -> dict:
         # def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
         """
         Return a dict the profile of the dataset

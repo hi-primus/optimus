@@ -23,6 +23,7 @@ from optimus.engines.base.rows import BaseRows as rows_class
 from optimus.engines.base.mask import Mask as mask_class
 from optimus.plots.plots import Plot as plots_class
 from optimus.outliers.outliers import Outliers as outliers_class
+from optimus.engines.base.profile import BaseProfile as profile_class
 
 engine_accessors = {
     "create": create_class,
@@ -36,7 +37,8 @@ dataframe_accessors = {
     "rows": rows_class,
     "mask": mask_class,
     "plot": plots_class,
-    "outliers": outliers_class
+    "outliers": outliers_class,
+    "profile": profile_class
 }
 
 accessors = {**engine_accessors, **dataframe_accessors}
@@ -225,7 +227,7 @@ def _generate_code(body=None, variables=[], **kwargs):
 
     for item in operation:
         method = getattr(method, item)
-        
+
     properties = method_properties(method, method_root_type)
 
     code, updated = properties["generator"](body, properties, variables)
@@ -241,7 +243,12 @@ def available_variable(name, variables):
 
 
 def method_properties(func, method_root_type):
+    
     func_properties = signature(func)
+
+    if list(func_properties.parameters.keys()) == ['root'] and getattr(func, "__call__"):
+        func_properties = signature(func.__call__)
+
     arguments_list = list(func_properties.parameters.items())
     arguments = {}
     for key, arg in arguments_list:
