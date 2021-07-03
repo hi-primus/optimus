@@ -135,22 +135,22 @@ def _get_generator(func_properties, method_root_type):
     if method_root_type == "dataframe":
     
         # If the method returns a dataframe, it's a transformation
-        if DataFrameType == func_properties.return_annotation:
+        if DataFrameType == func_properties["return_annotation"]:
             return _generate_code_dataframe_transformation
         # TO-DO: should mask functions be treated as transformations? (MaskDataFrameType)
-        if MaskDataFrameType == func_properties.return_annotation:
+        if MaskDataFrameType == func_properties["return_annotation"]:
             return _generate_code_dataframe_mask
         # If the method returns anything else, it's an output
-        elif ClustersType == func_properties.return_annotation:
+        elif ClustersType == func_properties["return_annotation"]:
             return _generate_code_dataframe_clusters
         else:
             return _generate_code_output
     
     elif method_root_type == "engine":
     
-        if DataFrameType == func_properties.return_annotation:
+        if DataFrameType == func_properties["return_annotation"]:
             return _generate_code_engine_dataframe
-        elif ConnectionType == func_properties.return_annotation:
+        elif ConnectionType == func_properties["return_annotation"]:
             return _generate_code_engine_connection
         else:
             return _generate_code_output
@@ -244,12 +244,26 @@ def available_variable(name, variables):
 
 def method_properties(func, method_root_type):
     
-    func_properties = signature(func)
+    try:
+        fp = signature(func)
+        func_properties = {"parameters": fp.parameters, "return_annotation": fp.return_annotation}
+    except ValueError as e:
+        if getattr(func, "funcs"):
+            func_properties = {"parameters": {}, "return_annotation": None}
+            for f in func.funcs.values():
+                fp = signature(f)
+                func_properties["parameters"].update(fp.parameters)
+                if fp.return_annotation:
+                    func_properties["return_annotation"] = fp.return_annotation
+            print(func_properties)
+        else:
+            raise e
 
-    if list(func_properties.parameters.keys()) == ['root'] and getattr(func, "__call__"):
-        func_properties = signature(func.__call__)
+    if list(func_properties["parameters"].keys()) == ['root'] and getattr(func, "__call__"):
+        fp = signature(func.__call__)
+        func_properties = {"parameters": fp.parameters, "return_annotation": fp.return_annotation}
 
-    arguments_list = list(func_properties.parameters.items())
+    arguments_list = list(func_properties["parameters"].items())
     arguments = {}
     for key, arg in arguments_list:
         
@@ -266,7 +280,7 @@ def method_properties(func, method_root_type):
                         
     return {
         "arguments": arguments, 
-        "returns": signature(func).return_annotation,
+        "returns": func_properties["return_annotation"],
         "generator": _get_generator(func_properties, method_root_type)
     }
 

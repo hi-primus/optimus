@@ -305,7 +305,7 @@ class BaseColumns(ABC):
         return self.root.new(df.data).cols.assign({col_name: value})
 
     @dispatch(object, object)
-    def rename(self, columns_old_new=None, func=None):
+    def rename(self, columns_old_new=None, func=None) -> DataFrameType:
         """"
         Changes the name of a column(s) dataFrame.
         :param columns_old_new: List of tuples or list of strings. Each tuple has de following form: (oldColumnName, newColumnName).
@@ -346,19 +346,19 @@ class BaseColumns(ABC):
         return self.root.new(dfd, meta=meta)
 
     @dispatch(list)
-    def rename(self, columns_old_new=None):
+    def rename(self, columns_old_new=None) -> DataFrameType:
         return self.rename(columns_old_new, None)
 
     @dispatch(object)
-    def rename(self, func=None):
+    def rename(self, func=None) -> DataFrameType:
         return self.rename(None, func)
 
     @dispatch(str, str, object)
-    def rename(self, old_column, new_column, func=None):
+    def rename(self, old_column, new_column, func=None) -> DataFrameType:
         return self.rename([(old_column, new_column)], func)
 
     @dispatch(str, str)
-    def rename(self, old_column, new_column):
+    def rename(self, old_column, new_column) -> DataFrameType:
         return self.rename([(old_column, new_column)], None)
 
     def parse_profiler_dtypes(self, col_data_type):
@@ -394,19 +394,19 @@ class BaseColumns(ABC):
         return result
 
     @dispatch(str, str)
-    def set_dtype(self, column, dtype):
+    def set_dtype(self, column, dtype) -> DataFrameType:
         return self.set_dtype({column: dtype}, False)
 
     @dispatch(str, str, bool)
-    def set_dtype(self, column, dtype, categorical):
+    def set_dtype(self, column, dtype, categorical) -> DataFrameType:
         return self.set_dtype({column: {"dtype": dtype, "categorical": categorical}}, False)
 
     @dispatch(dict)
-    def set_dtype(self, columns: dict):
+    def set_dtype(self, columns: dict) -> DataFrameType:
         return self.set_dtype(columns, False)
 
     @dispatch(dict, bool)
-    def set_dtype(self, columns: dict, inferred=False):
+    def set_dtype(self, columns: dict, inferred=False) -> DataFrameType:
         """
         Set profiler data type
         :param columns: A dict with the form {"col_name": profiler datatype}
@@ -694,7 +694,7 @@ class BaseColumns(ABC):
         df = self.root.new(df)
         return df
 
-    def join(self, df_right, how="left", on=None, left_on=None, right_on=None, key_middle=False) -> DataFrameType:
+    def join(self, df_right: DataFrameType, how="left", on=None, left_on=None, right_on=None, key_middle=False) -> DataFrameType:
         """
         Join 2 dataframes SQL style
         :param df_right:
