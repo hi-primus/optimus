@@ -145,6 +145,6 @@ including:
  
 ## Backers and Sponsors
 
-Become a [backer](https://opencollective.com/optimus#backer) or a [sponsor](https://opencollective.com/optimus#backer) and get your image on our README on Github with a link to your site. 
+Become a [backer](https://opencollective.com/optimus#backer) or a [sponsor](https://opencollective.com/optimus#sponsor) and get your image on our README on Github with a link to your site. 
 
 [![OpenCollective](https://opencollective.com/optimus/backers/badge.svg)](#backers) [![OpenCollective](https://opencollective.com/optimus/sponsors/badge.svg)](#sponsors)
