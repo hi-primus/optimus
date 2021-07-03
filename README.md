@@ -27,7 +27,7 @@ In your terminal just type  ```pip install pyoptimus```
 
 You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/optimus/blob/develop-21.8/examples/10_min_from_pandas_to_spark_with_optimus.ipynb) where you can find the basic to start working.
 
-Also you can go to the [examples](examples/) folder to found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
+Also you can go to the [examples](https://github.com/hi-primus/optimus/tree/develop-21.8/examples/) folder to found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
 Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-21.8/docs/cheatsheet/optimus_cheat_sheet.html)
 
@@ -101,7 +101,7 @@ Using `display` you have a beautiful way to show your data with extra informatio
 ```python
 display(df)
 ```
-![](readme/images/table.png)
+![](https://github.com/hi-primus/optimus/tree/develop-21.8/readme/images/table.png)
 
 ## Cleaning and Processing
  
@@ -128,7 +128,7 @@ new_df = df\
 
 ## Troubleshooting
 
-If you have issues, see our [Troubleshooting Guide](troubleshooting.md)
+If you have issues, see our [Troubleshooting Guide](https://github.com/hi-primus/optimus/tree/develop-21.8/troubleshooting.md)
 
 ## Contributing to Optimus
 
