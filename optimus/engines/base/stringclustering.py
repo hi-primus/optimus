@@ -9,7 +9,7 @@ from optimus.engines.base.ml.contants import CLUSTER_COL
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.output import print_json
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str
+from optimus.infer import is_list, is_str
 
 
 class Clusters:
@@ -51,8 +51,11 @@ class Clusters:
 
         for column in columns:
             result[column] = {}
-            # print("asda", self.clusters[column])
-            for cluster in self.clusters[column][0:limit_clusters]:
+            clusters = self.clusters[column]
+            if not is_list(clusters):
+                clusters = list(clusters.values())
+                
+            for cluster in clusters[0:limit_clusters]:
                 if verbose:
                     cluster_name = cluster["suggestion"]
                     _cluster = copy.deepcopy(cluster)
