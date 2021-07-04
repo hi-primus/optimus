@@ -119,8 +119,12 @@ def string_clustering(df, input_cols="*", algorithm=None, *args, **kwargs) -> Cl
 
                 c = b[b[:, 2].argsort()][:topn][:, [0, 1]]
                 c = [s] + c[np.where(c != s)].tolist()
-                cols_dict[s] = {"suggestion": c, "suggestions_size": len(c), "total_count": total_rows}
-            # print(cols_dict)
+                cols_dict[s] = {
+                    "suggestion": c[0], 
+                    "suggestions": c, 
+                    "suggestions_size": len(c), 
+                    "total_count": total_rows
+                }
             result[input_col] = cols_dict
         else:
 
