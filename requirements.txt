@@ -41,5 +41,5 @@ num2words==0.5.10
 python-Levenshtein==0.12.2
 xlrd>=1.2.0
 s3fs>=0.5.2
+py-dateinfer @ git+https://github.com/hi-primus/dateinfer@main
 url_parser @ git+https://github.com/hi-primus/url_parser@main
-py-dateinfer @ git+https://github.com/hi-primus/dateinfer@master
