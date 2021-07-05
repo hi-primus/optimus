@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from functools import reduce
+from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.core import val_to_list
 
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
@@ -42,6 +43,26 @@ class DataFrameBaseColumns():
 
     def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
         pass
+
+    def crosstab(self, col_x, col_y, output="dict"):
+        """
+        :param col_x:
+        :param col_y:
+        :param output:
+        :return:
+        """
+        dfd = self.root.data
+
+        result = self._pd.crosstab(dfd[col_x], dfd[col_y])
+
+        if output == "dict":
+            result = result.to_dict()
+        elif output == "dataframe":
+            result = self.root.new(result.reset_index())
+        else:
+            RaiseIt.value_error(output, ["dict", "dataframe"])
+
+        return result
 
     def standard_scaler(self, input_cols="*", output_cols=None):
         df = self.root

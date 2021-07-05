@@ -632,6 +632,9 @@ class BaseColumns(ABC):
 
         return result
 
+    def crosstab(self, col_x, col_y, output="dict") -> dict:
+        pass
+
     def pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> dict:
         """
         Get how many equal patterns there are in a column. Triggers the operation only if necessary
@@ -1641,7 +1644,9 @@ class BaseColumns(ABC):
                 for replace_by, search in replace.items():
                     _replace_by.append(replace_by)
                     _search.append(search)
-                df = df.cols._replace(col, _search, _replace_by)
+                print(_search)
+                print(_replace_by)
+                df = df.cols._replace(col, _search, _replace_by, search_by="chars")
 
         else:
             search = val_to_list(search)
