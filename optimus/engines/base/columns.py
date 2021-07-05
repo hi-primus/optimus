@@ -613,18 +613,24 @@ class BaseColumns(ABC):
 
         return df
 
-    def correlation(self, cols="*", method="pearson", output="json"):
+    def correlation(self, cols="*", method="pearson", tidy=True):
         """
 
         :param cols:
         :param method:
-        :param output:
+        :param tidy:
         :return:
         """
         df = self.root
         dfd = self.root.data
         cols = parse_columns(df, cols)
-        return dfd[cols].corr(method).to_dict()
+
+        result = dfd[cols].corr(method).to_dict()
+
+        if tidy and is_list(cols) and len(cols)==2:
+            result = result[cols[0]][cols[1]]
+
+        return result
 
     def pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> dict:
         """
