@@ -1,4 +1,5 @@
 import operator
+from optimus.engines.base.set import BaseSet
 from optimus.helpers.types import DataFrameType, InternalDataFrameType
 import time
 from abc import abstractmethod, ABC
@@ -251,6 +252,10 @@ class BaseDataFrame(ABC):
     @property
     def profile(self):
         return BaseProfile(self)
+
+    @property
+    def set(self):
+        return BaseSet(self)
 
     @property
     def plot(self):
