@@ -22,6 +22,7 @@ from optimus.engines.base.columns import BaseColumns as cols_class
 from optimus.engines.base.rows import BaseRows as rows_class
 from optimus.engines.base.set import BaseSet as set_class
 from optimus.engines.base.mask import Mask as mask_class
+from optimus.engines.base.ml.models import ML as ml_class
 from optimus.plots.plots import Plot as plots_class
 from optimus.outliers.outliers import Outliers as outliers_class
 from optimus.engines.base.profile import BaseProfile as profile_class
@@ -38,6 +39,7 @@ dataframe_accessors = {
     "rows": rows_class,
     "set": set_class,
     "mask": mask_class,
+    "ml": ml_class,
     "plot": plots_class,
     "outliers": outliers_class,
     "profile": profile_class
