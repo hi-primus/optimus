@@ -263,10 +263,6 @@ alias_map_list = [
   ["reverse", "rows.reverse"],
   ["dropRows", "rows.drop"],
   ["between", "rows.between"],
-  [
-    ["dropByDatatypes", "dropByDtypes", "drop_by_dtypes"],
-    "rows.drop_by_dtypes",
-  ],
   [["dropNA", "drop_na"], "rows.drop_na"],
   [["dropDuplicates", "drop_duplicates"], "rows.drop_duplicates"],
   ["limit", "rows.limit"],

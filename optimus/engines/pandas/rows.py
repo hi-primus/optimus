@@ -43,23 +43,6 @@ class Rows(BaseRows):
     def _sort(self, dfd, col_name, ascending):
         return dfd.sort_values(col_name, ascending=ascending)
 
-    def drop_duplicates(self, subset=None) -> DataFrame:
-        """
-        Drop duplicates values in a dataframe
-        :param subset: List of columns to make the comparison, this only  will consider this subset of columns,
-        :return: Return a new DataFrame with duplicate rows removed
-        :return:
-        """
-        df = self.root
-        dfd = df.data
-        subset = parse_columns(df, subset)
-        subset = val_to_list(subset)
-        dfd = dfd.drop_duplicates(subset=subset)
-
-        return self.root.new(dfd)
-
-
-
     @staticmethod
     def unnest(input_cols) -> DataFrame:
         df = self

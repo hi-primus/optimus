@@ -55,21 +55,6 @@ class Rows(BaseRows):
         return dfd.sort_values(col_name, ascending=ascending)
 
     @staticmethod
-    def drop_duplicates(subset=None) -> DataFrame:
-        """
-        Drop duplicates values in a dataframe
-        :param subset: List of columns to make the comparison, this only  will consider this subset of columns,
-        :return: Return a new DataFrame with duplicate rows removed
-        :return:
-        """
-        df = self
-        subset = parse_columns(df, subset)
-        subset = val_to_list(subset)
-        df = df.drop_duplicates(subset=subset)
-
-        return df
-
-    @staticmethod
     def unnest(input_cols) -> DataFrame:
         df = self
         return df

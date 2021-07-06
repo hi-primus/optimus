@@ -114,18 +114,6 @@ class DaskBaseRows(BaseRows):
 
         return self.root.new(self.root._base_to_dfd(df.cols.select("*").data.head(count), partitions))
 
-    def between_index(self, columns, lower_bound=None, upper_bound=None):
-        """
-
-        :param columns:
-        :param lower_bound:
-        :param upper_bound:
-        :return:
-        """
-        dfd = self.root.data
-        columns = parse_columns(dfd, columns)
-        return self.root.new(dfd[lower_bound: upper_bound][columns])
-
     def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
                 bounds=None):
         """
@@ -179,34 +167,6 @@ class DaskBaseRows(BaseRows):
             df = df.rows.select(_between(col_name))
         meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(df.data, meta=meta)
-
-    def drop_by_dtypes(self, input_cols, data_type=None):
-        df = self.root
-        return df
-
-    def drop_duplicates(self, keep="first", subset=None):
-        """
-        Drop duplicates values in a dataframe
-        :param subset: List of columns to make the comparison, this only  will consider this subset of columns,
-        :param keep: Row to keep when find a duplicate
-        :return: Return a new DataFrame with duplicate rows removed
-        :return:
-        """
-        dfd = self.root.data
-        subset = parse_columns(dfd, subset)
-        subset = val_to_list(subset)
-        dfd = dfd.drop_duplicates(keep=keep, subset=subset)
-
-        return self.root.new(dfd)
-
-        # df = self.parent.data
-        # columns = prepare_columns(self.parent, input_cols, output_cols, accepts_missing_cols=True)
-        # kw_columns ={}
-        # for input_col, output_col in columns:
-        #     kw_columns[output_col]= df[input_col].isin(values)
-        #
-        # df = df.assign(**kw_columns)
-        # return self.parent.new(df)
 
     def unnest(self, input_cols):
         df = self.root

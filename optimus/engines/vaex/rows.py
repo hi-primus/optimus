@@ -16,14 +16,6 @@ class Rows(BaseRows):
         pass
 
     @staticmethod
-    def drop_by_dtypes(input_cols, data_type=None):
-        pass
-
-    @staticmethod
-    def drop_duplicates(input_cols=None):
-        pass
-
-    @staticmethod
     def unnest(input_cols):
         pass
 
