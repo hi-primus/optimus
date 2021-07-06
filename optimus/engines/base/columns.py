@@ -1363,17 +1363,6 @@ class BaseColumns(ABC):
         else:
             return df
 
-    def match(self, cols="*", regex=None, dtype=None, output_cols=None, drop=True) -> DataFrameType:
-        if dtype is None:
-            return self.match_regex(cols=cols, regex=regex, output_cols=output_cols)
-        else:
-            return self.match_dtype(cols=cols, dtype=dtype, output_cols=output_cols, drop=drop)
-
-
-    def match_regex(self, cols="*", regex="", output_cols=None) -> DataFrameType:
-        return self.apply(cols, self.F.match, args=(regex,), func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.MATCH.value, mode="vectorized", func_type="column_expr")
-
     def lower(self, cols="*", output_cols=None) -> DataFrameType:
         return self.apply(cols, self.F.lower, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
@@ -2496,9 +2485,19 @@ class BaseColumns(ABC):
     def duplicated(self, cols="*", keep="first", output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "duplicated", output_cols, rename_func=not drop, keep=keep)
 
+    def match(self, cols="*", regex=None, dtype=None, output_cols=None, drop=True) -> DataFrameType:
+        if dtype is None:
+            return self.match_regex(cols=cols, regex=regex, output_cols=output_cols, drop=drop)
+        else:
+            return self.match_dtype(cols=cols, dtype=dtype, output_cols=output_cols, drop=drop)
+
+    def match_regex(self, cols="*", regex=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_match_{regex}"
+        return self._mask(cols, "match_regex", output_cols, rename_func, regex=regex)
+
     def match_dtype(self, cols="*", dtype=None, output_cols=None, drop=True) -> DataFrameType:
         rename_func = False if drop else lambda n: f"{n}_match_{dtype}"
-        return self._mask(cols, "match", output_cols, rename_func, dtype=dtype)
+        return self._mask(cols, "match_dtype", output_cols, rename_func, dtype=dtype)
 
     def starts_with(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
         rename_func = False if drop else lambda n: f"{n}_starts_with_{value}"
