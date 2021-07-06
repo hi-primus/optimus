@@ -2399,6 +2399,32 @@ class BaseColumns(ABC):
 
         return self.append(append_df)
 
+    # Append mask
+
+    def greater_than(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_greater_than_{value}"
+        return self._mask(cols, "greater_than", output_cols, rename_func, value=value)
+
+    def greater_than_equal(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_greater_than_equal_{value}"
+        return self._mask(cols, "greater_than_equal", output_cols, rename_func, value=value)
+
+    def less_than(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_less_than_{value}"
+        return self._mask(cols, "less_than", output_cols, rename_func, value=value)
+
+    def less_than_equal(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_less_than_equal_{value}"
+        return self._mask(cols, "less_than_equal", output_cols, rename_func, value=value)
+
+    def equal(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_equal_{value}"
+        return self._mask(cols, "equal", output_cols, rename_func, value=value)
+
+    def not_equal(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_not_equal_{value}"
+        return self._mask(cols, "not_equal", output_cols, rename_func, value=value)
+
     def missing(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "missing", output_cols, rename_func=not drop)
 
@@ -2406,14 +2432,30 @@ class BaseColumns(ABC):
         return self._mask(cols, "nulls", output_cols, rename_func=not drop)
 
     def mismatch(self, cols="*", dtype=None, output_cols=None, drop=True) -> DataFrameType:
-        rename_func = False if drop else lambda n: f"{dtype}_mismatch_{n}"
+        rename_func = False if drop else lambda n: f"{n}_mismatch_{dtype}"
         return self._mask(cols, "mismatch", output_cols, rename_func, dtype=dtype)
 
+    def duplicated(self, cols="*", keep="first", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "duplicated", output_cols, rename_func=not drop, keep=keep)
+
     def match_dtype(self, cols="*", dtype=None, output_cols=None, drop=True) -> DataFrameType:
-        rename_func = False if drop else lambda n: f"{dtype}_match_{n}"
+        rename_func = False if drop else lambda n: f"{n}_match_{dtype}"
         return self._mask(cols, "match", output_cols, rename_func, dtype=dtype)
 
+    def starts_with(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_starts_with_{value}"
+        return self._mask(cols, "starts_with", output_cols, rename_func, value=value)
+
+    def ends_with(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_ends_with_{value}"
+        return self._mask(cols, "ends_with", output_cols, rename_func, value=value)
+
+    def contains(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_contains_{value}"
+        return self._mask(cols, "contains", output_cols, rename_func, value=value)
+
     # String clustering algorithms
+
     def fingerprint(self, cols="*", output_cols=None) -> DataFrameType:
         """
         Create the fingerprint for a column
