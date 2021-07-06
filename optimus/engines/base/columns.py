@@ -2400,57 +2400,62 @@ class BaseColumns(ABC):
 
         return self.append(append_df)
 
-    def _any_mask(self, cols="*", method: str=None, tidy=True, *args, **kwargs) -> bool:
+    def _any_mask(self, cols="*", method: str=None, inverse=False, tidy=True, *args, **kwargs) -> bool:
 
         mask = getattr(self.root.mask, method)(cols, *args, **kwargs)
 
-        values = { col: bool(mask.data[col].any()) for col in mask.cols.names() }
+        if inverse:
+            # assigns True if there is any False value
+            values = { col: not bool(mask.data[col].all()) for col in mask.cols.names() }
+        else:
+            # assigns True if there is any True value
+            values = { col: bool(mask.data[col].any()) for col in mask.cols.names() }
 
         return format_dict(values, tidy)
 
     # Any mask
 
-    def any_greater_than(self, cols="*", value=None, tidy=True):
-        return self._any_mask(cols, "greater_than", value=value, tidy=tidy)
+    def any_greater_than(self, cols="*", value=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "greater_than", value=value, inverse=inverse, tidy=tidy)
 
-    def any_greater_than_equal(self, cols="*", value=None, tidy=True):
-        return self._any_mask(cols, "greater_than_equal", value=value, tidy=tidy)
+    def any_greater_than_equal(self, cols="*", value=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "greater_than_equal", value=value, inverse=inverse, tidy=tidy)
 
-    def any_less_than(self, cols="*", value=None, tidy=True):
-        return self._any_mask(cols, "less_than", value=value, tidy=tidy)
+    def any_less_than(self, cols="*", value=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "less_than", value=value, inverse=inverse, tidy=tidy)
 
-    def any_less_than_equal(self, cols="*", value=None, tidy=True):
-        return self._any_mask(cols, "less_than_equal", value=value, tidy=tidy)
+    def any_less_than_equal(self, cols="*", value=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "less_than_equal", value=value, inverse=inverse, tidy=tidy)
 
-    def any_equal(self, cols="*", value=None, tidy=True):
-        return self._any_mask(cols, "equal", value=value, tidy=tidy)
+    def any_equal(self, cols="*", value=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "equal", value=value, inverse=inverse, tidy=tidy)
 
-    def any_not_equal(self, cols="*", value=None, tidy=True):
-        return self._any_mask(cols, "not_equal", value=value, tidy=tidy)
+    def any_not_equal(self, cols="*", value=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "not_equal", value=value, inverse=inverse, tidy=tidy)
 
-    def any_missing(self, cols="*", tidy=True):
-        return self._any_mask(cols, "missing", tidy=tidy)
+    def any_missing(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "missing", inverse=inverse, tidy=tidy)
 
-    def any_nulls(self, cols="*", tidy=True):
-        return self._any_mask(cols, "nulls", tidy=tidy)
+    def any_nulls(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "nulls", inverse=inverse, tidy=tidy)
 
-    def any_mismatch(self, cols="*", dtype=None, tidy=True):
-        return self._any_mask(cols, "mismatch", dtype=dtype, tidy=tidy)
+    def any_mismatch(self, cols="*", dtype=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "mismatch", dtype=dtype, inverse=inverse, tidy=tidy)
 
-    def any_duplicated(self, cols="*", keep="first", tidy=True):
-        return self._any_mask(cols, "duplicated", keep=keep, tidy=tidy)
+    def any_duplicated(self, cols="*", keep="first", inverse=False, tidy=True):
+        return self._any_mask(cols, "duplicated", keep=keep, inverse=inverse, tidy=tidy)
 
-    def any_matching_dtype(self, cols="*", dtype=None, tidy=True):
-        return self._any_mask(cols, "match", dtype=dtype, tidy=tidy)
+    def any_matching_dtype(self, cols="*", dtype=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "match", dtype=dtype, inverse=inverse, tidy=tidy)
 
-    def any_starting_with(self, cols="*", value=None, tidy=True):
-        return self._any_mask(cols, "starts_with", value=value, tidy=tidy)
+    def any_starting_with(self, cols="*", value=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "starts_with", value=value, inverse=inverse, tidy=tidy)
 
-    def any_ending_with(self, cols="*", value=None, tidy=True):
-        return self._any_mask(cols, "ends_with", value=value, tidy=tidy)
+    def any_ending_with(self, cols="*", value=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "ends_with", value=value, inverse=inverse, tidy=tidy)
 
-    def any_containing(self, cols="*", value=None, tidy=True):
-        return self._any_mask(cols, "contains", value=value, tidy=tidy)
+    def any_containing(self, cols="*", value=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "contains", value=value, inverse=inverse, tidy=tidy)
 
     # Append mask
 
