@@ -2067,7 +2067,7 @@ class BaseColumns(ABC):
 
             values = {list(j.values())[0]: list(j.values())[1] for j in
                       matches_mismatches["frequency"][col_name]["values"]}
-            missing = df.mask.nulls(col_name).cols.sum()
+            missing = df.mask.null(col_name).cols.sum()
 
             matches = values.get(True)
             mismatches = values.get(False, missing) - missing
@@ -2384,7 +2384,7 @@ class BaseColumns(ABC):
             append_df = append_df.cols.rename(cols, output_cols)
         elif rename_func:
             if rename_func == True:
-                rename_func = lambda n: f"{method}_{n}"
+                rename_func = lambda n: f"{n}_{method}"
             append_df = append_df.cols.rename(rename_func)
 
         return self.append(append_df)
@@ -2399,6 +2399,19 @@ class BaseColumns(ABC):
         else:
             # assigns True if there is any True value
             values = { col: bool(mask.data[col].any()) for col in mask.cols.names() }
+
+        return format_dict(values, tidy)
+
+    def _count_mask(self, cols="*", method: str=None, inverse=False, tidy=True, *args, **kwargs) -> bool:
+
+        mask = getattr(self.root.mask, method)(cols, *args, **kwargs)
+
+        if inverse:
+            # assigns True if there is any False value
+            values = { col: not mask.data[col].sum() for col in mask.cols.names() }
+        else:
+            # assigns True if there is any True value
+            values = { col: mask.data[col].sum() for col in mask.cols.names() }
 
         return format_dict(values, tidy)
 
@@ -2425,8 +2438,17 @@ class BaseColumns(ABC):
     def any_missing(self, cols="*", inverse=False, tidy=True):
         return self._any_mask(cols, "missing", inverse=inverse, tidy=tidy)
 
-    def any_nulls(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "nulls", inverse=inverse, tidy=tidy)
+    def any_null(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "null", inverse=inverse, tidy=tidy)
+
+    def any_none(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "none", inverse=inverse, tidy=tidy)
+
+    def any_nan(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "nan", inverse=inverse, tidy=tidy)
+
+    def any_empty(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "empty", inverse=inverse, tidy=tidy)
 
     def any_mismatch(self, cols="*", dtype=None, inverse=False, tidy=True):
         return self._any_mask(cols, "mismatch", dtype=dtype, inverse=inverse, tidy=tidy)
@@ -2434,8 +2456,14 @@ class BaseColumns(ABC):
     def any_duplicated(self, cols="*", keep="first", inverse=False, tidy=True):
         return self._any_mask(cols, "duplicated", keep=keep, inverse=inverse, tidy=tidy)
 
-    def any_matching_dtype(self, cols="*", dtype=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "match", dtype=dtype, inverse=inverse, tidy=tidy)
+    def any_match(self, cols="*", regex=None, dtype=None,inverse=False, tidy=True):
+        return self._any_mask(cols, "match", regex=regex, dtype=dtype, inverse=inverse, tidy=tidy)
+
+    def any_match_dtype(self, cols="*", dtype=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "match_dtype", dtype=dtype, inverse=inverse, tidy=tidy)
+
+    def any_match_regex(self, cols="*", regex=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "match_regex", regex=regex, inverse=inverse, tidy=tidy)
 
     def any_starting_with(self, cols="*", value=None, inverse=False, tidy=True):
         return self._any_mask(cols, "starts_with", value=value, inverse=inverse, tidy=tidy)
@@ -2445,6 +2473,72 @@ class BaseColumns(ABC):
 
     def any_containing(self, cols="*", value=None, inverse=False, tidy=True):
         return self._any_mask(cols, "contains", value=value, inverse=inverse, tidy=tidy)
+
+    def any_value_in(self, cols="*", values=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "value_in", values=values, inverse=inverse, tidy=tidy)
+
+    # Count mask
+
+    def count_greater_than(self, cols="*", value=None, tidy=True):
+        return self._count_mask(cols, "greater_than", value=value, tidy=tidy)
+
+    def count_greater_than_equal(self, cols="*", value=None, tidy=True):
+        return self._count_mask(cols, "greater_than_equal", value=value, tidy=tidy)
+
+    def count_less_than(self, cols="*", value=None, tidy=True):
+        return self._count_mask(cols, "less_than", value=value, tidy=tidy)
+
+    def count_less_than_equal(self, cols="*", value=None, tidy=True):
+        return self._count_mask(cols, "less_than_equal", value=value, tidy=tidy)
+
+    def count_equal(self, cols="*", value=None, tidy=True):
+        return self._count_mask(cols, "equal", value=value, tidy=tidy)
+
+    def count_not_equal(self, cols="*", value=None, tidy=True):
+        return self._count_mask(cols, "not_equal", value=value, tidy=tidy)
+
+    def count_missing(self, cols="*", tidy=True):
+        return self._count_mask(cols, "missing", tidy=tidy)
+
+    def count_null(self, cols="*", tidy=True):
+        return self._count_mask(cols, "null", tidy=tidy)
+
+    def count_none(self, cols="*", tidy=True):
+        return self._count_mask(cols, "none", tidy=tidy)
+
+    def count_nan(self, cols="*", tidy=True):
+        return self._count_mask(cols, "nan", tidy=tidy)
+
+    def count_empty(self, cols="*", tidy=True):
+        return self._count_mask(cols, "empty", tidy=tidy)
+
+    def count_mismatch(self, cols="*", dtype=None, tidy=True):
+        return self._count_mask(cols, "mismatch", dtype=dtype, tidy=tidy)
+
+    def count_duplicated(self, cols="*", keep="first", tidy=True):
+        return self._count_mask(cols, "duplicated", keep=keep, tidy=tidy)
+
+    def count_match(self, cols="*", regex=None, dtype=None,tidy=True):
+        return self._count_mask(cols, "match", regex=regex, dtype=dtype, tidy=tidy)
+
+    def count_match_dtype(self, cols="*", dtype=None, tidy=True):
+        return self._count_mask(cols, "match_dtype", dtype=dtype, tidy=tidy)
+
+    def count_match_regex(self, cols="*", regex=None, tidy=True):
+        return self._count_mask(cols, "match_regex", regex=regex, tidy=tidy)
+
+    def count_starting_with(self, cols="*", value=None, tidy=True):
+        return self._count_mask(cols, "starts_with", value=value, tidy=tidy)
+
+    def count_ending_with(self, cols="*", value=None, tidy=True):
+        return self._count_mask(cols, "ends_with", value=value, tidy=tidy)
+
+    def count_containing(self, cols="*", value=None, tidy=True):
+        return self._count_mask(cols, "contains", value=value, tidy=tidy)
+
+    def count_value_in(self, cols="*", values=None, tidy=True):
+        return self._count_mask(cols, "value_in", values=values, tidy=tidy)
+
 
     # Append mask
 
@@ -2519,6 +2613,9 @@ class BaseColumns(ABC):
     def contains(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
         rename_func = False if drop else lambda n: f"{n}_contains_{value}"
         return self._mask(cols, "contains", output_cols, rename_func, value=value)
+
+    def value_in(self, cols="*", values=None, output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "value_in", output_cols, rename_func=not drop, values=values)
 
     # String clustering algorithms
 
