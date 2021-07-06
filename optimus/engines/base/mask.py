@@ -171,16 +171,18 @@ class Mask(ABC):
         :param cols:
         :return:
         """
-
+        df = self.root
         dfd = self.root.data
 
         if cols is not None:
-            subset = val_to_list(cols)
+            subset = parse_columns(df, cols)
             subset_df = dfd[subset]
         else:
             subset_df = dfd
 
-        mask = subset_df.duplicated(keep=keep, subset=cols)
+        col_name = cols[0] if is_list(cols) else cols or "duplicated_rows"
+
+        mask = subset_df.duplicated(keep=keep).rename(col_name).to_frame()
 
         return self.root.new(mask)
 
