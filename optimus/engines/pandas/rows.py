@@ -43,64 +43,6 @@ class Rows(BaseRows):
     def _sort(self, dfd, col_name, ascending):
         return dfd.sort_values(col_name, ascending=ascending)
 
-    def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
-                bounds=None) -> DataFrame:
-        """
-        Trim values at input thresholds
-        :param upper_bound:
-        :param lower_bound:
-        :param columns: Columns to be trimmed
-        :param invert:
-        :param equal:
-        :param bounds:
-        :return:
-        """
-        df = self.root
-        # TODO: should process string or dates
-        columns = parse_columns(df.data, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
-        if bounds is None:
-            bounds = [(lower_bound, upper_bound)]
-
-        def _between(_col_name):
-
-            if invert is False and equal is False:
-                op1 = operator.gt
-                op2 = operator.lt
-                opb = operator.__and__
-
-            elif invert is False and equal is True:
-                op1 = operator.ge
-                op2 = operator.le
-                opb = operator.__and__
-
-            elif invert is True and equal is False:
-                op1 = operator.lt
-                op2 = operator.gt
-                opb = operator.__or__
-
-            elif invert is True and equal is True:
-                op1 = operator.le
-                op2 = operator.ge
-                opb = operator.__or__
-
-            sub_query = []
-            for bound in bounds:
-                _lower_bound, _upper_bound = bound
-                sub_query.append(opb(op1(df[_col_name], _lower_bound), op2(df[_col_name], _upper_bound)))
-            query = functools.reduce(operator.__or__, sub_query)
-
-            return query
-
-        # df = self
-        for col_name in columns:
-            df = df.rows.select(_between(col_name))
-        df.meta = Meta.action(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
-        return self.root.new(df)
-
-    def drop_by_dtypes(self, input_cols, data_type=None):
-        df = self.root
-        return df
-
     def drop_duplicates(self, subset=None) -> DataFrame:
         """
         Drop duplicates values in a dataframe

@@ -16,10 +16,6 @@ class Rows(BaseRows):
         pass
 
     @staticmethod
-    def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False, bounds=None):
-        pass
-
-    @staticmethod
     def drop_by_dtypes(input_cols, data_type=None):
         pass
 

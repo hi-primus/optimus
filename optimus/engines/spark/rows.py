@@ -129,59 +129,6 @@ class Rows(DaskBaseRows):
         return df
 
     @staticmethod
-    def between(columns, lower_bound=None, upper_bound=None, invert=False, equal=False, bounds=None) -> DataFrame:
-        """
-                Trim values at input thresholds
-                :param upper_bound:
-                :param lower_bound:
-                :param columns: Columns to be trimmed
-                :param bounds:
-                :param invert:
-                :param equal:
-                :return:
-                """
-        # TODO: should process string or dates
-        columns = parse_columns(self.root, columns, filter_by_column_dtypes=self.constants.NUMERIC_TYPES)
-        if bounds is None:
-            bounds = [(lower_bound, upper_bound)]
-
-        def _between(_col_name):
-
-            if invert is False and equal is False:
-                op1 = operator.gt
-                op2 = operator.lt
-                opb = operator.__and__
-
-            elif invert is False and equal is True:
-                op1 = operator.ge
-                op2 = operator.le
-                opb = operator.__and__
-
-            elif invert is True and equal is False:
-                op1 = operator.lt
-                op2 = operator.gt
-                opb = operator.__or__
-
-            elif invert is True and equal is True:
-                op1 = operator.le
-                op2 = operator.ge
-                opb = operator.__or__
-
-            sub_query = []
-            for bound in bounds:
-                _lower_bound, _upper_bound = bound
-                sub_query.append(opb(op1(F.col(_col_name), _lower_bound), op2(F.col(_col_name), _upper_bound)))
-            query = functools.reduce(operator.__or__, sub_query)
-
-            return query
-
-        df = self
-        for col_name in columns:
-            df = df.rows.select(_between(col_name))
-        df.meta = Meta.action(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
-        return df
-
-    @staticmethod
     def drop_by_dtypes(input_cols, data_type=None):
         """
         Drop rows by cell data type
