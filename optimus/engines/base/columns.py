@@ -2475,8 +2475,17 @@ class BaseColumns(ABC):
     def missing(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "missing", output_cols, rename_func=not drop)
 
-    def nulls(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
-        return self._mask(cols, "nulls", output_cols, rename_func=not drop)
+    def null(self, cols="*", how="all", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "null", output_cols, rename_func=not drop, how=how)
+
+    def none(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "none", output_cols, rename_func=not drop)
+
+    def nan(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "nan", output_cols, rename_func=not drop)
+
+    def empty(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "empty", output_cols, rename_func=not drop)
 
     def mismatch(self, cols="*", dtype=None, output_cols=None, drop=True) -> DataFrameType:
         rename_func = False if drop else lambda n: f"{n}_mismatch_{dtype}"
