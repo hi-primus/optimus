@@ -1758,21 +1758,10 @@ class BaseColumns(ABC):
         df = self.root
         return len(df.cols.names())
 
-    def count_na(self, cols="*", tidy=True, compute=True) -> int:
-        """
-        Return the NAN and Null count in a Column
-        :param cols: '*', list of columns names or a single column name.
-        :param tidy:
-        :param compute:
-        :return:
-        """
-        df = self.root
-        return df.cols.agg_exprs(cols, self.F.count_na, tidy=tidy, compute=compute)
-
-    def unique(self, cols="*", values=None, estimate=True, tidy=True, compute=True) -> list:
+    def unique_values(self, cols="*", values=None, estimate=True, tidy=True, compute=True) -> list:
 
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.unique, values, estimate, tidy=tidy, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.unique_values, values, estimate, tidy=tidy, compute=compute)
 
     def count_uniques(self, cols="*", values=None, estimate=True, tidy=True, compute=True) -> int:
         df = self.root
@@ -2456,6 +2445,9 @@ class BaseColumns(ABC):
     def any_duplicated(self, cols="*", keep="first", inverse=False, tidy=True):
         return self._any_mask(cols, "duplicated", keep=keep, inverse=inverse, tidy=tidy)
 
+    # def any_unique(self, cols="*", keep="first", inverse=False, tidy=True):
+    #     return self._any_mask(cols, "unique", keep=keep, inverse=inverse, tidy=tidy)
+
     def any_match(self, cols="*", regex=None, dtype=None,inverse=False, tidy=True):
         return self._any_mask(cols, "match", regex=regex, dtype=dtype, inverse=inverse, tidy=tidy)
 
@@ -2520,6 +2512,9 @@ class BaseColumns(ABC):
 
     def count_duplicated(self, cols="*", keep="first", tidy=True):
         return self._count_mask(cols, "duplicated", keep=keep, tidy=tidy)
+
+    # def count_uniques(self, cols="*", keep="first", tidy=True):
+    #     return self._count_mask(cols, "unique", keep=keep, tidy=tidy)
 
     def count_match(self, cols="*", regex=None, dtype=None,tidy=True):
         return self._count_mask(cols, "match", regex=regex, dtype=dtype, tidy=tidy)
@@ -2592,6 +2587,9 @@ class BaseColumns(ABC):
 
     def duplicated(self, cols="*", keep="first", output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "duplicated", output_cols, rename_func=not drop, keep=keep)
+
+    def unique(self, cols="*", keep="first", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "unique", output_cols, rename_func=not drop, keep=keep)
 
     def match(self, cols="*", regex=None, dtype=None, output_cols=None, drop=True) -> DataFrameType:
         if dtype is None:

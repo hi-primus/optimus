@@ -41,7 +41,7 @@ class CUDFFunctions(Functions):
     def sqrt(self, series):
         return self.to_float(series).sqrt()
 
-    def unique(self, series, *args):
+    def unique_values(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.
         return self.to_string(series).unique()
 

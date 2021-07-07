@@ -333,6 +333,9 @@ class BaseRows(ABC):
     def duplicated(self, cols="*", keep="first", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="duplicated", drop=drop, keep=keep, how=how)
 
+    def unique(self, cols="*", keep="first", drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="unique", drop=drop, keep=keep, how=how)
+
     def mismatch(self, cols="*", dtype=None, drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="mismatch", drop=drop, dtype=dtype, how=how)
 
@@ -445,6 +448,16 @@ class BaseRows(ABC):
 
     def drop_duplicated(self, cols="*", keep="first", how="any") -> DataFrameType:
         return self._mask(cols, method="duplicated", drop=True, keep=keep, how=how)
+
+    def drop_uniques(self, cols="*", keep="first", how="any") -> DataFrameType:
+        """
+        Drops first (passed to keep) matches of duplicates and unique values.
+        :param cols: 
+        :param keep: 
+        :param how: 
+        :return: Dataframe
+        """
+        return self._mask(cols, method="unique", drop=True, keep=keep, how=how)
 
     def drop_mismatch(self, cols="*", dtype=None, how="any") -> DataFrameType:
         return self._mask(cols, method="mismatch", drop=True, dtype=dtype, how=how)

@@ -301,6 +301,16 @@ class Mask(ABC):
 
         return self.root.new(self._to_frame(mask))
 
+    def unique(self, cols, keep="first") -> MaskDataFrameType:
+        """
+        Find the rows that are not duplicated values
+
+        :param keep:
+        :param cols:
+        :return:
+        """
+        return ~self.duplicated(cols, keep)
+
     def empty(self, cols="*") -> MaskDataFrameType:
         """
         Find the rows that do not have any info

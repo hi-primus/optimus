@@ -85,7 +85,7 @@ class Functions(ABC):
     def count_uniques(self, series, values=None, estimate: bool = True):
         return self.to_string(series).nunique()
 
-    def unique(self, series, *args):
+    def unique_values(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.
         return list(self.to_string(series).unique())
 
