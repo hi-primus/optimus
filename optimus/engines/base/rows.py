@@ -303,11 +303,11 @@ class BaseRows(ABC):
     def greater_than(self, cols="*", value=None, drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="greater_than", drop=drop, value=value, how=how)
 
-    def greater_than_equal(self, cols="*", value=None, drop=False, how="any") -> DataFrameType:
-        return self._mask(cols, method="greater_than_equal", drop=drop, value=value, how=how)
+    def less_than(self, cols="*", value=None, drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="less_than", drop=drop, value=value, how=how)
 
-    def greater_than_equal(self, cols="*", value=None, drop=False, how="any") -> DataFrameType:
-        return self._mask(cols, method="greater_than_equal", drop=drop, value=value, how=how)
+    def less_than_equal(self, cols="*", value=None, drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="less_than_equal", drop=drop, value=value, how=how)
 
     def equal(self, cols="*", value=None, drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="equal", drop=drop, value=value, how=how)
