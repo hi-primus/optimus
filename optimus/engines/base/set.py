@@ -16,6 +16,7 @@ class BaseSet():
 
 
     def _mask(self, col_name, true_value=None, default_value=None, method: str=None, *args, **kwargs) -> DataFrameType:
+        
         df = self.root
         
         if col_name in df.cols.names():
@@ -152,4 +153,7 @@ class BaseSet():
 
     def contains(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
         return self._mask(col_name, true_value=true_value, default_value=default_value, method="contains", value=value)
+    
+    def expression(self, col_name, true_value=None, default_value=None, where=None) -> DataFrameType:
+        return self._mask(col_name, true_value=true_value, default_value=default_value, method="expression", where=where)
 
