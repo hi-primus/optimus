@@ -2445,7 +2445,7 @@ class BaseColumns(ABC):
     def any_duplicated(self, cols="*", keep="first", inverse=False, tidy=True):
         return self._any_mask(cols, "duplicated", keep=keep, inverse=inverse, tidy=tidy)
 
-    # def any_unique(self, cols="*", keep="first", inverse=False, tidy=True):
+    # def any_uniques(self, cols="*", keep="first", inverse=False, tidy=True):
     #     return self._any_mask(cols, "unique", keep=keep, inverse=inverse, tidy=tidy)
 
     def any_match(self, cols="*", regex=None, dtype=None,inverse=False, tidy=True):
@@ -2474,6 +2474,59 @@ class BaseColumns(ABC):
 
     def any_expression(self, value=None, inverse=False, tidy=True):
         return self._any_mask("*", "expression", value=value, inverse=inverse, tidy=tidy)
+
+    # Any mask (type)
+
+    def any_str(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "str", inverse=inverse, tidy=tidy)
+
+    def any_int(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "int", inverse=inverse, tidy=tidy)
+
+    def any_float(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "float", inverse=inverse, tidy=tidy)
+
+    def any_numeric(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "numeric", inverse=inverse, tidy=tidy)
+
+    def any_email(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "email", inverse=inverse, tidy=tidy)
+
+    def any_ip(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "ip", inverse=inverse, tidy=tidy)
+
+    def any_url(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "url", inverse=inverse, tidy=tidy)
+
+    def any_gender(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "gender", inverse=inverse, tidy=tidy)
+
+    def any_boolean(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "boolean", inverse=inverse, tidy=tidy)
+
+    def any_zip_code(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "zip_code", inverse=inverse, tidy=tidy)
+
+    def any_credit_card_number(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "credit_card_number", inverse=inverse, tidy=tidy)
+
+    def any_datetime(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "datetime", inverse=inverse, tidy=tidy)
+
+    def any_object(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "object", inverse=inverse, tidy=tidy)
+
+    def any_array(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "array", inverse=inverse, tidy=tidy)
+
+    def any_phone_number(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "phone_number", inverse=inverse, tidy=tidy)
+
+    def any_social_security_number(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "social_security_number", inverse=inverse, tidy=tidy)
+
+    def any_http_code(self, cols="*", inverse=False, tidy=True):
+        return self._any_mask(cols, "http_code", inverse=inverse, tidy=tidy)
 
     # Count mask
 
@@ -2545,6 +2598,59 @@ class BaseColumns(ABC):
 
     def count_expression(self, value=None, inverse=False, tidy=True):
         return self._count_mask("*", "expression", value=value, inverse=inverse)
+
+    # Count mask (data types)
+
+    def count_str(self, cols="*", tidy=True):
+        return self._count_mask(cols, "str", tidy=tidy)
+
+    def count_int(self, cols="*", tidy=True):
+        return self._count_mask(cols, "int", tidy=tidy)
+
+    def count_float(self, cols="*", tidy=True):
+        return self._count_mask(cols, "float", tidy=tidy)
+
+    def count_numeric(self, cols="*", tidy=True):
+        return self._count_mask(cols, "numeric", tidy=tidy)
+
+    def count_email(self, cols="*", tidy=True):
+        return self._count_mask(cols, "email", tidy=tidy)
+
+    def count_ip(self, cols="*", tidy=True):
+        return self._count_mask(cols, "ip", tidy=tidy)
+
+    def count_url(self, cols="*", tidy=True):
+        return self._count_mask(cols, "url", tidy=tidy)
+
+    def count_gender(self, cols="*", tidy=True):
+        return self._count_mask(cols, "gender", tidy=tidy)
+
+    def count_boolean(self, cols="*", tidy=True):
+        return self._count_mask(cols, "boolean", tidy=tidy)
+
+    def count_zip_code(self, cols="*", tidy=True):
+        return self._count_mask(cols, "zip_code", tidy=tidy)
+
+    def count_credit_card_number(self, cols="*", tidy=True):
+        return self._count_mask(cols, "credit_card_number", tidy=tidy)
+
+    def count_datetime(self, cols="*", tidy=True):
+        return self._count_mask(cols, "datetime", tidy=tidy)
+
+    def count_object(self, cols="*", tidy=True):
+        return self._count_mask(cols, "object", tidy=tidy)
+
+    def count_array(self, cols="*", tidy=True):
+        return self._count_mask(cols, "array", tidy=tidy)
+
+    def count_phone_number(self, cols="*", tidy=True):
+        return self._count_mask(cols, "phone_number", tidy=tidy)
+
+    def count_social_security_number(self, cols="*", tidy=True):
+        return self._count_mask(cols, "social_security_number", tidy=tidy)
+
+    def count_http_code(self, cols="*", tidy=True):
+        return self._count_mask(cols, "http_code", tidy=tidy)
 
     # Append mask
 
@@ -2631,6 +2737,60 @@ class BaseColumns(ABC):
 
     def expression(self, where=None, cols="*", output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "expression", output_cols, rename_func=not drop, where=where)
+
+    # Append mask (types)
+
+    def str_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "str", output_cols, rename_func=not drop)
+
+    def int_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "int", output_cols, rename_func=not drop)
+
+    def float_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "float", output_cols, rename_func=not drop)
+
+    def numeric_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "numeric", output_cols, rename_func=not drop)
+
+    def email_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "email", output_cols, rename_func=not drop)
+
+    def ip_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "ip", output_cols, rename_func=not drop)
+
+    def url_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "url", output_cols, rename_func=not drop)
+
+    def gender_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "gender", output_cols, rename_func=not drop)
+
+    def boolean_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "boolean", output_cols, rename_func=not drop)
+
+    def zip_code_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "zip_code", output_cols, rename_func=not drop)
+
+    def credit_card_number_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "credit_card_number", output_cols, rename_func=not drop)
+
+    def datetime_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "datetime", output_cols, rename_func=not drop)
+
+    def object_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "object", output_cols, rename_func=not drop)
+
+    def array_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "array", output_cols, rename_func=not drop)
+
+    def phone_number_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "phone_number", output_cols, rename_func=not drop)
+
+    def social_security_number_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "social_security_number", output_cols, rename_func=not drop)
+
+    def http_code_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "http_code", output_cols, rename_func=not drop)
+
 
     # String clustering algorithms
 
