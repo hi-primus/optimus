@@ -126,9 +126,24 @@ class BaseSet():
     def duplicated(self, col_name, value=None, default_value=None, keep="first") -> DataFrameType:
         return self._mask(col_name, true_value=value, default_value=default_value, method="duplicated", keep=keep)
 
-    def match_dtype(self, col_name, value=None, default_value=None, dtype=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="match")
+    def unique(self, col_name, value=None, default_value=None, keep="first") -> DataFrameType:
+        return self._mask(col_name, true_value=value, default_value=default_value, method="unique", keep=keep)
 
+    def match(self, col_name, value=None, default_value=None, regex=None, dtype=None) -> DataFrameType:
+        return self._mask(col_name, true_value=value, default_value=default_value, method="match_dtype", regex=regex, dtype=dtype)
+
+    def match_regex(self, col_name, value=None, default_value=None, regex=None) -> DataFrameType:
+        return self._mask(col_name, true_value=value, default_value=default_value, method="match_regex", regex=regex)
+
+    def match_dtype(self, col_name, value=None, default_value=None, dtype=None) -> DataFrameType:
+        return self._mask(col_name, true_value=value, default_value=default_value, method="match_dtype", dtype=dtype)
+
+    def match_pattern(self, col_name, value=None, default_value=None, pattern=None) -> DataFrameType:
+        return self._mask(col_name, true_value=value, default_value=default_value, method="match_pattern", pattern=pattern)
+
+    def value_in(self, col_name, true_value=None, default_value=None, values=None) -> DataFrameType:
+        return self._mask(col_name, true_value=true_value, default_value=default_value, method="value_in", values=values)
+        
     def starts_with(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
         return self._mask(col_name, true_value=true_value, default_value=default_value, method="starts_with", value=value)
 

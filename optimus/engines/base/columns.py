@@ -2469,6 +2469,9 @@ class BaseColumns(ABC):
     def any_value_in(self, cols="*", values=None, inverse=False, tidy=True):
         return self._any_mask(cols, "value_in", values=values, inverse=inverse, tidy=tidy)
 
+    def any_match_pattern(self, cols="*", pattern=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "match_pattern", pattern=pattern, inverse=inverse, tidy=tidy)
+
     def any_expression(self, value=None, inverse=False, tidy=True):
         return self._any_mask("*", "expression", value=value, inverse=inverse, tidy=tidy)
 
@@ -2519,10 +2522,10 @@ class BaseColumns(ABC):
     def count_match(self, cols="*", regex=None, dtype=None,tidy=True):
         return self._count_mask(cols, "match", regex=regex, dtype=dtype, tidy=tidy)
 
-    def count_match_dtype(self, cols="*", dtype=None, tidy=True):
+    def count_dtype(self, cols="*", dtype=None, tidy=True):
         return self._count_mask(cols, "match_dtype", dtype=dtype, tidy=tidy)
 
-    def count_match_regex(self, cols="*", regex=None, tidy=True):
+    def count_regex(self, cols="*", regex=None, tidy=True):
         return self._count_mask(cols, "match_regex", regex=regex, tidy=tidy)
 
     def count_starting_with(self, cols="*", value=None, tidy=True):
@@ -2536,6 +2539,9 @@ class BaseColumns(ABC):
 
     def count_values_in(self, cols="*", values=None, tidy=True):
         return self._count_mask(cols, "value_in", values=values, tidy=tidy)
+
+    def count_match_pattern(self, cols="*", pattern=None, tidy=True):
+        return self._count_mask(cols, "match_pattern", pattern=pattern, tidy=tidy)
 
     def count_expression(self, value=None, inverse=False, tidy=True):
         return self._count_mask("*", "expression", value=value, inverse=inverse)
@@ -2604,6 +2610,9 @@ class BaseColumns(ABC):
     def match_dtype(self, cols="*", dtype=None, output_cols=None, drop=True) -> DataFrameType:
         rename_func = False if drop else lambda n: f"{n}_match_{dtype}"
         return self._mask(cols, "match_dtype", output_cols, rename_func, dtype=dtype)
+
+    def match_pattern(self, cols="*", pattern=None, output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "pattern", output_cols, rename_func=not drop, pattern=pattern)
 
     def starts_with(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
         rename_func = False if drop else lambda n: f"{n}_starts_with_{value}"
