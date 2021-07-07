@@ -447,10 +447,10 @@ class BaseRows(ABC):
     def drop_less_than(self, cols="*", value=None, how="any") -> DataFrameType:
         return self._mask(cols, method="less_than", drop=True, value=value, how=how)
 
-    def drop_equals(self, cols="*", value=None, how="any") -> DataFrameType:
+    def drop_equal(self, cols="*", value=None, how="any") -> DataFrameType:
         return self._mask(cols, method="equal", drop=True, value=value, how=how)
 
-    def drop_not_equals(self, cols="*", value=None, how="any") -> DataFrameType:
+    def drop_not_equal(self, cols="*", value=None, how="any") -> DataFrameType:
         return self._mask(cols, method="not_equal", drop=True, value=value, how=how)
 
     def drop_missings(self, cols="*", how="any") -> DataFrameType:

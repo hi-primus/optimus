@@ -2489,10 +2489,10 @@ class BaseColumns(ABC):
     def count_less_than_equal(self, cols="*", value=None, tidy=True):
         return self._count_mask(cols, "less_than_equal", value=value, tidy=tidy)
 
-    def count_equals(self, cols="*", value=None, tidy=True):
+    def count_equal(self, cols="*", value=None, tidy=True):
         return self._count_mask(cols, "equal", value=value, tidy=tidy)
 
-    def count_not_equals(self, cols="*", value=None, tidy=True):
+    def count_not_equal(self, cols="*", value=None, tidy=True):
         return self._count_mask(cols, "not_equal", value=value, tidy=tidy)
 
     def count_missings(self, cols="*", tidy=True):
