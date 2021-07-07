@@ -366,9 +366,6 @@ class BaseRows(ABC):
     def find(self, cols="*", value=None, drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="find", drop=drop, value=value, how=how)
 
-    def empty(self, cols="*", drop=False, how="any") -> DataFrameType:
-        return self._mask(cols, method="empty", drop=drop, how=how)
-
     def email(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="email", drop=drop, how=how)
     
@@ -488,9 +485,6 @@ class BaseRows(ABC):
 
     def drop_find(self, cols="*", value=None, how="any") -> DataFrameType:
         return self._mask(cols, method="find", drop=True, value=value, how=how)
-
-    def drop_empty(self, cols="*", how="any") -> DataFrameType:
-        return self._mask(cols, method="empty", drop=True, how=how)
 
     def drop_emails(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="email", drop=True, how=how)
