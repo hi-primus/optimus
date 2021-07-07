@@ -2486,16 +2486,16 @@ class BaseColumns(ABC):
     def count_less_than_equal(self, cols="*", value=None, tidy=True):
         return self._count_mask(cols, "less_than_equal", value=value, tidy=tidy)
 
-    def count_equal(self, cols="*", value=None, tidy=True):
+    def count_equals(self, cols="*", value=None, tidy=True):
         return self._count_mask(cols, "equal", value=value, tidy=tidy)
 
-    def count_not_equal(self, cols="*", value=None, tidy=True):
+    def count_not_equals(self, cols="*", value=None, tidy=True):
         return self._count_mask(cols, "not_equal", value=value, tidy=tidy)
 
-    def count_missing(self, cols="*", tidy=True):
+    def count_missings(self, cols="*", tidy=True):
         return self._count_mask(cols, "missing", tidy=tidy)
 
-    def count_null(self, cols="*", tidy=True):
+    def count_nulls(self, cols="*", tidy=True):
         return self._count_mask(cols, "null", tidy=tidy)
 
     def count_none(self, cols="*", tidy=True):
@@ -2534,7 +2534,7 @@ class BaseColumns(ABC):
     def count_containing(self, cols="*", value=None, tidy=True):
         return self._count_mask(cols, "contains", value=value, tidy=tidy)
 
-    def count_value_in(self, cols="*", values=None, tidy=True):
+    def count_values_in(self, cols="*", values=None, tidy=True):
         return self._count_mask(cols, "value_in", values=values, tidy=tidy)
 
     def count_expression(self, value=None, inverse=False, tidy=True):
