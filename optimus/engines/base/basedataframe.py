@@ -603,7 +603,7 @@ class BaseDataFrame(ABC):
         return tabulate(df.rows.limit(limit + 1).cols.select(columns).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
                         tablefmt="simple",
-                        showindex="never")
+                        showindex="never")+"\n"
 
     def export(self):
         """
