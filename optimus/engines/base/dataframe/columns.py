@@ -1,5 +1,7 @@
 from abc import abstractmethod
 from functools import reduce
+from optimus.engines.base.basedataframe import BaseDataFrame
+from optimus.infer import is_dict
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.core import val_to_list
 
@@ -30,7 +32,23 @@ class DataFrameBaseColumns():
         df = self.root
         
         dfd = df.data.reset_index(drop=True)
-        _dfd = self._pd.concat([_df.data.reset_index(drop=True) for _df in dfs], axis=1)
+
+        dfds = []
+
+        for _df in dfs:
+            if is_dict(_df):
+                _dfd = dfd
+                for col, value in _df.items():
+                    if isinstance(value, (BaseDataFrame,)):
+                        value = value.data[value.cols.names()[0]]
+                    _dfd[col] = value
+                _df = _dfd[list(_df.keys())]
+                del _dfd
+            else:
+                _df = _df.data
+            dfds.append(_df)
+
+        _dfd = self._pd.concat([_df.reset_index(drop=True) for _df in dfds], axis=1)
 
         for col in _dfd.columns:
             dfd[col] = _dfd[col]
