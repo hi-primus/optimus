@@ -194,6 +194,27 @@ class Mask(ABC):
         
         return df.new(self._to_frame(mask))
 
+    def expression(self, where=None, cols="*") -> MaskDataFrameType:
+        """
+        Find rows and appends resulting mask to the dataset
+        :param where: Mask, expression or name of the column to be taken as mask
+        :param output_col:
+        :return: Optimus Dataframe
+        """
+
+        df = self.root.cols.select(cols)
+
+        if is_str(where):
+            if where in df.cols.names():
+                where = df[where]
+            else:
+                where = eval(where)
+
+        if isinstance(where, (df.__class__,)):
+            return where
+
+        RaiseIt.type_error(where, ["Dataframe", "Expression", "Column name"])
+
     def find(self, cols="*", value=None) -> MaskDataFrameType:
         
         df = self.root

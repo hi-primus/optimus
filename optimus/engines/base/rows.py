@@ -72,25 +72,6 @@ class BaseRows(ABC):
 
         return df.cols.assign(kw_columns)
 
-    def find(self, where, output_col) -> DataFrameType:
-        """
-        Find rows and appends resulting mask to the dataset
-        :param where: Mask, expression or name of the column to be taken as mask
-        :param output_col:
-        :return: Optimus Dataframe
-        """
-
-        df = self.root
-        dfd = self.root.data
-
-        if is_str(where):
-            if where in df.cols.names():
-                where = df[where]
-            else:
-                where = eval(where)
-
-        return df.cols.assign({output_col: where})
-
     def select(self, expr=None, contains=None, case=None, flags=0, na=False, regex=False) -> DataFrameType:
         """
         :param expr: Expression used, For Ex: (df["A"] > 3) & (df["A"] <= 1000) or Column name "A"
@@ -300,7 +281,7 @@ class BaseRows(ABC):
     def _mask(self, cols, method, drop=False, how="any", *args, **kwargs) -> DataFrameType:
 
         df = self.root
-        mask = getattr(df.mask, method)(cols, *args, **kwargs)
+        mask = getattr(df.mask, method)(cols=cols, *args, **kwargs)
 
         if how=="any":
             mask = mask.mask.any()
@@ -423,4 +404,7 @@ class BaseRows(ABC):
     
     def http_code(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="http_code", drop=drop, how=how)
+    
+    def expression(self, where=None, cols="*", drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="expression", drop=drop, how=how, where=where)
     

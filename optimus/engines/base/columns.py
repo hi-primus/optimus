@@ -2378,7 +2378,7 @@ class BaseColumns(ABC):
 
     def _mask(self, cols="*", method: str=None, output_cols=None, rename_func=True, *args, **kwargs) -> DataFrameType:
 
-        append_df = getattr(self.root.mask, method)(cols, *args, **kwargs)
+        append_df = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
         if output_cols:
             append_df = append_df.cols.rename(cols, output_cols)
@@ -2391,7 +2391,7 @@ class BaseColumns(ABC):
 
     def _any_mask(self, cols="*", method: str=None, inverse=False, tidy=True, *args, **kwargs) -> bool:
 
-        mask = getattr(self.root.mask, method)(cols, *args, **kwargs)
+        mask = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
         if inverse:
             # assigns True if there is any False value
@@ -2404,7 +2404,7 @@ class BaseColumns(ABC):
 
     def _count_mask(self, cols="*", method: str=None, inverse=False, tidy=True, *args, **kwargs) -> bool:
 
-        mask = getattr(self.root.mask, method)(cols, *args, **kwargs)
+        mask = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
         if inverse:
             # assigns True if there is any False value
@@ -2477,6 +2477,9 @@ class BaseColumns(ABC):
     def any_value_in(self, cols="*", values=None, inverse=False, tidy=True):
         return self._any_mask(cols, "value_in", values=values, inverse=inverse, tidy=tidy)
 
+    def any_expression(self, value=None, inverse=False, tidy=True):
+        return self._any_mask("*", "expression", value=value, inverse=inverse, tidy=tidy)
+
     # Count mask
 
     def count_greater_than(self, cols="*", value=None, tidy=True):
@@ -2539,6 +2542,8 @@ class BaseColumns(ABC):
     def count_value_in(self, cols="*", values=None, tidy=True):
         return self._count_mask(cols, "value_in", values=values, tidy=tidy)
 
+    def count_expression(self, value=None, inverse=False, tidy=True):
+        return self._count_mask("*", "expression", value=value, inverse=inverse)
 
     # Append mask
 
@@ -2616,6 +2621,9 @@ class BaseColumns(ABC):
 
     def value_in(self, cols="*", values=None, output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "value_in", output_cols, rename_func=not drop, values=values)
+
+    def expression(self, where=None, cols="*", output_cols=None, drop=True) -> DataFrameType:
+        return self._mask(cols, "expression", output_cols, rename_func=not drop, where=where)
 
     # String clustering algorithms
 
