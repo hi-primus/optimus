@@ -802,15 +802,17 @@ class BaseColumns(ABC):
         if ref_col:
             ref_col = parse_columns(df, ref_col)
             new_index = all_columns.index(ref_col[0])
+            old_index = all_columns.index(column[0])
+            left = -1 if new_index > old_index else 0
         else:
             new_index = all_columns
         # Column to move
 
         if position == 'after':
             # Check if the movement is from right to left:
-            new_index = new_index + 1
+            new_index = new_index + 1 + left
         elif position == 'before':
-            new_index = new_index
+            new_index = new_index + left
         elif position == 'beginning':
             new_index = 0
         elif position == 'end':
