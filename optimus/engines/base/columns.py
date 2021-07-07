@@ -875,7 +875,7 @@ class BaseColumns(ABC):
             if dfd[col_name].dtype.name == "category":
                 result[col_name] = "category"
             else:
-                result[col_name] = np.dtype(dfd[col_name]).type
+                result[col_name] = dfd[col_name].dtype.name
         return format_dict(result)
 
     def agg_exprs(self, cols="*", funcs=None, *args, compute=True, tidy=True, parallel=False):

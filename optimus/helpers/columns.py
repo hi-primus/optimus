@@ -352,11 +352,12 @@ def filter_col_name_by_dtypes(df, data_type):
     :return:
     """
     data_type = parse_dtypes(df, data_type)
-    data_type = tuple(val_to_list(data_type))
+    data_type = val_to_list(data_type)
     # Filter columns by data type
     result = []
     for col_name in df.cols.names():
-        if str(df.cols.schema_dtype(col_name)) in data_type:
+        found_data_type = df.cols.schema_dtype(col_name)        
+        if any([dt in found_data_type for dt in data_type]):
             result.append(col_name)
     return result
 

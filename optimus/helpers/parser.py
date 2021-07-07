@@ -1,3 +1,4 @@
+from optimus.helpers.core import one_list_to_val, val_to_list
 from optimus.helpers.logger import logger
 from optimus.infer import is_numeric, is_nan
 from optimus.helpers.constants import PYTHON_SHORT_TYPES
@@ -76,16 +77,15 @@ def parse_dtypes(df, value):
     :param df:
     :return:
     """
-    if not isinstance(value, list):
-        value = [value]
-    try:
-        data_type = [df.constants.DTYPES_DICT[df.constants.SHORT_DTYPES[v]] for v in value]
-    except KeyError:
-        data_type = value
 
-    if isinstance(data_type, list) and len(data_type) == 1:
-        result = data_type[0]
-    else:
-        result = data_type
-    return result
+    value = val_to_list(value)
+
+    data_type = []
+
+    for v in value:
+        v = df.constants.SHORT_DTYPES.get(v, v)
+        # v = df.constants.DTYPES_DICT.get(v, v)
+        data_type.append(v)
+
+    return one_list_to_val(data_type)
 
