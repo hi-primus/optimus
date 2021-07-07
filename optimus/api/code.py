@@ -13,7 +13,7 @@ from .prepare import prepare
 from optimus.engines.base.engine import BaseEngine as engine_class
 from optimus.engines.base.stringclustering import Clusters as clusters_class
 
-from optimus.engines.base.create import Create as create_class
+from optimus.engines.base.create import BaseCreate as create_class
 from optimus.engines.base.io.load import BaseLoad as load_class
 from optimus.engines.base.io.save import BaseSave as save_class
 from optimus.engines.base.io.connect import Connect as connect_class

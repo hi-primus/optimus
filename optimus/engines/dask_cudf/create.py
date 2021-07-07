@@ -1,28 +1,16 @@
+from optimus.engines.base.create import BaseCreate
+from optimus.helpers.types import DataFrameType, InternalDataFrameType
 import cudf
+import pandas as pd
 
+from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
 
-class Create:
-    def __init__(self, root):
-        self.root = root
+class Create(BaseCreate):
 
-    def dataframe(self, dict=None, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
-        """
-        Helper to create dataframe:
-        :param dict:
-        :param cols: List of Tuple with name, data type and a flag to accept null
-        :param rows: List of Tuples with the same number and types that cols
-        :param pdf: a pandas dataframe
-        :param n_partitions:
-        :return: Dataframe
-        """
+    def _dfd_from_dict(self, dict) -> InternalDataFrameType:
+        return cudf.DataFrame({ name: cudf.Series(values, dtype=dtype) for (name, dtype, nulls), values in dict.items() })
 
-        if dict:
-            cdf = cudf.DataFrame(dict)
-        elif pdf:
-            cdf = cudf.from_pandas(pdf)
-        else:
-            cdf = cudf.DataFrame(kwargs)
-
-        df = self.root.dataframe(cdf, n_partitions)
-        return df
-
+    def _df_from_dfd(self, dfd, n_partitions=1, *args, **kwargs) -> DataFrameType:
+        if isinstance(dfd, (pd.DataFrame,)):
+            dfd = cudf.from_pandas(dfd)
+        return DaskCUDFDataFrame(dfd, n_partitions, *args, **kwargs)

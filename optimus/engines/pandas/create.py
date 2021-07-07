@@ -1,26 +1,13 @@
+from optimus.helpers.types import DataFrameType
+from optimus.engines.base.create import BaseCreate
 import pandas as pd
 
 from optimus.engines.pandas.dataframe import PandasDataFrame
 
 
-class Create:
-    def __init__(self, root):
-        self.root = root
+class Create(BaseCreate):
 
-    def dataframe(self, dict=None, cols=None, rows=None, pdf=None, n_partitions=1, *args, **kwargs):
-        """
-        Helper to create dataframe:
-        :param cols: List of Tuple with name, data type and a flag to accept null
-        :param rows: List of Tuples with the same number and types that cols
-        :param pdf: a pandas dataframe
-        :param n_partitions:
-        :return: Dataframe
-        """
+    def _df_from_dfd(self, dfd, *args, **kwargs) -> DataFrameType:
+        return PandasDataFrame(dfd, *args, **kwargs)
 
-        if dict:
-            pdf = pd.DataFrame(dict)
-        elif pdf is None:
-            pdf = pd.DataFrame(kwargs)
 
-        df = PandasDataFrame(pdf)
-        return df

@@ -1,27 +1,61 @@
-from optimus.helpers.types import DataFrameType
+from abc import abstractmethod
+from optimus.engines.base.meta import Meta
+from optimus.infer import is_tuple
+from optimus.helpers.types import DataFrameType, InternalDataFrameType
 import pandas as pd
 
 
-class Create:
+class BaseCreate:
     def __init__(self, root):
         self.root = root
 
-    def dataframe(self, dict: dict=None, cols=None, rows=None, pdf: pd.DataFrame=None, n_partitions: int=1, *args, **kwargs) -> DataFrameType:
-        """
-        Helper to create dataframe:
-        :param dict:
-        :param cols: List of Tuple with name, data type and a flag to accept null
-        :param rows: List of Tuples with the same number and types that cols
-        :param pdf: a pandas dataframe
-        :param n_partitions:
-        :return: Dataframe
-        """
-        
-        if dict:
-            pdf = pd.DataFrame(dict)
-        elif pdf is None:
-            pdf = pd.DataFrame(kwargs)
+    def _dictionary(self, dict):
 
-        df = self.root.dataframe(pdf, n_partitions)
+        new_dict = {}
+        
+        for key, values in dict.items():
+            if is_tuple(key):
+                if len(key) == 3:
+                    name, dtype, nulls = key
+                elif len(key) == 2:
+                    name, dtype = key
+                    nulls = False
+            else:
+                name = key
+                dtype = None
+                nulls = False
+
+            new_dict[(name, dtype, nulls)] = values
+
+        return new_dict
+
+    
+    def _dfd_from_dict(self, dict):
+        return pd.DataFrame({ name: pd.Series(values, dtype=dtype) for (name, dtype, nulls), values in dict.items() })
+
+    @abstractmethod
+    def _df_from_dfd(self, dfd, *args, **kwargs):
+        pass
+
+
+    def dataframe(self, dict: dict=None, dfd: InternalDataFrameType=None, *args, **kwargs) -> DataFrameType:
+        """
+        Creates a dictionary using the form 
+        {"Column name": ["value 1", "value 2"], ...} or {("Column name", "str", True): ["value 1", "value 2"]}
+        Where the tuple keys uses the form (str, str, boolean) for (column name, data type, allow nulls)
+        :param dict: A dictionary to construct the dataframe for
+        :param dfd: A pandas dataframe, ignores dict when passed
+        :return: BaseDataFrame
+        """
+
+        if dfd is None:
+            if dict is None:
+                dict = kwargs
+                kwargs = {}
+            dict = self._dictionary(dict)
+            dfd = self._dfd_from_dict(dict)
+
+        df = self._df_from_dfd(dfd, *args, **kwargs)
+        df.meta = Meta.set(df.meta, value={"max_cell_length": df.cols.len("*").cols.max()})
         return df
 
