@@ -5,13 +5,13 @@ from optimus.engines.base.mask import Mask
 class DaskCUDFMask(Mask):
 
     def numeric(self, cols="*"):
-        return self.root.cols.apply(cols, is_numeric_cudf)
+        return self.root[cols].cols.apply(cols, is_numeric_cudf)
 
     def int(self, cols="*"):
-        return self.root.cols.apply(cols, is_integer_cudf)
+        return self.root[cols].cols.apply(cols, is_integer_cudf)
 
     def float(self, cols="*"):
-        return self.root.cols.apply(cols, is_float_cudf)
+        return self.root[cols].cols.apply(cols, is_float_cudf)
 
     def str(self, cols="*"):
-        return self.root.cols.apply(cols, is_string_cudf)
+        return self.root[cols].cols.apply(cols, is_string_cudf)
