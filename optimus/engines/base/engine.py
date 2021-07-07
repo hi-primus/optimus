@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 from optimus.engines.base.io.connect import Connect
 from optimus.helpers.logger import logger
-
+import numpy as np
 
 class BaseEngine:
 
@@ -23,6 +23,14 @@ class BaseEngine:
         :return: JDBC object
         """
         return Connect()
+
+    @property
+    def nan(self):
+        """
+        Create the JDBC string connection
+        :return: JDBC object
+        """
+        return np.nan
 
     @abstractmethod
     def create(self):
