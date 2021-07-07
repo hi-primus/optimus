@@ -446,7 +446,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def cast(self, cols="*", dtype=None, output_cols=None, columns=None) -> DataFrameType:
+    def cast(self, cols=None, dtype=None, output_cols=None, columns=None) -> DataFrameType:
         """
         NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
         trnasformation like string to number in which should output nan.
@@ -470,7 +470,8 @@ class BaseColumns(ABC):
 
         df = self.root
 
-        columns = prepare_columns(df, cols, output_cols, args=dtype)
+        if columns is None:
+            columns = prepare_columns(df, cols, output_cols, args=dtype)
 
         func_map = {
             "float": "to_float",
@@ -480,7 +481,15 @@ class BaseColumns(ABC):
             "str": "to_string"
         }
 
-        for input_col, output_col, arg in columns:
+        for item in columns:
+
+            if len(item) == 3:
+                input_col, output_col, arg = item
+            elif len(item) == 2:
+                input_col, arg = item
+                output_col = input_col
+            else:
+                RaiseIt.value_error(columns, ["list of tuples"])
 
             if arg in func_map.keys():
                 df = getattr(df.cols, func_map[arg])(input_col, output_col)
