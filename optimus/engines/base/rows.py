@@ -297,6 +297,19 @@ class BaseRows(ABC):
 
         return df
 
+
+    def str(self, cols="*", drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="str", drop=drop, how=how)
+
+    def int(self, cols="*", drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="int", drop=drop, how=how)
+
+    def float(self, cols="*", drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="float", drop=drop, how=how)
+
+    def numeric(self, cols="*", drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="numeric", drop=drop, how=how)
+
     def greater_than_equal(self, cols="*", value=None, drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="greater_than_equal", drop=drop, value=value, how=how)
 
@@ -409,6 +422,18 @@ class BaseRows(ABC):
         return self._mask(cols, method="expression", drop=drop, how=how, where=where)
     
     # drop functions
+
+    def drop_str(self, cols="*", how="any") -> DataFrameType:
+        return self._mask(cols, method="str", drop=True, how=how)
+
+    def drop_int(self, cols="*", how="any") -> DataFrameType:
+        return self._mask(cols, method="int", drop=True, how=how)
+
+    def drop_float(self, cols="*", how="any") -> DataFrameType:
+        return self._mask(cols, method="float", drop=True, how=how)
+
+    def drop_numeric(self, cols="*", how="any") -> DataFrameType:
+        return self._mask(cols, method="numeric", drop=True, how=how)
     
     def drop_greater_than_equal(self, cols="*", value=None, how="any") -> DataFrameType:
         return self._mask(cols, method="greater_than_equal", drop=True, value=value, how=how)
