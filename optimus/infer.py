@@ -346,6 +346,13 @@ def is_tuple(value):
     """
     return isinstance(value, tuple)
 
+def is_list_or_tuple(value):
+    """
+    Check if an object is a list or a tuple
+    :param value:
+    :return:
+    """
+    return isinstance(value, list)
 
 def is_list_of_int(value):
     """
