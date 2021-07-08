@@ -514,7 +514,7 @@ class BaseDataFrame(ABC):
         imgkit.from_string(self.table_html(limit=limit, full=True), path, css=css)
         print_html("<img src='" + path + "'>")
 
-    def table_html(self, limit=10, columns=None, title=None, full=False, truncate=True, count=True):
+    def table_html(self, limit=10, columns=None, title=None, full=False, truncate=True, count=True, highlight=[]):
         """
         Return a HTML table with the spark cols, data types and values
         :param columns: Columns to be printed
@@ -559,22 +559,22 @@ class BaseDataFrame(ABC):
         total_rows = humanize.intword(total_rows)
         total_cols = df.cols.count()
         total_partitions = df.partitions()
-
         df_type = type(df)
+        highlight = val_to_list(highlight)
         output = template.render(df_type=df_type, cols=final_columns, data=data, limit=limit, total_rows=total_rows,
                                  total_cols=total_cols,
-                                 partitions=total_partitions, title=title, truncate=truncate)
+                                 partitions=total_partitions, title=title, truncate=truncate, highlight=highlight)
 
         if full is True:
             output = HEADER + output + FOOTER
         return output
 
-    def display(self, limit=10, columns=None, title=None, truncate=True, plain_text=False):
+    def display(self, limit=10, columns=None, title=None, truncate=True, plain_text=False, highlight=[]):
         # TODO: limit, columns, title, truncate
         df = self
 
         if is_notebook() and not plain_text:
-            print_html(df.table(limit, columns, title, truncate))
+            print_html(df.table(limit, columns, title, truncate, highlight))
 
         else:
             print(df.ascii(limit, columns))
@@ -582,12 +582,12 @@ class BaseDataFrame(ABC):
     def print(self, limit=10, columns=None):
         print(self.ascii(limit, columns))
 
-    def table(self, limit=None, columns=None, title=None, truncate=True):
+    def table(self, limit=None, columns=None, title=None, truncate=True, highlight=[]):
         df = self
         try:
             if is_notebook():
                 # TODO: move the html param to the ::: if is_notebook() and engine.output is "html":
-                return df.table_html(title=title, limit=limit, columns=columns, truncate=truncate)
+                return df.table_html(title=title, limit=limit, columns=columns, truncate=truncate, highlight=highlight)
 
         except NameError as e:
             print(e)

@@ -9,41 +9,47 @@
 {% endmacro %}
 
 {{header_footer(limit, total_rows, total_cols, partitions)}}
-<table class="optimus_table" style="font-size: 12px;">
-    <thead style="border-bottom: 1px solid black;">
-    <tr>
-        {%for col in cols: %}
-        <th style="font-family: sans-serif;">
-            <div class="column_name" style="font-size: 1.2em;">{{col[0]}}</div>
-            <div class="data_type" style="font-size: 0.8em; font-weight: normal;">{{loop.index}} ({{col[1]}})</div>
-            <div class="data_type" style="font-size: 0.8em; font-weight: normal;">
-                {% if col[2] == true %}
-                nullable
-                {% else %}
-                not nullable
+<span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
+    <table class="optimus_table" style="font-size: 12px;">
+        <thead style="border-bottom: 1px solid currentColor;">
+        <tr>
+            {%for col in cols: %}
+            <th style="font-family: sans-serif; {{'background-color: rgba(240,240,0,0.18); ' if col[0] in highlight else ''}}">
+                <div class="column_name" style="font-size: 1.2em;">{{col[0]}}</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">{{loop.index}} ({{col[1]}})</div>
+                {% if col[2] != undefined %}
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">
+                    {% if col[2] == true %}
+                    nullable
+                    {% else %}
+                    not nullable
+                    {% endif %}
+                </div>
                 {% endif %}
-            </div>
-        </th>
-        {% endfor %}
-    </tr>
+            </th>
+            {% endfor %}
+        </tr>
 
-    </thead>
-    <tbody style="font-family: monospace; border-bottom: 1px solid #cccccc;">
-    {%for r in data:%}
-    <tr>
-        {%for k,v in r.items(): %}
-        <td style="border: 0px;">
-            <div style="min-height: 14px;" title="{{v|string|replace(" ", "&#8901;")|safe}}">
-                {% if truncate == true %}
-                {{v|string|replace(" ",  "&#8901;")|truncate(128)|safe}}
-                 {% else %}
-                {{v|string|replace(" ",  "&#8901;")|safe}}
-                {% endif %}
-            </div>
-        </td>
+        </thead>
+        <tbody style="font-family: monospace;">
+        {%for r in data:%}
+        <tr>
+            {%for k,v in r.items(): %}
+            <td style="border: 0px; {{'background-color: rgba(240,240,0,0.18); ' if k in highlight else ''}}">
+                <div style="min-height: 14px;" title="{{v|string|replace(" ", "&#8901;")|safe}}">
+                    {{i}}
+                    {% if truncate == true %}
+                    {{v|string|replace(" ",  "&#8901;")|truncate(128)|safe}}
+                    {% else %}
+                    {{v|string|replace(" ",  "&#8901;")|safe}}
+                    {% endif %}
+                </div>
+            </td>
+            {% endfor %}
+        </tr>
         {% endfor %}
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
+    <div style="background-color: currentColor; opacity: 0.2; height: 1px; width: 100%"></div>
+</span>
 {{header_footer(limit, total_rows, total_cols,partitions, df_type)}}
