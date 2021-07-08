@@ -133,7 +133,7 @@ class DataFrameBaseColumns():
         df = self.root
         return df.cols.apply(input_cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, set_index=True)
+                             output_cols=output_cols, mode="map", set_index=True)
 
     @staticmethod
     def astype(*args, **kwargs):
