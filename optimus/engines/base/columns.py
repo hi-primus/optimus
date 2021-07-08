@@ -2284,8 +2284,9 @@ class BaseColumns(ABC):
         return cols
 
     def count_zeros(self, cols="*", tidy=True, compute=True):
-        df = self.root
-        return df.cols.agg_exprs(cols, self.F.count_zeros, tidy=True, compute=True)
+        return self.count_equal(cols, 0, tidy)
+        # df = self.root
+        # return df.cols.agg_exprs(cols, self.F.count_zeros, tidy=tidy, compute=compute)
 
     @staticmethod
     @abstractmethod
