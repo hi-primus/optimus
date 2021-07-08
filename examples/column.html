@@ -14272,7 +14272,12 @@ a.anchor-link {
 
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>Hi, this notebook will show you almost all the columns operation availables in Optimus. For row operation, IO, ML and DL please go to the examples folder in the repo</p>
+<h1 id="Optimus-column-operations">Optimus column operations<a class="anchor-link" href="#Optimus-column-operations">&#182;</a></h1>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p>Hi, this notebook will show you some column operation available in Optimus.</p>
 
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
@@ -14297,6 +14302,7 @@ a.anchor-link {
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -14310,70 +14316,13 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">)</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="Columns-Operations">Columns Operations<a class="anchor-link" href="#Columns-Operations">&#182;</a></h2><p>In this notebook you can see a detailed overview ok all the columns operations available in Optimus. You can access the operation via df.cols.</p>
-
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[4]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">optimus</span> <span class="kn">import</span> <span class="n">Optimus</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[5]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Create optimus</span>
 <span class="n">op</span> <span class="o">=</span> <span class="n">Optimus</span><span class="p">(</span><span class="s2">&quot;pandas&quot;</span><span class="p">)</span>
 </pre></div>
 
      </div>
 </div>
 </div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-
-<div class="jp-OutputArea-child">
-
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr">
-<pre>[nltk_data] Downloading package averaged_perceptron_tagger
-[nltk_data]   Package averaged_perceptron_tagger is already up-to-
-[nltk_data]       date!
-</pre>
-</div>
-</div>
-
-</div>
-
 </div>
 
 </div>
@@ -14384,7 +14333,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[6]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[4]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">create</span><span class="o">.</span><span class="n">dataframe</span><span class="p">({</span>
@@ -14430,7 +14379,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -14863,7 +14812,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[7]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[5]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;new_col_1&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -14898,7 +14847,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -15363,12 +15312,12 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Append-one-or-multiples-dataframes-columns-like">Append one or multiples dataframes columns like<a class="anchor-link" href="#Append-one-or-multiples-dataframes-columns-like">&#182;</a></h3>
+<h3 id="Append-one-or-multiples-columns-from-dataframes">Append one or multiples columns from dataframes<a class="anchor-link" href="#Append-one-or-multiples-columns-from-dataframes">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[8]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[6]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_col</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">create</span><span class="o">.</span><span class="n">dataframe</span><span class="p">({(</span><span class="s2">&quot;NEW COLUMN&quot;</span><span class="p">,</span> <span class="s2">&quot;str&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span> <span class="p">[</span><span class="s2">&quot;q&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">]})</span>
@@ -15404,7 +15353,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -15916,7 +15865,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[9]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[7]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;col 2&quot;</span><span class="p">:</span> <span class="mf">2.22</span><span class="p">,</span> <span class="s2">&quot;col 3&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;col 2&quot;</span><span class="p">,</span> <span class="s2">&quot;col 3&quot;</span><span class="p">])</span>
@@ -15950,7 +15899,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -16546,7 +16495,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[10]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[8]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
@@ -16584,7 +16533,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -16802,7 +16751,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[11]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[9]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">names</span><span class="p">())</span>
@@ -16862,7 +16811,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -17080,7 +17029,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[12]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;n.*&quot;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -17114,7 +17063,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -17290,7 +17239,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[13]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[11]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">data_type</span><span class="o">=</span><span class="s2">&quot;int&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -17324,7 +17273,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -17458,7 +17407,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[14]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[12]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;number&quot;</span><span class="p">)</span>
@@ -17492,7 +17441,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -18004,7 +17953,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[15]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">rename</span><span class="p">([(</span><span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;gods&quot;</span><span class="p">)],</span> <span class="nb">str</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;NUMBER&quot;</span><span class="p">,</span> <span class="s2">&quot;GODS&quot;</span><span class="p">])</span>
@@ -18038,7 +17987,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -18550,10 +18499,10 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[16]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[14]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;new column&quot;</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -18584,7 +18533,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -18648,7 +18597,7 @@ a.anchor-link {
                 
             </th>
             
-            <th style="font-family: sans-serif; ">
+            <th style="font-family: sans-serif; background-color: rgba(240,240,0,0.18); ">
                 <div class="column_name" style="font-size: 1.2em;">new column</div>
                 <div class="data_type" style="font-size: 0.8em; font-weight: normal;">11 (object)</div>
                 
@@ -18751,7 +18700,7 @@ a.anchor-link {
                 </div>
             </td>
             
-            <td style="border: 0px; ">
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
                 <div style="min-height: 14px;" title="q">
                     
                     
@@ -18854,7 +18803,7 @@ a.anchor-link {
                 </div>
             </td>
             
-            <td style="border: 0px; ">
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
                 <div style="min-height: 14px;" title="w">
                     
                     
@@ -18957,7 +18906,7 @@ a.anchor-link {
                 </div>
             </td>
             
-            <td style="border: 0px; ">
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
                 <div style="min-height: 14px;" title="e">
                     
                     
@@ -19060,7 +19009,7 @@ a.anchor-link {
                 </div>
             </td>
             
-            <td style="border: 0px; ">
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
                 <div style="min-height: 14px;" title="r">
                     
                     
@@ -19096,7 +19045,7 @@ a.anchor-link {
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[17]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[15]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -19130,7 +19079,7 @@ a.anchor-link {
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -19651,7 +19600,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[18]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[16]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;str&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;num 2&quot;</span><span class="p">,</span> <span class="s2">&quot;int&quot;</span><span class="p">)])</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;num 2&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">dtypes</span><span class="p">()</span>
@@ -19670,7 +19619,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[18]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[16]:</div>
 
 
 
@@ -19693,7 +19642,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[19]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[17]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;str&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">dtypes</span><span class="p">()</span>
@@ -19712,7 +19661,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[19]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[17]:</div>
 
 
 
@@ -19745,7 +19694,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[20]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[18]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;str&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">dtypes</span><span class="p">()</span>
@@ -19764,7 +19713,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[20]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[18]:</div>
 
 
 
@@ -19797,7 +19746,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[21]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[19]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="s2">&quot;thing&quot;</span><span class="p">,</span> <span class="s2">&quot;after&quot;</span><span class="p">,</span> <span class="s2">&quot;words&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;thing&quot;</span><span class="p">,</span> <span class="s2">&quot;words&quot;</span><span class="p">])</span>
@@ -19831,7 +19780,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -20348,7 +20297,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[22]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[20]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -20382,7 +20331,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -20894,7 +20843,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[23]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[21]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s2">&quot;desc&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -20928,7 +20877,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -21440,12 +21389,12 @@ Because of that we prefer to create a tuple like this:</p>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Drop-one-columns">Drop one columns<a class="anchor-link" href="#Drop-one-columns">&#182;</a></h3>
+<h3 id="Drop-one-column">Drop one column<a class="anchor-link" href="#Drop-one-column">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[24]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[22]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -21479,7 +21428,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -21949,7 +21898,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[25]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[23]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;words&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -21983,7 +21932,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -22413,7 +22362,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[26]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[24]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -22454,7 +22403,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -22972,7 +22921,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -23437,15 +23386,13 @@ Because of that we prefer to create a tuple like this:</p>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="Unnest--Columns">Unnest  Columns<a class="anchor-link" href="#Unnest--Columns">&#182;</a></h2><p>With unnest you can convert one column into multiple ones. it can hadle string, array and vectors</p>
-<h3 id="Spark">Spark<a class="anchor-link" href="#Spark">&#182;</a></h3><p>Can split strings with split()</p>
-<h3 id="Pandas">Pandas<a class="anchor-link" href="#Pandas">&#182;</a></h3><p>via str.split()</p>
+<h2 id="Unnest--Columns">Unnest  Columns<a class="anchor-link" href="#Unnest--Columns">&#182;</a></h2><p>With unnest you can convert one column into multiple ones. it can hadle strings and arrays.</p>
 
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[27]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[25]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;two strings&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">unnest</span><span class="p">(</span><span class="s2">&quot;two strings&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -23479,7 +23426,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -23655,7 +23602,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[28]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[26]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;two strings&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">unnest</span><span class="p">(</span><span class="s2">&quot;two strings&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -23689,7 +23636,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -23823,7 +23770,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[29]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[27]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;col_array&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">unnest</span><span class="p">(</span><span class="s2">&quot;col_array&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -23857,7 +23804,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -24033,7 +23980,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[30]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[28]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;col_int&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">unnest</span><span class="p">(</span><span class="s2">&quot;col_int&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -24067,7 +24014,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -24243,7 +24190,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[31]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[29]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;two strings&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">unnest</span><span class="p">([</span><span class="s2">&quot;two strings&quot;</span><span class="p">],</span> <span class="n">splits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -24277,7 +24224,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -24500,7 +24447,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[32]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[30]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_fill</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">create</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">],</span> <span class="n">B</span><span class="o">=</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">],</span> <span class="n">C</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
@@ -24535,7 +24482,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -24737,7 +24684,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[33]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[31]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_fill</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">impute</span><span class="p">([</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">],</span> <span class="s2">&quot;continuous&quot;</span><span class="p">,</span> <span class="s2">&quot;median&quot;</span><span class="p">)</span>
@@ -24756,7 +24703,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[33]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[31]:</div>
 
 
 
@@ -24771,7 +24718,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -24973,7 +24920,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[34]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[32]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_fill</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">impute</span><span class="p">([</span><span class="s2">&quot;C&quot;</span><span class="p">],</span> <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;most_frequent&quot;</span><span class="p">)</span>
@@ -24992,7 +24939,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[34]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[32]:</div>
 
 
 
@@ -25007,7 +24954,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -25214,7 +25161,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[35]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[33]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span>
@@ -25233,7 +25180,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[35]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[33]:</div>
 
 
 
@@ -25248,7 +25195,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -25763,7 +25710,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[36]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[34]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
@@ -25800,7 +25747,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -26313,7 +26260,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[37]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[35]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">set</span><span class="o">.</span><span class="n">numeric</span><span class="p">(</span><span class="s2">&quot;filter&quot;</span><span class="p">,</span> <span class="s2">&quot;new string&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;filter&quot;</span><span class="p">)</span>
@@ -26347,7 +26294,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -26859,7 +26806,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[38]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[36]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
@@ -26896,7 +26843,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -27403,12 +27350,12 @@ Because of that we prefer to create a tuple like this:</p>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Select-row-where-column-&quot;filter&quot;-is-&quot;int&quot;">Select row where column "filter" is "int"<a class="anchor-link" href="#Select-row-where-column-&quot;filter&quot;-is-&quot;int&quot;">&#182;</a></h3>
+<h3 id="Select-rows-where-filter-is-an-integer">Select rows where <code>filter</code> is an integer<a class="anchor-link" href="#Select-rows-where-filter-is-an-integer">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[39]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[37]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="s2">&quot;filter&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;filter&quot;</span><span class="p">)</span>
@@ -27442,7 +27389,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -27640,12 +27587,12 @@ Because of that we prefer to create a tuple like this:</p>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Create-an-abstract-dataframe-to-filter-a-rows-where-the-value-of-column-&quot;num&quot;&gt;-1">Create an abstract dataframe to filter a rows where the value of column "num"&gt; 1<a class="anchor-link" href="#Create-an-abstract-dataframe-to-filter-a-rows-where-the-value-of-column-&quot;num&quot;&gt;-1">&#182;</a></h3>
+<h3 id="Create-an-abstract-dataframe-to-filter-rows-where-the-value-of-num-is-greater-than-1">Create an abstract dataframe to filter rows where the value of <code>num</code> is greater than 1<a class="anchor-link" href="#Create-an-abstract-dataframe-to-filter-rows-where-the-value-of-num-is-greater-than-1">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[40]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[38]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">greater_than</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;num&quot;</span><span class="p">)</span>
@@ -27679,7 +27626,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -28083,12 +28030,12 @@ Because of that we prefer to create a tuple like this:</p>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Create-an-abstract-dataframe-(Pandas-UDF)-to-pass-two-arguments-to-a-function-a-apply-a-sum-operation">Create an abstract dataframe (Pandas UDF) to pass two arguments to a function a apply a sum operation<a class="anchor-link" href="#Create-an-abstract-dataframe-(Pandas-UDF)-to-pass-two-arguments-to-a-function-a-apply-a-sum-operation">&#182;</a></h3>
+<h3 id="Create-an-UDF-with-two-arguments-and-pass-it-to-df.cols.set">Create an UDF with two arguments and pass it to <code>df.cols.set</code><a class="anchor-link" href="#Create-an-UDF-with-two-arguments-and-pass-it-to-df.cols.set">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[41]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[39]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">):</span>
@@ -28125,7 +28072,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -28674,12 +28621,12 @@ Because of that we prefer to create a tuple like this:</p>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Apply-a-column-expression-to-when-the-value-of-&quot;num&quot;-or-&quot;num-2&quot;-is-grater-than-2">Apply a column expression to when the value of "num" or "num 2" is grater than 2<a class="anchor-link" href="#Apply-a-column-expression-to-when-the-value-of-&quot;num&quot;-or-&quot;num-2&quot;-is-grater-than-2">&#182;</a></h3>
+<h3 id="Set-a-value-where-the-values-of-num-and-num-2-are-both-greater-than-2">Set a value where the values of <code>num</code> and <code>num 2</code> are both greater than 2<a class="anchor-link" href="#Set-a-value-where-the-values-of-num-and-num-2-are-both-greater-than-2">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[42]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[40]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">where</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;num&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;num 2&quot;</span><span class="p">]</span><span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span>
@@ -28714,7 +28661,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -29226,7 +29173,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[43]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[41]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_null</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">create</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">timestamp</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">],</span> <span class="nb">id</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">nan</span><span class="p">])</span>
@@ -29246,7 +29193,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[43]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[41]:</div>
 
 
 
@@ -29261,7 +29208,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -29525,7 +29472,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[44]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[42]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_null</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">count_nulls</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
@@ -29544,7 +29491,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[44]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[42]:</div>
 
 
 
@@ -29562,7 +29509,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[45]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[43]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_null</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">count_nulls</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
@@ -29581,7 +29528,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[45]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[43]:</div>
 
 
 
@@ -29599,12 +29546,12 @@ Because of that we prefer to create a tuple like this:</p>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="Count-uniques">Count uniques<a class="anchor-link" href="#Count-uniques">&#182;</a></h2><h3 id="Spark">Spark<a class="anchor-link" href="#Spark">&#182;</a></h3><h3 id="Pandas">Pandas<a class="anchor-link" href="#Pandas">&#182;</a></h3>
+<h2 id="Count-uniques">Count uniques<a class="anchor-link" href="#Count-uniques">&#182;</a></h2>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[46]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[44]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">count_uniques</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
@@ -29623,7 +29570,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[46]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[44]:</div>
 
 
 
@@ -29656,7 +29603,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[47]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[45]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -29690,7 +29637,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -30197,7 +30144,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[48]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[46]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_distinct</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">create</span><span class="o">.</span><span class="n">dataframe</span><span class="p">({</span>
@@ -30220,7 +30167,7 @@ Because of that we prefer to create a tuple like this:</p>
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[48]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[46]:</div>
 
 
 
@@ -30235,7 +30182,7 @@ Because of that we prefer to create a tuple like this:</p>
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -30386,7 +30333,7 @@ Because of that we prefer to create a tuple like this:</p>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[49]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[47]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_distinct</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
@@ -30433,7 +30380,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[50]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[48]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_zeros</span> <span class="o">=</span> <span class="n">df_distinct</span>
@@ -30453,7 +30400,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[50]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[48]:</div>
 
 
 
@@ -30476,7 +30423,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[51]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[49]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">dtypes</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
@@ -30495,7 +30442,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[51]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[49]:</div>
 
 
 
@@ -30528,7 +30475,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[52]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[50]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;animals&quot;</span><span class="p">)</span>
@@ -30562,7 +30509,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -31069,12 +31016,12 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Replace-&quot;dog&quot;,&quot;cat&quot;-in-column-&quot;animals&quot;-by-the-word-&quot;animals&quot;">Replace "dog","cat" in column "animals" by the word "animals"<a class="anchor-link" href="#Replace-&quot;dog&quot;,&quot;cat&quot;-in-column-&quot;animals&quot;-by-the-word-&quot;animals&quot;">&#182;</a></h3>
+<h3 id="Replace-&quot;dog&quot;-and-&quot;cat&quot;-in-animals-by-the-string-&quot;animals&quot;">Replace <code>"dog"</code> and <code>"cat"</code> in <code>animals</code> by the string <code>"animals"</code><a class="anchor-link" href="#Replace-&quot;dog&quot;-and-&quot;cat&quot;-in-animals-by-the-string-&quot;animals&quot;">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[53]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[51]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;cat&quot;</span><span class="p">],</span> <span class="s2">&quot;animals&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;animals&quot;</span><span class="p">)</span>
@@ -31108,7 +31055,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -31615,12 +31562,12 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Replace-&quot;dog-tv&quot;,-&quot;cat&quot;,-&quot;eagle&quot;,-&quot;fish&quot;-in-columns-&quot;two-strings&quot;,&quot;animals&quot;-by-the-string-&quot;animals&quot;">Replace "dog-tv", "cat", "eagle", "fish" in columns "two strings","animals" by the string "animals"<a class="anchor-link" href="#Replace-&quot;dog-tv&quot;,-&quot;cat&quot;,-&quot;eagle&quot;,-&quot;fish&quot;-in-columns-&quot;two-strings&quot;,&quot;animals&quot;-by-the-string-&quot;animals&quot;">&#182;</a></h3>
+<h3 id="Replace-&quot;dog-tv&quot;,-&quot;cat&quot;,-&quot;eagle&quot;-and-&quot;fish&quot;-in-columns-two-strings-and-animals-by-the-string-&quot;animals&quot;">Replace <code>"dog-tv"</code>, <code>"cat"</code>, <code>"eagle"</code> and <code>"fish"</code> in columns <code>two strings</code> and <code>animals</code> by the string <code>"animals"</code><a class="anchor-link" href="#Replace-&quot;dog-tv&quot;,-&quot;cat&quot;,-&quot;eagle&quot;-and-&quot;fish&quot;-in-columns-two-strings-and-animals-by-the-string-&quot;animals&quot;">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[54]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[52]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">([</span><span class="s2">&quot;two strings&quot;</span><span class="p">,</span> <span class="s2">&quot;animals&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;dog-tv&quot;</span><span class="p">,</span> <span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;eagle&quot;</span><span class="p">,</span> <span class="s2">&quot;fish&quot;</span><span class="p">],</span> <span class="s2">&quot;animals&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;two strings&quot;</span><span class="p">])</span>
@@ -31654,7 +31601,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -32161,12 +32108,12 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Replace-&quot;dog&quot;-by--&quot;dog_1&quot;-and-&quot;cat&quot;-by-&quot;cat_1&quot;-in-columns-&quot;animals&quot;">Replace "dog" by  "dog_1" and "cat" by "cat_1" in columns "animals"<a class="anchor-link" href="#Replace-&quot;dog&quot;-by--&quot;dog_1&quot;-and-&quot;cat&quot;-by-&quot;cat_1&quot;-in-columns-&quot;animals&quot;">&#182;</a></h3>
+<h3 id="Replace-&quot;dog&quot;-by--&quot;dog_1&quot;-and-&quot;cat&quot;-by-&quot;cat_1&quot;-in-animals">Replace <code>"dog"</code> by  <code>"dog_1"</code> and <code>"cat"</code> by <code>"cat_1"</code> in <code>animals</code><a class="anchor-link" href="#Replace-&quot;dog&quot;-by--&quot;dog_1&quot;-and-&quot;cat&quot;-by-&quot;cat_1&quot;-in-animals">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[55]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[53]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;dog_1&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;cat_1&quot;</span><span class="p">)])</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;animals&quot;</span><span class="p">)</span>
@@ -32200,7 +32147,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -32707,12 +32654,12 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Replace-in-column-&quot;animals&quot;,-&quot;dog&quot;-by-&quot;pet&quot;">Replace in column "animals", "dog" by "pet"<a class="anchor-link" href="#Replace-in-column-&quot;animals&quot;,-&quot;dog&quot;-by-&quot;pet&quot;">&#182;</a></h3>
+<h3 id="Replace-&quot;dog&quot;-by-&quot;pet&quot;-in-animals">Replace <code>"dog"</code> by <code>"pet"</code> in <code>animals</code><a class="anchor-link" href="#Replace-&quot;dog&quot;-by-&quot;pet&quot;-in-animals">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[56]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[54]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;pet&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;animals&quot;</span><span class="p">)</span>
@@ -32746,7 +32693,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -33253,12 +33200,12 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Replace-a,b,c-by-%-in-all-columns">Replace a,b,c by % in all columns<a class="anchor-link" href="#Replace-a,b,c-by-%-in-all-columns">&#182;</a></h3>
+<h3 id="Replace-&quot;a&quot;,-&quot;b&quot;-and-&quot;c&quot;-by-&quot;%&quot;-in-all-columns">Replace <code>"a"</code>, <code>"b"</code> and <code>"c"</code> by <code>"%"</code> in all columns<a class="anchor-link" href="#Replace-&quot;a&quot;,-&quot;b&quot;-and-&quot;c&quot;-by-&quot;%&quot;-in-all-columns">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[57]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[55]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">],</span> <span class="s2">&quot;%&quot;</span><span class="p">)</span>
@@ -33277,7 +33224,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[57]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[55]:</div>
 
 
 
@@ -33292,7 +33239,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -33799,15 +33746,15 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Replace-3-and-2-by-10-in-a-numeric-columns">Replace 3 and 2 by 10 in a numeric columns<a class="anchor-link" href="#Replace-3-and-2-by-10-in-a-numeric-columns">&#182;</a></h3>
+<h3 id="Replace-3-and-2-by-10-in-a-numeric-column">Replace <code>3</code> and <code>2</code> by <code>10</code> in a numeric column<a class="anchor-link" href="#Replace-3-and-2-by-10-in-a-numeric-column">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[58]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[56]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span> <span class="n">search_by</span><span class="o">=</span><span class="s2">&quot;values&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;num&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">10</span><span class="p">,</span> <span class="n">search_by</span><span class="o">=</span><span class="s2">&quot;values&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;num&quot;</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -33838,7 +33785,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -34234,10 +34181,10 @@ zombies                 2
             </td>
             
             <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="3">
+                <div style="min-height: 14px;" title="10">
                     
                     
-                    3
+                    10
                     
                 </div>
             </td>
@@ -34345,15 +34292,15 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Replace-3-by-6-and-2-by-12-in-a-numeric-columns">Replace 3 by 6 and 2 by 12 in a numeric columns<a class="anchor-link" href="#Replace-3-by-6-and-2-by-12-in-a-numeric-columns">&#182;</a></h3>
+<h3 id="Replace-3-by-6-and-2-by-12-in-a-numeric-column">Replace <code>3</code> by <code>6</code> and <code>2</code> by <code>12</code> in a numeric column<a class="anchor-link" href="#Replace-3-by-6-and-2-by-12-in-a-numeric-column">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[59]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[57]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">12</span><span class="p">)],</span> <span class="n">search_by</span><span class="o">=</span><span class="s2">&quot;values&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;num&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">12</span><span class="p">)],</span> <span class="n">search_by</span><span class="o">=</span><span class="s2">&quot;values&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;num&quot;</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -34384,7 +34331,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -34780,10 +34727,10 @@ zombies                 2
             </td>
             
             <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="3">
+                <div style="min-height: 14px;" title="6">
                     
                     
-                    3
+                    6
                     
                 </div>
             </td>
@@ -34896,7 +34843,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[60]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[58]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;animal&quot;</span><span class="p">,</span> <span class="n">search_by</span><span class="o">=</span><span class="s2">&quot;words&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;animals&quot;</span><span class="p">)</span>
@@ -34930,7 +34877,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -35437,7 +35384,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[61]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[59]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;animal&quot;</span><span class="p">,</span> <span class="n">search_by</span><span class="o">=</span><span class="s2">&quot;words&quot;</span><span class="p">,</span> <span class="n">output_cols</span><span class="o">=</span><span class="s2">&quot;friends&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;friends&quot;</span><span class="p">])</span>
@@ -35471,7 +35418,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -36020,7 +35967,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[62]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[60]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;11&quot;</span><span class="p">,</span> <span class="n">search_by</span><span class="o">=</span><span class="s2">&quot;chars&quot;</span><span class="p">)</span>
@@ -36039,7 +35986,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[62]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[60]:</div>
 
 
 
@@ -36054,7 +36001,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -36561,7 +36508,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[63]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[61]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;dog_1&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;cat_1&quot;</span><span class="p">)],</span> <span class="n">search_by</span><span class="o">=</span><span class="s2">&quot;words&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;animals&quot;</span><span class="p">)</span>
@@ -36595,7 +36542,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -37102,7 +37049,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[64]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[62]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;cat&quot;</span><span class="p">],</span> <span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;words&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;animals&quot;</span><span class="p">)</span>
@@ -37136,7 +37083,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -37643,12 +37590,12 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Use-Regex">Use Regex<a class="anchor-link" href="#Use-Regex">&#182;</a></h3>
+<h3 id="Replace-using-a-regular-expression">Replace using a regular expression<a class="anchor-link" href="#Replace-using-a-regular-expression">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[65]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[63]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">replace_regex</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;.*[Cc]at.*&#39;</span><span class="p">,</span> <span class="s1">&#39;contains cat&#39;</span><span class="p">)</span>
@@ -37667,7 +37614,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[65]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[63]:</div>
 
 
 
@@ -37682,7 +37629,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -38194,645 +38141,15 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Merge-two-columns-in-a-column-vector">Merge two columns in a column vector<a class="anchor-link" href="#Merge-two-columns-in-a-column-vector">&#182;</a></h3><h4 id="Match-the-string-as-a-word-not-as-a-substring">Match the string as a word not as a substring<a class="anchor-link" href="#Match-the-string-as-a-word-not-as-a-substring">&#182;</a></h4>
+<h3 id="Merge-two-columns-in-a-string-column">Merge two columns in a string column<a class="anchor-link" href="#Merge-two-columns-in-a-string-column">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[66]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[64]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;num_1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">nest</span><span class="p">([</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;num_1&quot;</span><span class="p">],</span> <span class="n">output_col</span><span class="o">=</span><span class="s2">&quot;col_nested&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;num_1&quot;</span><span class="p">,</span> <span class="s2">&quot;col_nested&quot;</span><span class="p">])</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-
-<div class="jp-OutputArea-child">
-
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-
-<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output " data-mime-type="text/html">
-
-
-
-
-
-<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">Viewing 4 of 4 rows / 13 columns</div>
-<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">1 partition(s) </div>
-
-
-<span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
-        <thead style="border-bottom: 1px solid currentColor;">
-        <tr>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">words</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">1 (object)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; background-color: rgba(240,240,0,0.18); ">
-                <div class="column_name" style="font-size: 1.2em;">num</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">2 (int32)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; background-color: rgba(240,240,0,0.18); ">
-                <div class="column_name" style="font-size: 1.2em;">num_1</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">3 (int32)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; background-color: rgba(240,240,0,0.18); ">
-                <div class="column_name" style="font-size: 1.2em;">col_nested</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">4 (object)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">animals</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">5 (object)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">thing</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">6 (object)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">two strings</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">7 (object)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">filter</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">8 (object)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">num 2</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">9 (string)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">col_array</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">10 (object)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">col_int</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">11 (object)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">new_col_1</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">12 (int64)</div>
-                
-            </th>
-            
-            <th style="font-family: sans-serif; ">
-                <div class="column_name" style="font-size: 1.2em;">NEW COLUMN</div>
-                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">13 (object)</div>
-                
-            </th>
-            
-        </tr>
-
-        </thead>
-        <tbody style="font-family: monospace;">
-        
-        <tr>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="&#8901;&#8901;I&#8901;like&#8901;&#8901;&#8901;&#8901;&#8901;fish&#8901;&#8901;">
-                    
-                    
-                    &#8901;&#8901;I&#8901;like&#8901;&#8901;&#8901;&#8901;&#8901;fish&#8901;&#8901;
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="1">
-                    
-                    
-                    1
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="1">
-                    
-                    
-                    1
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="11">
-                    
-                    
-                    11
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="dog">
-                    
-                    
-                    dog
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="housé">
-                    
-                    
-                    housé
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="cat-car">
-                    
-                    
-                    cat-car
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="a">
-                    
-                    
-                    a
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="1">
-                    
-                    
-                    1
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="['baby',&#8901;'sorry']">
-                    
-                    
-                    ['baby',&#8901;'sorry']
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="[1,&#8901;2,&#8901;3]">
-                    
-                    
-                    [1,&#8901;2,&#8901;3]
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="1">
-                    
-                    
-                    1
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="q">
-                    
-                    
-                    q
-                    
-                </div>
-            </td>
-            
-        </tr>
-        
-        <tr>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="&#8901;&#8901;&#8901;&#8901;zombies">
-                    
-                    
-                    &#8901;&#8901;&#8901;&#8901;zombies
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="2">
-                    
-                    
-                    2
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="2">
-                    
-                    
-                    2
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="22">
-                    
-                    
-                    22
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="cat">
-                    
-                    
-                    cat
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="tv">
-                    
-                    
-                    tv
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="dog-tv">
-                    
-                    
-                    dog-tv
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="b">
-                    
-                    
-                    b
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="2">
-                    
-                    
-                    2
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="['baby&#8901;1',&#8901;'sorry&#8901;1']">
-                    
-                    
-                    ['baby&#8901;1',&#8901;'sorry&#8901;1']
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="[3,&#8901;4]">
-                    
-                    
-                    [3,&#8901;4]
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="1">
-                    
-                    
-                    1
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="w">
-                    
-                    
-                    w
-                    
-                </div>
-            </td>
-            
-        </tr>
-        
-        <tr>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="simpsons&#8901;&#8901;&#8901;cat&#8901;lady">
-                    
-                    
-                    simpsons&#8901;&#8901;&#8901;cat&#8901;lady
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="2">
-                    
-                    
-                    2
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="2">
-                    
-                    
-                    2
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="22">
-                    
-                    
-                    22
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="frog">
-                    
-                    
-                    frog
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="table">
-                    
-                    
-                    table
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="eagle-tv-plus">
-                    
-                    
-                    eagle-tv-plus
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="1">
-                    
-                    
-                    1
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="3">
-                    
-                    
-                    3
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="['baby&#8901;2',&#8901;'sorry&#8901;2']">
-                    
-                    
-                    ['baby&#8901;2',&#8901;'sorry&#8901;2']
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="[5,&#8901;6,&#8901;7]">
-                    
-                    
-                    [5,&#8901;6,&#8901;7]
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="1">
-                    
-                    
-                    1
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="e">
-                    
-                    
-                    e
-                    
-                </div>
-            </td>
-            
-        </tr>
-        
-        <tr>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="None">
-                    
-                    
-                    None
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="3">
-                    
-                    
-                    3
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="3">
-                    
-                    
-                    3
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
-                <div style="min-height: 14px;" title="33">
-                    
-                    
-                    33
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="eagle">
-                    
-                    
-                    eagle
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="glass">
-                    
-                    
-                    glass
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="lion-pc">
-                    
-                    
-                    lion-pc
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="c">
-                    
-                    
-                    c
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="4">
-                    
-                    
-                    4
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="['baby&#8901;3',&#8901;'sorry&#8901;3']">
-                    
-                    
-                    ['baby&#8901;3',&#8901;'sorry&#8901;3']
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="[7,&#8901;8]">
-                    
-                    
-                    [7,&#8901;8]
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="1">
-                    
-                    
-                    1
-                    
-                </div>
-            </td>
-            
-            <td style="border: 0px; ">
-                <div style="min-height: 14px;" title="r">
-                    
-                    
-                    r
-                    
-                </div>
-            </td>
-            
-        </tr>
-        
-        </tbody>
-    </table>
-    <div style="background-color: currentColor; opacity: 0.2; height: 1px; width: 100%"></div>
-</span>
-
-<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">Viewing 4 of 4 rows / 13 columns</div>
-<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">1 partition(s) &lt;class &#39;optimus.engines.pandas.dataframe.PandasDataFrame&#39;&gt;</div>
-
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="Merge-two-columns-in-a-string-columns">Merge two columns in a string columns<a class="anchor-link" href="#Merge-two-columns-in-a-string-columns">&#182;</a></h3>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[67]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">nest</span><span class="p">([</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;two strings&quot;</span><span class="p">],</span> <span class="n">output_col</span><span class="o">=</span><span class="s2">&quot;col_nested&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s2">&quot;---&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;two strings&quot;</span><span class="p">,</span> <span class="s2">&quot;col_nested&quot;</span><span class="p">])</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">nest</span><span class="p">([</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;two strings&quot;</span><span class="p">],</span> <span class="n">output_col</span><span class="o">=</span><span class="s2">&quot;col_nested&quot;</span><span class="p">,</span> <span class="n">separator</span><span class="o">=</span><span class="s2">&quot;---&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;two strings&quot;</span><span class="p">,</span> <span class="s2">&quot;col_nested&quot;</span><span class="p">])</span>
 </pre></div>
 
      </div>
@@ -38863,7 +38180,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -39412,12 +38729,642 @@ zombies                 2
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="Merge-two-columns-in-a-column-vector">Merge two columns in a column vector<a class="anchor-link" href="#Merge-two-columns-in-a-column-vector">&#182;</a></h3>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+<div class="jp-Cell-inputWrapper">
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[65]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+     <div class="CodeMirror cm-s-jupyter">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;num_1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">nest</span><span class="p">([</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;num_1&quot;</span><span class="p">],</span> <span class="n">output_col</span><span class="o">=</span><span class="s2">&quot;col_nested&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="s2">&quot;vector&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;num_1&quot;</span><span class="p">,</span> <span class="s2">&quot;col_nested&quot;</span><span class="p">])</span>
+</pre></div>
+
+     </div>
+</div>
+</div>
+</div>
+
+<div class="jp-Cell-outputWrapper">
+
+
+<div class="jp-OutputArea jp-Cell-outputArea">
+
+<div class="jp-OutputArea-child">
+
+    
+    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+
+
+
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output " data-mime-type="text/html">
+
+
+
+
+
+<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">Viewing 4 of 4 rows / 13 columns</div>
+<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">1 partition(s) </div>
+
+
+<span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
+        <thead style="border-bottom: 1px solid currentColor;">
+        <tr>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">words</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">1 (object)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; background-color: rgba(240,240,0,0.18); ">
+                <div class="column_name" style="font-size: 1.2em;">num</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">2 (int32)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; background-color: rgba(240,240,0,0.18); ">
+                <div class="column_name" style="font-size: 1.2em;">num_1</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">3 (int32)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; background-color: rgba(240,240,0,0.18); ">
+                <div class="column_name" style="font-size: 1.2em;">col_nested</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">4 (object)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">animals</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">5 (object)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">thing</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">6 (object)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">two strings</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">7 (object)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">filter</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">8 (object)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">num 2</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">9 (string)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">col_array</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">10 (object)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">col_int</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">11 (object)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">new_col_1</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">12 (int64)</div>
+                
+            </th>
+            
+            <th style="font-family: sans-serif; ">
+                <div class="column_name" style="font-size: 1.2em;">NEW COLUMN</div>
+                <div class="data_type" style="font-size: 0.8em; font-weight: normal;">13 (object)</div>
+                
+            </th>
+            
+        </tr>
+
+        </thead>
+        <tbody style="font-family: monospace;">
+        
+        <tr>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="&#8901;&#8901;I&#8901;like&#8901;&#8901;&#8901;&#8901;&#8901;fish&#8901;&#8901;">
+                    
+                    
+                    &#8901;&#8901;I&#8901;like&#8901;&#8901;&#8901;&#8901;&#8901;fish&#8901;&#8901;
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="1">
+                    
+                    
+                    1
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="1">
+                    
+                    
+                    1
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="[1,&#8901;1]">
+                    
+                    
+                    [1,&#8901;1]
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="dog">
+                    
+                    
+                    dog
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="housé">
+                    
+                    
+                    housé
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="cat-car">
+                    
+                    
+                    cat-car
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="a">
+                    
+                    
+                    a
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="1">
+                    
+                    
+                    1
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="['baby',&#8901;'sorry']">
+                    
+                    
+                    ['baby',&#8901;'sorry']
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="[1,&#8901;2,&#8901;3]">
+                    
+                    
+                    [1,&#8901;2,&#8901;3]
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="1">
+                    
+                    
+                    1
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="q">
+                    
+                    
+                    q
+                    
+                </div>
+            </td>
+            
+        </tr>
+        
+        <tr>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="&#8901;&#8901;&#8901;&#8901;zombies">
+                    
+                    
+                    &#8901;&#8901;&#8901;&#8901;zombies
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="2">
+                    
+                    
+                    2
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="2">
+                    
+                    
+                    2
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="[2,&#8901;2]">
+                    
+                    
+                    [2,&#8901;2]
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="cat">
+                    
+                    
+                    cat
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="tv">
+                    
+                    
+                    tv
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="dog-tv">
+                    
+                    
+                    dog-tv
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="b">
+                    
+                    
+                    b
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="2">
+                    
+                    
+                    2
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="['baby&#8901;1',&#8901;'sorry&#8901;1']">
+                    
+                    
+                    ['baby&#8901;1',&#8901;'sorry&#8901;1']
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="[3,&#8901;4]">
+                    
+                    
+                    [3,&#8901;4]
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="1">
+                    
+                    
+                    1
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="w">
+                    
+                    
+                    w
+                    
+                </div>
+            </td>
+            
+        </tr>
+        
+        <tr>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="simpsons&#8901;&#8901;&#8901;cat&#8901;lady">
+                    
+                    
+                    simpsons&#8901;&#8901;&#8901;cat&#8901;lady
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="2">
+                    
+                    
+                    2
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="2">
+                    
+                    
+                    2
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="[2,&#8901;2]">
+                    
+                    
+                    [2,&#8901;2]
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="frog">
+                    
+                    
+                    frog
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="table">
+                    
+                    
+                    table
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="eagle-tv-plus">
+                    
+                    
+                    eagle-tv-plus
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="1">
+                    
+                    
+                    1
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="3">
+                    
+                    
+                    3
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="['baby&#8901;2',&#8901;'sorry&#8901;2']">
+                    
+                    
+                    ['baby&#8901;2',&#8901;'sorry&#8901;2']
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="[5,&#8901;6,&#8901;7]">
+                    
+                    
+                    [5,&#8901;6,&#8901;7]
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="1">
+                    
+                    
+                    1
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="e">
+                    
+                    
+                    e
+                    
+                </div>
+            </td>
+            
+        </tr>
+        
+        <tr>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="None">
+                    
+                    
+                    None
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="3">
+                    
+                    
+                    3
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="3">
+                    
+                    
+                    3
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; background-color: rgba(240,240,0,0.18); ">
+                <div style="min-height: 14px;" title="[3,&#8901;3]">
+                    
+                    
+                    [3,&#8901;3]
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="eagle">
+                    
+                    
+                    eagle
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="glass">
+                    
+                    
+                    glass
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="lion-pc">
+                    
+                    
+                    lion-pc
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="c">
+                    
+                    
+                    c
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="4">
+                    
+                    
+                    4
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="['baby&#8901;3',&#8901;'sorry&#8901;3']">
+                    
+                    
+                    ['baby&#8901;3',&#8901;'sorry&#8901;3']
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="[7,&#8901;8]">
+                    
+                    
+                    [7,&#8901;8]
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="1">
+                    
+                    
+                    1
+                    
+                </div>
+            </td>
+            
+            <td style="border: 0px; ">
+                <div style="min-height: 14px;" title="r">
+                    
+                    
+                    r
+                    
+                </div>
+            </td>
+            
+        </tr>
+        
+        </tbody>
+    </table>
+    <div style="background-color: currentColor; opacity: 0.2; height: 1px; width: 100%"></div>
+</span>
+
+<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">Viewing 4 of 4 rows / 13 columns</div>
+<div class="info_items" style="margin: 10px 0; font-family: sans-serif; font-size: 10px;">1 partition(s) &lt;class &#39;optimus.engines.pandas.dataframe.PandasDataFrame&#39;&gt;</div>
+
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <h3 id="Merge-three-columns-in-an-array">Merge three columns in an array<a class="anchor-link" href="#Merge-three-columns-in-an-array">&#182;</a></h3>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[68]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[66]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">nest</span><span class="p">([</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;two strings&quot;</span><span class="p">,</span> <span class="s2">&quot;num 2&quot;</span><span class="p">],</span> <span class="n">output_col</span><span class="o">=</span><span class="s2">&quot;col_nested&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="s2">&quot;array&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;animals&quot;</span><span class="p">,</span> <span class="s2">&quot;two strings&quot;</span><span class="p">,</span> <span class="s2">&quot;num 2&quot;</span><span class="p">,</span> <span class="s2">&quot;col_nested&quot;</span><span class="p">])</span>
@@ -39451,7 +39398,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -40005,7 +39952,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[69]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[67]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="s2">&quot;https://raw.githubusercontent.com/ironmussa/Optimus/master/examples/data/foo.csv&quot;</span><span class="p">)</span>
@@ -40019,7 +39966,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[70]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[68]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span>
@@ -40038,7 +39985,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[70]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[68]:</div>
 
 
 
@@ -40053,7 +40000,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -40966,7 +40913,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[71]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[69]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
@@ -40985,7 +40932,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[71]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[69]:</div>
 
 
 
@@ -41011,7 +40958,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[72]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[70]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">frequency</span><span class="p">(</span><span class="s2">&quot;billingId&quot;</span><span class="p">)</span>
@@ -41030,7 +40977,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[72]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[70]:</div>
 
 
 
@@ -41076,7 +41023,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[73]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[71]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="s2">&quot;billingId&quot;</span><span class="p">))</span>
@@ -41193,7 +41140,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[74]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[72]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
@@ -41212,7 +41159,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[74]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[72]:</div>
 
 
 
@@ -41234,10 +41181,15 @@ zombies                 2
 
 </div>
 
-</div>### Descriptive Statistics<div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="Descriptive-Statistics">Descriptive Statistics<a class="anchor-link" href="#Descriptive-Statistics">&#182;</a></h3>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[75]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[73]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">display</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">kurtosis</span><span class="p">(</span><span class="s2">&quot;billingId&quot;</span><span class="p">))</span>
@@ -41354,7 +41306,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[76]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[74]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">mad</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">)</span>
@@ -41373,7 +41325,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[76]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[74]:</div>
 
 
 
@@ -41391,7 +41343,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[77]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[75]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">mad</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="n">more</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -41410,7 +41362,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[77]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[75]:</div>
 
 
 
@@ -41433,7 +41385,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[78]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[76]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">percentile</span><span class="p">([</span><span class="s1">&#39;price&#39;</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">]))</span>
@@ -41473,7 +41425,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[79]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[77]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">mode</span><span class="p">([</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="s2">&quot;billingId&quot;</span><span class="p">]))</span>
@@ -41513,7 +41465,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[80]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[78]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span>
@@ -41532,7 +41484,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[80]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[78]:</div>
 
 
 
@@ -41547,7 +41499,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -42460,7 +42412,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[81]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[79]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span> \
@@ -42499,7 +42451,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -43417,7 +43369,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[82]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[80]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">iqr</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">)</span>
@@ -43436,7 +43388,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[82]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[80]:</div>
 
 
 
@@ -43454,7 +43406,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[83]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[81]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">iqr</span><span class="p">(</span><span class="s2">&quot;price&quot;</span><span class="p">,</span> <span class="n">more</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -43473,7 +43425,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[83]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[81]:</div>
 
 
 
@@ -43493,10 +43445,15 @@ zombies                 2
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <h2 id="Cleaning-and-Date-Operations-Operations">Cleaning and Date Operations Operations<a class="anchor-link" href="#Cleaning-and-Date-Operations-Operations">&#182;</a></h2>
 </div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="Years-between-a-date-and-today-(No-other-date-is-passed)">Years between a date and today (No other date is passed)<a class="anchor-link" href="#Years-between-a-date-and-today-(No-other-date-is-passed)">&#182;</a></h3>
+</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[84]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[82]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">years_between</span><span class="p">(</span><span class="s2">&quot;birth&quot;</span><span class="p">,</span> <span class="n">date_format</span><span class="o">=</span><span class="s2">&quot;%Y/%m/</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">round</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;birth&quot;</span><span class="p">)</span>
@@ -43530,7 +43487,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -44443,7 +44400,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[85]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[83]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;&amp;&quot;</span><span class="p">,</span> <span class="s2">&quot;%&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
@@ -44477,7 +44434,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -45390,7 +45347,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[86]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[84]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">normalize_chars</span><span class="p">(</span><span class="s2">&quot;lastName&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;lastName&quot;</span><span class="p">)</span>
@@ -45424,7 +45381,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -46337,7 +46294,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[87]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[85]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">remove_special_chars</span><span class="p">(</span><span class="s2">&quot;lastName&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;lastName&quot;</span><span class="p">)</span>
@@ -46371,7 +46328,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -47284,7 +47241,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[88]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[86]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="s2">&quot;billingId&quot;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;billingId&quot;</span><span class="p">)</span>
@@ -47318,7 +47275,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -48231,7 +48188,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[89]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[87]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_abs</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">create</span><span class="o">.</span><span class="n">dataframe</span><span class="p">({</span>
@@ -48265,7 +48222,7 @@ zombies                 2
 <div class="jp-OutputArea-child">
 
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[89]:</div>
+    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[87]:</div>
 
 
 
@@ -48280,7 +48237,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -48703,7 +48660,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[90]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[88]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df_abs</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">abs</span><span class="p">([</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;num 2&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;num&quot;</span><span class="p">,</span> <span class="s2">&quot;num 2&quot;</span><span class="p">])</span>
@@ -48737,7 +48694,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
@@ -49160,7 +49117,7 @@ zombies                 2
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[91]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[89]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">qcut</span><span class="p">(</span><span class="s2">&quot;billingId&quot;</span><span class="p">,</span> <span class="n">quantiles</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">display</span><span class="p">(</span><span class="n">highlight</span><span class="o">=</span><span class="s2">&quot;billingId&quot;</span><span class="p">)</span>
@@ -49194,7 +49151,7 @@ zombies                 2
 
 
 <span class="optimus_table_container" style="display: inline-flex; flex-direction: column;">
-    <table class="optimus_table" style="font-size: 12px;">
+    <table class="optimus_table" style="font-size: 12px; margin: 0;">
         <thead style="border-bottom: 1px solid currentColor;">
         <tr>
             
