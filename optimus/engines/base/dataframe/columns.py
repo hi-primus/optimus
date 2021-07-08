@@ -157,12 +157,8 @@ class DataFrameBaseColumns():
 
         # cudfd do nor support apply or agg join for this operation
         if shape == "vector" or shape == "array":
-            raise NotImplementedError("Not implemented yet")
-            # https://stackoverflow.com/questions/43898035/pandas-combine-column-values-into-a-list-in-a-new-column/43898233
-            # t['combined'] = t.values.tolist()
+            dfd = dfd.assign(**{output_col: dfd[input_cols].values.tolist()})
 
-            # dfds = [dfd[input_col] for input_col in input_cols]
-            # dfd[output_col] = dfd[input_cols].values.tolist()
         elif shape == "string":
             dfds = [dfd[input_col].astype(str) for input_col in input_cols]
             dfd = dfd.assign(**{output_col: reduce((lambda x, y: x + separator + y), dfds)})
