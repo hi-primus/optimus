@@ -323,17 +323,22 @@ class Functions(ABC):
 
     def replace_words(self, series, search, replace_by):
         search = val_to_list(search)
-        str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        return self.to_string_accessor(series).replace(str_regex, replace_by, regex= True)
+        str_regex = [r'\b%s\b' % re.escape(s) for s in search]
+        print(str_regex)
+        # str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+        return series.replace(str_regex, replace_by, regex= True)
 
     def replace_full(self, series, search, replace_by):
         search = val_to_list(search)
-        str_regex = (r'^%s$' % r'$|^'.join(map(re.escape, search)))
-        return self.to_string_accessor(series).replace(str_regex, replace_by, regex=True)
+        str_regex = [r'^%s$' % re.escape(s) for s in search]
+        print(str_regex)
+        # str_regex = (r'^%s$' % r'$|^'.join(map(re.escape, search)))
+        return series.replace(str_regex, replace_by, regex=True)
 
     def replace_values(self, series, search, replace_by):
         search = val_to_list(search)
-        return series.mask(series.isin(search), replace_by)
+        # return series.mask(series.isin(search), replace_by)
+        return series.replace(search, replace_by)
 
     def remove_white_spaces(self, series):
         return self.to_string_accessor(series).replace(" ", "")

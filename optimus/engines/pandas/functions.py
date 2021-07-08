@@ -1,5 +1,6 @@
 # DataFrame = pd.DataFrame
 from datetime import datetime, timedelta
+from optimus.helpers.core import val_to_list
 
 import numpy as np
 import pandas as pd
@@ -108,7 +109,7 @@ class PandasFunctions(Functions):
 
     def replace_chars(self, series, search, replace_by):
         search = list(map(re.escape, search))
-        return series.replace(search, replace_by, regex=True)
+        return self.to_string(series).replace(search, replace_by, regex=True)
 
     def normalize_chars(self, series):
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
