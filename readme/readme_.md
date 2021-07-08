@@ -131,7 +131,7 @@ new_df = df\
     .cols.lower(["names", "function"])\
     .cols.date_format("date arrival", "yyyy/MM/dd", "dd-MM-YYYY")\
     .cols.years_between("date arrival", "dd-MM-YYYY", output_cols="from arrival")\
-    .cols.remove_accents("names")\
+    .cols.normalize_chars("names")\
     .cols.remove_special_chars("names")\
     .rows.drop(df["rank"]>8)\
     .cols.rename("*", str.lower)\
