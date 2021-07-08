@@ -569,7 +569,7 @@ def is_int(value):
     :param value:
     :return:
     """
-    return isinstance(value, int)
+    return isinstance(value, int) and not isinstance(value, bool)
 
 
 def is_int_like(value):
