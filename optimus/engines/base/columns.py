@@ -249,11 +249,11 @@ class BaseColumns(ABC):
 
         return df
 
-    def set(self, col_name, value=None, where=None, default=None, eval_value=False):
+    def set(self, cols="*", value=None, where=None, args=[], default=None, eval_value=False):
         """
         Set a column value using a number, string or a expression.
         :param col_name:
-        :param value: expression, number or string
+        :param value: expression, function or value
         :param where: mask
         :param default: value
         :param eval_value:
@@ -262,47 +262,63 @@ class BaseColumns(ABC):
         df = self.root
         dfd = df.data
 
-        col_name = one_list_to_val(col_name)
+        cols = val_to_list(cols)
 
-        temp_col_name = name_col(col_name, "SET")
-        if default is not None:
-            dfd[temp_col_name] = default
-            default = dfd[temp_col_name]
-            del dfd[temp_col_name]
-        elif col_name:
-            if col_name in df.cols.names():
-                default = dfd[col_name]
-            else:
-                default = None
-        if eval_value and is_str(value):
-            value = eval(value)
+        assign_dict = {}
 
-        if is_str(where):
-            if where in df.cols.names():
-                where = df[where]
-            else:
-                where = eval(where)
-
-        if where:
+        if where is not None:
             where = where.get_series()
-            if isinstance(value, self.root.__class__):
 
-                value = value.get_series()
+        for col_name in cols:
+
+            temp_col_name = name_col(col_name, "SET")
+
+            if default is not None:
+                if is_str(default) and default in df.cols.names():
+                    default = dfd[default]
+                elif isinstance(default, self.root.__class__):
+                    default = default.get_series()
+                else:
+                    dfd[temp_col_name] = default
+                    default = dfd[temp_col_name]
+                    del dfd[temp_col_name]
+            elif col_name:
+                if col_name in df.cols.names():
+                    default = dfd[col_name]
+                else:
+                    default = None
+            if eval_value and is_str(value):
+                value = eval(value)
+
+            if is_str(where):
+                if where in df.cols.names():
+                    where = df[where]
+                else:
+                    where = eval(where)
+
+            if callable(value):
+                args = val_to_list(args)
+                value = value(default, *args)
+
+            if where is not None:
+                if isinstance(value, self.root.__class__):
+                    value = value.get_series()
+                else:
+                    # TO-DO: Create the value series
+                    dfd[temp_col_name] = value
+                    value = dfd[temp_col_name]
+                    del dfd[temp_col_name]
+
+                value = default.mask(where, value)
+
             else:
+                if isinstance(value, self.root.__class__):
+                    value = value.data[value.cols.names()[0]]
 
-                # TO-DO: Create the value series
-                dfd[temp_col_name] = value
-                value = dfd[temp_col_name]
-                del dfd[temp_col_name]
-
-            value = default.mask(where, value)
-
-        else:
-            if isinstance(value, self.root.__class__):
-                value = value.data[value.cols.names()[0]]
+            assign_dict[col_name] = value
 
         # meta = Meta.action(df.meta, Actions.SET.value, col_name)
-        return self.root.new(df.data).cols.assign({col_name: value})
+        return self.root.new(df.data).cols.assign(assign_dict)
 
     @dispatch(object, object)
     def rename(self, columns_old_new=None, func=None) -> DataFrameType:

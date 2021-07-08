@@ -7,153 +7,153 @@ class BaseSet():
     def __init__(self, root):
         self.root = root
 
-    def __call__(self, col_name=None, value=None, default=None, where=None):
-        return self.root.cols.set(col_name=col_name, value=value, where=where, default=default)
+    def __call__(self, cols=None, value=None, default=None, args=[], where=None):
+        return self.root.cols.set(cols=cols, value=value, args=args, where=where, default=default)
 
 
-    def all(self, col_name, value=None) -> DataFrameType:
-        return self.__call__(col_name, value)
+    def all(self, cols, value=None) -> DataFrameType:
+        return self.__call__(cols, value)
 
 
-    def _mask(self, col_name, true_value=None, default_value=None, method: str=None, *args, **kwargs) -> DataFrameType:
+    def _mask(self, cols, true_value=None, default_value=None, args=[], method: str=None, **kwargs) -> DataFrameType:
         
         df = self.root
         
-        if col_name in df.cols.names():
-            input = df[col_name]
-            input_col_name = col_name
+        if cols in df.cols.names():
+            input = df[cols]
+            input_cols = cols
         elif isinstance(true_value, (self.root.__class__,)):
             input = true_value
-            input_col_name = input.cols.names()[0]
+            input_cols = input.cols.names()[0]
         else:
-            df[col_name] = default_value or true_value
-            input = df[col_name]
-            input_col_name = col_name
+            df[cols] = default_value or true_value
+            input = df[cols]
+            input_cols = cols
 
-        mask = getattr(input.mask, method)(input_col_name, *args, **kwargs)
-        return self.__call__(col_name, value=true_value, default=default_value, where=mask)
+        mask = getattr(input.mask, method)(input_cols, **kwargs)
+        return self.__call__(cols, value=true_value, default=default_value, args=args, where=mask)
 
     # Types
 
-    def str(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="str")
+    def str(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="str")
 
-    def int(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="int")
+    def int(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="int")
     
-    def float(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="float")
+    def float(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="float")
     
-    def numeric(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="numeric")
+    def numeric(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="numeric")
     
-    def email(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="email")
+    def email(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="email")
     
-    def ip(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="ip")
+    def ip(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="ip")
     
-    def url(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="url")
+    def url(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="url")
     
-    def gender(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="gender")
+    def gender(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="gender")
     
-    def boolean(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="boolean")
+    def boolean(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="boolean")
     
-    def zip_code(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="zip_code")
+    def zip_code(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="zip_code")
     
-    def credit_card_number(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="credit_card_number")
+    def credit_card_number(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="credit_card_number")
     
-    def datetime(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="datetime")
+    def datetime(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="datetime")
     
-    def object(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="object")
+    def object(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="object")
     
-    def array(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="array")
+    def array(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="array")
     
-    def phone_number(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="phone_number")
+    def phone_number(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="phone_number")
     
-    def social_security_number(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="social_security_number")
+    def social_security_number(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="social_security_number")
     
-    def http_code(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="http_code")
+    def http_code(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="http_code")
 
     # Other    
 
-    def null(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="null")
+    def null(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="null")
 
-    def none(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="none")
+    def none(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="none")
     
-    def nan(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="nan")
+    def nan(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="nan")
     
-    def empty(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="empty")
+    def empty(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="empty")
 
-    def greater_than(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="greater_than", value=value)
+    def greater_than(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="greater_than", value=value)
 
-    def greater_than_equal(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="greater_than_equal", value=value)
+    def greater_than_equal(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="greater_than_equal", value=value)
 
-    def less_than(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="less_than", value=value)
+    def less_than(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="less_than", value=value)
 
-    def less_than_equal(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="less_than_equal", value=value)
+    def less_than_equal(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="less_than_equal", value=value)
 
-    def equal(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="equal", value=value)
+    def equal(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="equal", value=value)
 
-    def not_equal(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="not_equal", value=value)
+    def not_equal(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="not_equal", value=value)
 
-    def missing(self, col_name, value=None, default_value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="missing")
+    def missing(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="missing")
 
-    def mismatch(self, col_name, value=None, default_value=None, dtype=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="mismatch", dtype=dtype)
+    def mismatch(self, cols, value=None, default_value=None, args=[], dtype=None) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="mismatch", dtype=dtype)
 
-    def duplicated(self, col_name, value=None, default_value=None, keep="first") -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="duplicated", keep=keep)
+    def duplicated(self, cols, value=None, default_value=None, args=[], keep="first") -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="duplicated", keep=keep)
 
-    def unique(self, col_name, value=None, default_value=None, keep="first") -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="unique", keep=keep)
+    def unique(self, cols, value=None, default_value=None, args=[], keep="first") -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="unique", keep=keep)
 
-    def match(self, col_name, value=None, default_value=None, regex=None, dtype=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="match_dtype", regex=regex, dtype=dtype)
+    def match(self, cols, value=None, default_value=None, args=[], regex=None, dtype=None) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_dtype", regex=regex, dtype=dtype)
 
-    def match_regex(self, col_name, value=None, default_value=None, regex=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="match_regex", regex=regex)
+    def match_regex(self, cols, value=None, default_value=None, args=[], regex=None) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_regex", regex=regex)
 
-    def match_dtype(self, col_name, value=None, default_value=None, dtype=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="match_dtype", dtype=dtype)
+    def match_dtype(self, cols, value=None, default_value=None, args=[], dtype=None) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_dtype", dtype=dtype)
 
-    def match_pattern(self, col_name, value=None, default_value=None, pattern=None) -> DataFrameType:
-        return self._mask(col_name, true_value=value, default_value=default_value, method="match_pattern", pattern=pattern)
+    def match_pattern(self, cols, value=None, default_value=None, args=[], pattern=None) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_pattern", pattern=pattern)
 
-    def value_in(self, col_name, true_value=None, default_value=None, values=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="value_in", values=values)
+    def value_in(self, cols, true_value=None, default_value=None, args=[], values=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="value_in", values=values)
         
-    def starts_with(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="starts_with", value=value)
+    def starts_with(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="starts_with", value=value)
 
-    def ends_with(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="ends_with", value=value)
+    def ends_with(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="ends_with", value=value)
 
-    def contains(self, col_name, true_value=None, default_value=None, value=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="contains", value=value)
+    def contains(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="contains", value=value)
     
-    def expression(self, col_name, true_value=None, default_value=None, where=None) -> DataFrameType:
-        return self._mask(col_name, true_value=true_value, default_value=default_value, method="expression", where=where)
+    def expression(self, cols, true_value=None, default_value=None, args=[], where=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="expression", where=where)
 
