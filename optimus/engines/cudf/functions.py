@@ -121,7 +121,7 @@ class CUDFFunctions(Functions):
         # Some formats are no supported yet. https://github.com/rapidsai/cudf/issues/5991
         return cudf.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
-    def years_between(self, date_format=None):
+    def days_between(self, date_format=None):
 
         raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
         # return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()

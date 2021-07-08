@@ -107,7 +107,7 @@ class VaexFunctions(Functions):
         pass
 
     @staticmethod
-    def years_between(self, date_format=None):
+    def days_between(self, date_format=None):
         pass
 
     def slice(self, series, start, stop, step):

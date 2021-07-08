@@ -442,7 +442,7 @@ class Functions(ABC):
 
     @staticmethod
     @abstractmethod
-    def years_between(self, date_format=None):
+    def days_between(self, date_format=None):
         pass
 
     def domain(self, value):

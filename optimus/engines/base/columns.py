@@ -1174,6 +1174,30 @@ class BaseColumns(ABC):
         return self.apply(cols, self.F.reciprocal, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
+    def _round(self, cols="*", mode=True, output_cols=None) -> DataFrameType:
+
+        df = self.root
+        
+        if is_int(mode):
+            print("is int")
+            df = df.cols.round(cols, decimals=mode, output_cols=output_cols)
+        else:
+            modes = {
+                "floor": "floor",
+                "down": "floor",
+                "ceil": "ceil",
+                "up": "ceil",
+                "round": "round",
+                True: "round"
+            }
+
+            if not mode in modes:
+                RaiseIt.value_error(mode, list(modes.keys()))
+
+            df = getattr(df.cols, modes[mode])(cols, output_cols=output_cols)
+        
+        return df
+
     def round(self, cols="*", decimals=0, output_cols=None) -> DataFrameType:
         """
 
@@ -1653,14 +1677,50 @@ class BaseColumns(ABC):
 
         return self.apply(cols, _second, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
 
-    def years_between(self, cols="*", date_format=None, output_cols=None) -> DataFrameType:
+    def _td_between(self, cols="*", func=None, value=None, date_format=None, round=None, output_cols=None) -> DataFrameType:
 
-        def _years_between(value, args):
-            return self.F.years_between(value, *args)
+        df = self.root
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
+        col_names = df.cols.names()
 
-        return self.apply(cols, _years_between, args=[date_format], func_return_type=str,
+        if is_list(cols) and len(cols)==2 and value is None:
+            value = df.data[cols[1]]
+            cols = cols[0]
+        elif is_str(value) and value in col_names:
+            value = df.data[value]
+        elif is_list_of_str(value):
+            value = [df.data[v] if v in col_names else v for v in value]
+
+        def _years_between(series, args):
+            return self.F.days_between(series, *args)/365.25
+
+        return df.cols.apply(cols, func, args=[value, date_format], func_return_type=str,
                           output_cols=output_cols,
-                          meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True)
+                          meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True).cols._round(output_cols, round)
+    
+    def years_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> DataFrameType:
+
+        def _years_between(series, args):
+            return self.F.days_between(series, *args)/365.25
+
+        return self._td_between(cols, _years_between, value, date_format, round, output_cols)
+
+    def months_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> DataFrameType:
+
+        def _months_between(series, args):
+            return self.F.days_between(series, *args)/30.4375
+
+        return self._td_between(cols, _months_between, value, date_format, round, output_cols)
+
+    def days_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> DataFrameType:
+
+        def _days_between(series, args):
+            return self.F.days_between(series, *args)
+
+        return self._td_between(cols, _days_between, value, date_format, round, output_cols)
+
+
 
     def replace(self, cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
                 output_cols=None) -> DataFrameType:

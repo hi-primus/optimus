@@ -1,5 +1,6 @@
 # DataFrame = pd.DataFrame
 from datetime import datetime, timedelta
+from optimus.infer import is_list, is_list_or_tuple
 from optimus.helpers.core import val_to_list
 
 import numpy as np
@@ -118,6 +119,17 @@ class PandasFunctions(Functions):
         return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format).reset_index(
             drop=True)
 
-    def years_between(self, series, date_format=None):
-        return (pd.to_datetime(series, format=date_format,
-                               errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
+    def days_between(self, series, value=None, date_format=None):
+
+        value_date_format = date_format
+
+        if is_list_or_tuple(date_format) and len(date_format) == 2:
+            date_format, value_date_format = date_format
+
+        if is_list_or_tuple(value) and len(value) == 2:
+            value, value_date_format = value
+
+        date = pd.to_datetime(series, format=date_format, errors="coerce")
+        value = pd.Timestamp.now() if value is None else pd.to_datetime(value, format=value_date_format, errors="coerce")
+        
+        return (value - date).dt.days

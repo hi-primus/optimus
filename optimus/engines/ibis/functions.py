@@ -139,7 +139,7 @@ class IbisFunctions(Functions):
         series = self.series
         return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
-    def years_between(self, date_format=None):
+    def days_between(self, date_format=None):
         series = self.series
         return (pd.to_datetime(series, format=date_format,
-                               errors="coerce").dt.date - datetime.now().date()) / timedelta(days=365)
+                               errors="coerce").dt.date - datetime.now().date())
