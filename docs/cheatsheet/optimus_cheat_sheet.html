@@ -7,7 +7,7 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
     <title>Optimus Cheat Sheet</title>
     <style>
@@ -114,6 +114,10 @@
             margin-bottom: 2em;
         }
 
+        .table-info code {
+            background-color: unset;
+        }
+
         .table-info tr td:first-child {
             font-weight: bold;
         }
@@ -129,6 +133,8 @@
 
         .table-data thead {
             background-color: #4471c4;
+            color: white;
+            font-weight: 700;
         }
 
         .table-data tbody {
@@ -154,1258 +160,1246 @@
             line-height: 1;
             margin: 0 0.1em;
         }
-
     </style>
 </head>
+
 <body>
 
-<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
         crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
         integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
         crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/>
-<script>hljs.initHighlightingOnLoad();</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" />
+    <script>hljs.initHighlightingOnLoad();</script>
 
 
-<div class="container">
-    <h1>Optimus Cheat Sheet</h1>
-    <span>Agile Data Science Workflows made easy with Python and Spark.</span>
-    <div style="font-size: 2rem;"> <b>This cheatsheet is outdated.</b> <a href="https://github.com/hi-primus/optimus/tree/develop-21.8">Go Back to the repository.</a></div>
-    <div class="row">
-        <div class="col-sm-4">
-            <h3>Initialize Optimus</h3>
-            <pre><code class="python">from optimus import Optimus
-op = Optimus()</code></pre>
-            <span class="commentary">Import optimus</span>
-            <h3>Creating DataFrames</h3>
-            <pre><code class="python">df = op.create.df(
-    [
-        ("names", "str", True),
-        ("height", "float", True),
-        ("function", "str", True),
-        ("rank", "int", True),
-    ],
-    [
-        ("bumbl#ebéé  ", 17.5, "Espionage", 7),
-        ("Optim'us", 28.0, "Leader", 10),
-        ("ironhide&", 26.0, "Security", 7),
-    ])</code></pre>
+    <div class="container">
+        <h1>Optimus Cheat Sheet</h1>
+        <span>Agile Data Science Workflows made easy.</span>
+        <div class="row">
+            <div class="col-sm-4">
+                <h3>Initialize Optimus</h3>
+                <pre><code class="python">from optimus import Optimus
+op = Optimus("pandas")</code></pre>
+                <span class="commentary">Import optimus</span>
+                <h3>Creating DataFrames</h3>
+                <pre><code class="python">df = op.create.dataframe({
+    ("names"): ["bumbl#ebéé  ", "Optim'us", "ironhide&"],
+    ("height", "float"): [17.5, 28.0, 26.0],
+    "function": ["Espionage", "Leader", "Security"],
+    ("rank", "int"): [7, 10, 7]
+})</code></pre>
 
-            <table class="table-data">
-                <thead>
-                <tr>
-                    <td>names</td>
-                    <td>height</td>
-                    <td>function</td>
-                    <td>rank</td>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>bumbl#ebéé⸱⸱</td>
-                    <td>17.5</td>
-                    <td>Espionage</td>
-                    <td>7</td>
-                </tr>
+                <table class="table-data">
+                    <thead>
+                        <tr>
+                            <td>names</td>
+                            <td>height</td>
+                            <td>function</td>
+                            <td>rank</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>bumbl#ebéé⸱⸱</td>
+                            <td>17.5</td>
+                            <td>Espionage</td>
+                            <td>7</td>
+                        </tr>
 
-                <tr>
-                    <td>Optim'us</td>
-                    <td>28.0</td>
-                    <td>Leader</td>
-                    <td>10</td>
-                </tr>
-                <tr>
-                    <td>ironhide&</td>
-                    <td>26.0</td>
-                    <td>Security</td>
-                    <td>7</td>
-                </tr>
-                </tbody>
-            </table>
-            <span class="commentary">Specify values for each column.</span>
+                        <tr>
+                            <td>Optim'us</td>
+                            <td>28.0</td>
+                            <td>Leader</td>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <td>ironhide&</td>
+                            <td>26.0</td>
+                            <td>Security</td>
+                            <td>7</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <span class="commentary">Specify values for each column.</span>
 
-            <h3>Data Loading</h3>
+                <h3>Data Loading</h3>
 
-            <pre><code class="python">df = op.load.csv("foo.csv")
+                <pre><code class="python">df = op.load.csv("foo.csv")
 df = op.load.json("foo.json")
 df = op.load.parquet("foo.parquet")
-df = op.load.avro("foo.avro")</code></pre>
-            <span class="commentary">Load a file</span>
+df = op.load.excel("foo.xls")
+df = op.load.avro("foo.avro")
+df = op.load.file("foo.anything")
+</code></pre>
+                <span class="commentary">Load a file</span>
 
 
-            <pre><code class="python">df = op.load.url("http://.../foo.csv")
-df = op.load.url("http://./f.json", "json")
-df = op.load.url("http://./f.parquet",
-"parquet")
-df = op.load.url("http://./f.avro", "avro")</code></pre>
-            <span class="commentary">Load a file to a dataframe from a URL</span>
+                <pre><code class="python">df = op.load.csv("http://.../foo.csv")
+df = op.load.json("http://./f.json")
+df = op.load.file("http://./f.parquet")
+</code></pre>
+                <span class="commentary">Load a file to a dataframe from a URL</span>
+                <h3>Data Saving</h3>
 
-            <h3>Method Chaining</h3>
-            <span class="commentary">Most Optimus methods return a DataFrame so that another Optimus method can be applied to the result. This
-                improved readability of code.</span>
-            <pre><code class="python">df = df\
-    .rows.sort(["rank","height"])\
-    .cols.lower(["names","function"])\
-    .cols.remove_accents("names")\
+                <pre><code class="python">df.save.csv("directory/foo.csv")
+df.save.json("directory/foo.json")
+df.save.parquet("directory/foo.parquet")
+df.save.excel("directory/foo.xls")
+df.save.avro("directory/foo.avro")
+</code></pre>
+                <span class="commentary">Save a local file</span>
+                <h3>Method Chaining</h3>
+                <span class="commentary">Most Optimus methods return a DataFrame so that another Optimus method can be
+                    applied to the result. This
+                    improved readability of code.</span>
+                <pre><code class="python">df = df\
+    .rows.sort(["rank", "height"])\
+    .cols.lower(["names", "function"])\
+    .cols.normalize_chars("names")\
     .cols.remove_special_chars("names")\
     .cols.trim("names")</code></pre>
 
-            <table class="table-data">
-                <thead>
-                <tr>
-                    <td>names</td>
-                    <td>height</td>
-                    <td>function</td>
-                    <td>rank</td>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>optimus</td>
-                    <td>28.0</td>
-                    <td>leader</td>
-                    <td>10</td>
-                </tr>
-
-                <tr>
-                    <td>ironhide</td>
-                    <td>26.0</td>
-                    <td>security</td>
-                    <td>7</td>
-                </tr>
-                <tr>
-                    <td>bumblebee</td>
-                    <td>17.5</td>
-                    <td>espionage</td>
-                    <td>7</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="col-sm-4">
-            <h3>Reshaping Data</h3>
-
-            <!-- Melt -->
-            <pre><code class="python">df = df.ext.melt(
-        "names",
-        ["height", "function","rank"])</code></pre>
-            <span class="commentary">Gather columns into rows.</span>
-
-            <div class="flex-row d-flex">
-                <div>
-                    <table class="table-operations-with-data">
-                        <thead>
+                <table class="table-data">
+                    <thead>
                         <tr>
-                            <td class="gray">names</td>
-                            <td class="green">height</td>
-                            <td class="orange">function</td>
-                            <td class="blue">rank</td>
+                            <td>names</td>
+                            <td>height</td>
+                            <td>function</td>
+                            <td>rank</td>
                         </tr>
-                        </thead>
-                        <tbody>
+                    </thead>
+                    <tbody>
                         <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="green-light">28.0</td>
-                            <td class="orange-light">leader</td>
-                            <td class="blue-light">10</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="green-light">26.0</td>
-                            <td class="orange-light">security</td>
-                            <td class="blue-light">7</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="green-light">17.5</td>
-                            <td class="orange-light">espionage</td>
-                            <td class="blue-light">7</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="operation-symbol">
-                    🡆
-                </div>
-                <div>
-                    <table class="table-operations-with-data">
-                        <thead>
-                        <tr>
-                            <td class="gray">names</td>
-                            <td class="gray-dark">variable</td>
-                            <td class="gray-dark">value</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <!-- 1st -->
-                        <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="green">height</td>
-                            <td class="green-light">28.0</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="orange">function</td>
-                            <td class="orange-light">leader</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="blue">rank</td>
-                            <td class="blue-light">10</td>
-                        </tr>
-                        <!-- 2nd -->
-                        <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="green">height</td>
-                            <td class="green-light">26.0</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="orange">function</td>
-                            <td class="orange-light">security</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="blue">rank</td>
-                            <td class="blue-light">7</td>
-                        </tr>
-                        <!-- 3nd -->
-                        <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="green">height</td>
-                            <td class="green-light">17.5</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="orange">function</td>
-                            <td class="orange-light">espionage</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="blue">rank</td>
-                            <td class="blue-light">7</td>
+                            <td>optimus</td>
+                            <td>28.0</td>
+                            <td>leader</td>
+                            <td>10</td>
                         </tr>
 
-                        </tbody>
-                    </table>
-                </div>
+                        <tr>
+                            <td>ironhide</td>
+                            <td>26.0</td>
+                            <td>security</td>
+                            <td>7</td>
+                        </tr>
+                        <tr>
+                            <td>bumblebee</td>
+                            <td>17.5</td>
+                            <td>espionage</td>
+                            <td>7</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Summarize Data</h3>
+                <span class="commentary">
+                    Optimus provides a large set o summary functions.
+                </span>
+
+
+                <pre><code class="python">df.cols.sum()</code></pre>
+                <span class="commentary">Sum all values in a column.</span>
+
+                <pre><code class="python">df.cols.min()</code></pre>
+                <span class="commentary">Min value in a column.</span>
+
+                <pre><code class="python">df.cols.max()</code></pre>
+                <span class="commentary">Max value in a column.</span>
+
+                <pre><code class="python">df.cols.median()</code></pre>
+                <span class="commentary">Median value in a column.</span>
+
+                <pre><code class="python">df.cols.mean()</code></pre>
+                <span class="commentary">Mean value in a column.</span>
+
+                <pre><code class="python">df.cols.std()</code></pre>
+                <span class="commentary">Standard Deviation in a column.</span>
+
+                <pre><code class="python">df.cols.quantile([0.25,0.75])</code></pre>
+                <span class="commentary">Qunatiles in a column.</span>
+
+                <h3>Machine Learning</h3>
+                <pre><code class="python">model = df.ml.logistic_regression_text("sentence")</code></pre>
+                <span class="commentary">Create a model using Logistic Regression text.</span>
+
+                <pre><code class="python">model = df.ml.random_forest("diagnosis")</code></pre>
+                <span class="commentary">Create a model using Random Forest.</span>
+
+                <pre><code class="python">model = df.ml.decision_tree(cols, "diagnosis")</code></pre>
+                <span class="commentary">Create a model using Decision Tree.</span>
+
+                <pre><code class="python">model = df.ml.gbt(cols, "diagnosis")</code></pre>
+                <span class="commentary">Create a model using Gradient Boosting Trees.</span>
             </div>
 
+            <div class="col-sm-4">
+                <h3>Reshaping Data</h3>
 
-            <!-- Pivot -->
-            <pre><code class="python">df = df.ext.pivot("names","variable","value")</code></pre>
-            <span class="commentary">Spread rows into columns.</span>
-            <div class="flex-row d-flex">
-                <div>
-                    <table class="table-operations-with-data">
-                        <thead>
-                        <tr>
-                            <td class="gray">names</td>
-                            <td class="gray-dark">variable</td>
-                            <td class="gray-dark">value</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <!-- 1st -->
-                        <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="green">height</td>
-                            <td class="green-light">28.0</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="orange">function</td>
-                            <td class="orange-light">leader</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="blue">rank</td>
-                            <td class="blue-light">10</td>
-                        </tr>
-                        <!-- 2nd -->
-                        <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="green">height</td>
-                            <td class="green-light">26.0</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="orange">function</td>
-                            <td class="orange-light">security</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="blue">rank</td>
-                            <td class="blue-light">7</td>
-                        </tr>
-                        <!-- 3nd -->
-                        <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="green">height</td>
-                            <td class="green-light">17.5</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="orange">function</td>
-                            <td class="orange-light">espionage</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="blue">rank</td>
-                            <td class="blue-light">7</td>
-                        </tr>
+                <!-- Melt -->
+                <pre><code class="python">df = df.melt(
+    "names",
+    ["height", "function", "rank"])</code></pre>
+                <span class="commentary">Gather columns into rows.</span>
 
-                        </tbody>
-                    </table>
+                <div class="flex-row d-flex">
+                    <div>
+                        <table class="table-operations-with-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray">names</td>
+                                    <td class="green">height</td>
+                                    <td class="orange">function</td>
+                                    <td class="blue">rank</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="green-light">28.0</td>
+                                    <td class="orange-light">leader</td>
+                                    <td class="blue-light">10</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="green-light">26.0</td>
+                                    <td class="orange-light">security</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="green-light">17.5</td>
+                                    <td class="orange-light">espionage</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="operation-symbol">
+                        🡆
+                    </div>
+                    <div>
+                        <table class="table-operations-with-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray">names</td>
+                                    <td class="gray-dark">variable</td>
+                                    <td class="gray-dark">value</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 1st -->
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="green">height</td>
+                                    <td class="green-light">28.0</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="orange">function</td>
+                                    <td class="orange-light">leader</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="blue">rank</td>
+                                    <td class="blue-light">10</td>
+                                </tr>
+                                <!-- 2nd -->
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="green">height</td>
+                                    <td class="green-light">26.0</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="orange">function</td>
+                                    <td class="orange-light">security</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="blue">rank</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                                <!-- 3nd -->
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="green">height</td>
+                                    <td class="green-light">17.5</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="orange">function</td>
+                                    <td class="orange-light">espionage</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="blue">rank</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="operation-symbol">
-                    🡆
+
+
+                <!-- Pivot -->
+                <pre><code class="python">df = df.pivot("names", "variable", "value")</code></pre>
+                <span class="commentary">Spread rows into columns.</span>
+                <div class="flex-row d-flex">
+                    <div>
+                        <table class="table-operations-with-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray">names</td>
+                                    <td class="gray-dark">variable</td>
+                                    <td class="gray-dark">value</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 1st -->
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="green">height</td>
+                                    <td class="green-light">28.0</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="orange">function</td>
+                                    <td class="orange-light">leader</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="blue">rank</td>
+                                    <td class="blue-light">10</td>
+                                </tr>
+                                <!-- 2nd -->
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="green">height</td>
+                                    <td class="green-light">26.0</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="orange">function</td>
+                                    <td class="orange-light">security</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="blue">rank</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                                <!-- 3nd -->
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="green">height</td>
+                                    <td class="green-light">17.5</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="orange">function</td>
+                                    <td class="orange-light">espionage</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="blue">rank</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="operation-symbol">
+                        🡆
+                    </div>
+                    <div>
+                        <table class="table-operations-with-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray">names</td>
+                                    <td class="green">height</td>
+                                    <td class="orange">function</td>
+                                    <td class="blue">rank</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="green-light">28.0</td>
+                                    <td class="orange-light">leader</td>
+                                    <td class="blue-light">10</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="green-light">26.0</td>
+                                    <td class="orange-light">security</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="green-light">17.5</td>
+                                    <td class="orange-light">espionage</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
                 </div>
-                <div>
-                    <table class="table-operations-with-data">
-                        <thead>
-                        <tr>
-                            <td class="gray">names</td>
-                            <td class="green">height</td>
-                            <td class="orange">function</td>
-                            <td class="blue">rank</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="green-light">28.0</td>
-                            <td class="orange-light">leader</td>
-                            <td class="blue-light">10</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="green-light">26.0</td>
-                            <td class="orange-light">security</td>
-                            <td class="blue-light">7</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="green-light">17.5</td>
-                            <td class="orange-light">espionage</td>
-                            <td class="blue-light">7</td>
-                        </tr>
-                        </tbody>
-                    </table>
+                <!-- Concat Rows-->
+                <pre><code class="python">df = df.rows.append([
+  "Grimlock",
+  "Commander",
+  "80",
+  "9"
+])</code></pre>
+                <span class="commentary">Append a dataframe as rows</span>
+                <div class="flex-row d-flex">
+                    <div>
+                        <table class="table-operations-with-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray">names</td>
+                                    <td class="green">height</td>
+                                    <td class="orange">function</td>
+                                    <td class="blue">rank</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="green-light">28.0</td>
+                                    <td class="orange-light">leader</td>
+                                    <td class="blue-light">10</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="green-light">26.0</td>
+                                    <td class="orange-light">security</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="green-light">17.5</td>
+                                    <td class="orange-light">espionage</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <table class="table-operations-with-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray">names</td>
+                                    <td class="green">height</td>
+                                    <td class="orange">function</td>
+                                    <td class="blue">rank</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light">Grimlock</td>
+                                    <td class="green-light">80</td>
+                                    <td class="orange-light">Commander</td>
+                                    <td class="blue-light">9</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="operation-symbol">
+                        }
+                    </div>
+                    <div>
+                        <table class="table-operations-with-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray">names</td>
+                                    <td class="green">height</td>
+                                    <td class="orange">function</td>
+                                    <td class="blue">rank</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light">optimus</td>
+                                    <td class="green-light">28.0</td>
+                                    <td class="orange-light">leader</td>
+                                    <td class="blue-light">10</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">ironhide</td>
+                                    <td class="green-light">26.0</td>
+                                    <td class="orange-light">security</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">bumblebee</td>
+                                    <td class="green-light">17.5</td>
+                                    <td class="orange-light">espionage</td>
+                                    <td class="blue-light">7</td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light">Grimlock</td>
+                                    <td class="green-light">80</td>
+                                    <td class="orange-light">Commander</td>
+                                    <td class="blue-light">9</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
+                <pre><code class="python">df = df.rows.sort("names")</code></pre>
+
+                <span class="commentary">Order rows by values of a column (low to high).</span>
+
+                <pre><code class="python">df = df.rows.sort("names", "asc")</code></pre>
+                <span class="commentary">Order rows by values of a column (high to low).</span>
+
+                <pre><code class="python">df = df.cols.rename("names", "name")</code></pre>
+                <span class="commentary">Rename the columns of a DataFrame.</span>
+
+                <pre><code class="python">df = df.cols.rename([
+  ("name", "names"),
+  ("function", "task")])</code></pre>
+                <span class="commentary">Drop columns from a DataFrame.</span>
+
+
+                <h3>Handling Missing Data</h3>
+                <pre><code class="python">df.rows.drop_na(cols)</code></pre>
+                <span class="commentary">Drop rows any column having null data.</span>
+
+                <pre><code class="python">df.cols.fill_na(cols, output_cols, value)</code></pre>
+                <span class="commentary">Replace all null data with value.</span>
+
+                <pre><code class="python">df.cols.impute(cols, strategy="mean")</code></pre>
+                <span class="commentary">Replace all null data using a strategy.</span>
+
+                <h3>Make new columns</h3>
+
+                <div class="flex-row d-flex">
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="operation-symbol">
+                        🡆
+                    </div>
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="green"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <pre><code class="python">df.cols.append("new_rank", df["rank"]+"1")</code></pre>
+                <span class="commentary">Compute and append a new column.</span>
+
+                <pre><code class="python">df.cols.qcut("height", "bins", 2)</code></pre>
+                <span class="commentary">Bin columns into n buckets.</span>
+
+                <h3>String Processing</h3>
+                <h4>Key Collision</h4>
+                <pre><code class="python">df.cols.fingerprint(df, "names")</code></pre>
+                <span class="commentary">Create a fingerprint from a string.</span>
+
+                <pre><code class="python">df.string_clustering("names", "fingerprint")</code></pre>
+                <span class="commentary">Cluster a dataframe column based on the fingerprint algorithm.</span>
+
+                <pre><code class="python">df.cols.n_gram_fingerprint(df, "names", 2)</code></pre>
+                <span class="commentary">Calculate the 2-gram for a fingerprinted string.</span>
+
+                <pre><code class="python">df.string_clustering("names", "n_gram_fingerprint", 2)</code></pre>
+                <span class="commentary">Cluster a DataFrame column based on the n-gram fingerprint algorithm.</span>
+                <!-- TODO: levenshtein -->
+                <!-- <h4>Distance Cluster</h4>
+                <pre><code class="python">from optimus.ml import distancecluster as dc
+                dc.levenshtein_matrix(df,"names")
+                </code></pre>
+                <span class="commentary">Create a couple of column with all the string combination.</span>
+
+                <pre><code class="python">dc.levenshtein_filter(df,"names")
+                </code></pre>
+                <span class="commentary">Get the nearest string.</span>
+
+                <pre><code class="python">dc.levenshtein_cluster(df,"names")
+                </code></pre>
+                <span class="commentary">Returna a strings of cluster related to a string.</span>
+                </div>
+                </div> -->
+
 
             </div>
-            <!-- Concat Rows-->
-            <pre><code class="python">df = df.rows.append(
-    ["Grimlock", "Commander","80", "9"],)</code></pre>
-            <span class="commentary">Append a dataframe as rows</span>
-            <div class="flex-row d-flex">
-                <div>
-                    <table class="table-operations-with-data">
-                        <thead>
-                        <tr>
-                            <td class="gray">names</td>
-                            <td class="green">height</td>
-                            <td class="orange">function</td>
-                            <td class="blue">rank</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="green-light">28.0</td>
-                            <td class="orange-light">leader</td>
-                            <td class="blue-light">10</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="green-light">26.0</td>
-                            <td class="orange-light">security</td>
-                            <td class="blue-light">7</td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="green-light">17.5</td>
-                            <td class="orange-light">espionage</td>
-                            <td class="blue-light">7</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <table class="table-operations-with-data">
-                        <thead>
-                        <tr>
-                            <td class="gray">names</td>
-                            <td class="green">height</td>
-                            <td class="orange">function</td>
-                            <td class="blue">rank</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light">Grimlock</td>
-                            <td class="green-light">80</td>
-                            <td class="orange-light">Commander</td>
-                            <td class="blue-light">9</td>
-                        </tr>
-                        </tbody>
-                    </table>
+
+            <div class="col-sm-4">
+                <h3>Select Rows</h3>
+                <div class="flex-row d-flex">
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="gray-light"></td>
+                                    <td class="gray-light"></td>
+                                    <td class="gray-light"></td>
+                                    <td class="gray-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="gray-light"></td>
+                                    <td class="gray-light"></td>
+                                    <td class="gray-light"></td>
+                                    <td class="gray-light"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="operation-symbol">
+                        🡆
+                    </div>
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="operation-symbol">
-                    }
+                <pre><code class="python">df.display(n)</code></pre>
+                <span class="commentary">Show first n rows</span>
+
+                <pre><code class="python">df.rows.drop_duplicates()</code></pre>
+                <span class="commentary">Remove duplicates rows (only considers columns).</span>
+
+                <pre><code class="python">df.rows.sample(n)</code></pre>
+                <span class="commentary">Randomly select n rows</span>
+
+                <pre><code class="python">df.rows.select(df["rank"]>7)</code></pre>
+                <span class="commentary">Extract rows that meet logical criteria.</span>
+
+                <table class="table-info">
+                    <tbody>
+                        <tr>
+                            <td><pre><code class="python"> df["A"] &lt; df["B"]</code></pre></td>
+                            <td>Less than</td>
+                        </tr>
+                        <tr>
+                            <td><pre><code class="python"> df["A"] &gt; df["B"]</code></pre></td>
+                            <td>Greater than</td>
+                        </tr>
+                        <tr>
+                            <td><pre><code class="python"> df["A"] == df["B"]</code></pre></td>
+                            <td>Equal to</td>
+                        </tr>
+                        <tr>
+                            <td><pre><code class="python"> df["A"] &lt;= df["B"]</code></pre></td>
+                            <td>Less than or equal to</td>
+                        </tr>
+                        <tr>
+                            <td><pre><code class="python"> df["A"] &gt;= df["B"]</code></pre></td>
+                            <td>Greater than or equal to</td>
+                        </tr>
+                        <tr>
+                            <td><pre><code class="python"> df["A"] != df["B"]</code></pre></td>
+                            <td>Not equal to</td>
+                        </tr>
+                        <tr>
+                            <td><pre><code class="python">~df["A"]</code></pre></td>
+                            <td>Negation</td>
+                        </tr>
+                        <tr>
+                            <td><pre><code class="python"> df["A"] & df["B"]</code></pre></td>
+                            <td>And</td>
+                        </tr>
+                        <tr>
+                            <td><pre><code class="python"> df["A"] | df["B"]</code></pre></td>
+                            <td>Or</td>
+                        </tr>
+
+
+                    </tbody>
+                </table>
+
+                <h3>Select Columns</h3>
+                <div class="flex-row d-flex">
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray"></td>
+                                    <td class="green"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="green"></td>
+                                    <td class="blue"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="blue-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="blue-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="blue-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="blue-light"></td>
+
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="operation-symbol">
+                        🡆
+                    </div>
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div>
-                    <table class="table-operations-with-data">
-                        <thead>
+                <pre><code class="python">df.cols.select(["names", "height", "function"])</code></pre>
+                <span class="commentary">Select multiple columns with specific names.</span>
+
+                <pre><code class="python">df.cols.select([1, 3, 5])</code></pre>
+                <span class="commentary">Select columns in positions 1, 3 and 5 (first column is 0)</span>
+
+                <pre><code class="python">df.cols.select("n.*", regex=True)</code></pre>
+                <span class="commentary">Select columns whose name matched regular expression regex.</span>
+
+                <table class="table-info">
+                    <tbody>
                         <tr>
-                            <td class="gray">names</td>
-                            <td class="green">height</td>
-                            <td class="orange">function</td>
-                            <td class="blue">rank</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light">optimus</td>
-                            <td class="green-light">28.0</td>
-                            <td class="orange-light">leader</td>
-                            <td class="blue-light">10</td>
+                            <td>'\.</td>
+                            <td>Matches strings containing a period</td>
                         </tr>
                         <tr>
-                            <td class="gray-light">ironhide</td>
-                            <td class="green-light">26.0</td>
-                            <td class="orange-light">security</td>
-                            <td class="blue-light">7</td>
+                            <td>'Length$'</td>
+                            <td>Matches strings ending wirt word 'Length'</td>
                         </tr>
                         <tr>
-                            <td class="gray-light">bumblebee</td>
-                            <td class="green-light">17.5</td>
-                            <td class="orange-light">espionage</td>
-                            <td class="blue-light">7</td>
+                            <td>'^$epal</td>
+                            <td>Matches strings begining with the word 'Sepal'</td>
                         </tr>
                         <tr>
-                            <td class="gray-light">Grimlock</td>
-                            <td class="green-light">80</td>
-                            <td class="orange-light">Commander</td>
-                            <td class="blue-light">9</td>
+                            <td>'^x[1-5]$</td>
+                            <td>Matches strings beginning with 'x' and ending with 1,2,3,4,5</td>
                         </tr>
-                        </tbody>
-                    </table>
+                        <tr>
+                            <td>''^(?!Species$).*'</td>
+                            <td>Matches strings expect the string 'Species'</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Unnest</h3>
+                <div class="flex-row d-flex">
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray"></td>
+                                    <td class="blue"></td>
+                                    <td class="green"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="operation-symbol">
+                        🡆
+                    </div>
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray"></td>
+                                    <td class="blue"></td>
+                                    <td class="green"></td>
+                                    <td class="green"></td>
+                                    <td class="green"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="green-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="green-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="green-light"></td>
+
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="green-light"></td>
+                                    <td class="green-light"></td>
+
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
 
-            <pre><code class="python">df = df.rows.sort("names")</code></pre>
+                <pre><code class="python">df = df\
+    cols.unnest("col_to_unnest")
+    </code></pre>
+                <span class="commentary">Unnest a string, array or vector column</span>
 
-            <span class="commentary">Order rows by values of a column (low to high).</span>
+                <h3>Nest</h3>
+                <div class="flex-row d-flex">
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
 
-            <pre><code class="python">df = df.rows.sort("names","asc")</code></pre>
-            <span class="commentary">Order rows by values of a column (high to low).</span>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
 
-            <pre><code class="python">df = df.cols.rename("names","name")</code></pre>
-            <span class="commentary">Rename the columns of a DataFrame.</span>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
 
-            <pre><code class="python">df = df.cols.rename([
-    ("name","names"),
-    ("function","task")])</code></pre>
-            <span class="commentary">Drop columns from a DataFrame.</span>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
 
-            <h3>Nest</h3>
-            <div class="flex-row d-flex">
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="gray"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        </tbody>
-                    </table>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="operation-symbol">
+                        🡆
+                    </div>
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="gray"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="green"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="gray-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="green-light"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="operation-symbol">
-                    🡆
-                </div>
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="gray"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="green"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
-            <pre><code class="python">df = df\
+                <pre><code class="python">df = df\
     .cols.nest(["names", "function"],
      output_col = "nested_col",
      separator=" ")</code></pre>
-            <span class="commentary">Merge multiple columns as string</span>
+                <span class="commentary">Merge multiple columns as string</span>
 
-            <pre><code class="python">df = df
+                <pre><code class="python">df = df
     .cols.nest(["names", "function"],
     output_col = "new_col",
     shape ="array")</code></pre>
-            <span class="commentary">Merge multiple columns as array</span>
+                <span class="commentary">Merge multiple columns as array</span>
+                <h3>Plotting</h3>
+                <pre><code class="python">df.plot.hist("*")</code></pre>
+                <span class="commentary">Histogram for all columns.</span>
 
-            <pre><code class="python">df = df\
-    .cols.nest(["height", "rank"],
-     output_col = "nested_col"
-    "vector")</code></pre>
-            <span class="commentary">Merge multiple columns as vector</span>
+                <pre><code class="python">df.plot.frequency("*")</code></pre>
+                <span class="commentary">Frequency plot for all columns.</span>
+
+                <pre><code class="python">df.plots.correlation("*")</code></pre>
+                <span class="commentary">Correlation plot for all columns.</span>
 
 
+                <h3>Profiling</h3>
+                <pre><code class="python">df.profile("*")</code></pre>
+                <span class="commentary">Profile every column.</span>
+
+                <pre><code class="python">df.profile("names")</code></pre>
+                <span class="commentary">Profile a specific column.</span>
+                
+                <pre><code class="python">df.profile(["names", "height"])</code></pre>
+                <span class="commentary">Profile multiple columns.</span>
+
+
+            </div>
         </div>
 
+        <div class="row d-none">
+            <div class="col-sm-4 d-none">
+                <h3>Outliers</h3>
+                <div class="flex-row d-flex">
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="red-light"></td>
+                                    <td class="red-light"></td>
+                                    <td class="red-light"></td>
+                                    <td class="red-light"></td>
+                                    <td class="red-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="red-light"></td>
+                                    <td class="red-light"></td>
+                                    <td class="red-light"></td>
+                                    <td class="red-light"></td>
+                                    <td class="red-light"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="operation-symbol">
+                        🡆
+                    </div>
+                    <div>
+                        <table class="table-operations-no-data">
+                            <thead>
+                                <tr>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                    <td class="blue"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
+                                <tr>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                    <td class="blue-light"></td>
+                                </tr>
 
-        <div class="col-sm-4">
-            <h3>Select Rows</h3>
-            <div class="flex-row d-flex">
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="gray-light"></td>
-                            <td class="gray-light"></td>
-                            <td class="gray-light"></td>
-                            <td class="gray-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="gray-light"></td>
-                            <td class="gray-light"></td>
-                            <td class="gray-light"></td>
-                            <td class="gray-light"></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="operation-symbol">
-                    🡆
-                </div>
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
+                <!-- TODO: plot -> outliers -->
+                <pre><code class="python">df.plot.iqr("rank")</code></pre>
+                <span class="commentary">Delete outliers using iqr method.</span>
 
-                        </tbody>
-                    </table>
-                </div>
+                <pre><code class="python">df.plot.z_score("rank")</code></pre>
+                <span class="commentary">Delete outliers using z-score method.</span>
+                <pre><code class="python">df.plot.mad("rank")</code></pre>
+                <span class="commentary">Delete outliers using mad method.</span>
+
+                <pre><code class="python">df.plot.modified_z_score("rank")</code></pre>
+                <span class="commentary">Delete outliers using modified z-score method.</span>
+
+
             </div>
-            <pre><code class="python">df.rows.select(column, df[]>7)</code></pre>
-            <span class="commentary">Extract rows that meet logical criteria.</span>
-
-            <pre><code class="python">df.rows.drop_duplicates()</code></pre>
-            <span class="commentary">Remove duplicates rows (only considers columns).</span>
-
-            <pre><code class="python">df.ext.display(n)</code></pre>
-            <span class="commentary">Show first n rows</span>
-
-            <pre><code class="python">df.ext.sample(n)</code></pre>
-            <span class="commentary">Randomly select n rows</span>
-            <h4>Logic in Python</h4>
-            <table class="table-info">
-                <tbody>
-                <tr>
-                    <td><</td>
-                    <td>Less than</td>
-                </tr>
-                <tr>
-                    <td>></td>
-                    <td>Greater tahn</td>
-                </tr>
-                <tr>
-                    <td>==</td>
-                    <td>Equals</td>
-                </tr>
-                <tr>
-                    <td><=</td>
-                    <td>Less than or equals</td>
-                </tr>
-                <tr>
-                    <td><=</td>
-                    <td>Greater than or equals</td>
-                </tr>
-                <tr>
-                    <td>!=</td>
-                    <td>Not equal to</td>
-                </tr>
+            <div class="col-sm-4">
 
 
-                </tbody>
-            </table>
-
-            <h3>Select Columns</h3>
-            <div class="flex-row d-flex">
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="gray"></td>
-                            <td class="green"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="green"></td>
-                            <td class="blue"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="green-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="green-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="green-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="green-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="operation-symbol">
-                    🡆
-                </div>
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="gray"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <pre><code class="python">df.cols.select(["names","height",
-"function"])</code></pre>
-            <span class="commentary">Select multiple columns with specific names.</span>
-
-            <pre><code class="python">df.cols.select([1 , 3, 5])</code></pre>
-            <span class="commentary">Select columns in positions 1, 3 and 5 (first column is 0)</span>
-
-            <pre><code class="python">df.cols.select("n.*", regex = True)</code></pre>
-            <span class="commentary">Select columns whose name matched regular expression regex.</span>
-
-            <table class="table-info">
-                <tbody>
-                <tr>
-                    <td>'\.</td>
-                    <td>Matches strings containing a period</td>
-                </tr>
-                <tr>
-                    <td>'Length$'</td>
-                    <td>Matches strings ending wirt word 'Length'</td>
-                </tr>
-                <tr>
-                    <td>'^$epal</td>
-                    <td>Matches strings begining with the word 'Sepal'</td>
-                </tr>
-                <tr>
-                    <td>'^x[1-5]$</td>
-                    <td>Matches strings beginning with 'x' and ending with 1,2,3,4,5</td>
-                </tr>
-                <tr>
-                    <td>''^(?!Species$).*'</td>
-                    <td>Matches strings expect the string 'Species'</td>
-                </tr>
-                </tbody>
-            </table>
-
-            <h3>Unnest</h3>
-            <div class="flex-row d-flex">
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="gray"></td>
-                            <td class="blue"></td>
-                            <td class="green"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="operation-symbol">
-                    🡆
-                </div>
-                <div>
-                  <table class="table-operations-no-data">
-                      <thead>
-                      <tr>
-                          <td class="gray"></td>
-                          <td class="blue"></td>
-                          <td class="green"></td>
-                          <td class="green"></td>
-                          <td class="green"></td>
-                      </tr>
-                      </thead>
-                      <tbody>
-                      <tr>
-                          <td class="gray-light"></td>
-                          <td class="blue-light"></td>
-                          <td class="green-light"></td>
-                          <td class="green-light"></td>
-                          <td class="green-light"></td>
-
-                      </tr>
-                      <tr>
-                          <td class="gray-light"></td>
-                          <td class="blue-light"></td>
-                          <td class="green-light"></td>
-                          <td class="green-light"></td>
-                          <td class="green-light"></td>
-
-                      </tr>
-                      <tr>
-                          <td class="gray-light"></td>
-                          <td class="blue-light"></td>
-                          <td class="green-light"></td>
-                          <td class="green-light"></td>
-                          <td class="green-light"></td>
-
-                      </tr>
-                      <tr>
-                          <td class="gray-light"></td>
-                          <td class="blue-light"></td>
-                          <td class="green-light"></td>
-                          <td class="green-light"></td>
-                          <td class="green-light"></td>
-
-                      </tr>
-                      </tbody>
-                  </table>
-                </div>
             </div>
 
-            <pre><code class="python">df = df\
-    cols.unnest("col_to_unnest")
-    </code></pre>
-            <span class="commentary">Unnest a string, array or vector column</span>
-        </div>
-    </div>
-    <div class="row">
-
-        <div class="col-sm-4">
-            <h3>Summarize Data</h3>
-            <span class="commentary">
-                Optimus provides a large set o summary functions.
-            </span>
-
-
-            <pre><code class="python">df.cols.sum()</code></pre>
-            <span class="commentary">Sum all values in a column.</span>
-
-            <pre><code class="python">df.cols.min()</code></pre>
-            <span class="commentary">Min value in a column.</span>
-
-            <pre><code class="python">df.cols.max()</code></pre>
-            <span class="commentary">Max value in a column.</span>
-
-            <pre><code class="python">df.cols.median()</code></pre>
-            <span class="commentary">Median value in a column.</span>
-
-            <pre><code class="python">df.cols.mean()</code></pre>
-            <span class="commentary">Mean value in a column.</span>
-
-            <pre><code class="python">df.cols.std()</code></pre>
-            <span class="commentary">Standard Deviation in a column.</span>
-
-            <pre><code class="python">df.cols.quantile([0.25,0.75])</code></pre>
-            <span class="commentary">Qunatiles in a column.</span>
-
-        </div>
-        <div class="col-sm-4">
-            <h3>Handling Missing Data</h3>
-            <pre><code class="python">df.rows.drop_na(columns)</code></pre>
-            <span class="commentary">Drop rows any column having NA/null data.</span>
-
-            <pre><code class="python">df.cols.fill_na(columns, value)</code></pre>
-            <span class="commentary">Replace all NA/null data with value.</span>
-
-            <pre><code class="python">df.cols.impute(input_cols,output_cols,
-    strategy)</code></pre>
-            <span class="commentary">Replace all NA/null data with value.</span>
-
-            <h3>Make new columns</h3>
-
-            <div class="flex-row d-flex">
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="gray"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="operation-symbol">
-                    🡆
-                </div>
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="gray"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="green"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="gray-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="green-light"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <pre><code class="python">df.cols.append("new_rank", df["rank"]+"1")</code></pre>
-            <span class="commentary">Compute and append a new column.</span>
-
-            <pre><code class="python">df.cols.qcut("height","bins", 2).show()</code></pre>
-            <span class="commentary">Bin columns into n buckets.</span>
-
-
-        </div>
-        <div class="col-sm-4">
-            <h3>Plotting</h3>
-            <pre><code class="python">df.plot.hist("*")</code></pre>
-            <span class="commentary">Histogram for all columns.</span>
-
-            <pre><code class="python">df.plot.frequency("*")</code></pre>
-            <span class="commentary">Frequency plot for all columns.</span>
-
-            <pre><code class="python">df.plots.correlation("*")</code></pre>
-            <span class="commentary">Correlation plot for all columns.</span>
-
-
-            <h3>Profiling</h3>
-            <pre><code class="python">from optimus.profiler.profiler import Profiler
-    profiler = Profiler()
-    Profiler.run(df, "*")</code></pre>
-            <span class="commentary">Frequency plot for each column.</span>
-
-            <pre><code class="python">Profiler.columns(df, "names")</code></pre>
-            <span class="commentary">Profile a specific column.</span>
-
-
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-sm-4">
-            <h3>Outliers</h3>
-            <div class="flex-row d-flex">
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="red-light"></td>
-                            <td class="red-light"></td>
-                            <td class="red-light"></td>
-                            <td class="red-light"></td>
-                            <td class="red-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="red-light"></td>
-                            <td class="red-light"></td>
-                            <td class="red-light"></td>
-                            <td class="red-light"></td>
-                            <td class="red-light"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="operation-symbol">
-                    🡆
-                </div>
-                <div>
-                    <table class="table-operations-no-data">
-                        <thead>
-                        <tr>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                            <td class="blue"></td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-                        <tr>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                            <td class="blue-light"></td>
-                        </tr>
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <pre><code class="python">df.plot.iqr("rank")</code></pre>
-            <span class="commentary">Delete outliers using iqr method.</span>
-
-            <pre><code class="python">df.plot.z_score("rank")</code></pre>
-            <span class="commentary">Delete outliers using z-score method.</span>
-
-            <pre><code class="python">df.plot.mad("rank")</code></pre>
-            <span class="commentary">Delete outliers using mad method.</span>
-
-            <pre><code class="python">df.plot.modified_z_score("rank")</code></pre>
-            <span class="commentary">Delete outliers using modified z-score method.</span>
-
-
-        </div>
-        <div class="col-sm-4">
-            <h3>Machine Learning</h3>
-            <pre><code class="python">df_predict, ml_model = op.
-ml.logistic_regression_text(df, "sentence")</code></pre>
-            <span class="commentary">Create a model using Logistic Regression text.</span>
-
-            <pre><code class="python">df_model, rf_model = op
-.ml.random_forest(df, columns, "diagnosis")</code></pre>
-            <span class="commentary">Create a model using Random Forest.</span>
-
-            <pre><code class="python">df_model, rf_model = op
-.ml.decision_tree(df, columns, "diagnosis")</code></pre>
-            <span class="commentary">Create a model using Decision Tree.</span>
-
-            <pre><code class="python">df_model, rf_model = op
-.ml.gbt(df, columns, "diagnosis")</code></pre>
-            <span class="commentary">Create a model using Gradient Boosting Trees.</span>
-
-            <h3>Deep Learning</h3>
-            <pre><code class="python">model, df_preds =
-op.dl.image_classifier_lr(train_df)</code></pre>
-            <span class="commentary">Delete outliers using iqr method.</span>
-
-        </div>
-        <div class="col-sm-4">
-            <h3>String Processing</h3>
-            <h4>Key Collision</h4>
-            <pre><code class="python">from optimus.ml import keycollision as keyCol
-keyCol.fingerprint(df, "names")
-</code></pre>
-            <span class="commentary">Create a fingerprint from a string.</span>
-
-
-            <pre><code class="python">keyCol.fingerprint_cluster(df, "names")
-</code></pre>
-            <span class="commentary">Cluster a dataframe column based on the Fingerprint algorithm.</span>
-
-            <pre><code class="python">keyCol.n_gram_fingerprint(df, "names", 2)
-</code></pre>
-            <span class="commentary">Calculate the ngram for a fingerprinted string.</span>
-
-            <pre><code class="python">keyCol
-.n_gram_fingerprint_cluster(df, "names" , 2)
-</code></pre>
-            <span class="commentary">Cluster a DataFrame column based on the N-Gram Fingerprint algorithm.</span>
-
-            <h4>Distance Cluster</h4>
-            <pre><code class="python">from optimus.ml import distancecluster as dc
-dc.levenshtein_matrix(df,"names")
-</code></pre>
-            <span class="commentary">Create a couple of column with all the string combination.</span>
-
-            <pre><code class="python">dc.levenshtein_filter(df,"names")
-</code></pre>
-            <span class="commentary">Get the nearest string.</span>
-
-            <pre><code class="python">dc.levenshtein_cluster(df,"names")
-</code></pre>
-            <span class="commentary">Returna a strings of cluster related to a string.</span>
-        </div>
-    </div>
-
-
-</div>
 </body>
 </html>
