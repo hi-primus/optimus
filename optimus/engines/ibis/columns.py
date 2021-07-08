@@ -159,8 +159,7 @@ class Cols(DataFrameBaseColumns, BaseColumns):
     def correlation(input_cols, method="pearson", output="json"):
         pass
 
-    @staticmethod
-    def qcut(columns, num_buckets, handle_invalid="skip"):
+    def qcut(self, columns, quantiles, handle_invalid="skip"):
         pass
 
     def string_to_index(self, input_cols=None, output_cols=None, columns=None):

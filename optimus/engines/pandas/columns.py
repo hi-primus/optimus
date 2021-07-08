@@ -71,10 +71,6 @@ class Cols(DataFrameBaseColumns, BaseColumns):
                                 "mismatch": mismatches_count - na_count}
         return result
 
-    @staticmethod
-    def qcut(columns, num_buckets, handle_invalid="skip"):
-        pass
-
     def string_to_index(self, input_cols="*", output_cols=None, columns=None):
         df = self.root
         le = preprocessing.LabelEncoder()

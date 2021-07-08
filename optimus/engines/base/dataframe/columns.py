@@ -55,10 +55,6 @@ class DataFrameBaseColumns():
 
         return self.root.new(dfd)
 
-    @staticmethod
-    def qcut(columns, num_buckets, handle_invalid="skip"):
-        pass
-
     def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
         pass
 

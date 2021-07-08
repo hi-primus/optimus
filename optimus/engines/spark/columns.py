@@ -1692,8 +1692,7 @@ class Cols(BaseColumns):
     #     columns = parse_columns(self, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
     #     return columns
 
-    @staticmethod
-    def qcut(columns, num_buckets, handle_invalid="skip"):
+    def qcut(self, columns, quantiles, handle_invalid="skip"):
         """
         Bin columns into n buckets. Quantile Discretizer
         :param columns: Input columns to processed
@@ -1706,7 +1705,7 @@ class Cols(BaseColumns):
         check_column_numbers(columns, "*")
 
         for col_name in columns:
-            discretizer = QuantileDiscretizer(numBuckets=num_buckets, inputCol=col_name,
+            discretizer = QuantileDiscretizer(numBuckets=quantiles, inputCol=col_name,
                                               outputCol=name_col(col_name, "qcut"),
                                               handleInvalid=handle_invalid)
             df = discretizer.fit(df).transform(df)

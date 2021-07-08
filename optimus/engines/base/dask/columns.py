@@ -46,12 +46,12 @@ class DaskBaseColumns():
         return self.root.new(dfd, meta=meta)
         # return dfd
 
-    def qcut(self, columns, num_buckets, handle_invalid="skip"):
+    def qcut(self, columns, quantiles, handle_invalid="skip"):
 
         df = self.root.data
         columns = parse_columns(df, columns)
         # s.fillna(np.nan)
-        df[columns] = df[columns].map_partitions(pd.qcut, num_buckets)
+        df[columns] = df[columns].map_partitions(pd.qcut, quantiles)
         return df
 
     @staticmethod

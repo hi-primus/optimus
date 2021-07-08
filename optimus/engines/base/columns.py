@@ -2297,10 +2297,10 @@ class BaseColumns(ABC):
         # df = self.root
         # return df.cols.agg_exprs(cols, self.F.count_zeros, tidy=tidy, compute=compute)
 
-    @staticmethod
-    @abstractmethod
-    def qcut(cols, num_buckets, handle_invalid="skip"):
-        pass
+    def qcut(self, cols="*", quantiles=None, output_cols=None):
+
+        return self.apply(cols, self.F.qcut, args=quantiles, output_cols=output_cols, meta_action=Actions.ABS.value,
+                          mode="vectorized")
 
     def cut(self, cols="*", bins=None, labels=None, default=None, output_cols=None) -> DataFrameType:
 

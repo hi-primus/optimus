@@ -230,7 +230,7 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
         # return np.count_nonzero(df.isnull().values.ravel())
 
-    def qcut(self, columns, num_buckets, handle_invalid="skip"):
+    def qcut(self, columns, quantiles, handle_invalid="skip"):
         pass
 
     def string_to_index(self, input_cols=None, output_cols=None, columns=None):

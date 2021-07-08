@@ -175,6 +175,9 @@ class Functions(ABC):
 
             return np.select(conditions, labels, default=default)
 
+    def qcut(self, series, quantiles):
+        return pd.qcut(series, quantiles)
+
     def abs(self, series):
         return self.to_float(series).abs()
 
