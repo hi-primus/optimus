@@ -118,10 +118,6 @@ class DaskBaseColumns():
     def astype(*args, **kwargs):
         pass
 
-    @staticmethod
-    def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
-        pass
-
     # TODO: Check if we must use * to select all the columns
 
     def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):

@@ -144,10 +144,6 @@ class DataFrameBaseColumns():
         pass
 
     @staticmethod
-    def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
-        pass
-
-    @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
 
