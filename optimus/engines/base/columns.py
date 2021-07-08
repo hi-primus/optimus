@@ -249,6 +249,23 @@ class BaseColumns(ABC):
 
         return df
 
+    def apply_by_dtypes(self, cols="*", func=None, args=None, dtype=None):
+        """
+        Apply a function using pandas udf or udf if apache arrow is not available
+        :param cols: Columns in which the function is going to be applied
+        :param func: Functions to be applied to a columns
+        :param args:
+        :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
+        :param dtype:
+        :return:
+        """
+
+        cols = parse_columns(self.root, cols)
+
+        mask = self.root.mask.match_dtype(cols, dtype)
+
+        return self.set(cols, func=func, args=args, where=mask)
+
     def set(self, cols="*", value=None, where=None, args=[], default=None, eval_value=False):
         """
         Set a column value using a number, string or a expression.
