@@ -286,12 +286,16 @@ class BaseColumns(ABC):
         if where is not None:
             where = where.get_series()
 
+        move_cols = []
+
         for col_name in cols:
 
             temp_col_name = name_col(col_name, "SET")
 
             if default is not None:
                 if is_str(default) and default in df.cols.names():
+                    if default != col_name:
+                        move_cols.append((default, col_name))
                     default = dfd[default]
                 elif isinstance(default, self.root.__class__):
                     default = default.get_series()
@@ -335,7 +339,10 @@ class BaseColumns(ABC):
             assign_dict[col_name] = value
 
         # meta = Meta.action(df.meta, Actions.SET.value, col_name)
-        return self.root.new(df.data).cols.assign(assign_dict)
+        new_df = self.root.new(df.data).cols.assign(assign_dict)
+        for col, new_col in move_cols:
+            new_df = new_df.cols.move(new_col, "after", col)
+        return new_df
 
     @dispatch(object, object)
     def rename(self, columns_old_new=None, func=None) -> DataFrameType:
