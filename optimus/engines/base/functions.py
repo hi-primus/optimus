@@ -327,14 +327,12 @@ class Functions(ABC):
     def replace_words(self, series, search, replace_by):
         search = val_to_list(search)
         str_regex = [r'\b%s\b' % re.escape(s) for s in search]
-        print(str_regex)
         # str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
         return series.replace(str_regex, replace_by, regex= True)
 
     def replace_full(self, series, search, replace_by):
         search = val_to_list(search)
         str_regex = [r'^%s$' % re.escape(s) for s in search]
-        print(str_regex)
         # str_regex = (r'^%s$' % r'$|^'.join(map(re.escape, search)))
         return series.replace(str_regex, replace_by, regex=True)
 
