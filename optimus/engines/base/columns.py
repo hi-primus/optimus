@@ -1682,6 +1682,8 @@ class BaseColumns(ABC):
                 df = df.cols._replace(col, _search, _replace_by, search_by="chars")
 
         else:
+            if is_list_of_tuples(search) and replace_by is None:
+                search, replace_by = zip(*search)
             search = val_to_list(search)
             replace_by = val_to_list(replace_by)
             if len(replace_by) == 1:
