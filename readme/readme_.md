@@ -42,7 +42,7 @@ In your terminal just type  ```pip install pyoptimus```
 
 You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/optimus/blob/develop-21.8/examples/10_min_from_pandas_to_spark_with_optimus.ipynb) where you can find the basic to start working.
 
-Also you can go to the [examples](https://github.com/hi-primus/optimus/tree/develop-21.8/examples/) folder to found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
+Also you can go to [Examples](https://github.com/hi-primus/optimus/tree/develop-21.8/examples/examples.md) and found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
 Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-21.8/docs/cheatsheet/optimus_cheat_sheet.html)
 
