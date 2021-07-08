@@ -196,7 +196,7 @@ class BaseColumns(ABC):
     def to_timestamp(cols, date_format=None, output_cols=None):
         pass
 
-    def apply(self, cols="*", func=None, func_return_type=None, args=None, func_type=None, when=None,
+    def apply(self, cols="*", func=None, func_return_type=None, args=None, func_type=None, where=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
               meta_action=Actions.APPLY_COLS.value, mode="vectorized", set_index=False, default=None, **kwargs) -> DataFrameType:
 
