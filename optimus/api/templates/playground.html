@@ -76,14 +76,14 @@
 
     console.log("Optimus API");
 
-    async function postData(data) {
-      const response = await fetch("/run", {
+    async function postData(body) {
+      const response = await fetch("/default/run", {
         method: 'POST',
         mode: 'cors',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: data
+        body
       })
       return response.json()
     }
