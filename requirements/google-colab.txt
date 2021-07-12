@@ -23,7 +23,7 @@ ipython==5.5.0
 ratelimit==2.2.1
 humanize==0.5.1
 h2o-pysparkling-2.4==2.4.13
-psutil==5.4.8
+psutil==5.6.6
 backoff==1.8.0
 kombu==4.6.1
 pandas==0.24.2
