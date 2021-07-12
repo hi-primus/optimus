@@ -22,8 +22,8 @@ statsmodels>=0.10.1
 glom>=19.10.0
 fastavro>=0.22.7
 fast-histogram>=0.8
-python-magic>=0.4.15
-python-magic-bin>=0.4.14; platform_system == "Windows"
+python-magic>=0.4.15; platform_system != "Windows"
+python-magic-bin==0.4.14; platform_system == "Windows"
 string-grouper==0.1.0
 nltk
 pendulum>=2.0.5
@@ -41,5 +41,5 @@ num2words==0.5.10
 python-Levenshtein==0.12.2
 xlrd>=1.2.0
 s3fs>=0.5.2
-url_parser @ git+https://github.com/ironmussa/url_parser@master
-py-dateinfer @ git+https://github.com/ironmussa/dateinfer@master
+py-dateinfer @ git+https://github.com/hi-primus/dateinfer@main
+url_parser @ git+https://github.com/hi-primus/url_parser@main
