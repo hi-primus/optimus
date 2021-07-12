@@ -32,9 +32,9 @@ except ImportError:
 requirements_file = 'requirements.txt'
 
 if "DATABRICKS_RUNTIME_VERSION" in os.environ:
-    requirements_file = 'requirements-databricks.txt'
+    requirements_file = 'requirements/databricks.txt'
 elif IN_COLAB:
-    requirements_file = 'requirements-google-colab.txt'
+    requirements_file = 'requirements/google-colab.txt'
 
 with open(requirements_file) as f:
     required = f.read().splitlines()
@@ -43,7 +43,7 @@ extras_requirements_keys = ['spark', 'dask', 'vaex', 'cudf', 'ai', 'db', 'api']
 extras_requirements = {}
 
 for extra in extras_requirements_keys:
-    with open('requirements-'+extra+'.txt') as f:
+    with open('requirements/'+extra+'.txt') as f:
         extras_requirements[extra] = f.read().splitlines()
 
 lint_requirements = ['pep8', 'pyflakes']
