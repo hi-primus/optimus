@@ -21,8 +21,8 @@ def json_converter(obj):
             return obj.isoformat()
             # return obj.strftime('%Y-%m-%d')
 
-        elif isinstance(obj, (np.int32, np.int32, np.uint64,)):
-            return int(obj)
+        elif isinstance(obj, (np.generic,)):
+            return np.asscalar(obj)
 
 
 def json_enconding(obj):
