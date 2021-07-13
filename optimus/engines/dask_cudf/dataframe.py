@@ -40,8 +40,8 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
 
     @property
     def constants(self):
-        from optimus.engines.base.dask.constants import constants
-        return constants(self)
+        from optimus.engines.base.dask.constants import Constants
+        return Constants()
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         return PandasDataFrame(self.get_buffer().data[input_cols][lower_bound: upper_bound].to_pandas())
