@@ -84,10 +84,10 @@ class Test:
             test_file.write(source_df)
 
         # Class name
-        cls = "class Test_" + self.name + "(unittest.TestCase):\n"
+        cls = "\nclass Test_" + self.name + "(unittest.TestCase):\n"
 
         test_file.write(cls)
-        test_file.write("\tmaxDiff = None\n")
+        test_file.write("    maxDiff = None\n")
 
         for root, dirs, files in os.walk(self.path):
             for file in files:
@@ -123,7 +123,7 @@ class Test:
         buffer = []
 
         def add_buffer(value):
-            buffer.append("\t" + value)
+            buffer.append("    " + value)
 
         # Create name
         name = []
@@ -152,6 +152,7 @@ class Test:
 
         filename = test_name + ".test"
 
+        add_buffer("\n")
         add_buffer("def " + func_test_name + ":\n")
 
         source = "source_df"
@@ -163,7 +164,7 @@ class Test:
             df_func = self.df
         elif isinstance(obj, (BaseDataFrame,)):
 
-            source_df = "\t" + generate_code(source="op", target="source_df",
+            source_df = "    " + generate_code(source="op", target="source_df",
                                              operation="create.dataframe", dict=obj.export(), n_partitions=n_partitions) + "\n"
 
             df_func = obj
@@ -221,13 +222,13 @@ class Test:
             separator = ","
 
         if method is None:
-            add_buffer("\tactual_df = source_df\n")
+            add_buffer("    actual_df = source_df\n")
         else:
             am = ""
             if additional_method:
                 am = "." + additional_method + "()"
 
-            add_buffer("\tactual_df =" + source + "." + method + "(" + _args + separator + ','.join(
+            add_buffer("    actual_df = " + source + "." + method + "(" + _args + separator + ','.join(
                 _kwargs) + ")" + am + "\n")
 
         # print("df_result", df_result)
@@ -247,7 +248,7 @@ class Test:
             df_result = getattr(df_result, additional_method)()
         if output == "df":
             df_result.table()
-            expected = "\t" + \
+            expected = "    " + \
                 generate_code(source="op", target="expected_df", operation="create.dataframe", dict=df_result.export(), n_partitions=n_partitions) + \
                 "\n"
 
@@ -256,23 +257,23 @@ class Test:
                 df_result = "'" + df_result + "'"
             else:
                 df_result = str(df_result)
-            add_buffer("\tactual_df = json_enconding(actual_df)\n")
-            expected = "\texpected_value = json_enconding(" + df_result + ")\n"
+            add_buffer("    actual_df = json_enconding(actual_df)\n")
+            expected = "    expected_value = json_enconding(" + df_result + ")\n"
 
         elif output == "dict":
-            expected = "\texpected_value =" + str(df_result) + "\n"
+            expected = "    expected_value =" + str(df_result) + "\n"
         else:
-            expected = "\t\n"
+            expected = "    \n"
 
         add_buffer(expected)
 
         # Output
         if output == "df":
-            add_buffer("\tassert (expected_df.equals(actual_df))\n")
+            add_buffer("    self.assertTrue(expected_df.equals(actual_df))\n")
         elif output == "json":
-            add_buffer("\tassert(expected_value == actual_df)\n")
+            add_buffer("    self.assertTrue(expected_value == actual_df)\n")
         elif output == "dict":
-            add_buffer("\tself.assertDictEqual(deep_sort(expected_value),  deep_sort(actual_df))\n")
+            add_buffer("    self.assertDictEqual(deep_sort(expected_value),  deep_sort(actual_df))\n")
 
         filename = self.path + "//" + filename
         if not os.path.exists(os.path.dirname(filename)):
