@@ -37,6 +37,10 @@ class BaseEngine:
         pass
 
     @abstractmethod
+    def constants(self):
+        pass
+
+    @abstractmethod
     def load(self):
         pass
 

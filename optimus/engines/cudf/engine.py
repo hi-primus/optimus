@@ -19,6 +19,11 @@ class CUDFEngine(BaseEngine):
         self.client = CUDF.instance
 
     @property
+    def constants(self):
+        from optimus.engines.cudf.constants import Constants
+        return Constants()
+
+    @property
     def create(self):
         from optimus.engines.cudf.create import Create
         return Create(self)

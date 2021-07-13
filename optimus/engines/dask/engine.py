@@ -85,6 +85,11 @@ class DaskEngine(BaseEngine):
         return self.client.dask
 
     @property
+    def constants(self):
+        from optimus.engines.base.dask.constants import Constants
+        return Constants()
+
+    @property
     def create(self):
         if self.remote:
             return RemoteDummyVariable(self, "_create")

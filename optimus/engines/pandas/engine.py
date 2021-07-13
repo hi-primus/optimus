@@ -24,6 +24,11 @@ class PandasEngine(BaseEngine):
         self.client = pd
 
     @property
+    def constants(self):
+        from optimus.engines.pandas.constants import Constants
+        return Constants()
+
+    @property
     def create(self):
         return Create(self)
 
