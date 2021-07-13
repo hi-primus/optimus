@@ -44,7 +44,7 @@ class PandasEngine(BaseEngine):
     def remote_submit(self, callback, *args, **kwargs):
         return self.submit(callback, op=self, *args, **kwargs)
 
-    def submit(self, func, *args, **kwargs):
+    def submit(self, func, *args, priority=0, pure=False, **kwargs):
         import uuid
         def _func():
             return func(*args, **kwargs)

@@ -53,5 +53,5 @@ class BaseEngine:
         pass
 
     @abstractmethod
-    def submit(self, func, *args, **kwargs):
+    def submit(self, func, *args, priority=0, pure=False, **kwargs):
         pass

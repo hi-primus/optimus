@@ -119,11 +119,11 @@ class RemoteOptimusInterface:
 
         return self.client.submit(_init, self.engine)
 
-    def submit(self, func, *args, **kwargs):
+    def submit(self, func, *args, priority=0, pure=False, **kwargs):
         def _remote(_func, *args, **kwargs):
             from dask.distributed import get_worker
             actor = get_worker().actor
-            return actor.submit(_func, *args, **kwargs)
+            return actor.submit(_func, priority=priority, pure=pure, *args, **kwargs)
 
         kwargs.update({"pure": False})
 
