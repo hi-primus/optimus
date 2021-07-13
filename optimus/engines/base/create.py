@@ -20,6 +20,7 @@ class BaseCreate:
                 elif len(key) == 2:
                     name, dtype = key
                     nulls = False
+                dtype = self.root.constants.DTYPES_ALIAS.get(dtype, dtype)
             else:
                 name = key
                 dtype = None
@@ -38,7 +39,7 @@ class BaseCreate:
         pass
 
 
-    def dataframe(self, dict: dict=None, dfd: InternalDataFrameType=None, *args, **kwargs) -> DataFrameType:
+    def dataframe(self, dict: dict=None, dfd: InternalDataFrameType=None, n_partitions: int=1, *args, **kwargs) -> DataFrameType:
         """
         Creates a dictionary using the form 
         {"Column name": ["value 1", "value 2"], ...} or {("Column name", "str", True): ["value 1", "value 2"]}
