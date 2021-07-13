@@ -291,15 +291,15 @@ class BaseDataFrame(ABC):
         dfd = self.data
         return dfd.assign(**kw_columns)
 
-    def to_json(self, columns="*", n="all", orient="list"):
+    def to_json(self, cols="*", n="all", orient="list"):
         """
         Return a json from a Dataframe
         :return:
         """
 
-        return json.dumps(self.cols.select(columns).to_dict(n, orient), ensure_ascii=False, default=json_converter)
+        return json.dumps(self.to_dict(cols, n, orient), ensure_ascii=False, default=json_converter)
 
-    def to_dict(self, n=10, orient="list"):
+    def to_dict(self, cols="*", n=10, orient="list"):
         """
             Return a dict from a Collect result
             :param n:
@@ -307,11 +307,11 @@ class BaseDataFrame(ABC):
             :return:
         """
         if n=="all":
-            series = self.to_pandas()
+            dfd = self.cols.select(cols).to_pandas()
         else:
-            series = self.buffer_window("*", 0, n).data
+            dfd = self.buffer_window(cols, 0, n).data
             
-        return series.to_dict(orient)
+        return dfd.to_dict(orient)
 
     @staticmethod
     @abstractmethod
@@ -607,13 +607,18 @@ class BaseDataFrame(ABC):
 
     def export(self):
         """
-        Helper function to export all the dataframe in text format. Aimed to be used in test functions
+        Helper function to export all the dataframe in dict format. Aimed to be used in test functions
         :return:
         """
-        df_data = self.to_json()
-        df_schema = self.data.dtypes.to_json()
+        df_dict = self.to_dict(n="all")
+        df_schema = self.cols.dtypes() # TO-DO use types in tests
 
-        return f"{df_schema}, {df_data}"
+        df_data = {}
+
+        for col_name in df_dict.keys():
+            df_data.update({(col_name, df_schema[col_name]): df_dict[col_name]})        
+
+        return df_data
 
     def show(self, n=10):
         """
