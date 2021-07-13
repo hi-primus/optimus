@@ -52,7 +52,10 @@ class Test:
         # Imports
         _imports = [
             "import numpy as np",
-            "nan = np.nan", 
+            "NaN = np.nan", 
+            "null = None", 
+            "false = False", 
+            "true = True", 
             "from optimus import Optimus",
             "from optimus.helpers.json import json_enconding",
             "from optimus.helpers.functions import deep_sort",
@@ -178,8 +181,32 @@ class Test:
                 _df = generate_code(source="op", target=False, operation="create.dataframe", dict=v.export(),
                                     n_partitions=n_partitions)
                 _args.append(_df)
-            else:
+            elif isinstance(v, (str, bool, dict, list)):
                 _args.append(pformat(v))
+            else:
+                _args.append(str(v))
+
+            # if is_str(v):
+            #     _args.append("'" + v + "'")
+            # elif is_numeric(v):
+            #     _args.append(str(v))
+
+            # elif is_list_value(v):
+            #     if is_list_of_str(v):
+            #         lst = ["'" + x + "'" for x in v]
+            #     elif is_list_of_numeric(v) or is_list_of_tuples(v):
+            #         lst = [str(x) for x in v]
+            #     elif is_list_of_tuples(v):
+            #         lst = [str(x) for x in v]
+            #     _args.append('[' + ','.join(lst) + ']')
+            # elif is_dict(v):
+            #     _args.append(json.dumps(v))
+            # elif is_function(v):
+            #     _args.append(v.__qualname__)
+            # elif is_dask_dataframe(v):
+            #     _args.append("op.create.df('"+v.export()+"')")
+            # else:
+            #     _args.append(str(v))
 
         _args = ','.join(_args)
         _kwargs = []
@@ -241,7 +268,7 @@ class Test:
 
         # Output
         if output == "df":
-            add_buffer("\tassert (expected_df.collect() == actual_df.collect())\n")
+            add_buffer("\tassert (expected_df.equals(actual_df))\n")
         elif output == "json":
             add_buffer("\tassert(expected_value == actual_df)\n")
         elif output == "dict":
