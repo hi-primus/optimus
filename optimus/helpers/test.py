@@ -51,6 +51,8 @@ class Test:
 
         # Imports
         _imports = [
+            "import sys",
+            "sys.path.append(\"..\")",
             "import numpy as np",
             "NaN = np.nan", 
             "null = None", 
