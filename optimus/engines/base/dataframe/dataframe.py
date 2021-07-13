@@ -42,7 +42,7 @@ class DataFrameBaseDataFrame():
         """
         df = self.root
         if random is True:
-            seed = random_int()
+            seed = int(random_int())
         elif random is False:
             seed = 0
         else:
