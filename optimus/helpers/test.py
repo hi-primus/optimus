@@ -148,11 +148,7 @@ class Test:
         print("Creating {test} test function...".format(test=func_test_name))
         logger.print(func_test_name)
 
-        if not output == "dict":
-            add_buffer("@staticmethod\n")
-            func_test_name = "test_" + test_name + "()"
-        else:
-            func_test_name = "test_" + test_name + "(self)"
+        func_test_name = "test_" + test_name + "(self)"
 
         filename = test_name + ".test"
 
