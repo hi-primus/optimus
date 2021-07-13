@@ -105,6 +105,8 @@ class Test:
                         except UnsupportedOperation:
                             print("file seems to be empty")
 
+        test_file.write("\nif __name__ == '__main__': unittest.main()")
+
         test_file.close()
         print("Done")
 
