@@ -6,7 +6,7 @@ from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.helpers.exceptions import UnsupportedOperationError
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_value
+from optimus.infer import is_int, is_list_value
 
 
 class DataFrameBaseDataFrame():
@@ -33,6 +33,8 @@ class DataFrameBaseDataFrame():
             seed = int(random_int())
         elif random is False:
             seed = 0
+        elif is_int(random):
+            seed = random
         else:
             RaiseIt.value_error(random, ["True", "False"])
 
