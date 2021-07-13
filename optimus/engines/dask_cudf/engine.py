@@ -157,8 +157,8 @@ class DaskCUDFEngine(BaseEngine):
 
         return fut
 
-    def submit(self, func, *args, **kwargs):
+    def submit(self, func, *args, priority=0, pure=False, **kwargs):
         from optimus.engines.base.remote import RemoteDummyAttribute
         if isinstance(func, (RemoteDummyAttribute,)):
             return func(client_submit=True, *args, **kwargs)
-        return dask.distributed.get_client().submit(func, *args, **kwargs)
+        return dask.distributed.get_client().submit(func, priority=priority, pure=pure, *args, **kwargs)
