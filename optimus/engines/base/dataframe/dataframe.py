@@ -194,21 +194,6 @@ class DataFrameBaseDataFrame():
 
         raise NotImplementedError
 
-    def to_dict(self, n=10, orient="list"):
-        """
-        Create a dict
-        :param n:
-        :param orient:
-        :return:
-        """
-
-        if n=="all":
-            series = self.to_pandas()
-        else:
-            series = self.buffer_window("*", 0, n).data
-            
-        return series.to_dict(orient)
-
     def to_pandas(self):
         return self.data
 

@@ -56,7 +56,7 @@ class CUDFDataFrame(DataFrameBaseDataFrame, BaseDataFrame):
     def to_pandas(self):
         return self.data.to_pandas()
 
-    def to_dict(self, n=10, orient="list"):
+    def to_dict(self, cols="*", n=10, orient="list"):
         """
         Create a dict
         :param n:
@@ -65,9 +65,9 @@ class CUDFDataFrame(DataFrameBaseDataFrame, BaseDataFrame):
         """
 
         if n=="all":
-            series = self.to_pandas()
+            series = self.cols.select(cols).to_pandas()
         else:
-            series = self.buffer_window("*", 0, n).data
+            series = self.buffer_window(cols, 0, n).data
             
         return series.to_pandas().to_dict(orient)
 
