@@ -238,6 +238,11 @@ class BaseDataFrame(ABC):
         """
         return self.data.values
 
+    def equals(self, df2: DataFrameType) -> bool:
+        if isinstance(df2, (BaseDataFrame,)):
+            df2 = df2.data
+        return self.data.equals(df2)
+
     @abstractmethod
     def save(self):
         pass
@@ -613,12 +618,17 @@ class BaseDataFrame(ABC):
         df_dict = self.to_dict(n="all")
         df_schema = self.cols.dtypes() # TO-DO use types in tests
 
-        df_data = {}
+        df_data = []
+
+        from pprint import pformat
 
         for col_name in df_dict.keys():
-            df_data.update({(col_name, df_schema[col_name]): df_dict[col_name]})        
+            value = pformat((col_name, df_schema[col_name]))
+            value += ": "
+            value += json.dumps(df_dict[col_name], ensure_ascii=False, default=json_converter)
+            df_data.append(value)
 
-        return df_data
+        return "{" + ", ".join(df_data) + "}"
 
     def show(self, n=10):
         """
