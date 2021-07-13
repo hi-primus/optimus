@@ -12,8 +12,8 @@ class Encoding:
 
     def n_gram(self, input_col, n=2):
         """
-        Converts the input array of strings inside of a Spark DF into an array of n-grams.
-        :param df: Pyspark dataframe to analyze
+        Converts the input array of strings inside of DF into an array of n-grams.
+        :param df: Dataframe to analyze
         :param input_col: Column to analyzer.
         :param n: number of elements per n-gram >=1.
         :return:

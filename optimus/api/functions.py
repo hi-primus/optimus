@@ -47,7 +47,7 @@ def get_optimus_features():
 
 def run_or_code(session, body, run=False):
     
-    code, updated = generate_code(body, list(session.keys()))
+    code, updated = generate_code(body, list(session.keys()), True)
 
     res = {
         "status": "ok", 

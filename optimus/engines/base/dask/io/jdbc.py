@@ -393,7 +393,7 @@ class DaskBaseJDBC:
 
     def df_to_table(self, df, table, mode="overwrite"):
         """
-        Send a spark to the database
+        Sends a dataframe to the database
         :param df:
         :param table:
         :param mode

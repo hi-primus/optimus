@@ -9,10 +9,10 @@ class Extract:
     @staticmethod
     def gz(path, *args, **kwargs):
         """
-        Return a spark from a avro file.
+        Loads a dataframe from a gz file.
         :param path: path or location of the file. Must be string dataType
-        :param args: custom argument to be passed to the spark avro function
-        :param kwargs: custom keyword arguments to be passed to the spark avro function
+        :param args: custom argument to be passed to the internal function
+        :param kwargs: custom keyword arguments to be passed to the internal function
         :return: Spark Dataframe
         """
         file, file_name = prepare_path(path, "gz")

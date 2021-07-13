@@ -21,18 +21,6 @@ class DataFrameBaseDataFrame():
     def visualize(self):
         raise UnsupportedOperationError
 
-    def export(self):
-        """
-        Helper function to export all the dataframe in text format. Aimed to be used in test functions
-        :return:
-        """
-        df = self
-        dfd = self.data
-        df_data = dfd.to_json()
-        df_schema = df.cols.dtypes() # TO-DO use types in tests
-
-        return f"{df_data}"
-
     def sample(self, n=10, random=False):
         """
         Return a n number of sample from a dataFrame

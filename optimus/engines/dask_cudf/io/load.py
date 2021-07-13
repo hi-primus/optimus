@@ -48,7 +48,7 @@ class Load(BaseLoad):
     @staticmethod
     def tsv(path, header=True, infer_schema=True, *args, **kwargs):
         """
-        Return a spark from a tsv file.
+        Loads a dataframe from a tsv file.
         :param path: path or location of the file.
         :param header: tell the function whether dataset has a header row. 'true' default.
         :param infer_schema: infers the input schema automatically from data.
@@ -128,11 +128,11 @@ class Load(BaseLoad):
     @staticmethod
     def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
         """
-        Return a spark from a parquet file.
+        Loads a dataframe from a parquet file.
         :param path: path or location of the file. Must be string dataType
         :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
-        :param args: custom argument to be passed to the spark parquet function
-        :param kwargs: custom keyword arguments to be passed to the spark parquet function
+        :param args: custom argument to be passed to the internal parquet function
+        :param kwargs: custom keyword arguments to be passed to the internal parquet function
         :return: Spark Dataframe
         """
 
@@ -159,10 +159,10 @@ class Load(BaseLoad):
     @staticmethod
     def avro(path, storage_options=None, conn=None, *args, **kwargs):
         """
-        Return a spark from a avro file.
+        Loads a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
-        :param args: custom argument to be passed to the spark avro function
-        :param kwargs: custom keyword arguments to be passed to the spark avro function
+        :param args: custom argument to be passed to the internal avro function
+        :param kwargs: custom keyword arguments to be passed to the internal avro function
         :return: Spark Dataframe
         """
 
@@ -187,7 +187,7 @@ class Load(BaseLoad):
     @staticmethod
     def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
         """
-        Return a spark from a excel file.
+        Loads a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
         :param sheet_name: excel sheet name
         :param args: custom argument to be passed to the excel function
@@ -217,7 +217,7 @@ class Load(BaseLoad):
             # Convert object columns to string
             pdf = pdf.astype(column_dtype)
 
-            # Create spark data frame
+            # Create data frame
             df = dd.from_pandas(pdf, npartitions=3)
             df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         except IOError as error:

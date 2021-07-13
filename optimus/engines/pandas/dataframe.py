@@ -46,8 +46,8 @@ class PandasDataFrame(DataFrameBaseDataFrame, BaseDataFrame):
 
     @property
     def constants(self):
-        from optimus.engines.pandas.constants import constants
-        return constants(self)
+        from optimus.engines.pandas.constants import Constants
+        return Constants()
 
     @property
     def encoding(self):

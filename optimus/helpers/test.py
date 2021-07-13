@@ -1,10 +1,12 @@
 import errno
+from optimus.api.code import generate_code
+import warnings
 import os
 from io import UnsupportedOperation
-import simplejson as json
-import pyspark
+from pprint import pformat
 
-from optimus.helpers.check import is_dask_dataframe
+from optimus.engines.base.basedataframe import BaseDataFrame
+
 from optimus.infer import is_function, is_list_value, is_list_empty, is_list_of_str, is_list_of_numeric, is_list_of_tuples, \
     is_numeric, is_str, is_dict
 from optimus.helpers.debug import get_var_name
@@ -12,25 +14,27 @@ from optimus.helpers.logger import logger
 
 
 class Test:
-    def __init__(self, op=None, df=None, name=None, imports=None, path=None, final_path=None, source="source_df"):
+    def __init__(self, op=None, df=None, name=None, path=None, final_path=None, options={}, **kwargs):
         """
         Create python code with unit test functions for Optimus.
         :param op: optimus instance
         :param df: Spark Dataframe
         :param name: Name of the Test Class
-        :param imports: Libraries to be added
         :type path: folder where tests will be written individually. run() nneds to be runned to merge all the tests.
+        :param options: dictionary with configuration options
+            import: Libraries to be added. 
+            engine: Engine to use. 
+            n_partitions: Number of partitions of created dataframes (if supported)
 
         """
         self.op = op
         self.df = df
         self.name = name
-        self.imports = imports
         self.path = path
         self.final_path = final_path
+        self.options = options if options != {} else kwargs
 
     def run(self):
-
         """
         Return the tests in text format
         :return:
@@ -44,26 +48,36 @@ class Test:
 
         test_file = open(filename, 'w', encoding='utf-8')
         print("Creating file " + filename)
+
+        # Imports
         _imports = [
-            "from pyspark.sql.types import *",
+            "import numpy as np",
+            "nan = np.nan", 
             "from optimus import Optimus",
             "from optimus.helpers.json import json_enconding",
             "from optimus.helpers.functions import deep_sort",
             "import unittest"
         ]
-        if self.imports is not None:
-            for i in self.imports:
-                _imports.append(i)
 
-        # Imports
+        if self.options.get("imports", None) is not None:
+            for i in self.options["imports"]:
+                _imports.append(i)
         for i in _imports:
             test_file.write(i + "\n")
 
-        test_file.write("op = Optimus(master='local')\n")
+        # Engine
+        engine = self.options.get("engine", "pandas")
+
+        # Number of partitions
+        n_partitions = self.options.get("n_partitions", 1)
+
+        # Creating the Optimus instance
+        test_file.write(f"op = Optimus(\"{engine}\")\n")
 
         # Global Dataframe
         if self.df is not None:
-            source_df = "source_df=op.create.df(" + self.df.export() + ")\n"
+            source_df = generate_code(source="op", target="source_df",
+                                      operation="create.dataframe", dict=self.df.export(), n_partitions=n_partitions) + "\n"
             test_file.write(source_df)
 
         # Class name
@@ -138,12 +152,17 @@ class Test:
         add_buffer("def " + func_test_name + ":\n")
 
         source = "source_df"
+
+        n_partitions = self.options.get("n_partitions", 1)
+
         if obj is None:
             # Use the main df
             df_func = self.df
-        elif isinstance(obj, pyspark.sql.dataframe.DataFrame):
+        elif isinstance(obj, (BaseDataFrame,)):
 
-            source_df = "\tsource_df=op.create.df(" + obj.export() + ")\n"
+            source_df = "\t" + generate_code(source="op", target="source_df",
+                                             operation="create.dataframe", dict=obj.export(), n_partitions=n_partitions) + "\n"
+
             df_func = obj
             add_buffer(source_df)
         else:
@@ -153,47 +172,21 @@ class Test:
         # Process simple arguments
         _args = []
         for v in args:
-            if is_str(v):
-                _args.append("'" + v + "'")
-            elif is_numeric(v):
-                _args.append(str(v))
-
-            elif is_list_value(v):
-                if is_list_of_str(v):
-                    lst = ["'" + x + "'" for x in v]
-                elif is_list_of_numeric(v) or is_list_of_tuples(v):
-                    lst = [str(x) for x in v]
-                elif is_list_of_tuples(v):
-                    lst = [str(x) for x in v]
-                _args.append('[' + ','.join(lst) + ']')
-            elif is_dict(v):
-                _args.append(json.dumps(v))
-            elif is_function(v):
+            if is_function(v):
                 _args.append(v.__qualname__)
-            elif is_dask_dataframe(v):
-                _args.append("op.create.df('"+v.export()+"')")
+            elif isinstance(v, (BaseDataFrame,)):
+                _df = generate_code(source="op", target=False, operation="create.dataframe", dict=v.export(),
+                                    n_partitions=n_partitions)
+                _args.append(_df)
             else:
+                _args.append(pformat(v))
 
-                # _args.append(get_var_name(v))
-                _args.append(str(v))
-
-            # else:
-            #     import marshal
-            #     code_string = marshal.dumps(v.__code__)
-            #     add_buffer("\tfunction = '" + code_string + "'\n")
-            # import marshal, types
-            #
-            # code = marshal.loads(code_string)
-            # func = types.FunctionType(code, globals(), "some_func_name")
         _args = ','.join(_args)
         _kwargs = []
 
-        # print(_args)
         # Process keywords arguments
         for k, v in kwargs.items():
-            if is_str(v):
-                v = "'" + v + "'"
-            _kwargs.append(k + "=" + str(v))
+            _kwargs.append(k + "=" + pformat(v))
 
         # Separator if we have positional and keyword arguments
         separator = ""
@@ -213,7 +206,8 @@ class Test:
         # print("df_result", df_result)
         # Apply function to the spark
         if method is None:
-            df_result = self.op.create.df(*args, **kwargs)
+            df_result = self.op.create.dataframe(
+                *args, **kwargs, n_partitions=n_partitions)
         else:
             # Here we construct the method to be applied to the source object
             for f in method.split("."):
@@ -226,15 +220,17 @@ class Test:
             df_result = getattr(df_result, additional_method)()
         if output == "df":
             df_result.table()
-            expected = "\texpected_df = op.create.df(" + df_result.export() + ")\n"
+            expected = "\t" + \
+                generate_code(source="op", target="expected_df", operation="create.dataframe", dict=df_result.export(), n_partitions=n_partitions) + \
+                "\n"
 
         elif output == "json":
             if is_str(df_result):
                 df_result = "'" + df_result + "'"
             else:
                 df_result = str(df_result)
-            add_buffer("\tactual_df =json_enconding(actual_df)\n")
-            expected = "\texpected_value =json_enconding(" + df_result + ")\n"
+            add_buffer("\tactual_df = json_enconding(actual_df)\n")
+            expected = "\texpected_value = json_enconding(" + df_result + ")\n"
 
         elif output == "dict":
             expected = "\texpected_value =" + str(df_result) + "\n"
@@ -273,7 +269,7 @@ class Test:
         :param df: Do nothing, only for simplicity so you can delete a file test the same way you create it
         :param suffix: The create method will try to create a test function with the func param given.
         If you want to test a function with different params you can use suffix.
-        :param func: Spark spark function to be tested
+        :param func: Function to be tested
         :return:
         """
 
@@ -299,5 +295,5 @@ class Test:
         logger.print(func_test_name)
         try:
             os.remove(filename)
-        except FileNotFoundError:
-            print("File NOT found")
+        except FileNotFoundError as e:
+            warnings.warn(e)

@@ -838,7 +838,7 @@ class BaseColumns(ABC):
         :param column: Column to be moved
         :param position: Column new position. Accepts 'after', 'before', 'beginning', 'end'
         :param ref_col: Column taken as reference
-        :return: Spark DataFrame
+        :return: DataFrame
         """
         df = self.root
         # Check that column is a string or a list

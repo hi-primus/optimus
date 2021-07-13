@@ -240,5 +240,5 @@ class DaskBaseDataFrame(BaseDataFrame):
 
     @property
     def constants(self):
-        from optimus.engines.base.dask.constants import constants
-        return constants(self)
+        from optimus.engines.base.dask.constants import Constants
+        return Constants()

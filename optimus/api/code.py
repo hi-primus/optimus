@@ -95,14 +95,27 @@ def _generate_code_target(body, properties, target):
 
     arguments = _arguments(body, properties["arguments"])
     
-    code = f'{target} = '
+    code = ''
+
+    if target:
+        code += f'{target} = '
+    
     if body.get("source", None):
         code += f'{body["source"]}.'
+
     code += f'{body["operation"]}({arguments})'
-    return code, target
+    
+    if target:
+        return code, [target]
+    else:
+        return code, []
 
 def _generate_code_dataframe_transformation(body, properties, variables):
-    target = body.get("target") or body["source"]
+
+    target = body.get("target")
+
+    if target is None:
+        target = body["source"]
 
     options = body.get("operation_options", None)
     if options:
@@ -288,7 +301,7 @@ def method_properties(func, method_root_type):
         "generator": _get_generator(func_properties, method_root_type)
     }
 
-def generate_code(body=None, variables=[], **kwargs):
+def generate_code(body=None, variables=[], get_updated=False, **kwargs):
 
     if not body:
         body = kwargs
@@ -303,8 +316,11 @@ def generate_code(body=None, variables=[], **kwargs):
         
         operation = prepare(operation)
         operation_code, operation_updated = _generate_code(operation, [*updated, *variables])
-        updated.append(operation_updated)
+        updated.extend(operation_updated)
         code.append(operation_code)
 
-    return "\n".join(code), one_list_to_val(updated)
+    if get_updated:
+        return "\n".join(code), one_list_to_val(updated)
+    else:
+        return "\n".join(code)
     

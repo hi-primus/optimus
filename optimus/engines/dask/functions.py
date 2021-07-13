@@ -19,8 +19,8 @@ class DaskFunctions(DaskBaseFunctions, Functions):
 
     @property
     def constants(self):
-        from optimus.engines.base.dask.constants import constants
-        return constants(self)
+        from optimus.engines.base.dask.constants import Constants
+        return Constants()
 
     def delayed(self, func):
         def wrapper(*args, **kwargs):
