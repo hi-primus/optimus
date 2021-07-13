@@ -4,7 +4,7 @@ from inspect import signature
 from pprint import pformat
 
 from optimus.engines.base.basedataframe import BaseDataFrame as dataframe_class
-from optimus.infer import is_list
+from optimus.infer import is_list, is_str
 from optimus.helpers.types import DataFrameType, ConnectionType, ClustersType, MaskDataFrameType, is_any_optimus_type
 from optimus.helpers.core import val_to_list, one_list_to_val
 
@@ -79,14 +79,17 @@ def _arguments(args, args_properties=None):
     # Formating
     for arg in args_list:
         # Variable names of list of variable names
-        if arg in args_properties and is_any_optimus_type(args_properties[arg].get("type", None)):
-            if is_list(args[arg]):
-                args[arg] = f"[{', '.join(args[arg])}]"
+        if arg in args:
+            if arg in args_properties and is_any_optimus_type(args_properties[arg].get("type", None)):
+                if is_list(args[arg]):
+                    args[arg] = f"[{', '.join(args[arg])}]"
+                else:
+                    args[arg] = args[arg]
+            # Native types
+            elif is_str(arg) and args_properties[arg].get("type", None) == dict:
+                pass
             else:
-                args[arg] = args[arg]
-        # Native types
-        elif arg in args:
-            args[arg] = pformat(args[arg])
+                args[arg] = pformat(args[arg])
 
         
     return ", ".join([f'{arg}={args[arg]}' for arg in args_list if arg in args])
