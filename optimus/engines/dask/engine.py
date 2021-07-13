@@ -79,7 +79,7 @@ class DaskEngine(BaseEngine):
     @property
     def dask(self):
         """
-        Return a Spark session object
+        Return a Dask client object
         :return:
         """
         return self.client.dask

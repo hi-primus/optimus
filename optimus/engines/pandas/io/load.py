@@ -25,7 +25,7 @@ class Load(BaseLoad):
     @staticmethod
     def json(path, multiline=False, n_rows=False, *args, **kwargs):
         """
-        Return a dataframe from a json file.
+        Loads a dataframe from a json file.
         :param path: path or location of the file.
         :param multiline:
 
@@ -61,7 +61,7 @@ class Load(BaseLoad):
     @staticmethod
     def tsv(path, header=True, infer_schema=True, *args, **kwargs):
         """
-        Return a spark from a tsv file.
+        Loads a dataframe from a tsv file.
         :param path: path or location of the file.
         :param header: tell the function whether dataset has a header row. True default.
         :param infer_schema: infers the input schema automatically from data.
@@ -79,7 +79,7 @@ class Load(BaseLoad):
             storage_options=None, conn=None,
             *args, **kwargs):
         """
-        Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
+        Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
 
 
@@ -156,7 +156,7 @@ class Load(BaseLoad):
     @staticmethod
     def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
         """
-        Return a spark from a parquet file.
+        Loads a dataframe from a parquet file.
         :param path: path or location of the file. Must be string dataType
         :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
         :param args: custom argument to be passed to the spark parquet function
@@ -186,7 +186,7 @@ class Load(BaseLoad):
     @staticmethod
     def avro(path, storage_options=None, conn=None, *args, **kwargs):
         """
-        Return a spark from a avro file.
+        Loads a dataframe from a avro file.
         :param storage_options:
         :param path: path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark avro function
@@ -216,7 +216,7 @@ class Load(BaseLoad):
     @staticmethod
     def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
         """
-        Return a spark from a excel file.
+        Loads a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
         :param sheet_name: excel sheet name
         :param args: custom argument to be passed to the excel function
@@ -258,7 +258,7 @@ class Load(BaseLoad):
     @staticmethod
     def orc(path, columns, storage_options=None, conn=None, *args, **kwargs):
         """
-        Return a dataframe from a avro file.
+        Loads a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
