@@ -291,13 +291,13 @@ class BaseDataFrame(ABC):
         dfd = self.data
         return dfd.assign(**kw_columns)
 
-    def to_json(self, columns="*"):
+    def to_json(self, columns="*", n="all", orient="list"):
         """
         Return a json from a Dataframe
         :return:
         """
 
-        return json.dumps(self.cols.select(columns).to_dict(n="all", orient="records"), ensure_ascii=False, default=json_converter)
+        return json.dumps(self.cols.select(columns).to_dict(n, orient), ensure_ascii=False, default=json_converter)
 
     def to_dict(self, n=10, orient="list"):
         """

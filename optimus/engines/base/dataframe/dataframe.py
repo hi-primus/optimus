@@ -26,11 +26,12 @@ class DataFrameBaseDataFrame():
         Helper function to export all the dataframe in text format. Aimed to be used in test functions
         :return:
         """
-        df = self.data
-        df_data = df.to_json()
-        df_schema = df.cols.dtypes()
+        df = self
+        dfd = self.data
+        df_data = dfd.to_json()
+        df_schema = df.cols.dtypes() # TO-DO use types in tests
 
-        return f"{df_schema}, {df_data}"
+        return f"{df_data}"
 
     def sample(self, n=10, random=False):
         """
