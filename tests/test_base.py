@@ -1,8 +1,9 @@
 import unittest
 
+
 class TestBase(unittest.TestCase):
 
-    config = { "engine": "pandas", "n_partitions": 1 }
+    config = {"engine": "pandas", "n_partitions": 1}
     dict = {}
     load = {}
 
@@ -28,13 +29,13 @@ class TestBase(unittest.TestCase):
                 self.df = self.load_dataframe(**self.load)
         self.post_create()
 
-    def create_dataframe(self, dict=None, **kwargs):        
+    def create_dataframe(self, dict=None, **kwargs):
         if not "n_partitions" in kwargs and "n_partitions" in self.config:
             kwargs["n_partitions"] = self.config["n_partitions"]
 
         return self.op.create.dataframe(dict, **kwargs)
 
-    def load_dataframe(self, path=None, type='file', **kwargs):        
+    def load_dataframe(self, path=None, type='file', **kwargs):
         if not "n_partitions" in kwargs and "n_partitions" in self.config:
             kwargs["n_partitions"] = self.config["n_partitions"]
 
@@ -42,4 +43,3 @@ class TestBase(unittest.TestCase):
 
     def post_create(self):
         pass
-
