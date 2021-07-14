@@ -1,7 +1,5 @@
-import csv
 import uuid
 import os
-import magic
 
 from optimus.helpers.functions import prepare_path
 
@@ -20,6 +18,7 @@ def getfile_and_infer(path):
 
     file = open(full_file_name).read(2048)
 
+    import magic
     mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_file(full_file_name).split(";")
     mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "ext": file_ext}
 
@@ -38,6 +37,7 @@ def getfile_and_infer(path):
         # CSV
         else:
             try:
+                import csv
                 dialect = csv.Sniffer().sniff(file)
                 mime_info["filetype"] = "csv"
 
