@@ -16,7 +16,7 @@ Say Hi! to Optimus_ and visit our web page.
 
 .. _Optimus: https://hioptimus.com
 
-Prepare, process and explore your Big Data with fastest open source library on the planet using Apache Spark and Python (PySpark).
+Prepare, process and explore your Big Data with fastest open source library on the planet using Python.
 
 .. toctree::
    :maxdepth: 2

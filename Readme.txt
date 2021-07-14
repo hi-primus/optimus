@@ -1,4 +1,4 @@
-Optimus is the missing framework to profile, clean, process and do ML in a distributed fashion
+Optimus is the missing framework to profile, clean, process and do ML in a distributed fashion using Python.
 
 - Requirements:
 
