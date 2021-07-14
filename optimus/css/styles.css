@@ -11,28 +11,39 @@
 
 .info_items {
     margin: 10px 0;
-    font-size: 0.8em;
+    font-family: sans-serif; 
+    font-size: 10px;
 }
 
-.optimus_table td {
-    border: 0px;
-}
-
-
-.optimus_table thead {
-    border-bottom: 1px solid black;
-}
 .optimus_table {
     font-size: 12px;
+    margin: 0;
+}
+
+.optimus_table_container {
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.optimus_table thead {
+    font-family: sans-serif;
+    border-bottom: 1px solid currentColor;
 }
 
 .optimus_table tbody {
     font-family: monospace;
-    border-bottom: 1px solid #cccccc;
 }
 
 .optimus_table tbody div {
     min-height:14px
+}
+
+.optimus_table_border {
+    background-color: currentColor; opacity: 0.2; height: 1px; width: 100%
+}
+
+.highlight-col {
+    background-color: rgba(240,240,0,0.18);
 }
 
 /* Profiler */
@@ -63,12 +74,4 @@
 }
 .panel_profiler td {
     padding:0.2em
-}
-.optimus_table th {
-    font-family:sans-serif;
-}
-
-.info_items {
-    font-family:sans-serif;
-    font-size:10px;
 }
