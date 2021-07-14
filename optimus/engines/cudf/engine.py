@@ -2,7 +2,7 @@ from optimus.engines.base.engine import BaseEngine
 
 from optimus.engines.cudf.cudf import CUDF
 from optimus.engines.cudf.io.load import Load
-from optimus.version import __version__
+from optimus._version import __version__
 
 CUDF.instance = None
 
