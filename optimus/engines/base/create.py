@@ -56,7 +56,7 @@ class BaseCreate:
             dict = self._dictionary(dict)
             dfd = self._dfd_from_dict(dict)
 
-        df = self._df_from_dfd(dfd, *args, **kwargs)
+        df = self._df_from_dfd(dfd, n_partitions=n_partitions, *args, **kwargs)
         df.meta = Meta.set(df.meta, value={"max_cell_length": df.cols.len("*").cols.max()})
         return df
 
