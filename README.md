@@ -21,7 +21,7 @@ Optimus is the missing framework to profile, clean, process and do ML in a distr
 In your terminal just type  ```pip install pyoptimus```
 
 ### Requirements
-* Python>=3.6
+* Python>=3.7
 
 ## Examples
 

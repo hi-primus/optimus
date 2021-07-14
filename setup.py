@@ -15,8 +15,8 @@ def get_version():
                          version_file.read()).group('version')
 
 
-if sys.version_info < (3, 6):
-    raise RuntimeError('This version requires Python 3.6+')  # pragma: no cover
+if sys.version_info < (3, 7):
+    raise RuntimeError('This version requires Python 3.7+')  # pragma: no cover
 
 
 def readme():
@@ -87,8 +87,8 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     keywords=['datacleaner', 'data-wrangling',
               'data-cleansing', 'data-profiling'],
