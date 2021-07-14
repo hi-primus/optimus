@@ -177,6 +177,12 @@ class DaskBaseDataFrame(BaseDataFrame):
     def partitions(self):
         return self.data.npartitions
 
+    def equals(self, df2) -> bool:
+        if isinstance(df2, (BaseDataFrame,)):
+            return df2.to_dict(n="all") == self.to_dict(n="all")
+        else:
+            return self.to_dict(n="all") == df2
+
     @staticmethod
     def partitioner():
         print("Dask not support custom partitioner")
