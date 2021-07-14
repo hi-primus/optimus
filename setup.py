@@ -7,6 +7,8 @@ from setuptools import setup, find_packages
 from functools import reduce
 
 # Get version without importing, which avoids dependency issues
+
+
 def get_version():
     with open('optimus/version.py') as version_file:
         return re.search(r"""__version__\s+=\s+(['"])(?P<version>.+?)\1""",
@@ -39,7 +41,8 @@ elif IN_COLAB:
 with open(requirements_file) as f:
     required = f.read().splitlines()
 
-extras_requirements_keys = ['spark', 'dask', 'vaex', 'cudf', 'ai', 'db', 'api']
+extras_requirements_keys = ['spark', 'pandas',
+                            'dask', 'vaex', 'cudf', 'ai', 'db', 'api']
 extras_requirements = {}
 
 for extra in extras_requirements_keys:
@@ -60,7 +63,8 @@ setup(
     author='Argenis Leon',
     author_email='argenisleon@gmail.com',
     url='https://github.com/hi-primus/optimus/',
-    description=('Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion.'),
+    description=(
+        'Optimus is the missing framework for cleaning and pre-processing data in a distributed fashion.'),
     long_description=readme(),
     long_description_content_type='text/markdown',
     license='APACHE',
@@ -86,5 +90,6 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-    keywords=['datacleaner', 'data-wrangling', 'data-cleansing', 'data-profiling'],
+    keywords=['datacleaner', 'data-wrangling',
+              'data-cleansing', 'data-profiling'],
 )
