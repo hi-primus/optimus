@@ -1,29 +1,18 @@
-dist: trusty
+dist: xenial
 language: python
 python:
-  - "3.6"
   - "3.7"
-
-
-jdk:
-  - oraclejdk8
-
-env:
-  global:
-    - SPARK_HOME=/tmp/spark-2.4.1-bin-hadoop2.7
+  - "3.8"
 
 before_install:
-  - chmod +x install-spark.sh
   - pip install --upgrade pip
-  - pip install pytest pytest-cov
   - pip install coveralls
 
 install:
-  - ./install-spark.sh
-  - "pip install -r requirements-test.txt --progress-bar=off"
+  - "pip install -r requirements.txt --progress-bar=off"
 
 script:
-  - py.test -v --ignore=optimus/dl/ --ignore=examples/ --ignore=tests/creator --ignore=tests/test_dl.py
+  - python -m unittest
 
 deploy:
   provider: pypi

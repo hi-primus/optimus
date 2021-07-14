@@ -1,6 +1,4 @@
-import unittest
-from test_base import TestBase
-
+from optimus.tests.base import TestBase
 
 class TestCols(TestBase):
     dict = {"A": [-1, 2, 3, -10, -1.5, 50]}
