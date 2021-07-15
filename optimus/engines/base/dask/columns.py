@@ -46,40 +46,37 @@ class DaskBaseColumns():
         return self.root.new(dfd, meta=meta)
         # return dfd
 
-    def qcut(self, columns, quantiles, handle_invalid="skip"):
+    def qcut(self, cols="*", quantiles=4, handle_invalid="skip"):
 
         df = self.root.data
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         # s.fillna(np.nan)
-        df[columns] = df[columns].map_partitions(pd.qcut, quantiles)
+        df[cols] = df[cols].map_partitions(pd.qcut, quantiles)
         return df
 
-    @staticmethod
-    def heatmap(columns, buckets=10):
-        pass
+    def heatmap(self, cols="*", buckets=10):
+        raise NotImplementedError('Not implemented yet')
 
-    @staticmethod
-    def standard_scaler():
-        pass
+    def standard_scaler(self, cols="*", output_cols=None):
+        raise NotImplementedError('Not implemented yet')
 
-    @staticmethod
-    def max_abs_scaler(input_cols, output_cols=None):
-        pass
+    def max_abs_scaler(self, cols="*", output_cols=None):
+        raise NotImplementedError('Not implemented yet')
 
-    def min_max_scaler(self, input_cols, output_cols=None):
+    def min_max_scaler(self, cols="*", output_cols=None):
         # https://github.com/dask/dask/issues/2690
 
         df = self.df
 
         scaler = MinMaxScaler()
 
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
 
-        # _df = df[input_cols]
-        scaler.fit(df[input_cols])
+        # _df = df[cols]
+        scaler.fit(df[cols])
         # print(type(scaler.transform(_df)))
-        arr = scaler.transform(df[input_cols])
+        arr = scaler.transform(df[cols])
         darr = dd.from_array(arr)
         # print(type(darr))
         darr.name = 'z'
@@ -88,14 +85,13 @@ class DaskBaseColumns():
         return df
 
     # Date operations
-    @staticmethod
-    def to_timestamp(input_cols, date_format=None, output_cols=None):
-        pass
+    def to_timestamp(self, cols="*", date_format=None, output_cols=None):
+        raise NotImplementedError('Not implemented yet')
 
-    def replace_regex(self, input_cols, regex=None, value="", output_cols=None):
+    def replace_regex(self, cols="*", regex=None, value="", output_cols=None):
         """
         Use a Regex to replace values
-        :param input_cols: '*', list of columns names or a single column name.
+        :param cols: '*', list of columns names or a single column name.
         :param output_cols:
         :param regex: values to look at to be replaced
         :param value: new value to replace the old one
@@ -105,24 +101,23 @@ class DaskBaseColumns():
         def _replace_regex(_value, _regex, _replace):
             return _value.replace(_regex, _replace, regex=True)
 
-        return self.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
+        return self.apply(cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
                           filter_col_by_dtypes=self.root.constants.STRING_TYPES + self.root.constants.NUMERIC_TYPES)
 
-    def reverse(self, input_cols, output_cols=None):
+    def reverse(self, cols="*", output_cols=None):
         def _reverse(value):
             return value.astype(str).str[::-1]
 
-        return self.apply(input_cols, _reverse, output_cols=output_cols, mode="pandas", set_index=True)
+        return self.apply(cols, _reverse, output_cols=output_cols, mode="pandas", set_index=True)
 
-    @staticmethod
-    def astype(*args, **kwargs):
-        pass
+    def astype(self, cols="*", output_cols=None, *args, **kwargs):
+        raise NotImplementedError('Not implemented yet')
 
     # TODO: Check if we must use * to select all the columns
 
-    def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
+    def count_by_dtypes(self, cols="*", infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.root.data
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         columns_dtypes = df.cols.dtypes()
 
         def value_counts(series):
@@ -130,7 +125,7 @@ class DaskBaseColumns():
 
         delayed_results = []
 
-        for col_name in columns:
+        for col_name in cols:
             a = df.map_partitions(lambda df: df[col_name].apply(
                 lambda row: Infer.parse((col_name, row), infer, columns_dtypes, str_funcs, int_funcs,
                                         full=False))).compute()
@@ -152,10 +147,10 @@ class DaskBaseColumns():
 
         return result
 
-    def nest(self, input_cols, separator="", output_col=None, drop=False, shape="string"):
+    def nest(self, cols="*", separator="", output_col=None, drop=False, shape="string"):
         """
         Merge multiple columns with the format specified
-        :param input_cols: columns to be nested
+        :param cols: columns to be nested
         :param separator: char to be used as separator at the concat time
         :param shape: final data type, 'array', 'string' or 'vector'
         :param output_col:
@@ -163,11 +158,11 @@ class DaskBaseColumns():
         """
 
         df = self.root
-        input_cols = parse_columns(df, input_cols)
+        cols = parse_columns(df, cols)
         # output_col = val_to_list(output_col)
-        # check_column_numbers(input_cols, 2)
+        # check_column_numbers(cols, 2)
         if output_col is None:
-            output_col = name_col(input_cols)
+            output_col = name_col(cols)
             # RaiseIt.type_error(output_col, ["str"])
 
         # output_col = parse_columns(df, output_col, accepts_missing_cols=True)
@@ -175,18 +170,18 @@ class DaskBaseColumns():
         output_ordered_columns = df.cols.names()
 
         def _nest_string(row):
-            v = row[input_cols[0]].astype(str)
-            for i in range(1, len(input_cols)):
-                v = v + separator + row[input_cols[i]].astype(str)
+            v = row[cols[0]].astype(str)
+            for i in range(1, len(cols)):
+                v = v + separator + row[cols[i]].astype(str)
             return v
 
         def _nest_array(row):
             # https://stackoverflow.com/questions/43898035/pandas-combine-column-values-into-a-list-in-a-new-column/43898233
             # t['combined'] = t.values.tolist()
 
-            v = row[input_cols[0]].astype(str)
-            for i in range(1, len(input_cols)):
-                v += ", " + row[input_cols[i]].astype(str)
+            v = row[cols[0]].astype(str)
+            for i in range(1, len(cols)):
+                v += ", " + row[cols[i]].astype(str)
             return "[" + v + "]"
 
         if shape == "string":
@@ -197,13 +192,13 @@ class DaskBaseColumns():
         dfd = df.cols.assign(kw_columns).data
 
         if output_col not in output_ordered_columns:
-            col_index = output_ordered_columns.index(input_cols[-1]) + 1
+            col_index = output_ordered_columns.index(cols[-1]) + 1
             output_ordered_columns[col_index:col_index] = [output_col]
 
         meta = Meta.action(df.meta, Actions.NEST.value, list(kw_columns.values()))
 
         if drop is True:
-            for input_col in input_cols:
+            for input_col in cols:
                 if input_col in output_ordered_columns and input_col != output_col:
                     output_ordered_columns.remove(input_col)
 

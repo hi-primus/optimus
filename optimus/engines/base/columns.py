@@ -2188,7 +2188,7 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None) -> dict:
+    def count_by_dtypes(cols, infer=False, str_funcs=None, int_funcs=None) -> dict:
         pass
 
     def quality(self, cols="*") -> dict:
@@ -2377,12 +2377,12 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def string_to_index(cols=None, output_cols=None, columns=None) -> DataFrameType:
+    def string_to_index(cols=None, output_cols=None) -> DataFrameType:
         pass
 
     @staticmethod
     @abstractmethod
-    def index_to_string(cols=None, output_cols=None, columns=None) -> DataFrameType:
+    def index_to_string(cols=None, output_cols=None) -> DataFrameType:
         pass
 
     # URL methods

@@ -21,13 +21,13 @@ class Cols(DataFrameBaseColumns, BaseColumns):
         pass
 
     @staticmethod
-    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
+    def count_by_dtypes(cols, infer=False, str_funcs=None, int_funcs=None):
         pass
 
     @staticmethod
-    def string_to_index(input_cols=None, output_cols=None, columns=None):
+    def string_to_index(cols=None, output_cols=None):
         pass
 
     @staticmethod
-    def index_to_string(input_cols=None, output_cols=None, columns=None):
+    def index_to_string(cols=None, output_cols=None):
         pass

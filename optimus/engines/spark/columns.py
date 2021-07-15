@@ -1513,10 +1513,10 @@ class Cols(BaseColumns):
         # return result
 
     @staticmethod
-    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
+    def count_by_dtypes(cols, infer=False, str_funcs=None, int_funcs=None):
         """
         Use rdd to count the inferred data type in a row
-        :param columns: Columns to be processed
+        :param cols: Columns to be processed
         :param str_funcs: list of tuples for create a custom string parsers
         :param int_funcs: list of tuples for create a custom int parsers
         :param infer: Infer data type
@@ -1525,10 +1525,10 @@ class Cols(BaseColumns):
 
         df = self.root
 
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         columns_dtypes = df.cols.dtypes()
 
-        df_count = (df.select(columns).rdd
+        df_count = (df.select(cols).rdd
                     .flatMap(lambda x: x.asDict().items())
                     .map(lambda x: Infer.parse(x, infer, columns_dtypes, str_funcs, int_funcs))
                     .reduceByKey(lambda a, b: (a + b)))
@@ -1736,33 +1736,31 @@ class Cols(BaseColumns):
             df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
         return df
 
-    @staticmethod
-    def string_to_index(input_cols=None, output_cols=None, columns=None):
+    def string_to_index(self, cols=None, output_cols=None):
         """
         Encodes a string column of labels to a column of label indices
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :param columns:
         :return:
         """
         df = self.root
 
-        df = ml_string_to_index(df, input_cols, output_cols, columns)
+        df = ml_string_to_index(df, cols, output_cols)
 
         return df
 
-    @staticmethod
-    def index_to_string(input_cols=None, output_cols=None, columns=None):
+    def index_to_string(self, cols=None, output_cols=None):
         """
         Encodes a string column of labels to a column of label indices
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :param columns:
         :return:
         """
         df = self.root
 
-        df = ml_index_to_string(df, input_cols, output_cols, columns)
+        df = ml_index_to_string(df, cols, output_cols)
 
         return df
 

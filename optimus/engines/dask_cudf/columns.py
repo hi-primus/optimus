@@ -26,23 +26,23 @@ class Cols(CUDFBaseColumns, DaskBaseColumns, BaseColumns):
         # kw_columns[output_col] = df[input_col].map_partitions(func, *args)
         # return kw_columns
 
-    def string_to_index(self, input_cols=None, output_cols=None, columns=None):
+    def string_to_index(self, cols=None, output_cols=None):
         df = self.root
         le = preprocessing.LabelEncoder()
-        return string_to_index(df, input_cols, output_cols, le)
+        return string_to_index(df, cols, output_cols, le)
 
-    def index_to_string(self, input_cols=None, output_cols=None, columns=None):
+    def index_to_string(self, cols=None, output_cols=None):
         df = self.root
         le = preprocessing.LabelEncoder()
-        return index_to_string(df, input_cols, output_cols, le)
+        return index_to_string(df, cols, output_cols, le)
 
-    def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
+    def count_by_dtypes(self, cols, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         dtypes = df.cols.dtypes()
 
         result = {}
-        for col_name in columns:
+        for col_name in cols:
             df_result = df[col_name].map_partitions(Infer.parse_dask, col_name, infer, dtypes, str_funcs,
                                                     int_funcs, meta=str).compute()
 
