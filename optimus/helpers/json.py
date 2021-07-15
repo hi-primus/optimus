@@ -18,14 +18,14 @@ def json_converter(obj):
             return obj.isoformat()
 
         elif isinstance(obj, datetime.date):
-            return obj.isoformat()
             # return obj.strftime('%Y-%m-%d')
+            return obj.isoformat()
 
         elif isinstance(obj, (np.generic,)):
             return np.asscalar(obj)
 
 
-def json_enconding(obj):
+def json_encoding(obj):
     """
     Encode a json. Used for testing.
     :param obj:
@@ -39,7 +39,7 @@ def dump_json(value, *args, **kwargs):
     def _replace(data):
         if isinstance(data, dict):
             return {k: _replace(v) for k, v in data.items()}
-        elif isinstance(data, list):
+        elif isinstance(data, (list, set, tuple,)):
             return [_replace(i) for i in data]
         elif data == float("inf"):
             return "Infinity"
