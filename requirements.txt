@@ -29,7 +29,7 @@ python-magic-bin==0.4.14; sys_platform == 'win32'
 nltk
 pendulum>=2.0.5
 rply==0.7.7
-pybigquery==0.4.15
+pybigquery==0.10.0
 pandavro>=1.6.0
 openpyxl>=3.0.5
 tabulate>=0.8.7
