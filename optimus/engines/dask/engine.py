@@ -8,7 +8,7 @@ from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.dask.io.load import Load
 from optimus.optimus import Engine
-from optimus.version import __version__
+from optimus._version import __version__
 
 
 class DaskEngine(BaseEngine):

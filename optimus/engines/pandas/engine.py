@@ -6,7 +6,7 @@ from optimus.engines.pandas.io.extract import Extract
 from optimus.engines.pandas.io.load import Load
 from optimus.engines.pandas.pandas import Pandas
 from optimus.helpers.exceptions import UnsupportedOperationError
-from optimus.version import __version__
+from optimus._version import __version__
 
 Pandas.instance = None
 

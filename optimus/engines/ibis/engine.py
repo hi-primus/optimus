@@ -3,7 +3,7 @@ import ibis
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.ibis.io.jdbc import JDBC
 from optimus.optimus import Engine
-from optimus.version import __version__
+from optimus._version import __version__
 
 
 class IbisEngine(BaseEngine):

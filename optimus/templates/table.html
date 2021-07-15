@@ -9,42 +9,46 @@
 {% endmacro %}
 
 {{header_footer(limit, total_rows, total_cols, partitions)}}
-<table class="optimus_table">
-    <thead>
-    <tr>
-        {%for col in cols: %}
-        <th>
-            <div class="column_name">{{col[0]}}</div>
-            <div class="data_type">{{loop.index}} ({{col[1]}})</div>
-            <div class="data_type">
-                {% if col[2] == true %}
-                nullable
-                {% else %}
-                not nullable
+<span class="optimus_table_container">
+    <table class="optimus_table">
+        <thead>
+        <tr>
+            {%for col in cols: %}
+            <th style="{{'background-color: rgba(240,240,0,0.18); ' if col[0] in highlight else ''}}">
+                <div class="column_name">{{col[0]}}</div>
+                <div class="data_type">{{loop.index}} ({{col[1]}})</div>
+                {% if col[2] != undefined %}
+                <div class="data_type">
+                    {% if col[2] == true %}
+                    nullable
+                    {% else %}
+                    not nullable
+                    {% endif %}
+                </div>
                 {% endif %}
-            </div>
-        </th>
-        {% endfor %}
-    </tr>
+            </th>
+            {% endfor %}
+        </tr>
 
-    </thead>
-    <tbody>
-    {%for r in data:%}
-    <tr>
-        {%for k,v in r.items(): %}
-        <td>
-            <div style="{% if v is none or v is not defined %}color:#0000FF{% endif %} {% if v is sameas true %}color:#0000FF{% endif %}"
-                 title='{{v|string|replace(" ", "&#8901;")|safe}}'>
-                {% if truncate == true %}
-                {{v|string|replace(" ",  "&#8901;")|truncate(128)|safe}}
-                 {% else %}
-                {{v|string|replace(" ",  "&#8901;")|safe}}
-                {% endif %}
-            </div>
-        </td>
+        </thead>
+        <tbody>
+        {%for r in data:%}
+        <tr>
+            {%for k,v in r.items(): %}
+            <td style="border: 0px; {{'background-color: rgba(240,240,0,0.18); ' if k in highlight else ''}}">
+                <div title="{{v|string|replace(" ", "&#8901;")|safe}}">
+                    {% if truncate == true %}
+                    {{v|string|replace(" ",  "&#8901;")|truncate(128)|safe}}
+                    {% else %}
+                    {{v|string|replace(" ",  "&#8901;")|safe}}
+                    {% endif %}
+                </div>
+            </td>
+            {% endfor %}
+        </tr>
         {% endfor %}
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
+    <div class="optimus_table_border"></div>
+</span>
 {{header_footer(limit, total_rows, total_cols,partitions, df_type)}}

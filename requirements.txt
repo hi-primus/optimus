@@ -41,6 +41,7 @@ Metaphone==0.6
 num2words==0.5.10
 xlrd>=1.2.0
 s3fs>=0.5.2
+boto3>=1.17
 python-Levenshtein==0.12.2
 string-grouper==0.5.0
 py-dateinfer @ git+https://github.com/hi-primus/dateinfer@main

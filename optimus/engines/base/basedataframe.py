@@ -241,7 +241,9 @@ class BaseDataFrame(ABC):
     def equals(self, df2: DataFrameType) -> bool:
         if isinstance(df2, (BaseDataFrame,)):
             df2 = df2.data
-        return self.data.equals(df2)
+            return self.data.equals(df2)
+        else:
+            return self.to_dict(n="all") == df2
 
     @abstractmethod
     def save(self):

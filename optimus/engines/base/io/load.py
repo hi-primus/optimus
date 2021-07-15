@@ -1,10 +1,5 @@
-import csv
 import os
 from abc import abstractmethod
-
-import boto3
-import joblib
-import magic
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.helpers.functions import prepare_path
@@ -73,8 +68,9 @@ class BaseLoad:
         conn = kwargs.get("conn")
 
         if conn:
-
-            remote_obj = boto3.resource(conn.type, **conn.boto).Object(conn.options.get("bucket"), path)
+            import boto3
+            remote_obj = boto3.resource(
+                conn.type, **conn.boto).Object(conn.options.get("bucket"), path)
             body = remote_obj.get()['Body']
             buffer = body.read(amt=BYTES_SIZE)
             full_path = conn.path(path)
@@ -89,8 +85,11 @@ class BaseLoad:
         # Detect the file type
         try:
             file_ext = os.path.splitext(file_name)[1].replace(".", "")
-            mime, encoding = magic.Magic(mime=True, mime_encoding=True).from_buffer(buffer).split(";")
-            mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[1], "file_ext": file_ext}
+            import magic
+            mime, encoding = magic.Magic(
+                mime=True, mime_encoding=True).from_buffer(buffer).split(";")
+            mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[
+                1], "file_ext": file_ext}
 
         except Exception as e:
             print(getattr(e, 'message', repr(e)))
@@ -113,7 +112,8 @@ class BaseLoad:
                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
                 file_type = "excel"
             else:
-                RaiseIt.value_error(mime, ["csv", "json", "xml", "xls", "xlsx"])
+                RaiseIt.value_error(
+                    mime, ["csv", "json", "xml", "xls", "xlsx"])
 
         # Detect the file encoding
         if file_type == "csv":
@@ -123,6 +123,7 @@ class BaseLoad:
 
             if mime:
                 try:
+                    import csv
                     dialect = csv.Sniffer().sniff(str(buffer))
                     mime_info["file_type"] = "csv"
 
@@ -159,10 +160,12 @@ class BaseLoad:
             df = self.excel(full_path, **kwargs)
 
         else:
-            RaiseIt.value_error(file_type, ["csv", "json", "xml", "xls", "xlsx"])
+            RaiseIt.value_error(
+                file_type, ["csv", "json", "xml", "xls", "xlsx"])
 
         return df
 
     @staticmethod
     def model(path):
+        import joblib
         return joblib.load(path)

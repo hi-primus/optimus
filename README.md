@@ -1,27 +1,28 @@
 [![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.8/images/logoOptimus.png)](https://hi-optimus.com)
 
-[![PyPI version](https://badge.fury.io/py/pyoptimus.svg)](https://badge.fury.io/py/pyoptimus) [![Updates](https://pyup.io/repos/github/hi-primus/optimus/shield.svg)](https://pyup.io/repos/github/hi-primus/optimus/)  [![GitHub release](https://img.shields.io/github/release/hi-primus/optimus.svg)](https://github.com/hi-primus/optimus/)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/02b3ba0fe2b64d6297c6b8320f8b15a7)](https://www.codacy.com/app/argenisleon/Optimus?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hi-primus/optimus&amp;utm_campaign=Badge_Grade)
-[![Coverage Status](https://coveralls.io/repos/github/hi-primus/optimus/badge.svg?branch=develop-21.8)](https://coveralls.io/github/hi-primus/optimus?branch=develop-21.8) [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience) ![Discord](https://img.shields.io/discord/579030865468719104.svg)
+![Build](https://travis-ci.com/hi-primus/optimus.svg?branch=develop-21.8)
+[![PyPI Latest Release](https://img.shields.io/pypi/v/pyoptimus.svg)](https://pypi.org/project/pyoptimus/) 
+[![GitHub release](https://img.shields.io/github/release/hi-primus/optimus.svg?include_prereleases)](https://github.com/hi-primus/optimus/releases)
 [![CalVer](https://img.shields.io/badge/calver-YY.MM.MICRO-22bfda.svg)](http://calver.org)
 
 [![Downloads](https://pepy.tech/badge/pyoptimus)](https://pepy.tech/project/pyoptimus)
 [![Downloads](https://pepy.tech/badge/pyoptimus/month)](https://pepy.tech/project/pyoptimus/month)
 [![Downloads](https://pepy.tech/badge/pyoptimus/week)](https://pepy.tech/project/pyoptimus/week)
+[![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience) 
+
+[![Slack](https://img.shields.io/badge/chat-slack-red.svg?logo=slack&logoColor)](https://communityinviter.com/apps/hi-bumblebee/welcome)
 
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-21.8)
-[![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hi-primus/optimus/blob/develop-21.8/examples/10_min_from_spark_to_pandas_with_optimus.ipynb)
-
-Optimus is the missing framework to profile, clean, process and do ML in a distributed fashion using Apache Spark(PySpark).
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-21.8)
+[![Colab](https://img.shields.io/badge/launch-colab-yellow.svg?logo=googlecolab&color=e6a210)](https://colab.research.google.com/github/hi-primus/optimus/blob/develop-21.8/examples/10_min_from_spark_to_pandas_with_optimus.ipynb)
 
 ## Installation (pip): 
  
 In your terminal just type  ```pip install pyoptimus```
 
 ### Requirements
-* Python>=3.6
+* Python>=3.7
 
 ## Examples
 
@@ -141,7 +142,7 @@ including:
 * README.md corrections or redesigns. 
 * Adding unit, or functional [tests](https://github.com/hi-primus/optimus/tree/develop-21.8/tests)  
 * Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.
-* [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/)   about Optimus and its many features. 
+* [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/) about Optimus and its many features. 
 * Helping others on our official chats
  
 ## Backers and Sponsors

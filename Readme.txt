@@ -1,9 +1,8 @@
-Optimus is the missing framework to profile, clean, process and do ML in a distributed fashion using Apache Spark (PySpark).
+Optimus is the missing framework to profile, clean, process and do ML in a distributed fashion using Python.
 
 - Requirements:
 
-* Apache Spark>=2.4.0
-* Python>=3.6
+* Python>=3.7
 
 - Installation:
 
