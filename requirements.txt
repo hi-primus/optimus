@@ -1,5 +1,5 @@
 dask==2021.5.0
-distributed==2021.5.0
+distributed==2021.7.0
 numba>=0.49
 jsonschema
 simplejson>=3.16.0
