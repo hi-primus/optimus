@@ -26,7 +26,7 @@ fastavro>=0.22.7
 fast-histogram>=0.8
 python-magic>=0.4.15; sys_platform != 'win32'
 python-magic-bin==0.4.14; sys_platform == 'win32'
-nltk
+nltk==3.6.2
 pendulum>=2.0.5
 rply==0.7.7
 pybigquery==0.4.15
