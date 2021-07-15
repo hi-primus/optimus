@@ -1,1 +1,1 @@
-flask
+flask==2.0.1
