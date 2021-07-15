@@ -9,7 +9,6 @@ from pprint import pformat
 from optimus.engines.base.basedataframe import BaseDataFrame
 
 from optimus.infer import is_function, is_list_empty
-from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
 
 
@@ -76,7 +75,8 @@ class TestCreator:
             classes.update({key: config})
 
         # Class name
-        cls = "\nclass Test" + list(classes.keys())[0] + "(TestBase):\n"
+        base_class = "Test"+list(classes.keys())[0]
+        cls = "\nclass " + base_class + "(TestBase):\n"
         test_file.write(cls)
 
         # First Config
@@ -85,8 +85,7 @@ class TestCreator:
 
         # Global Dataframe
         if self.df is not None:
-            source_df = "    dict = " + self.df.export() + "\n"
-            test_file.write(source_df)
+            test_file.write("    dict = " + self.df.export() + "\n")
 
         test_file.write("    maxDiff = None\n")
 
@@ -106,9 +105,11 @@ class TestCreator:
 
         # test_file.write("\nif __name__ == '__main__': unittest.main()")
 
+
+
         for name, config in list(classes.items())[1:]:
 
-            cls = "\nclass Test" + name + "(TestBase):\n"
+            cls = f"\nclass Test{name}({base_class}):\n"
             test_file.write(cls)
 
             test_file.write("    config = " + pformat(config)+"\n")
@@ -160,7 +161,7 @@ class TestCreator:
 
         func_test_name = "test_" + test_name + "()"
 
-        print("Creating {test} test function...".format(test=func_test_name))
+        print(f"Creating {func_test_name} test function...")
         logger.print(func_test_name)
 
         func_test_name = "test_" + test_name + "(self)"
@@ -170,17 +171,22 @@ class TestCreator:
         add_buffer("\n")
         add_buffer("def " + func_test_name + ":\n")
 
-        source = "self.df"
+        if df is None and self.df is None and (len(args)+len(kwargs)):
+            df = self.op.create.dataframe(*args, **kwargs)
+            df_func = df
 
         if df is None:
             # Use the main df
+            add_buffer("    df = self.df\n")
+            df = self.df
             df_func = self.df
         elif isinstance(df, (BaseDataFrame,)):
-            source_df = "    self.create_dataframe(dict=" + df.export() + ")\n"
+            add_buffer(
+                "    df = self.create_dataframe(dict=" + df.export() + ")\n")
             df_func = df
-            add_buffer(source_df)
         else:
-            source = get_var_name(df)
+            add_buffer("    df = self.create_dataframe(dict=" +
+                       pformat(df, sort_dicts=False) + ")\n")
             df_func = df
 
         # Process simple arguments
@@ -209,29 +215,40 @@ class TestCreator:
             separator = ","
 
         if method is None:
-            add_buffer("    result = self.df\n")
+            add_buffer("    result = df\n")
+
         else:
             ams = ""
-            for method in additional_method:
-                ams += "." + method + "()"
+            for m in additional_method:
+                ams += "." + m + "()"
 
-            add_buffer("    result = " + source + "." + method + "(" + _args + separator + ','.join(
+            add_buffer("    result = df." + method + "(" + _args + separator + ','.join(
                 _kwargs) + ")" + ams + "\n")
 
         # print("df_result", df_result)
+
+        failed = False
+
         # Apply function
         if method is None:
-            df_result = self.op.create.dataframe(*args, **kwargs)
+            df_result = df_func
         else:
             # Here we construct the method to be applied to the source object
+            _df_func = df_func
             for f in method.split("."):
                 df_func = getattr(df_func, f)
 
-            df_result = df_func(*args, **kwargs)
-
+            try:
+                df_result = df_func(*args, **kwargs)
+            except Exception as e:
+                warnings.warn(
+                    f"The operation on test creation {func_test_name} failed, passing the same dataset instead")
+                print(e)
+                failed = True
+                df_result = _df_func
         # Additional Methods
-        for a_method in additional_method:
-            df_result = getattr(df_result, a_method)()
+        for m in additional_method:
+            df_result = getattr(df_result, m)()
 
         # Checks if output is ok
         if not isinstance(df_result, (BaseDataFrame,)):
@@ -248,6 +265,9 @@ class TestCreator:
         else:
             expected = "    expected = " + df_result + "\n"
 
+        if failed:
+            add_buffer(
+                "    # The following value does not represent a correct output of the operation\n")
         add_buffer(expected)
 
         # Output
@@ -280,7 +300,7 @@ class TestCreator:
 
         # return "".join(buffer)
 
-    def delete(self, method, variant=None):
+    def delete(self, method=None, variant=None):
         """
         This is a helper function that delete python tests files used to construct the final Test file.
         :param df: Do nothing, only for simplicity so you can delete a file test the same way you create it
@@ -293,14 +313,14 @@ class TestCreator:
 
         if variant is None:
             variant = ""
-        else:
+        elif method is not None:
             variant = "_" + variant
 
         # Create func test name. If is None we just test the create.df function a not transform the data frame in
         # any way
         if method is None:
-            method_test_name = "test_" + "create_df" + variant + "()"
-            filename = "create_df" + variant + ".test"
+            method_test_name = "test_" + variant + "()"
+            filename = variant + ".test"
 
         else:
             method_test_name = "test_" + \
