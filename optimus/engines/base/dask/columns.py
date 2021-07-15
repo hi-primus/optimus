@@ -120,9 +120,9 @@ class DaskBaseColumns():
 
     # TODO: Check if we must use * to select all the columns
 
-    def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
+    def count_by_dtypes(self, cols, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.root.data
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         columns_dtypes = df.cols.dtypes()
 
         def value_counts(series):
@@ -130,7 +130,7 @@ class DaskBaseColumns():
 
         delayed_results = []
 
-        for col_name in columns:
+        for col_name in cols:
             a = df.map_partitions(lambda df: df[col_name].apply(
                 lambda row: Infer.parse((col_name, row), infer, columns_dtypes, str_funcs, int_funcs,
                                         full=False))).compute()

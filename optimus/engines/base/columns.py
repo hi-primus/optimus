@@ -2188,7 +2188,7 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None) -> dict:
+    def count_by_dtypes(cols, infer=False, str_funcs=None, int_funcs=None) -> dict:
         pass
 
     def quality(self, cols="*") -> dict:

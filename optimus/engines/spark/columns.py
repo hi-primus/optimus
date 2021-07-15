@@ -1513,10 +1513,10 @@ class Cols(BaseColumns):
         # return result
 
     @staticmethod
-    def count_by_dtypes(columns, infer=False, str_funcs=None, int_funcs=None):
+    def count_by_dtypes(cols, infer=False, str_funcs=None, int_funcs=None):
         """
         Use rdd to count the inferred data type in a row
-        :param columns: Columns to be processed
+        :param cols: Columns to be processed
         :param str_funcs: list of tuples for create a custom string parsers
         :param int_funcs: list of tuples for create a custom int parsers
         :param infer: Infer data type
@@ -1525,10 +1525,10 @@ class Cols(BaseColumns):
 
         df = self.root
 
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         columns_dtypes = df.cols.dtypes()
 
-        df_count = (df.select(columns).rdd
+        df_count = (df.select(cols).rdd
                     .flatMap(lambda x: x.asDict().items())
                     .map(lambda x: Infer.parse(x, infer, columns_dtypes, str_funcs, int_funcs))
                     .reduceByKey(lambda a, b: (a + b)))

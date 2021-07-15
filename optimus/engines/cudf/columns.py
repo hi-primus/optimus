@@ -220,11 +220,11 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
         return {"hist": result}
 
-    def count_by_dtypes(self, columns, infer=False, str_funcs=None, int_funcs=None):
+    def count_by_dtypes(self, cols, infer=False, str_funcs=None, int_funcs=None):
         df = self.root
         result = {}
         df_len = len(df)
-        for col_name, na in df.cols.count_na(columns).items():
+        for col_name, na in df.cols.count_na(cols).items():
             result[col_name] = {"match": df_len - na, "missing": na, "mismatches": 0}
         return result
 

@@ -54,11 +54,11 @@ class Cols(DataFrameBaseColumns, BaseColumns):
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
         return {"x": {"name": col_x, "values": heatmap.T.tolist()}, "y": {"name": col_y, "values": extent}}
 
-    def count_by_dtypes(self, columns, dtype):
+    def count_by_dtypes(self, cols, dtype):
         df = self.root
         result = {}
         df_len = len(df.data)
-        for col_name, na_count in df.cols.count_na(columns, tidy=False)["count_na"].items():
+        for col_name, na_count in df.cols.count_na(cols, tidy=False)["count_na"].items():
             # for i, j in df.constants.DTYPES_DICT.items():
             #     if j == df[col_name].dtype.type:
             #         _dtype = df.constants.SHORT_DTYPES[i]
