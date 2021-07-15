@@ -44,10 +44,10 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
         except IndexError:
             return exprs
 
-    def find(self, columns, sub, ignore_case=False):
+    def find(self, cols, sub, ignore_case=False):
         """
         Find the start and end position for a char or substring
-        :param columns:
+        :param cols:
         :param ignore_case:
         :param sub:
         :return:
@@ -58,35 +58,34 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
         # TODO: This could be slow try to implement the find function in cudf
         df = df.to_pandas()
 
-        df = find(df, columns, sub, ignore_case)
+        df = find(df, cols, sub, ignore_case)
 
         return cudf.from_pandas(df)
 
-    def to_string(self, input_cols="*", output_cols=None):
+    def to_string(self, cols="*", output_cols=None):
         df = self.root
-        return df.cols.apply(input_cols, to_string_cudf, output_cols=output_cols,
+        return df.cols.apply(cols, to_string_cudf, output_cols=output_cols,
                              meta_action=Actions.TO_STRING.value,
                              mode="vectorized")
 
-    def to_integer(self, input_cols="*", output_cols=None):
+    def to_integer(self, cols="*", output_cols=None):
 
         df = self.root
-        return df.cols.apply(input_cols, to_integer_cudf, output_cols=output_cols,
+        return df.cols.apply(cols, to_integer_cudf, output_cols=output_cols,
                              meta_action=Actions.TO_INTEGER.value,
                              mode="pandas")
 
-    @staticmethod
-    def to_timestamp(input_cols, date_format=None, output_cols=None):
-        pass
+    def to_timestamp(self, cols="*", date_format=None, output_cols=None):
+        raise NotImplementedError('Not implemented yet')
 
-    def reverse(self, input_cols, output_cols=None):
+    def reverse(self, cols, output_cols=None):
         raise NotImplementedError('Not implemented yet')
 
     # https://github.com/rapidsai/cudf/issues/3177
-    # def replace(self, input_cols, search=None, replace_by=None, search_by="chars", output_cols=None):
+    # def replace(self, cols, search=None, replace_by=None, search_by="chars", output_cols=None):
     #     """
     #     Replace a value, list of values by a specified string
-    #     :param input_cols: '*', list of columns names or a single column name.
+    #     :param cols: '*', list of columns names or a single column name.
     #     :param output_cols:
     #     :param search: Values to look at to be replaced
     #     :param replace_by: New value to replace the old one
@@ -95,7 +94,7 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
     #     """
     #
     #     df = self.df
-    #     columns = prepare_columns(df, input_cols, output_cols)
+    #     columns = prepare_columns(df, cols, output_cols)
     #
     #     search = val_to_list(search)
     #     if search_by == "chars":
@@ -123,11 +122,11 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
     #     df.assign(**kw_columns)
     #     return df
 
-    def replace_regex(self, input_cols, regex=None, replace_by=None, output_cols=None):
+    def replace_regex(self, cols, regex=None, replace_by=None, output_cols=None):
         df = self.root
-        input_cols = parse_columns(df, input_cols)
-        output_cols = get_output_cols(input_cols, output_cols)
-        for input_col, output_col in zip(input_cols, output_cols):
+        cols = parse_columns(df, cols)
+        output_cols = get_output_cols(cols, output_cols)
+        for input_col, output_col in zip(cols, output_cols):
             df[output_col] = df[input_col].str.replace_multi(regex, replace_by, regex=True)
         return df
 
@@ -137,29 +136,29 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
 
     def strip_html(self):
-        df = self.root
+        # df = self.root
         # soup = BeautifulSoup(self.text, "html.parser")
         # self.text = soup.get_text()
         raise NotImplementedError('Not implemented yet')
 
-    def min_max_scaler(self, input_cols, output_cols=None):
-        pass
+    def min_max_scaler(self, cols="*", output_cols=None):
+        raise NotImplementedError('Not implemented yet')
 
-    def standard_scaler(self, input_cols, output_cols=None):
+    def standard_scaler(self, cols, output_cols=None):
 
         df = self.root
         scaler = StandardScaler()
-        for input_col, output_col in zip(input_cols, output_cols):
+        for input_col, output_col in zip(cols, output_cols):
             data = df[input_col]
             scaler.fit(data)
             df[output_col] = scaler.transform(data)
 
         return df
 
-    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
+    def impute(self, cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         """
 
-        :param input_cols:
+        :param cols:
         :param data_type:
         :param strategy:
         # - If "mean", then replace missing values using the mean along
@@ -173,42 +172,39 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
         :param output_cols:
         :return:
         """
-
         raise NotImplementedError("Not implemented yet")
 
-    @staticmethod
-    def max_abs_scaler(input_cols, output_cols=None):
+    def max_abs_scaler(self, cols="*", output_cols=None):
         raise NotImplementedError('Not implemented yet')
 
-    def is_match(self, columns, dtype, invert=False):
+    def is_match(self, cols="*", dtype=None, invert=False):
         """
         Find the rows that match a data type
-        :param columns:
+        :param cols:
         :param dtype: data type to match
         :param invert: Invert the match
         :return:
         """
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
 
         f = profiler_dtype_func(dtype)
         if f is not None:
-            for col_name in columns:
+            for col_name in cols:
                 df = df[col_name].to_pandas().apply(f)
                 df = ~df if invert is True else df
             return df
 
-    @staticmethod
-    def heatmap(columns, buckets=10):
-        pass
+    def heatmap(self, cols="*", buckets=10):
+        raise NotImplementedError('Not implemented yet')
 
-    def hist(self, columns="*", buckets=20, compute=True):
+    def hist(self, cols="*", buckets=20, compute=True):
         import cupy as cp
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
 
         result = {}
-        for col_name in columns:
+        for col_name in cols:
             # Seems to be some kind of bug of some types of data sets that converts all values to nan,
             # we drop na before  converting to array
             df_numeric = cp.array(to_float_cudf(df.data[col_name]).dropna().to_gpu_array())
@@ -220,7 +216,7 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
         return {"hist": result}
 
-    def count_by_dtypes(self, cols, infer=False, str_funcs=None, int_funcs=None):
+    def count_by_dtypes(self, cols="*", infer=False, str_funcs=None, int_funcs=None):
         df = self.root
         result = {}
         df_len = len(df)
@@ -230,8 +226,8 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
         # return np.count_nonzero(df.isnull().values.ravel())
 
-    def qcut(self, columns, quantiles, handle_invalid="skip"):
-        pass
+    def qcut(self, cols="*", quantiles=None, handle_invalid="skip"):
+        raise NotImplementedError('Not implemented yet')
 
     def string_to_index(self, cols=None, output_cols=None):
         df = self.root
