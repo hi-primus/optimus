@@ -11,6 +11,7 @@ import simplejson as json
 from dask import dataframe as dd
 from glom import assign
 from tabulate import tabulate
+from pprint import pformat
 
 from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
@@ -148,7 +149,8 @@ class BaseDataFrame(ABC):
                 name_right = getattr(df2, "name", 0)
 
             if name_left and name_right:
-                name = (name_left + "_" + name_right) if name_left != name_right else name_left
+                name = (name_left + "_" +
+                        name_right) if name_left != name_right else name_left
             else:
                 name = name_left if name_left else name_right
 
@@ -313,11 +315,11 @@ class BaseDataFrame(ABC):
             :param orient:
             :return:
         """
-        if n=="all":
+        if n == "all":
             dfd = self.cols.select(cols).to_pandas()
         else:
             dfd = self.buffer_window(cols, 0, n).data
-            
+
         return dfd.to_dict(orient)
 
     @staticmethod
@@ -456,7 +458,8 @@ class BaseDataFrame(ABC):
         else:
             profiled_columns = list(profiler_columns.keys())
             if not has_actions:
-                calculate_columns = [column for column in new_columns if column not in profiled_columns]
+                calculate_columns = [
+                    column for column in new_columns if column not in profiled_columns]
 
             else:
                 modified_columns = []
@@ -489,10 +492,14 @@ class BaseDataFrame(ABC):
 
                 profiled_columns = list(profiler_columns.keys())
 
-                calculate_columns = [column for column in new_columns if column not in profiled_columns]
-                modified_columns = [column for column in modified_columns if column in new_columns]
-                calculate_columns = list(set(modified_columns + calculate_columns))
-                calculate_columns = list(set(calculate_columns) - set(dropped_columns))
+                calculate_columns = [
+                    column for column in new_columns if column not in profiled_columns]
+                modified_columns = [
+                    column for column in modified_columns if column in new_columns]
+                calculate_columns = list(
+                    set(modified_columns + calculate_columns))
+                calculate_columns = list(
+                    set(calculate_columns) - set(dropped_columns))
 
         return calculate_columns
 
@@ -518,7 +525,8 @@ class BaseDataFrame(ABC):
 
         css = absolute_path("/css/styles.css")
 
-        imgkit.from_string(self.table_html(limit=limit, full=True), path, css=css)
+        imgkit.from_string(self.table_html(
+            limit=limit, full=True), path, css=css)
         print_html("<img src='" + path + "'>")
 
     def table_html(self, limit=10, columns=None, title=None, full=False, truncate=True, count=True, highlight=[]):
@@ -547,10 +555,13 @@ class BaseDataFrame(ABC):
             data = df.cols.select(columns).to_dict(n="all", orient="records")
         else:
             limit = min(limit, total_rows)
-            data = df.cols.select(columns).rows.limit(limit + 1).to_dict(n="all", orient="records")
+            data = df.cols.select(columns).rows.limit(
+                limit + 1).to_dict(n="all", orient="records")
         # Load the Jinja template
-        template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/templates/out"))
-        template_env = jinja2.Environment(loader=template_loader, autoescape=True)
+        template_loader = jinja2.FileSystemLoader(
+            searchpath=absolute_path("/templates/out"))
+        template_env = jinja2.Environment(
+            loader=template_loader, autoescape=True)
         template = template_env.get_template("table.html")
 
         # Filter only the columns and data type info need it
@@ -608,7 +619,8 @@ class BaseDataFrame(ABC):
 
         limit = min(limit, df.rows.approx_count())
         return tabulate(df.rows.limit(limit + 1).cols.select(columns).to_pandas(),
-                        headers=[f"""{i}\n({j})""" for i, j in df.cols.dtypes().items()],
+                        headers=[f"""{i}\n({j})""" for i,
+                                 j in df.cols.dtypes().items()],
                         tablefmt="simple",
                         showindex="never")+"\n"
 
@@ -699,12 +711,15 @@ class BaseDataFrame(ABC):
                     cols_to_infer.remove(col_name)
 
             if cols_to_infer:
-                cols_dtypes = {**cols_dtypes, **df.cols.infer_profiler_dtypes(cols_to_infer)}
-                cols_dtypes = {col: cols_dtypes[col] for col in cols_to_profile}
+                cols_dtypes = {**cols_dtypes, **
+                               df.cols.infer_profiler_dtypes(cols_to_infer)}
+                cols_dtypes = {col: cols_dtypes[col]
+                               for col in cols_to_profile}
 
             _t = time.process_time()
             mismatch = df.cols.count_mismatch(cols_dtypes)
-            profiler_time["count_mismatch"] = {"columns": cols_dtypes, "elapsed_time": time.process_time() - _t}
+            profiler_time["count_mismatch"] = {
+                "columns": cols_dtypes, "elapsed_time": time.process_time() - _t}
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             cols_properties = cols_dtypes.items()
@@ -725,7 +740,8 @@ class BaseDataFrame(ABC):
             if len(hist_cols):
                 _t = time.process_time()
                 hist = df.cols.hist(hist_cols, buckets=bins, compute=False)
-                profiler_time["hist"] = {"columns": hist_cols, "elapsed_time": time.process_time() - _t}
+                profiler_time["hist"] = {
+                    "columns": hist_cols, "elapsed_time": time.process_time() - _t}
 
             if len(freq_cols):
                 _t = time.process_time()
@@ -748,7 +764,8 @@ class BaseDataFrame(ABC):
 
                 if len(non_sliced_cols) > 0:
                     # print("non_sliced_cols",non_sliced_cols)
-                    freq = df.cols.frequency(non_sliced_cols, n=bins, count_uniques=True, compute=False)
+                    freq = df.cols.frequency(
+                        non_sliced_cols, n=bins, count_uniques=True, compute=False)
 
                 if len(sliced_cols) > 0:
                     # print("sliced_cols", sliced_cols)
@@ -756,7 +773,8 @@ class BaseDataFrame(ABC):
                                                                                    count_uniques=True,
                                                                                    compute=False)
 
-                profiler_time["frequency"] = {"columns": freq_cols, "elapsed_time": time.process_time() - _t}
+                profiler_time["frequency"] = {
+                    "columns": freq_cols, "elapsed_time": time.process_time() - _t}
 
             def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
                 _c = {}
@@ -765,7 +783,8 @@ class BaseDataFrame(ABC):
                 _freq = {} if _freq is None else _freq.get("frequency", {})
 
                 for _col_name in _columns:
-                    _c[_col_name] = {"stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
+                    _c[_col_name] = {
+                        "stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
                     if _col_name in _freq:
                         f = _freq[_col_name]
                         _c[_col_name]["stats"]["frequency"] = f["values"]
@@ -782,15 +801,18 @@ class BaseDataFrame(ABC):
 
             dtypes = df.cols.dtypes("*")
 
-            hist, freq, sliced_freq, mismatch = dd.compute(hist, freq, sliced_freq, mismatch)
+            hist, freq, sliced_freq, mismatch = dd.compute(
+                hist, freq, sliced_freq, mismatch)
 
             freq = {**freq, **sliced_freq}
 
-            updated_columns = merge(cols_to_profile, hist, freq, mismatch, dtypes, count_uniques)
+            updated_columns = merge(
+                cols_to_profile, hist, freq, mismatch, dtypes, count_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
             assign(profiler_data, "name", Meta.get(df.meta, "name"), dict)
-            assign(profiler_data, "file_name", Meta.get(df.meta, "file_name"), dict)
+            assign(profiler_data, "file_name",
+                   Meta.get(df.meta, "file_name"), dict)
 
             data_set_info = {'cols_count': df.cols.count(),
                              'rows_count': df.rows.count(),
@@ -801,9 +823,11 @@ class BaseDataFrame(ABC):
             assign(profiler_data, "summary", data_set_info, dict)
             dtypes_list = list(set(df.cols.dtypes("*").values()))
             assign(profiler_data, "summary.dtypes_list", dtypes_list, dict)
-            assign(profiler_data, "summary.total_count_dtypes", len(set([i for i in dtypes.values()])), dict)
+            assign(profiler_data, "summary.total_count_dtypes",
+                   len(set([i for i in dtypes.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
-            assign(profiler_data, "summary.p_missing", round(total_count_na / df.rows.count() * 100, 2))
+            assign(profiler_data, "summary.p_missing", round(
+                total_count_na / df.rows.count() * 100, 2))
 
         # _t = time.process_time()
 
@@ -813,7 +837,8 @@ class BaseDataFrame(ABC):
 
         # Order columns
         actual_columns = profiler_data["columns"]
-        profiler_data["columns"] = {key: actual_columns[key] for key in all_columns_names if key in actual_columns}
+        profiler_data["columns"] = {key: actual_columns[key]
+                                    for key in all_columns_names if key in actual_columns}
         meta = Meta.set(meta, "profile", profiler_data)
 
         if cols_dtypes is not None:
@@ -872,7 +897,8 @@ class BaseDataFrame(ABC):
             for column, aggregations_set in aggregations.items():
                 aggregations_set = val_to_list(aggregations_set)
                 for aggregation in aggregations_set:
-                    result[column + "_" + aggregation] = getattr(df.cols, aggregation)(column, tidy=True)
+                    result[column + "_" + aggregation] = getattr(
+                        df.cols, aggregation)(column, tidy=True)
 
             if output == "dataframe":
                 result = self.new(result)
@@ -900,8 +926,10 @@ class BaseDataFrame(ABC):
                               mismatch=mismatch, advanced_stats=advanced_stats)
 
         # Load jinja
-        template_loader = jinja2.FileSystemLoader(searchpath=absolute_path("/profiler/templates/out"))
-        template_env = jinja2.Environment(loader=template_loader, autoescape=True)
+        template_loader = jinja2.FileSystemLoader(
+            searchpath=absolute_path("/profiler/templates/out"))
+        template_env = jinja2.Environment(
+            loader=template_loader, autoescape=True)
 
         # Render template
         # Create the profiler info header
@@ -920,22 +948,29 @@ class BaseDataFrame(ABC):
                 hist_dict = col["stats"]["hist"]
 
                 if col["column_dtype"] == "date":
-                    hist_year = plot_hist({col_name: hist_dict["years"]}, "base64", "years")
-                    hist_month = plot_hist({col_name: hist_dict["months"]}, "base64", "months")
-                    hist_weekday = plot_hist({col_name: hist_dict["weekdays"]}, "base64", "weekdays")
-                    hist_hour = plot_hist({col_name: hist_dict["hours"]}, "base64", "hours")
-                    hist_minute = plot_hist({col_name: hist_dict["minutes"]}, "base64", "minutes")
+                    hist_year = plot_hist(
+                        {col_name: hist_dict["years"]}, "base64", "years")
+                    hist_month = plot_hist(
+                        {col_name: hist_dict["months"]}, "base64", "months")
+                    hist_weekday = plot_hist(
+                        {col_name: hist_dict["weekdays"]}, "base64", "weekdays")
+                    hist_hour = plot_hist(
+                        {col_name: hist_dict["hours"]}, "base64", "hours")
+                    hist_minute = plot_hist(
+                        {col_name: hist_dict["minutes"]}, "base64", "minutes")
                     hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
 
                 elif col["column_dtype"] == "int" or col["column_dtype"] == "string" or col[
-                    "column_dtype"] == "decimal":
+                        "column_dtype"] == "decimal":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
             if "frequency" in col:
-                freq_pic = plot_frequency({col_name: col["frequency"]}, output="base64")
+                freq_pic = plot_frequency(
+                    {col_name: col["frequency"]}, output="base64")
 
-            html = html + template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
+            html = html + \
+                template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
         # self.html = html + df.table_html(10)
