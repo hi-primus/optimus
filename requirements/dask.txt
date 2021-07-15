@@ -1,4 +1,4 @@
-dask[complete]==2021.5.0
+dask[complete]==2021.7.0
 distributed==2021.5.0
 dask-ml>=1.6.0
 pyarrow==1.0.1
