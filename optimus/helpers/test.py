@@ -1,4 +1,5 @@
 import errno
+from optimus.helpers.core import val_to_list
 from optimus.api.code import generate_code
 import warnings
 import os
@@ -7,14 +8,13 @@ from pprint import pformat
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 
-from optimus.infer import is_function, is_list_value, is_list_empty, is_list_of_str, is_list_of_numeric, is_list_of_tuples, \
-    is_numeric, is_str, is_dict
+from optimus.infer import is_function, is_list_empty, is_str
 from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
 
 
-class Test:
-    def __init__(self, op=None, df=None, name=None, path=None, final_path=None, options={}, **kwargs):
+class TestCreator:
+    def __init__(self, op=None, df=None, name=None, path="", create_path="..", configs={}, **kwargs):
         """
         Create python code with unit test functions for Optimus.
         :param op: optimus instance
@@ -27,12 +27,15 @@ class Test:
             n_partitions: Number of partitions of created dataframes (if supported)
 
         """
+        if path and len(path):
+            create_path += f"/{path}"
+
         self.op = op
         self.df = df
         self.name = name
         self.path = path
-        self.final_path = final_path
-        self.options = options if options != {} else kwargs
+        self.create_path = create_path
+        self.options = kwargs
 
     def run(self):
         """
@@ -40,11 +43,7 @@ class Test:
         :return:
         """
 
-        final_path = self.final_path
-        if self.path is None:
-            filename = "test_" + self.name + ".py"
-        else:
-            filename = final_path + "/" + "test_" + self.name + ".py"
+        filename = self.create_path + "/" + "test_" + self.name + ".py"
 
         test_file = open(filename, 'w', encoding='utf-8')
         print("Creating file " + filename)
@@ -54,10 +53,10 @@ class Test:
             "import sys",
             "sys.path.append(\"..\")",
             "import numpy as np",
-            "NaN = np.nan", 
-            "null = None", 
-            "false = False", 
-            "true = True", 
+            "NaN = np.nan",
+            "null = None",
+            "false = False",
+            "true = True",
             "from optimus import Optimus",
             "from optimus.helpers.json import json_enconding",
             "from optimus.helpers.functions import deep_sort",
@@ -91,7 +90,7 @@ class Test:
         test_file.write(cls)
         test_file.write("    maxDiff = None\n")
 
-        for root, dirs, files in os.walk(self.path):
+        for root, dirs, files in os.walk(self.create_path):
             for file in files:
                 if file.endswith(".test"):
                     full_path = os.path.join(root, file)
@@ -110,14 +109,13 @@ class Test:
         test_file.close()
         print("Done")
 
-    def create(self, obj, method, suffix=None, output="df", additional_method=None, *args, **kwargs):
+    def create(self, method=None, variant=None, df=None, compare_by="df", additional_method=[], args=(), **kwargs):
         """
         This is a helper function that output python tests for Spark DataFrames.
-        :param obj: Object to be tested
         :param method: Method to be tested
-        :param suffix: The test name will be create using the method param. suffix will add a string in case you want
-        to customize the test name.
-        :param output: can be a 'df' or a 'json'
+        :param variant: The test name will be create using the method param. This will be added as a suffix in case you want to customize the test name.
+        :param df: Object to be tested
+        :param compare_by: 'df', 'json' or 'dict'
         :param additional_method:
         :param args: Arguments to be used in the method
         :param kwargs: Keyword arguments to be used in the functions
@@ -135,11 +133,13 @@ class Test:
         if method is not None:
             name.append(method.replace(".", "_"))
 
-        if additional_method is not None:
+        additional_method = val_to_list(additional_method)
+
+        for additional_method in additional_method:
             name.append(additional_method)
 
-        if suffix is not None:
-            name.append(suffix)
+        if variant is not None:
+            name.append(variant)
 
         test_name = "_".join(name)
 
@@ -159,19 +159,17 @@ class Test:
 
         n_partitions = self.options.get("n_partitions", 1)
 
-        if obj is None:
+        if df is None:
             # Use the main df
             df_func = self.df
-        elif isinstance(obj, (BaseDataFrame,)):
-
+        elif isinstance(df, (BaseDataFrame,)):
             source_df = "    " + generate_code(source="op", target="source_df",
-                                             operation="create.dataframe", dict=obj.export(), n_partitions=n_partitions) + "\n"
-
-            df_func = obj
+                                               operation="create.dataframe", dict=df.export(), n_partitions=n_partitions) + "\n"
+            df_func = df
             add_buffer(source_df)
         else:
-            source = get_var_name(obj)
-            df_func = obj
+            source = get_var_name(df)
+            df_func = df
 
         # Process simple arguments
         _args = []
@@ -186,28 +184,6 @@ class Test:
                 _args.append(pformat(v))
             else:
                 _args.append(str(v))
-
-            # if is_str(v):
-            #     _args.append("'" + v + "'")
-            # elif is_numeric(v):
-            #     _args.append(str(v))
-
-            # elif is_list_value(v):
-            #     if is_list_of_str(v):
-            #         lst = ["'" + x + "'" for x in v]
-            #     elif is_list_of_numeric(v) or is_list_of_tuples(v):
-            #         lst = [str(x) for x in v]
-            #     elif is_list_of_tuples(v):
-            #         lst = [str(x) for x in v]
-            #     _args.append('[' + ','.join(lst) + ']')
-            # elif is_dict(v):
-            #     _args.append(json.dumps(v))
-            # elif is_function(v):
-            #     _args.append(v.__qualname__)
-            # elif is_dask_dataframe(v):
-            #     _args.append("op.create.df('"+v.export()+"')")
-            # else:
-            #     _args.append(str(v))
 
         _args = ','.join(_args)
         _kwargs = []
@@ -224,15 +200,15 @@ class Test:
         if method is None:
             add_buffer("    actual_df = source_df\n")
         else:
-            am = ""
-            if additional_method:
-                am = "." + additional_method + "()"
+            ams = ""
+            for method in additional_method:
+                ams += "." + method + "()"
 
             add_buffer("    actual_df = " + source + "." + method + "(" + _args + separator + ','.join(
-                _kwargs) + ")" + am + "\n")
+                _kwargs) + ")" + ams + "\n")
 
         # print("df_result", df_result)
-        # Apply function to the spark
+        # Apply function
         if method is None:
             df_result = self.op.create.dataframe(
                 *args, **kwargs, n_partitions=n_partitions)
@@ -243,39 +219,40 @@ class Test:
 
             df_result = df_func(*args, **kwargs)
 
+        if not isinstance(df_result, (BaseDataFrame,)) and compare_by == "df":
+            compare_by = "json"
+
         # Additional Methods
-        if additional_method is not None:
-            df_result = getattr(df_result, additional_method)()
-        if output == "df":
-            df_result.table()
+        for method in additional_method:
+            df_result = getattr(df_result, method)()
+        if compare_by == "df":
             expected = "    " + \
                 generate_code(source="op", target="expected_df", operation="create.dataframe", dict=df_result.export(), n_partitions=n_partitions) + \
                 "\n"
 
-        elif output == "json":
-            if is_str(df_result):
-                df_result = "'" + df_result + "'"
-            else:
-                df_result = str(df_result)
+        elif compare_by == "json":
+            df_result = pformat(df_result)
             add_buffer("    actual_df = json_enconding(actual_df)\n")
-            expected = "    expected_value = json_enconding(" + df_result + ")\n"
+            expected = "    expected_value = json_enconding(" + \
+                df_result + ")\n"
 
-        elif output == "dict":
-            expected = "    expected_value =" + str(df_result) + "\n"
+        elif compare_by == "dict":
+            expected = "    expected_value =" + pformat(df_result) + "\n"
         else:
-            expected = "    \n"
+            expected = "    expected_value =" + pformat(df_result) + "\n"
 
         add_buffer(expected)
 
         # Output
-        if output == "df":
+        if compare_by == "df":
             add_buffer("    self.assertTrue(expected_df.equals(actual_df))\n")
-        elif output == "json":
-            add_buffer("    self.assertTrue(expected_value == actual_df)\n")
-        elif output == "dict":
-            add_buffer("    self.assertDictEqual(deep_sort(expected_value),  deep_sort(actual_df))\n")
+        elif compare_by == "dict":
+            add_buffer(
+                "    self.assertDictEqual(deep_sort(expected_value),  deep_sort(actual_df))\n")
+        else:
+            add_buffer("    self.assertEqual(expected_value, actual_df)\n")
 
-        filename = self.path + "//" + filename
+        filename = self.create_path + "/" + filename
         if not os.path.exists(os.path.dirname(filename)):
             try:
                 os.makedirs(os.path.dirname(filename))
@@ -291,33 +268,33 @@ class Test:
 
         # return "".join(buffer)
 
-    def delete(self, df, func, suffix=None, *args, **kwargs):
+    def delete(self, func, variant=None, *args, **kwargs):
         """
         This is a helper function that delete python tests files used to construct the final Test file.
         :param df: Do nothing, only for simplicity so you can delete a file test the same way you create it
-        :param suffix: The create method will try to create a test function with the func param given.
-        If you want to test a function with different params you can use suffix.
+        :param variant: The create method will try to create a test function with the func param given.
+        If you want to test a function with different params you can use variant.
         :param func: Function to be tested
         :return:
         """
 
-        if suffix is None:
-            suffix = ""
+        if variant is None:
+            variant = ""
         else:
-            suffix = "_" + suffix
+            variant = "_" + variant
 
         # Create func test name. If is None we just test the create.df function a not transform the data frame in
         # any way
         if func is None:
-            func_test_name = "test_" + "create_df" + suffix + "()"
-            filename = "create_df" + suffix + ".test"
+            func_test_name = "test_" + "create_df" + variant + "()"
+            filename = "create_df" + variant + ".test"
 
         else:
-            func_test_name = "test_" + func.replace(".", "_") + suffix + "()"
+            func_test_name = "test_" + func.replace(".", "_") + variant + "()"
 
-            filename = func.replace(".", "_") + suffix + ".test"
+            filename = func.replace(".", "_") + variant + ".test"
 
-        filename = self.path + "//" + filename
+        filename = self.path + "/" + filename
 
         print("Deleting file {test}...".format(test=filename))
         logger.print(func_test_name)
