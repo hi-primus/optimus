@@ -1736,33 +1736,31 @@ class Cols(BaseColumns):
             df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
         return df
 
-    @staticmethod
-    def string_to_index(input_cols=None, output_cols=None, columns=None):
+    def string_to_index(self, cols=None, output_cols=None):
         """
         Encodes a string column of labels to a column of label indices
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :param columns:
         :return:
         """
         df = self.root
 
-        df = ml_string_to_index(df, input_cols, output_cols, columns)
+        df = ml_string_to_index(df, cols, output_cols)
 
         return df
 
-    @staticmethod
-    def index_to_string(input_cols=None, output_cols=None, columns=None):
+    def index_to_string(self, cols=None, output_cols=None):
         """
         Encodes a string column of labels to a column of label indices
-        :param input_cols:
+        :param cols:
         :param output_cols:
         :param columns:
         :return:
         """
         df = self.root
 
-        df = ml_index_to_string(df, input_cols, output_cols, columns)
+        df = ml_index_to_string(df, cols, output_cols)
 
         return df
 

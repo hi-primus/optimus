@@ -20,13 +20,13 @@ class Cols(DaskBaseColumns, BaseColumns):
     def _names(self):
         return list(self.root.data.columns)
 
-    def string_to_index(self, input_cols=None, output_cols=None, columns=None):
+    def string_to_index(self, cols=None, output_cols=None):
         le = preprocessing.LabelEncoder()
-        return string_to_index(self, input_cols, output_cols, le)
+        return string_to_index(self, cols, output_cols, le)
 
-    def index_to_string(self, input_cols=None, output_cols=None, columns=None):
+    def index_to_string(self, cols=None, output_cols=None):
         le = preprocessing.LabelEncoder()
-        return index_to_string(self, input_cols, output_cols, le)
+        return index_to_string(self, cols, output_cols, le)
 
     def hist(self, columns="*", buckets=MAX_BUCKETS, compute=True):
         df = self.root

@@ -233,15 +233,15 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
     def qcut(self, columns, quantiles, handle_invalid="skip"):
         pass
 
-    def string_to_index(self, input_cols=None, output_cols=None, columns=None):
+    def string_to_index(self, cols=None, output_cols=None):
         df = self.root
         le = preprocessing.LabelEncoder()
-        return string_to_index(df, input_cols, output_cols, le)
+        return string_to_index(df, cols, output_cols, le)
 
-    def index_to_string(self, input_cols=None, output_cols=None, columns=None):
+    def index_to_string(self, cols=None, output_cols=None):
         df = self.root
         le = preprocessing.LabelEncoder()
-        return index_to_string(df, input_cols, output_cols, le)
+        return index_to_string(df, cols, output_cols, le)
 
     def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols):
         if mode == "string":
