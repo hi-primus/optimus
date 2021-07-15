@@ -1,4 +1,4 @@
-dask==2021.5.0
+dask==2021.7.0
 distributed==2021.5.0
 numba>=0.49
 jsonschema
