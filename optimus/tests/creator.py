@@ -8,7 +8,7 @@ from pprint import pformat
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 
-from optimus.infer import is_function, is_list_empty, is_str
+from optimus.infer import is_function, is_list_empty
 from optimus.helpers.debug import get_var_name
 from optimus.helpers.logger import logger
 
@@ -104,7 +104,7 @@ class TestCreator:
                         except UnsupportedOperation:
                             print("file seems to be empty")
 
-        test_file.write("\nif __name__ == '__main__': unittest.main()")
+        # test_file.write("\nif __name__ == '__main__': unittest.main()")
 
         test_file.close()
         print("Done")
