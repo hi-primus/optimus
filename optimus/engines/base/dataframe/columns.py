@@ -78,26 +78,26 @@ class DataFrameBaseColumns():
 
         return result
 
-    def standard_scaler(self, input_cols="*", output_cols=None):
+    def standard_scaler(self, cols="*", output_cols=None):
         df = self.root
 
         def _standard_scaler(_value):
             return StandardScaler().fit_transform(_value.values.reshape(-1, 1))
 
-        return df.cols.apply(input_cols, func=_standard_scaler, output_cols=output_cols,
+        return df.cols.apply(cols, func=_standard_scaler, output_cols=output_cols,
                              meta_action=Actions.STANDARD_SCALER.value)
 
-    def max_abs_scaler(self, input_cols="*", output_cols=None):
+    def max_abs_scaler(self, cols="*", output_cols=None):
 
         df = self.root
 
         def _max_abs_scaler(_value):
             return MaxAbsScaler().fit_transform(_value.values.reshape(-1, 1))
 
-        return df.cols.apply(input_cols, func=_max_abs_scaler, output_cols=output_cols,
+        return df.cols.apply(cols, func=_max_abs_scaler, output_cols=output_cols,
                              meta_action=Actions.MAX_ABS_SCALER.value)
 
-    def min_max_scaler(self, input_cols, output_cols=None):
+    def min_max_scaler(self, cols="*", output_cols=None):
         # https://github.com/dask/dask/issues/2690
 
         df = self.root
@@ -105,13 +105,13 @@ class DataFrameBaseColumns():
         def _min_max_scaler(_value):
             return MinMaxScaler().fit_transform(_value.values.reshape(-1, 1))
 
-        return df.cols.apply(input_cols, func=_min_max_scaler, output_cols=output_cols,
+        return df.cols.apply(cols, func=_min_max_scaler, output_cols=output_cols,
                              meta_action=Actions.MIN_MAX_SCALER.value)
 
-    def replace_regex(self, input_cols, regex=None, value="", output_cols=None):
+    def replace_regex(self, cols="*", regex=None, value="", output_cols=None):
         """
         Use a Regex to replace values
-        :param input_cols: '*', list of columns names or a single column name.
+        :param cols: '*', list of columns names or a single column name.
         :param output_cols:
         :param regex: values to look at to be replaced
         :param value: new value to replace the old one
@@ -123,15 +123,15 @@ class DataFrameBaseColumns():
         def _replace_regex(_value, _regex, _replace):
             return _value.replace(_regex, _replace, regex=True)
 
-        return df.cols.apply(input_cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
+        return df.cols.apply(cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
-    def reverse(self, input_cols, output_cols=None):
+    def reverse(self, cols="*", output_cols=None):
         def _reverse(value):
             return str(value)[::-1]
 
         df = self.root
-        return df.cols.apply(input_cols, _reverse, func_return_type=str,
+        return df.cols.apply(cols, _reverse, func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
                              output_cols=output_cols, mode="map", set_index=True)
 
@@ -140,35 +140,35 @@ class DataFrameBaseColumns():
         pass
 
     @staticmethod
-    def to_timestamp(input_cols, date_format=None, output_cols=None):
+    def to_timestamp(cols, date_format=None, output_cols=None):
         pass
 
-    def nest(self, input_cols, separator="", output_col=None, shape="string", drop=False):
+    def nest(self, cols="*", separator="", output_col=None, shape="string", drop=False):
         df = self.root
 
         dfd = df.data
 
         if output_col is None:
-            output_col = name_col(input_cols)
+            output_col = name_col(cols)
 
-        input_cols = parse_columns(df, input_cols)
+        cols = parse_columns(df, cols)
 
         output_ordered_columns = df.cols.names()
 
         # cudfd do nor support apply or agg join for this operation
         if shape == "vector" or shape == "array":
-            dfd = dfd.assign(**{output_col: dfd[input_cols].values.tolist()})
+            dfd = dfd.assign(**{output_col: dfd[cols].values.tolist()})
 
         elif shape == "string":
-            dfds = [dfd[input_col].astype(str) for input_col in input_cols]
+            dfds = [dfd[input_col].astype(str) for input_col in cols]
             dfd = dfd.assign(**{output_col: reduce((lambda x, y: x + separator + y), dfds)})
 
         if output_col not in output_ordered_columns:
-            col_index = output_ordered_columns.index(input_cols[-1]) + 1
+            col_index = output_ordered_columns.index(cols[-1]) + 1
             output_ordered_columns[col_index:col_index] = [output_col]
 
         if drop is True:
-            for input_col in input_cols:
+            for input_col in cols:
                 if input_col in output_ordered_columns and input_col != output_col:
                     output_ordered_columns.remove(input_col)
 

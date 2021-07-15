@@ -20,33 +20,30 @@ class Cols(DataFrameBaseColumns, BaseColumns):
     def _series_to_pandas(self, series):
         return series
 
-    def find(self, columns, sub, ignore_case=False):
+    def find(self, cols="*", sub=None, ignore_case=False):
         """
         Find the start and end position for a char or substring
-        :param columns:
+        :param cols:
         :param ignore_case:
         :param sub:
         :return:
         """
         df = self.root
-        return find(df, columns, sub, ignore_case)
+        return find(df, cols, sub, ignore_case)
 
-    @staticmethod
-    def to_timestamp(input_cols, date_format=None, output_cols=None):
-        pass
+    def to_timestamp(self, cols="*", date_format=None, output_cols=None):
+        raise NotImplementedError('Not implemented yet')
 
-    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
+    def impute(self, cols="*", data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         df = self.root
-        return impute(df, input_cols, data_type=data_type, strategy=strategy, fill_value=fill_value, output_cols=None)
+        return impute(df, cols, data_type=data_type, strategy=strategy, fill_value=fill_value, output_cols=None)
 
-    @staticmethod
-    def astype(*args, **kwargs):
-        pass
+    def astype(self, cols="*", output_cols=None, *args, **kwargs):
+        raise NotImplementedError('Not implemented yet')
 
     # NLP
-    @staticmethod
-    def stem_words(input_col):
-        df = self
+    def stem_words(self, input_col):
+        raise NotImplementedError('Not implemented yet')
 
     def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
         df = self.root.data
@@ -54,7 +51,7 @@ class Cols(DataFrameBaseColumns, BaseColumns):
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
         return {"x": {"name": col_x, "values": heatmap.T.tolist()}, "y": {"name": col_y, "values": extent}}
 
-    def count_by_dtypes(self, cols, dtype):
+    def count_by_dtypes(self, cols="*", dtype=None):
         df = self.root
         result = {}
         df_len = len(df.data)
@@ -78,7 +75,7 @@ class Cols(DataFrameBaseColumns, BaseColumns):
 
         return df
 
-    def index_to_string(self, cols=None, output_cols=None):
+    def index_to_string(self, cols="*", output_cols=None):
         df = self.root
         le = preprocessing.LabelEncoder()
         df = index_to_string(df, cols, output_cols, le)
