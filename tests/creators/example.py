@@ -1,16 +1,25 @@
 import sys
 sys.path.append("../..")
 
-df_dict = {('function', 'string'): ('a', 'b', 'c')}
-
 
 def create():
     from optimus import Optimus
     from optimus.tests.creator import TestCreator
+
     op = Optimus("pandas")
-    df = op.create.dataframe(df_dict)
-    t = TestCreator(op, df, name="string")
-    t.create(method="cols.upper", variant="multiple", cols=["function"])
+    df = op.create.dataframe({('name', 'string'): (
+        'Optimus', 'Bumblebee', 'Eject'), ('age (M)', 'int'): [5, 5, 5]})
+
+    configs = {
+        "Pandas": {"engine": "pandas"},
+        "Dask": {"engine": "dask", "n_partitions": 1},
+        "Dask2": {"engine": "dask", "n_partitions": 2}
+    }
+
+    t = TestCreator(op, df, name="string", configs=configs)
+    t.create(method="cols.upper", variant="single", cols=["name"])
+    t.create(method="cols.upper", variant="multiple",
+             compare_by="json", cols=["name", "age (M)"])
     t.run()
 
 

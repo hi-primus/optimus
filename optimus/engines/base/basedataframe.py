@@ -612,25 +612,27 @@ class BaseDataFrame(ABC):
                         tablefmt="simple",
                         showindex="never")+"\n"
 
-    def export(self):
+    def export(self, n="all", dtypes=True):
         """
         Helper function to export all the dataframe in dict format. Aimed to be used in test functions
         :return:
         """
-        df_dict = self.to_dict(n="all")
-        df_schema = self.cols.dtypes() # TO-DO use types in tests
+        df_dict = self.to_dict(n=n)
 
-        df_data = []
+        if not dtypes:
+            df_data = pformat(df_dict, sort_dicts=False)
+        else:
+            df_dtypes = self.cols.dtypes()
+            df_data = []
+            for col_name in df_dict.keys():
+                value = pformat((col_name, df_dtypes[col_name]))
+                value += ": "
+                value += pformat(df_dict[col_name], sort_dicts=False)
+                df_data.append(value)
 
-        from pprint import pformat
+            df_data = "{" + ", ".join(df_data) + "}"
 
-        for col_name in df_dict.keys():
-            value = pformat((col_name, df_schema[col_name]))
-            value += ": "
-            value += json.dumps(df_dict[col_name], ensure_ascii=False, default=json_converter)
-            df_data.append(value)
-
-        return "{" + ", ".join(df_data) + "}"
+        return df_data
 
     def show(self, n=10):
         """
