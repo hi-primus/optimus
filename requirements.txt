@@ -44,5 +44,5 @@ s3fs>=0.5.2
 boto3>=1.17
 python-Levenshtein==0.12.2
 string-grouper==0.5.0
-py-dateinfer @ git+https://github.com/hi-primus/dateinfer@main
+py-dateinfer==0.4.5
 url_parser @ git+https://github.com/hi-primus/url_parser@main
