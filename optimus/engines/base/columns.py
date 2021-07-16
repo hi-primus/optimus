@@ -2426,7 +2426,7 @@ class BaseColumns(ABC):
             append_df = append_df.cols.rename(cols, output_cols)
         elif rename_func:
             if rename_func == True:
-                rename_func = lambda n: f"{n}_{method}"
+                def rename_func(n): return f"{n}_{method}"
             append_df = append_df.cols.rename(rename_func)
 
         return self.append(append_df)
