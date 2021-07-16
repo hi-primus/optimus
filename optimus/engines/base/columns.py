@@ -84,7 +84,7 @@ class BaseColumns(ABC):
 
         df = self.root
         cols = parse_columns(df, cols, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
-                                accepts_missing_cols=accepts_missing_cols)
+                             accepts_missing_cols=accepts_missing_cols)
         meta = df.meta
         dfd = df.data
         if cols is not None:
@@ -124,7 +124,8 @@ class BaseColumns(ABC):
 
         for input_col, output_col in zip(cols, output_cols):
             kw_columns[output_col] = dfd[input_col]
-            meta = Meta.action(meta, Actions.COPY.value, (input_col, output_col))
+            meta = Meta.action(meta, Actions.COPY.value,
+                               (input_col, output_col))
 
         df = self.root.new(dfd, meta=meta).cols.assign(kw_columns)
 
@@ -186,7 +187,7 @@ class BaseColumns(ABC):
 
         cols = parse_columns(df, cols)
         output_cols = get_output_cols(cols, output_cols)
-        
+
         for input_col, output_col in zip(cols, output_cols):
             dfd[output_col] = dfd[input_col].str.split().str.len()
         return self.root.new(dfd)
@@ -223,11 +224,13 @@ class BaseColumns(ABC):
             elif mode == "partitioned":
 
                 partitions = self.F.to_delayed(dfd[input_col])
-                delayed_parts = [self.F.delayed(func)(part, *args) for part in partitions]
+                delayed_parts = [self.F.delayed(func)(
+                    part, *args) for part in partitions]
                 kw_columns[output_col] = self.F.from_delayed(delayed_parts)
 
             elif mode == "map":
-                kw_columns[output_col] = self._map(dfd, input_col, str(output_col), func, *args)
+                kw_columns[output_col] = self._map(
+                    dfd, input_col, str(output_col), func, *args)
 
             # Preserve column order
             if output_col not in self.names():
@@ -361,9 +364,9 @@ class BaseColumns(ABC):
             validate_columns_names(df, columns_old_new)
         elif is_list_of_str(columns_old_new):
             validate_columns_names(df, columns_old_new)
-            columns_old_new = [ (col, col) for col in columns_old_new ]
+            columns_old_new = [(col, col) for col in columns_old_new]
         else:
-            columns_old_new = [ (col, col) for col in df.cols.names() ]
+            columns_old_new = [(col, col) for col in df.cols.names()]
 
         for col_name in columns_old_new:
 
@@ -381,7 +384,8 @@ class BaseColumns(ABC):
 
             if old_col_name != new_col_name:
                 dfd = dfd.rename(columns={old_col_name: new_col_name})
-                meta = Meta.action(meta, Actions.RENAME.value, (old_col_name, new_col_name))
+                meta = Meta.action(meta, Actions.RENAME.value,
+                                   (old_col_name, new_col_name))
 
         return self.root.new(dfd, meta=meta)
 
@@ -410,7 +414,8 @@ class BaseColumns(ABC):
         columns = {}
         for k, v in col_data_type.items():
             # Initialize values to 0
-            result_default = {data_type: 0 for data_type in df.constants.DTYPES_TO_PROFILER.keys()}
+            result_default = {
+                data_type: 0 for data_type in df.constants.DTYPES_TO_PROFILER.keys()}
             for k1, v1 in v.items():
                 for k2, v2 in df.constants.DTYPES_TO_PROFILER.items():
                     if k1 in df.constants.DTYPES_TO_PROFILER[k2]:
@@ -429,7 +434,8 @@ class BaseColumns(ABC):
         result = {}
 
         for col_name in columns:
-            column_meta = Meta.get(df.meta, f"profile.columns.{col_name}.stats.profiler_dtype.dtype")
+            column_meta = Meta.get(
+                df.meta, f"profile.columns.{col_name}.stats.profiler_dtype.dtype")
             result.update({col_name: column_meta})
         return result
 
@@ -460,9 +466,12 @@ class BaseColumns(ABC):
             dtype = props["dtype"]
             if dtype in ProfilerDataTypes.list():
                 if not inferred:
-                    df.meta = Meta.set(df.meta, f"columns_dtypes.{col_name}", props)
-                df.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.profiler_dtype", props)
-                df.meta = Meta.action(df.meta, Actions.PROFILER_DTYPE.value, col_name)
+                    df.meta = Meta.set(
+                        df.meta, f"columns_dtypes.{col_name}", props)
+                df.meta = Meta.set(
+                    df.meta, f"profile.columns.{col_name}.stats.profiler_dtype", props)
+                df.meta = Meta.action(
+                    df.meta, Actions.PROFILER_DTYPE.value, col_name)
             else:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
 
@@ -482,7 +491,8 @@ class BaseColumns(ABC):
 
             if props is not None:
                 df.meta = Meta.reset(df.meta, f"columns_dtypes.{col_name}")
-                df.meta = Meta.action(df.meta, Actions.PROFILER_DTYPE.value, col_name)
+                df.meta = Meta.action(
+                    df.meta, Actions.PROFILER_DTYPE.value, col_name)
 
         return df
 
@@ -589,16 +599,19 @@ class BaseColumns(ABC):
 
         if mode == 0:
             search_by = alpha_lower + alpha_upper + digits
-            replace_by = ["l"] * len(alpha_lower) + ["U"] * len(alpha_upper) + ["#"] * len(digits)
+            replace_by = ["l"] * len(alpha_lower) + ["U"] * \
+                len(alpha_upper) + ["#"] * len(digits)
         elif mode == 1:
             search_by = alpha_lower + alpha_upper + digits
-            replace_by = ["c"] * len(alpha_lower) + ["c"] * len(alpha_upper) + ["#"] * len(digits)
+            replace_by = ["c"] * len(alpha_lower) + ["c"] * \
+                len(alpha_upper) + ["#"] * len(digits)
         elif mode == 2:
             search_by = alpha_lower + alpha_upper + digits
             replace_by = ["*"] * len(alpha_lower + alpha_upper + digits)
         elif mode == 3:
             search_by = alpha_lower + alpha_upper + digits + punctuation
-            replace_by = ["*"] * len(alpha_lower + alpha_upper + digits + punctuation)
+            replace_by = ["*"] * \
+                len(alpha_lower + alpha_upper + digits + punctuation)
         else:
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
@@ -613,7 +626,8 @@ class BaseColumns(ABC):
     def assign(self, kw_columns):
 
         if kw_columns.__class__ == self.root.__class__:
-            kw_columns = {name: kw_columns.data[name] for name in kw_columns.cols.names()}
+            kw_columns = {name: kw_columns.data[name]
+                          for name in kw_columns.cols.names()}
 
         for key in kw_columns:
             if kw_columns[key].__class__ == self.root.__class__:
@@ -621,7 +635,8 @@ class BaseColumns(ABC):
                 kw_columns[key] = kw_columns[key].cols.rename([(name, key)])
                 kw_columns[key] = kw_columns[key].data[key]
 
-        meta = Meta.action(self.root.meta, Actions.SET.value, list(kw_columns.keys()))
+        meta = Meta.action(self.root.meta, Actions.SET.value,
+                           list(kw_columns.keys()))
 
         return self.root.new(self.root._assign(kw_columns), meta=meta)
 
@@ -642,14 +657,17 @@ class BaseColumns(ABC):
         result = {}
         cols = parse_columns(df, cols)
         for input_col in cols:
-            column_modified_time = Meta.get(df.meta, f"profile.columns.{input_col}.modified")
-            patterns_update_time = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.updated")
+            column_modified_time = Meta.get(
+                df.meta, f"profile.columns.{input_col}.modified")
+            patterns_update_time = Meta.get(
+                df.meta, f"profile.columns.{input_col}.patterns.updated")
             if column_modified_time is None:
                 column_modified_time = -1
             if patterns_update_time is None:
                 patterns_update_time = 0
 
-            patterns_more = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.more")
+            patterns_more = Meta.get(
+                df.meta, f"profile.columns.{input_col}.patterns.more")
 
             if column_modified_time > patterns_update_time \
                     or patterns_update_time == 0 \
@@ -667,11 +685,14 @@ class BaseColumns(ABC):
                     # Remove extra element from list
                     result[input_col]["values"].pop()
 
-                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
-                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
+                df.meta = Meta.set(
+                    df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
+                df.meta = Meta.set(
+                    df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
 
             else:
-                result[input_col] = Meta.get(df.meta, f"profile.columns.{input_col}.patterns")
+                result[input_col] = Meta.get(
+                    df.meta, f"profile.columns.{input_col}.patterns")
 
         return df
 
@@ -689,7 +710,7 @@ class BaseColumns(ABC):
 
         result = dfd[cols].corr(method).to_dict()
 
-        if tidy and is_list(cols) and len(cols)==2:
+        if tidy and is_list(cols) and len(cols) == 2:
             result = result[cols[0]][cols[1]]
 
         return result
@@ -715,15 +736,19 @@ class BaseColumns(ABC):
         calculate = flush
 
         for input_col in cols:
-            patterns_values = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.values")
-            patterns_more = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.more")
+            patterns_values = Meta.get(
+                df.meta, f"profile.columns.{input_col}.patterns.values")
+            patterns_more = Meta.get(
+                df.meta, f"profile.columns.{input_col}.patterns.more")
 
             if patterns_values is None or (len(patterns_values) < n and patterns_more):
                 calculate = True
                 break
 
-            column_modified_time = Meta.get(df.meta, f"profile.columns.{input_col}.modified")
-            patterns_update_time = Meta.get(df.meta, f"profile.columns.{input_col}.patterns.updated")
+            column_modified_time = Meta.get(
+                df.meta, f"profile.columns.{input_col}.modified")
+            patterns_update_time = Meta.get(
+                df.meta, f"profile.columns.{input_col}.patterns.updated")
             if column_modified_time is None:
                 column_modified_time = -1
             if patterns_update_time is None:
@@ -739,7 +764,8 @@ class BaseColumns(ABC):
             self.meta = df.meta
 
         for input_col in cols:
-            result[input_col] = Meta.get(df.meta, f"profile.columns.{input_col}.patterns")
+            result[input_col] = Meta.get(
+                df.meta, f"profile.columns.{input_col}.patterns")
             if len(result[input_col]["values"]) > n:
                 result[input_col].update({"more": True})
                 result[input_col]["values"] = result[input_col]["values"][0:n]
@@ -819,15 +845,18 @@ class BaseColumns(ABC):
         elif position == 'end':
             new_index = len(all_columns)
         else:
-            RaiseIt.value_error(position, ["after", "before", "beginning", "end"])
+            RaiseIt.value_error(
+                position, ["after", "before", "beginning", "end"])
 
         # Remove
         new_columns = []
         for col_name in column:
-            new_columns.append(all_columns.pop(all_columns.index(col_name)))  # delete
+            new_columns.append(all_columns.pop(
+                all_columns.index(col_name)))  # delete
         # Move the column to the new place
         for col_name in new_columns[::-1]:
-            all_columns.insert(new_index, col_name)  # insert and delete a element
+            # insert and delete a element
+            all_columns.insert(new_index, col_name)
             # new_index = new_index + 1
         return df[all_columns]
 
@@ -903,8 +932,10 @@ class BaseColumns(ABC):
         funcs = val_to_list(funcs)
 
         if parallel:
-            all_funcs = [getattr(df[cols].data, func.__name__)() for func in funcs]
-            agg_result = {func.__name__: self.exec_agg(all_funcs, compute) for func in funcs}
+            all_funcs = [getattr(df[cols].data, func.__name__)()
+                         for func in funcs]
+            agg_result = {func.__name__: self.exec_agg(
+                all_funcs, compute) for func in funcs}
 
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute) for
@@ -1129,7 +1160,7 @@ class BaseColumns(ABC):
     def _round(self, cols="*", mode=True, output_cols=None) -> DataFrameType:
 
         df = self.root
-        
+
         if is_int(mode):
             print("is int")
             df = df.cols.round(cols, decimals=mode, output_cols=output_cols)
@@ -1147,7 +1178,7 @@ class BaseColumns(ABC):
                 RaiseIt.value_error(mode, list(modes.keys()))
 
             df = getattr(df.cols, modes[mode])(cols, output_cols=output_cols)
-        
+
         return df
 
     def round(self, cols="*", decimals=0, output_cols=None) -> DataFrameType:
@@ -1394,7 +1425,6 @@ class BaseColumns(ABC):
         return self.apply(cols, self.F.lower, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
 
-    
     def infer_dtypes(self, cols="*", output_cols=None) -> DataFrameType:
         dtypes = self.root[cols].cols.dtypes()
         return self.apply(cols, self.F.infer_dtypes, args=(dtypes,), func_return_type=str,
@@ -1455,7 +1485,7 @@ class BaseColumns(ABC):
                           meta_action=Actions.WORD_TOKENIZE.value, mode="map")
 
     def word_count(self, cols="*", output_cols=None) -> DataFrameType:
-        
+
         df = self.root
 
         cols = parse_columns(df, cols)
@@ -1636,7 +1666,7 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(cols, output_cols)
         col_names = df.cols.names()
 
-        if is_list(cols) and len(cols)==2 and value is None:
+        if is_list(cols) and len(cols) == 2 and value is None:
             value = df.data[cols[1]]
             cols = cols[0]
         elif is_str(value) and value in col_names:
@@ -1648,9 +1678,9 @@ class BaseColumns(ABC):
             return self.F.days_between(series, *args)/365.25
 
         return df.cols.apply(cols, func, args=[value, date_format], func_return_type=str,
-                          output_cols=output_cols,
-                          meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True).cols._round(output_cols, round)
-    
+                             output_cols=output_cols,
+                             meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True).cols._round(output_cols, round)
+
     def years_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> DataFrameType:
 
         def _years_between(series, args):
@@ -1671,8 +1701,6 @@ class BaseColumns(ABC):
             return self.F.days_between(series, *args)
 
         return self._td_between(cols, _days_between, value, date_format, round, output_cols)
-
-
 
     def replace(self, cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
                 output_cols=None) -> DataFrameType:
@@ -1698,7 +1726,8 @@ class BaseColumns(ABC):
                     _search.append(search)
                 print(_search)
                 print(_replace_by)
-                df = df.cols._replace(col, _search, _replace_by, search_by="chars")
+                df = df.cols._replace(
+                    col, _search, _replace_by, search_by="chars")
 
         else:
             if is_list_of_tuples(search) and replace_by is None:
@@ -1707,7 +1736,8 @@ class BaseColumns(ABC):
             replace_by = val_to_list(replace_by)
             if len(replace_by) == 1:
                 replace_by = replace_by[0]
-            df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
+            df = df.cols._replace(cols, search, replace_by,
+                                  search_by, ignore_case, output_cols)
 
         return df
 
@@ -1743,7 +1773,8 @@ class BaseColumns(ABC):
             func = self.F.replace_values
             func_return_type = None
         else:
-            RaiseIt.value_error(search_by, ["chars", "words", "full", "values"])
+            RaiseIt.value_error(
+                search_by, ["chars", "words", "full", "values"])
 
         # Cudf raise and exception if both param are not the same type
         # For example [] ValueError: Cannot convert value of type list  to cudf scalar
@@ -1762,9 +1793,11 @@ class BaseColumns(ABC):
         def _num_to_words(text):
             if not is_list_value(text):
                 text = w_tokenizer.tokenize(text)
-                result = " ".join([num2words(w, lang=language) if str_to_int(w) else w for w in text])
+                result = " ".join(
+                    [num2words(w, lang=language) if str_to_int(w) else w for w in text])
             else:
-                result = [num2words(w, lang=language) if str_to_int(w) else w for w in text]
+                result = [num2words(w, lang=language)
+                          if str_to_int(w) else w for w in text]
             return result
 
         return self.apply(cols, _num_to_words, output_cols=output_cols, mode="map")
@@ -1815,7 +1848,8 @@ class BaseColumns(ABC):
 
         for input_col, output_col in columns:
             kw_columns[output_col] = df.data[input_col].fillna(value)
-            kw_columns[output_col] = kw_columns[output_col].mask(kw_columns[output_col] == "", value)
+            kw_columns[output_col] = kw_columns[output_col].mask(
+                kw_columns[output_col] == "", value)
 
         return df.cols.assign(kw_columns)
 
@@ -1833,7 +1867,6 @@ class BaseColumns(ABC):
         return df.cols.agg_exprs(cols, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
     def _math(self, cols="*", operator=None, output_col=None) -> DataFrameType:
-
         """
         Helper to process arithmetic operation between columns. If a
         :param cols: Columns to be used to make the calculation
@@ -1842,7 +1875,8 @@ class BaseColumns(ABC):
         """
         df = self.root
         cols = parse_columns(df, cols)
-        expr = reduce(operator, [df[col_name].cols.fill_na("*", 0).cols.to_float() for col_name in cols])
+        expr = reduce(operator, [df[col_name].cols.fill_na(
+            "*", 0).cols.to_float() for col_name in cols])
         return df.cols.assign({output_col: expr})
 
     def add(self, cols="*", output_col=None) -> DataFrameType:
@@ -1959,7 +1993,8 @@ class BaseColumns(ABC):
             separator = re.escape(separator)
 
         if mode == "string":
-            dfd_new = dfd[input_col].astype(str).str.split(separator, expand=True, n=splits - 1)
+            dfd_new = dfd[input_col].astype(str).str.split(
+                separator, expand=True, n=splits - 1)
 
         elif mode == "array":
             if is_dask_dataframe(dfd):
@@ -1968,7 +2003,8 @@ class BaseColumns(ABC):
                     pdf.columns = final_columns
                     return pdf
 
-                dfd_new = dfd[input_col].map_partitions(func, meta={c: object for c in final_columns})
+                dfd_new = dfd[input_col].map_partitions(
+                    func, meta={c: object for c in final_columns})
             else:
                 dfd_new = dfd[input_col].apply(pd.Series)
 
@@ -1978,7 +2014,6 @@ class BaseColumns(ABC):
         return dfd_new
 
     def unnest(self, cols="*", separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string") -> DataFrameType:
-
         """
         Split an array or string in different columns
         :param cols: Columns to be un-nested
@@ -2007,21 +2042,25 @@ class BaseColumns(ABC):
                 final_index = index
 
             if output_cols is None:
-                final_columns = [input_col + "_" + str(i) for i in range(splits)]
+                final_columns = [input_col + "_" +
+                                 str(i) for i in range(splits)]
             elif is_list_of_tuples(output_cols):
                 final_columns = output_cols[idx]
             elif is_list_value(output_cols):
                 final_columns = output_cols
             else:
-                final_columns = [output_cols + "_" + str(i) for i in range(splits)]
+                final_columns = [output_cols + "_" +
+                                 str(i) for i in range(splits)]
 
-            dfd_new = self._unnest(dfd, input_col, final_columns, separator, splits, mode, output_cols)
+            dfd_new = self._unnest(
+                dfd, input_col, final_columns, separator, splits, mode, output_cols)
 
             # If columns split is shorter than the number of splits
             new_columns = list(dfd_new.columns)
 
             if len(final_columns) < len(new_columns):
-                dfd_new = dfd_new.drop(columns=new_columns[0:len(final_columns)])
+                dfd_new = dfd_new.drop(
+                    columns=new_columns[0:len(final_columns)])
                 new_columns = list(dfd_new.columns)
 
             dfd_new.columns = final_columns[:len(new_columns)]
@@ -2065,7 +2104,8 @@ class BaseColumns(ABC):
         @self.F.delayed
         def _hist(pdf, col_name, _bins):
             # import cupy as cp
-            _count, bins_edges = np.histogram(pd.to_numeric(pdf, errors='coerce'), bins=_bins[col_name])
+            _count, bins_edges = np.histogram(pd.to_numeric(
+                pdf, errors='coerce'), bins=_bins[col_name])
             # _count, bins_edges = np.histogram(self.to_float(col_name).data[col_name], bins=_bins[col_name])
             # _count, bins_edges = cp.histogram(cp.array(_series.to_gpu_array()), buckets)
             return {col_name: [list(_count), list(bins_edges)]}
@@ -2089,7 +2129,8 @@ class BaseColumns(ABC):
             return {"hist": _result}
 
         partitions = self.F.to_delayed(df.data)
-        c = [_hist(part[col_name], col_name, _bins) for part in partitions for col_name in columns]
+        c = [_hist(part[col_name], col_name, _bins)
+             for part in partitions for col_name in columns]
 
         d = _agg_hist(c)
 
@@ -2139,10 +2180,11 @@ class BaseColumns(ABC):
             mismatches = 0 if mismatches is None else int(mismatches)
             missing = 0 if missing is None else int(missing)
 
-            result[col_name] = {"match": matches, "missing": missing, "mismatch": mismatches}
+            result[col_name] = {"match": matches,
+                                "missing": missing, "mismatch": mismatches}
 
-        for col_name in columns_type.keys():
-            result[col_name].update({"profiler_dtype": columns_type[col_name]})
+        for col_name in cols.keys():
+            result[col_name].update({"profiler_dtype": cols[col_name]})
 
         return result
 
@@ -2165,7 +2207,8 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols)
 
         # Infer the data type from every element in a Series.
-        sample = df.cols.select(cols).rows.limit(INFER_PROFILER_ROWS).to_optimus_pandas()
+        sample = df.cols.select(cols).rows.limit(
+            INFER_PROFILER_ROWS).to_optimus_pandas()
         rows_count = sample.rows.count()
         sample_dtypes = sample.cols.infer_dtypes().cols.frequency()
 
@@ -2176,7 +2219,8 @@ class BaseColumns(ABC):
             infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
             # Common datatype in a column
             dtype = infer_value_counts[0]["value"]
-            second_dtype = infer_value_counts[1]["value"] if len(infer_value_counts) > 1 else None
+            second_dtype = infer_value_counts[1]["value"] if len(
+                infer_value_counts) > 1 else None
 
             if dtype == ProfilerDataTypes.MISSING.value and second_dtype:
                 _dtype = second_dtype
@@ -2208,11 +2252,13 @@ class BaseColumns(ABC):
                     or any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
                 is_categorical = True
 
-            cols_and_inferred_dtype[col_name] = {"dtype": _dtype, "categorical": is_categorical}
+            cols_and_inferred_dtype[col_name] = {
+                "dtype": _dtype, "categorical": is_categorical}
             if dtype == ProfilerDataTypes.DATETIME.value:
                 # pydatainfer do not accepts None value so we must filter them
                 filtered_dates = [i for i in sample[col_name].to_list() if i]
-                cols_and_inferred_dtype[col_name].update({"format": pydateinfer.infer_dtypes(filtered_dates)})
+                cols_and_inferred_dtype[col_name].update(
+                    {"format": pydateinfer.infer_dtypes(filtered_dates)})
 
         return cols_and_inferred_dtype
 
@@ -2223,12 +2269,14 @@ class BaseColumns(ABC):
 
         @self.F.delayed
         def series_to_dict(_series, _total_freq_count=None):
-            _result = [{"value": i, "count": j} for i, j in self._series_to_dict_delayed(_series).items()]
+            _result = [{"value": i, "count": j}
+                       for i, j in self._series_to_dict_delayed(_series).items()]
 
             if _total_freq_count is None:
                 _result = {_series.name: {"values": _result}}
             else:
-                _result = {_series.name: {"values": _result, "count_uniques": int(_total_freq_count)}}
+                _result = {_series.name: {"values": _result,
+                                          "count_uniques": int(_total_freq_count)}}
 
             return _result
 
@@ -2241,16 +2289,20 @@ class BaseColumns(ABC):
 
             for i, j in _value_counts.items():
                 for x in list(j.values())[0]:
-                    x["percentage"] = round((x["count"] * 100 / _total_rows), 2)
+                    x["percentage"] = round(
+                        (x["count"] * 100 / _total_rows), 2)
 
             return _value_counts
 
         value_counts = [df.data[col_name].value_counts() for col_name in cols]
-        n_largest = [_value_counts.nlargest(n) for _value_counts in value_counts]
+        n_largest = [_value_counts.nlargest(n)
+                     for _value_counts in value_counts]
 
         if count_uniques is True:
-            count_uniques = [_value_counts.count() for _value_counts in value_counts]
-            b = [series_to_dict(_n_largest, _count) for _n_largest, _count in zip(n_largest, count_uniques)]
+            count_uniques = [_value_counts.count()
+                             for _value_counts in value_counts]
+            b = [series_to_dict(_n_largest, _count)
+                 for _n_largest, _count in zip(n_largest, count_uniques)]
         else:
             b = [series_to_dict(_n_largest) for _n_largest in n_largest]
 
@@ -2288,7 +2340,8 @@ class BaseColumns(ABC):
 
             query = ((df[col_name] < lb) | (df[col_name] > ub))
             # Fliers are outliers points
-            fliers = df.rows.select(query).cols.select(col_name).rows.limit(1000).to_dict()
+            fliers = df.rows.select(query).cols.select(
+                col_name).rows.limit(1000).to_dict()
             stats[col_name] = {'mean': _mean, 'median': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whisker_low': lb,
                                'whisker_high': ub,
                                'fliers': [fliers[0][col_name]], 'label': one_list_to_val(col_name)}
@@ -2298,7 +2351,7 @@ class BaseColumns(ABC):
     def names(self, col_names="*", by_dtypes=None, invert=False, is_regex=False) -> list:
 
         cols = parse_columns(self.root, col_names, filter_by_column_dtypes=by_dtypes, invert=invert,
-                                is_regex=is_regex)
+                             is_regex=is_regex)
         return cols
 
     def count_zeros(self, cols="*", tidy=True, compute=True):
@@ -2428,7 +2481,7 @@ class BaseColumns(ABC):
 
     # Mask functions
 
-    def _mask(self, cols="*", method: str=None, output_cols=None, rename_func=True, *args, **kwargs) -> DataFrameType:
+    def _mask(self, cols="*", method: str = None, output_cols=None, rename_func=True, *args, **kwargs) -> DataFrameType:
 
         append_df = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
@@ -2441,29 +2494,32 @@ class BaseColumns(ABC):
 
         return self.append(append_df)
 
-    def _any_mask(self, cols="*", method: str=None, inverse=False, tidy=True, *args, **kwargs) -> bool:
+    def _any_mask(self, cols="*", method: str = None, inverse=False, tidy=True, *args, **kwargs) -> bool:
 
         mask = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
         if inverse:
             # assigns True if there is any False value
-            values = { col: not bool(mask.data[col].all()) for col in mask.cols.names() }
+            values = {col: not bool(mask.data[col].all())
+                      for col in mask.cols.names()}
         else:
             # assigns True if there is any True value
-            values = { col: bool(mask.data[col].any()) for col in mask.cols.names() }
+            values = {col: bool(mask.data[col].any())
+                      for col in mask.cols.names()}
 
         return format_dict(values, tidy)
 
-    def _count_mask(self, cols="*", method: str=None, inverse=False, tidy=True, *args, **kwargs) -> bool:
+    def _count_mask(self, cols="*", method: str = None, inverse=False, tidy=True, *args, **kwargs) -> bool:
 
         mask = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
         if inverse:
             # assigns True if there is any False value
-            values = { col: not mask.data[col].sum() for col in mask.cols.names() }
+            values = {col: not mask.data[col].sum()
+                      for col in mask.cols.names()}
         else:
             # assigns True if there is any True value
-            values = { col: mask.data[col].sum() for col in mask.cols.names() }
+            values = {col: mask.data[col].sum() for col in mask.cols.names()}
 
         return format_dict(values, tidy)
 
@@ -2511,7 +2567,7 @@ class BaseColumns(ABC):
     # def any_uniques(self, cols="*", keep="first", inverse=False, tidy=True):
     #     return self._any_mask(cols, "unique", keep=keep, inverse=inverse, tidy=tidy)
 
-    def any_match(self, cols="*", regex=None, dtype=None,inverse=False, tidy=True):
+    def any_match(self, cols="*", regex=None, dtype=None, inverse=False, tidy=True):
         return self._any_mask(cols, "match", regex=regex, dtype=dtype, inverse=inverse, tidy=tidy)
 
     def any_match_dtype(self, cols="*", dtype=None, inverse=False, tidy=True):
@@ -2635,7 +2691,7 @@ class BaseColumns(ABC):
     # def count_uniques(self, cols="*", keep="first", tidy=True):
     #     return self._count_mask(cols, "unique", keep=keep, tidy=tidy)
 
-    def count_match(self, cols="*", regex=None, dtype=None,tidy=True):
+    def count_match(self, cols="*", regex=None, dtype=None, tidy=True):
         return self._count_mask(cols, "match", regex=regex, dtype=dtype, tidy=tidy)
 
     def count_dtype(self, cols="*", dtype=None, tidy=True):
@@ -2854,7 +2910,6 @@ class BaseColumns(ABC):
     def http_code_values(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "http_code", output_cols, rename_func=not drop)
 
-
     # String clustering algorithms
 
     def fingerprint(self, cols="*", output_cols=None) -> DataFrameType:
@@ -2912,7 +2967,8 @@ class BaseColumns(ABC):
             return nltk.pos_tag(text)
 
         for input_col, output_col in zip(cols, output_cols):
-            df = df.cols.apply(input_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
+            df = df.cols.apply(input_col, calculate_ngrams,
+                               "string", output_cols=output_col, mode="map")
         return df
 
     def ngrams(self, cols="*", n_size=2, output_cols=None) -> DataFrameType:
@@ -2933,7 +2989,8 @@ class BaseColumns(ABC):
             return list(map("".join, list(ngrams(value, n_size))))
 
         for input_col, output_col in zip(cols, output_cols):
-            df = df.cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
+            df = df.cols.apply(output_col, calculate_ngrams,
+                               "string", output_cols=output_col, mode="map")
 
         df.meta = Meta.action(df.meta, Actions.NGRAMS.value, output_cols)
 
@@ -2971,7 +3028,8 @@ class BaseColumns(ABC):
                   .cols.apply(output_col, calculate_ngrams, "string", output_cols=output_col, mode="map")
                   )
 
-        df.meta = Meta.action(df.meta, Actions.NGRAM_FINGERPRINT.value, output_cols)
+        df.meta = Meta.action(
+            df.meta, Actions.NGRAM_FINGERPRINT.value, output_cols)
 
         return df
 
@@ -3039,7 +3097,8 @@ class BaseColumns(ABC):
         df = df.cols.select(features).rows.drop_na()
 
         X = df[features]._to_values().ravel()
-        vectorizer = CountVectorizer(ngram_range=ngram_range, analyzer=analyzer)
+        vectorizer = CountVectorizer(
+            ngram_range=ngram_range, analyzer=analyzer)
         matrix = vectorizer.fit_transform(X)
 
         return self.root.new(pd.DataFrame(matrix.toarray(), columns=vectorizer.get_feature_names()))

@@ -393,7 +393,7 @@ class BaseDataFrame(ABC):
 
     def size(self, deep=True, format=None):
         """
-        Get the size of a dask in bytes
+        Get the size of the dataframe in bytes
         :return:
         """
         df = self.data
@@ -627,7 +627,7 @@ class BaseDataFrame(ABC):
         :return:
         """
         df_dict = self.to_dict(n="all")
-        df_schema = self.cols.dtypes() # TO-DO use types in tests
+        df_schema = self.cols.dtypes()  # TO-DO use types in tests
 
         df_data = []
 
@@ -636,7 +636,8 @@ class BaseDataFrame(ABC):
         for col_name in df_dict.keys():
             value = pformat((col_name, df_schema[col_name]))
             value += ": "
-            value += json.dumps(df_dict[col_name], ensure_ascii=False, default=json_converter)
+            value += json.dumps(df_dict[col_name],
+                                ensure_ascii=False, default=json_converter)
             df_data.append(value)
 
         return "{" + ", ".join(df_data) + "}"
