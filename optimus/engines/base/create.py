@@ -15,24 +15,30 @@ class BaseCreate:
         
         for key, values in dict.items():
             if is_tuple(key):
+                dtype = None
+                force_dtype = False
+                nulls = False
+                if len(key) == 4:
+                    name, dtype, nulls, force_dtype = key
                 if len(key) == 3:
                     name, dtype, nulls = key
                 elif len(key) == 2:
                     name, dtype = key
-                    nulls = False
-                dtype = self.root.constants.DTYPES_ALIAS.get(dtype, dtype)
+                if force_dtype:
+                    dtype = self.root.constants.DTYPES_ALIAS.get(dtype, dtype)
             else:
                 name = key
                 dtype = None
                 nulls = False
+                force_dtype = False
 
-            new_dict[(name, dtype, nulls)] = values
+            new_dict[(name, dtype, nulls, force_dtype)] = values
 
         return new_dict
 
     
     def _dfd_from_dict(self, dict):
-        return pd.DataFrame({ name: pd.Series(values, dtype=dtype) for (name, dtype, nulls), values in dict.items() })
+        return pd.DataFrame({name: pd.Series(values, dtype=dtype if force_dtype else None) for (name, dtype, nulls, force_dtype), values in dict.items()})
 
     @abstractmethod
     def _df_from_dfd(self, dfd, *args, **kwargs):
@@ -57,6 +63,12 @@ class BaseCreate:
             dfd = self._dfd_from_dict(dict)
 
         df = self._df_from_dfd(dfd, n_partitions=n_partitions, *args, **kwargs)
+        
         df.meta = Meta.set(df.meta, value={"max_cell_length": df.cols.len("*").cols.max()})
+        
+        for (name, dtype, nulls, force_dtype) in dict:
+            if not force_dtype:
+                df = df.cols.set_dtype(name, dtype)
+
         return df
 

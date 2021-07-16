@@ -464,6 +464,7 @@ class BaseColumns(ABC):
         for col_name, element in columns.items():
             props = element if is_dict(element) else {"dtype": element}
             dtype = props["dtype"]
+            dtype = df.constants.INFERRED_DTYPES_ALIAS.get(dtype, dtype)
             if dtype in ProfilerDataTypes.list():
                 if not inferred:
                     df.meta = Meta.set(
