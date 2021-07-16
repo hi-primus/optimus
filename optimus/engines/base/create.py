@@ -67,7 +67,7 @@ class BaseCreate:
         df.meta = Meta.set(df.meta, value={"max_cell_length": df.cols.len("*").cols.max()})
         
         for (name, dtype, nulls, force_dtype) in dict:
-            if not force_dtype:
+            if dtype and not force_dtype:
                 df = df.cols.set_dtype(name, dtype)
 
         return df
