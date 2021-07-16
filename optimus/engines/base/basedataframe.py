@@ -849,13 +849,7 @@ class BaseDataFrame(ABC):
         return df
 
     def graph(self) -> dict:
-        """
-        Return a dict the Dask tasks graph
-        :return:
-        """
-        dfd = self.data
-
-        return dfd.__dask_graph__().layers
+        raise NotImplementedError(f"Not supported using {type(self).__name__}")
 
     def get_series(self):
         col1 = self.cols.names(0)[0]

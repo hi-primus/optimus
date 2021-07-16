@@ -53,6 +53,9 @@ class DaskBaseDataFrame(BaseDataFrame):
         df = self.data
         return df.compute()
 
+    def _compute(self, *args, **kwargs):
+        return dask.compute(*(*(a for a in args), *(kwargs[k] for k in kwargs)))
+
     def visualize(self):
         return display(self.data.visualize())
 
@@ -80,6 +83,13 @@ class DaskBaseDataFrame(BaseDataFrame):
             return value[lower_bound:upper_bound]
 
         return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute())
+
+    def graph(self) -> dict:
+        """
+        Return a dict the Dask tasks graph
+        :return:
+        """
+        return self.data.__dask_graph__().layers
 
     def sample(self, n=10, random=False):
         """
