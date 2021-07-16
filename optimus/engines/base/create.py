@@ -9,14 +9,14 @@ class BaseCreate:
     def __init__(self, root):
         self.root = root
 
-    def _dictionary(self, dict):
+    def _dictionary(self, dict, force_dtypes=False):
 
         new_dict = {}
         
         for key, values in dict.items():
             if is_tuple(key):
                 dtype = None
-                force_dtype = False
+                force_dtype = force_dtypes
                 nulls = False
                 if len(key) == 4:
                     name, dtype, nulls, force_dtype = key
@@ -30,7 +30,7 @@ class BaseCreate:
                 name = key
                 dtype = None
                 nulls = False
-                force_dtype = False
+                force_dtype = force_dtypes
 
             new_dict[(name, dtype, nulls, force_dtype)] = values
 
@@ -44,8 +44,7 @@ class BaseCreate:
     def _df_from_dfd(self, dfd, *args, **kwargs):
         pass
 
-
-    def dataframe(self, dict: dict=None, dfd: InternalDataFrameType=None, n_partitions: int=1, *args, **kwargs) -> DataFrameType:
+    def dataframe(self, dict: dict = None, dfd: InternalDataFrameType = None, force_dtypes=False, n_partitions: int = 1, *args, **kwargs) -> DataFrameType:
         """
         Creates a dictionary using the form 
         {"Column name": ["value 1", "value 2"], ...} or {("Column name", "str", True): ["value 1", "value 2"]}
@@ -59,7 +58,7 @@ class BaseCreate:
             if dict is None:
                 dict = kwargs
                 kwargs = {}
-            dict = self._dictionary(dict)
+            dict = self._dictionary(dict, force_dtypes=force_dtypes)
             dfd = self._dfd_from_dict(dict)
 
         df = self._df_from_dfd(dfd, n_partitions=n_partitions, *args, **kwargs)
