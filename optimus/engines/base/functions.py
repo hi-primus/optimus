@@ -158,6 +158,7 @@ class Functions(ABC):
         return t - t.mean() / t.std(ddof=0)
 
     def modified_z_score(self, series):
+        series = pd.to_numeric(series, errors='coerce')
         mad_median = self.mad(series, True, True)
         median = mad_median["median"]
         mad = mad_median["mad"]
