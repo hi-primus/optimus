@@ -46,17 +46,17 @@ def is_null(_value):
     return pd.isnull(_value)
 
 
-def str_to_data_type(_value, _dtypes):
+def str_to_data_type(_value, _data_types):
     """
     Check if value can be parsed to a tuple or and list.
     Because Spark can handle tuples we will try to transform tuples to arrays
     :param _value:
-    :param _dtypes:
+    :param _data_types:
     :return:
     """
     # return True if isinstance(_value, str) else False
     try:
-        if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _dtypes):
+        if isinstance(literal_eval((_value.encode('ascii', 'ignore')).decode("utf-8")), _data_types):
             return True
     except (ValueError, SyntaxError, AttributeError):
         return False

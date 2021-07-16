@@ -349,17 +349,17 @@ class BaseRows(ABC):
     def unique(self, cols="*", keep="first", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="unique", drop=drop, keep=keep, how=how)
 
-    def mismatch(self, cols="*", dtype=None, drop=False, how="any") -> DataFrameType:
-        return self._mask(cols, method="mismatch", drop=drop, dtype=dtype, how=how)
+    def mismatch(self, cols="*", data_type=None, drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="mismatch", drop=drop, data_type=data_type, how=how)
 
-    def match(self, cols="*", regex=None, dtype=None, drop=False, how="any") -> DataFrameType:
-        return self._mask(cols, method="match", drop=drop, regex=regex, dtype=dtype, how=how)
+    def match(self, cols="*", regex=None, data_type=None, drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="match", drop=drop, regex=regex, data_type=data_type, how=how)
 
     def match_regex(self, cols="*", regex=None, drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="match_regex", drop=drop, regex=regex, how=how)
 
-    def match_dtype(self, cols="*", dtype=None, drop=False, how="any") -> DataFrameType:
-        return self._mask(cols, method="match_dtype", drop=drop, dtype=dtype, how=how)
+    def match_data_type(self, cols="*", data_type=None, drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="match_data_type", drop=drop, data_type=data_type, how=how)
 
     def value_in(self, cols="*", values=None, drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="value_in", drop=drop, values=values, how=how)
@@ -381,46 +381,46 @@ class BaseRows(ABC):
 
     def email(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="email", drop=drop, how=how)
-    
+
     def ip(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="ip", drop=drop, how=how)
-    
+
     def url(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="url", drop=drop, how=how)
-    
+
     def gender(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="gender", drop=drop, how=how)
-    
+
     def boolean(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="boolean", drop=drop, how=how)
-    
+
     def zip_code(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="zip_code", drop=drop, how=how)
-    
+
     def credit_card_number(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="credit_card_number", drop=drop, how=how)
-    
+
     def datetime(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="datetime", drop=drop, how=how)
-    
+
     def object(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="object", drop=drop, how=how)
-    
+
     def array(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="array", drop=drop, how=how)
-    
+
     def phone_number(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="phone_number", drop=drop, how=how)
-    
+
     def social_security_number(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="social_security_number", drop=drop, how=how)
-    
+
     def http_code(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="http_code", drop=drop, how=how)
-    
+
     def expression(self, where=None, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="expression", drop=drop, how=how, where=where)
-    
+
     # drop functions
 
     def drop_str(self, cols="*", how="any") -> DataFrameType:
@@ -434,7 +434,7 @@ class BaseRows(ABC):
 
     def drop_numeric(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="numeric", drop=True, how=how)
-    
+
     def drop_greater_than_equal(self, cols="*", value=None, how="any") -> DataFrameType:
         return self._mask(cols, method="greater_than_equal", drop=True, value=value, how=how)
 
@@ -481,17 +481,17 @@ class BaseRows(ABC):
         """
         return self._mask(cols, method="unique", drop=True, keep=keep, how=how)
 
-    def drop_mismatch(self, cols="*", dtype=None, how="any") -> DataFrameType:
-        return self._mask(cols, method="mismatch", drop=True, dtype=dtype, how=how)
+    def drop_mismatch(self, cols="*", data_type=None, how="any") -> DataFrameType:
+        return self._mask(cols, method="mismatch", drop=True, data_type=data_type, how=how)
 
-    def drop_match(self, cols="*", regex=None, dtype=None, how="any") -> DataFrameType:
-        return self._mask(cols, method="match", drop=True, regex=regex, dtype=dtype, how=how)
+    def drop_match(self, cols="*", regex=None, data_type=None, how="any") -> DataFrameType:
+        return self._mask(cols, method="match", drop=True, regex=regex, data_type=data_type, how=how)
 
     def drop_by_regex(self, cols="*", regex=None, how="any") -> DataFrameType:
         return self._mask(cols, method="match_regex", drop=True, regex=regex, how=how)
 
-    def drop_by_dtype(self, cols="*", dtype=None, how="any") -> DataFrameType:
-        return self._mask(cols, method="match_dtype", drop=True, dtype=dtype, how=how)
+    def drop_by_data_type(self, cols="*", data_type=None, how="any") -> DataFrameType:
+        return self._mask(cols, method="match_data_type", drop=True, data_type=data_type, how=how)
 
     def drop_value_in(self, cols="*", values=None, how="any") -> DataFrameType:
         return self._mask(cols, method="value_in", drop=True, values=values, how=how)
@@ -513,40 +513,40 @@ class BaseRows(ABC):
 
     def drop_emails(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="email", drop=True, how=how)
-    
+
     def drop_ips(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="ip", drop=True, how=how)
-    
+
     def drop_urls(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="url", drop=True, how=how)
-    
+
     def drop_genders(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="gender", drop=True, how=how)
-    
+
     def drop_booleans(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="boolean", drop=True, how=how)
-    
+
     def drop_zip_codes(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="zip_code", drop=True, how=how)
-    
+
     def drop_credit_card_numbers(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="credit_card_number", drop=True, how=how)
-    
+
     def drop_datetimes(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="datetime", drop=True, how=how)
-    
+
     def drop_objects(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="object", drop=True, how=how)
-    
+
     def drop_arrays(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="array", drop=True, how=how)
-    
+
     def drop_phone_numbers(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="phone_number", drop=True, how=how)
-    
+
     def drop_social_security_numbers(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="social_security_number", drop=True, how=how)
-    
+
     def drop_http_codes(self, cols="*", how="any") -> DataFrameType:
         return self._mask(cols, method="http_code", drop=True, how=how)
 

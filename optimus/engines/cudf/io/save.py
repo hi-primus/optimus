@@ -88,7 +88,7 @@ class Save:
         try:
             # df = self.root.data
             # columns = parse_columns(self, "*",
-            #                         filter_by_column_dtypes=["date", "array", "vector", "binary", "null"])
+            #                         filter_by_column_types=["date", "array", "vector", "binary", "null"])
             df = self.root.cols.cast("*", "str")
 
             # Dask reference

@@ -44,7 +44,7 @@ class BaseCreate:
     def _df_from_dfd(self, dfd, *args, **kwargs):
         pass
 
-    def dataframe(self, dict: dict = None, dfd: InternalDataFrameType = None, force_dtypes=False, n_partitions: int = 1, *args, **kwargs) -> DataFrameType:
+    def dataframe(self, dict: dict = None, dfd: InternalDataFrameType = None, force_data_types=False, n_partitions: int = 1, *args, **kwargs) -> DataFrameType:
         """
         Creates a dictionary using the form 
         {"Column name": ["value 1", "value 2"], ...} or {("Column name", "str", True, True): ["value 1", "value 2"]}
@@ -59,7 +59,7 @@ class BaseCreate:
             if dict is None:
                 dict = kwargs
                 kwargs = {}
-            dict = self._dictionary(dict, force_dtypes=force_dtypes)
+            dict = self._dictionary(dict, force_dtypes=force_data_types)
             dfd = self._dfd_from_dict(dict)
 
         df = self._df_from_dfd(dfd, n_partitions=n_partitions, *args, **kwargs)
@@ -68,7 +68,7 @@ class BaseCreate:
         
         for (name, dtype, nulls, force_dtype) in dict:
             if dtype and not force_dtype:
-                df = df.cols.set_dtype(name, dtype)
+                df = df.cols.set_data_type(name, dtype)
 
         return df
 

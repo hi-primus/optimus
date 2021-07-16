@@ -40,7 +40,7 @@ def save(self: DataFrame):
             try:
                 df = self
                 # columns = parse_columns(self, "*",
-                #                         filter_by_column_dtypes=["date", "array", "vector", "binary", "null"])
+                #                         filter_by_column_types=["date", "array", "vector", "binary", "null"])
                 # df = df.cols.cast(columns, "str").repartition(num_partitions)
 
                 # Dask reference

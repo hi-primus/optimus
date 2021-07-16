@@ -6,7 +6,7 @@ from ordered_set import OrderedSet
 
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_dtypes
+from optimus.helpers.parser import parse_data_types
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list_value, is_tuple, is_list_of_str, is_list_of_list, is_list_of_tuples, is_str, is_list, \
     is_int, is_list_of_int
@@ -127,7 +127,7 @@ def get_output_cols(cols, output_cols=None, merge=False, auto_increment=False):
     return output_cols
 
 
-def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, accepts_missing_cols=False, invert=False):
+def parse_columns(df, cols_args, is_regex=None, filter_by_column_types=None, accepts_missing_cols=False, invert=False):
     """
     Return a list of columns and check that columns exists in the spark
     Accept '*' as parameter in which case return a list of all columns in the spark.
@@ -137,7 +137,7 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, ac
     :param df: Dataframe in which the columns are going to be checked
     :param cols_args: Accepts * as param to return all the string columns in the spark
     :param is_regex: Use True is col_attrs is a regex
-    :param filter_by_column_dtypes: A data type for which a columns list is going be filtered
+    :param filter_by_column_types: A data type for which a columns list is going be filtered
     :param accepts_missing_cols: if true not check if column exist in the spark
     :param invert: Invert the final selection. For example if you want to select not integers
 
@@ -182,16 +182,18 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, ac
         check_for_missing_columns(df, cols)
 
     # Filter by column data type
-    filter_by_column_dtypes = val_to_list(filter_by_column_dtypes)
-    if is_list_of_list(filter_by_column_dtypes):
-        filter_by_column_dtypes = [item for sublist in filter_by_column_dtypes for item in sublist]
+    filter_by_column_types = val_to_list(filter_by_column_types)
+    if is_list_of_list(filter_by_column_types):
+        filter_by_column_types = [
+            item for sublist in filter_by_column_types for item in sublist]
 
     columns_residual = None
 
     # If necessary filter the columns by data type
-    if filter_by_column_dtypes:
+    if filter_by_column_types:
         # Get columns for every data type
-        columns_filtered = filter_col_name_by_dtypes(df, filter_by_column_dtypes)
+        columns_filtered = names_by_data_types(
+            df, filter_by_column_types)
 
         # Intersect the columns filtered per data type from the whole spark with the columns passed to the function
         final_columns = list(OrderedSet(cols).intersection(columns_filtered))
@@ -211,7 +213,7 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, ac
     if columns_residual:
         logger.print("%s %s %s", ",".join(escape_columns(columns_residual)),
                      "column(s) was not processed because is/are not",
-                     ",".join(filter_by_column_dtypes))
+                     ",".join(filter_by_column_types))
 
     # if because of filtering we got 0 columns return None
     if len(cols_params) == 0:
@@ -222,7 +224,7 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_dtypes=None, ac
 
 
 def prepare_columns(df, cols: [str, list], output_cols: [str, list] = None, is_regex=None,
-                    filter_by_column_dtypes=None, accepts_missing_cols=False, invert: bool = False, default=None,
+                    filter_by_column_types=None, accepts_missing_cols=False, invert: bool = False, default=None,
                     cols_dict=None, auto_increment=False, args=None):
     """
     One input columns- > Same output column. lower(), upper()
@@ -239,7 +241,7 @@ def prepare_columns(df, cols: [str, list], output_cols: [str, list] = None, is_r
     :param cols: intput columns names
     :param output_cols: output columns names
     :param is_regex: input columns is a regex
-    :param filter_by_column_dtypes: filter column selection by data type
+    :param filter_by_column_types: filter column selection by data type
     :param accepts_missing_cols: dont check the input columns exist
     :param invert: Invert selection
     :param default: Default column name if output_cols is not provider
@@ -251,7 +253,7 @@ def prepare_columns(df, cols: [str, list], output_cols: [str, list] = None, is_r
     if cols_dict:
         result = zip(*cols_dict)
     else:
-        cols = parse_columns(df, cols, is_regex, filter_by_column_dtypes,
+        cols = parse_columns(df, cols, is_regex, filter_by_column_types,
                                    accepts_missing_cols, invert)
         merge = False
         if output_cols is None and default is not None:
@@ -343,7 +345,7 @@ def check_for_missing_columns(df, col_names):
     return False
 
 
-def filter_col_name_by_dtypes(df, data_type):
+def names_by_data_types(df, data_type):
     """
     Return column names filtered by the column data type
     :param df: Dataframe which columns are going to be filtered
@@ -351,12 +353,12 @@ def filter_col_name_by_dtypes(df, data_type):
     :type data_type: str or list
     :return:
     """
-    data_type = parse_dtypes(df, data_type)
+    data_type = parse_data_types(df, data_type)
     data_type = val_to_list(data_type)
     # Filter columns by data type
     result = []
     for col_name in df.cols.names():
-        found_data_type = df.cols.schema_dtype(col_name)        
+        found_data_type = df.cols.schema_data_type(col_name)
         if any([dt in found_data_type for dt in data_type]):
             result.append(col_name)
     return result

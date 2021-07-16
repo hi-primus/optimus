@@ -6,7 +6,7 @@ from optimus.helpers.constants import ProfilerDataTypes, CONFIDENCE_LEVEL_CONSTA
 from optimus.helpers.json import json_converter
 
 
-def fill_missing_var_types(var_types, dtypes):
+def fill_missing_var_types(var_types, data_types):
     """
     Fill missing data types with 0
     :param var_types:
@@ -14,7 +14,7 @@ def fill_missing_var_types(var_types, dtypes):
     :return:
     """
     for k, v in var_types.items():
-        if dtypes[k] == ProfilerDataTypes.STRING.value:
+        if data_types[k] == ProfilerDataTypes.STRING.value:
             for label in ProfilerDataTypes:
                 if label.value not in v:
                     var_types[k][label.value] = 0

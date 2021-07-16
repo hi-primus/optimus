@@ -63,7 +63,7 @@ class BaseConstants:
 
     NUMERIC_TYPES = ["int8", "int16", "int32", "int64",
                      "uint8", "uint16", "uint32", "uint64", "float64"]
-    DTYPES_TO_PROFILER = {"int": ["int64", "int32"], "float": [
+    DTYPES_TO_INFERRED = {"int": ["int64", "int32"], "float": [
         "float64", "float"], "object": ["object"]}
 
     STRING_TYPES = ["string", "object"]

@@ -66,7 +66,7 @@ class DaskBaseDataFrame(BaseDataFrame):
         """
         df = self.root
         df_data = df.to_json()
-        df_schema = df.cols.dtypes()
+        df_schema = df.cols.data_types()
 
         return f"{df_schema}, {df_data}"
 

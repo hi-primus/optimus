@@ -31,7 +31,7 @@ class JSON:
 
     def schema(self) -> dict:
         """
-        Return a dict with the count, dtype and nested structure
+        Return a dict with the count, data_type and nested structure
         :return:
         """
 
@@ -39,20 +39,24 @@ class JSON:
             if isinstance(_data, dict):
                 for x, y in _data.items():
                     if is_dict(y):
-                        _keys[x] = {META: {"count": len(y), "dtype": type(y)}}
+                        _keys[x] = {
+                            META: {"count": len(y), "data_type": type(y)}}
                         if len(y) > 0:
                             _keys[x][PROPERTIES] = {}
                             _schema(y, _keys[x][PROPERTIES])
                     elif is_list_value(y):
-                        _keys[x] = {META: {"count": len(y), "dtype": type(y)}}
+                        _keys[x] = {
+                            META: {"count": len(y), "data_type": type(y)}}
                         if len(y) > 0:
-                            _keys[x] = {ITEMS: {PROPERTIES: {}, META: {"count": len(y), "dtype": type(y)}}}
+                            _keys[x] = {ITEMS: {PROPERTIES: {}, META: {
+                                "count": len(y), "data_type": type(y)}}}
                             _schema(y, _keys[x][ITEMS][PROPERTIES])
                     elif is_str(y):
-                        _keys[x] = {META: {"count": len(y), "dtype": type(y)}}
+                        _keys[x] = {
+                            META: {"count": len(y), "data_type": type(y)}}
                         _schema(y, _keys[x])
                     elif is_int(y):
-                        _keys[x] = {META: {"dtype": type(y)}}
+                        _keys[x] = {META: {"data_type": type(y)}}
                         _schema(y, _keys[x])
 
             elif is_list_value(_data):
@@ -80,12 +84,14 @@ class JSON:
                     _properties = values.get(ITEMS).get(PROPERTIES)
 
                 if values.get(PROPERTIES) or values.get(ITEMS):
-                    optimus.helpers.functions_spark.append([key, _meta["count"], _meta["dtype"], parent, len(parent)])
+                    optimus.helpers.functions_spark.append(
+                        [key, _meta["count"], _meta["data_type"], parent, len(parent)])
                     _profile(_properties, parent + [key], result=result)
 
         data = []
         _profile(self.schema(), [], data)
-        pdf = pd.DataFrame(data, columns=['key', 'count', 'dtype', 'path', COL_DEPTH])
+        pdf = pd.DataFrame(
+            data, columns=['key', 'count', 'data_type', 'path', COL_DEPTH])
         return pdf.sort_values(by=["count", COL_DEPTH], ascending=[False, True]).rows.limit(n).to_dict(orient='row')
 
     def flatten(self, path):

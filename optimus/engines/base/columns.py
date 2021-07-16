@@ -83,7 +83,7 @@ class BaseColumns(ABC):
         """
 
         df = self.root
-        cols = parse_columns(df, cols, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert,
+        cols = parse_columns(df, cols, is_regex=regex, filter_by_column_types=data_type, invert=invert,
                              accepts_missing_cols=accepts_missing_cols)
         meta = df.meta
         dfd = df.data
@@ -144,7 +144,7 @@ class BaseColumns(ABC):
             r = re.compile(regex)
             cols = [c for c in list(df.cols.names()) if re.match(r, c)]
 
-        cols = parse_columns(df, cols, filter_by_column_dtypes=data_type)
+        cols = parse_columns(df, cols, filter_by_column_types=data_type)
         check_column_numbers(cols, "*")
 
         dfd = df.data.drop(columns=cols)
@@ -198,10 +198,10 @@ class BaseColumns(ABC):
         pass
 
     def apply(self, cols="*", func=None, func_return_type=None, args=None, func_type=None, where=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
+              filter_col_by_data_types=None, output_cols=None, skip_output_cols_processing=False,
               meta_action=Actions.APPLY_COLS.value, mode="vectorized", set_index=False, default=None, **kwargs) -> DataFrameType:
 
-        columns = prepare_columns(self.root, cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+        columns = prepare_columns(self.root, cols, output_cols, filter_by_column_types=filter_col_by_data_types,
                                   accepts_missing_cols=True, default=default)
 
         kw_columns = {}
@@ -252,20 +252,20 @@ class BaseColumns(ABC):
 
         return df
 
-    def apply_by_dtypes(self, cols="*", func=None, args=None, dtype=None):
+    def apply_by_data_types(self, cols="*", func=None, args=None, data_type=None):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param cols: Columns in which the function is going to be applied
         :param func: Functions to be applied to a columns
         :param args:
         :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
-        :param dtype:
+        :param data_type:
         :return:
         """
 
         cols = parse_columns(self.root, cols)
 
-        mask = self.root.mask.match_dtype(cols, dtype)
+        mask = self.root.mask.match_data_type(cols, data_type)
 
         return self.set(cols, func=func, args=args, where=mask)
 
@@ -405,7 +405,7 @@ class BaseColumns(ABC):
     def rename(self, old_column, new_column) -> DataFrameType:
         return self.rename([(old_column, new_column)], None)
 
-    def parse_profiler_dtypes(self, col_data_type):
+    def parse_inferred_types(self, col_data_type):
         """
         Parse a data type to a profiler data type
         :return:
@@ -415,15 +415,15 @@ class BaseColumns(ABC):
         for k, v in col_data_type.items():
             # Initialize values to 0
             result_default = {
-                data_type: 0 for data_type in df.constants.DTYPES_TO_PROFILER.keys()}
+                data_type: 0 for data_type in df.constants.DTYPES_TO_INFERRED.keys()}
             for k1, v1 in v.items():
-                for k2, v2 in df.constants.DTYPES_TO_PROFILER.items():
-                    if k1 in df.constants.DTYPES_TO_PROFILER[k2]:
+                for k2, v2 in df.constants.DTYPES_TO_INFERRED.items():
+                    if k1 in df.constants.DTYPES_TO_INFERRED[k2]:
                         result_default[k2] = result_default[k2] + v1
             columns[k] = result_default
         return columns
 
-    def profiler_dtypes(self, columns="*"):
+    def inferred_types(self, columns="*"):
         """
         Get the profiler data types from the meta data
         :param columns:
@@ -435,24 +435,24 @@ class BaseColumns(ABC):
 
         for col_name in columns:
             column_meta = Meta.get(
-                df.meta, f"profile.columns.{col_name}.stats.profiler_dtype.dtype")
+                df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
             result.update({col_name: column_meta})
         return result
 
     @dispatch(str, str)
-    def set_dtype(self, column, dtype) -> DataFrameType:
-        return self.set_dtype({column: dtype}, False)
+    def set_data_type(self, column, data_type) -> DataFrameType:
+        return self.set_data_type({column: data_type}, False)
 
     @dispatch(str, str, bool)
-    def set_dtype(self, column, dtype, categorical) -> DataFrameType:
-        return self.set_dtype({column: {"dtype": dtype, "categorical": categorical}}, False)
+    def set_data_type(self, column, data_type, categorical) -> DataFrameType:
+        return self.set_data_type({column: {"data_type": data_type, "categorical": categorical}}, False)
 
     @dispatch(dict)
-    def set_dtype(self, columns: dict) -> DataFrameType:
-        return self.set_dtype(columns, False)
+    def set_data_type(self, columns: dict) -> DataFrameType:
+        return self.set_data_type(columns, False)
 
     @dispatch(dict, bool)
-    def set_dtype(self, columns: dict, inferred=False) -> DataFrameType:
+    def set_data_type(self, columns: dict, inferred=False) -> DataFrameType:
         """
         Set profiler data type
         :param columns: A dict with the form {"col_name": profiler datatype}
@@ -462,23 +462,23 @@ class BaseColumns(ABC):
         df = self.root
 
         for col_name, element in columns.items():
-            props = element if is_dict(element) else {"dtype": element}
-            dtype = props["dtype"]
+            props = element if is_dict(element) else {"data_type": element}
+            dtype = props["data_type"]
             dtype = df.constants.INFERRED_DTYPES_ALIAS.get(dtype, dtype)
             if dtype in ProfilerDataTypes.list():
                 if not inferred:
                     df.meta = Meta.set(
-                        df.meta, f"columns_dtypes.{col_name}", props)
+                        df.meta, f"columns_data_types.{col_name}", props)
                 df.meta = Meta.set(
-                    df.meta, f"profile.columns.{col_name}.stats.profiler_dtype", props)
+                    df.meta, f"profile.columns.{col_name}.stats.inferred_type", props)
                 df.meta = Meta.action(
-                    df.meta, Actions.PROFILER_DTYPE.value, col_name)
+                    df.meta, Actions.INFERRED_TYPE.value, col_name)
             else:
                 RaiseIt.value_error(dtype, ProfilerDataTypes.list())
 
         return df
 
-    def unset_dtype(self, columns="*"):
+    def unset_data_type(self, columns="*"):
         """
         Unset profiler data type
         :param columns:
@@ -488,16 +488,16 @@ class BaseColumns(ABC):
         columns = parse_columns(df, columns)
 
         for col_name in columns:
-            props = Meta.get(df.meta, f"columns_dtypes.{col_name}")
+            props = Meta.get(df.meta, f"columns_data_types.{col_name}")
 
             if props is not None:
-                df.meta = Meta.reset(df.meta, f"columns_dtypes.{col_name}")
+                df.meta = Meta.reset(df.meta, f"columns_data_types.{col_name}")
                 df.meta = Meta.action(
-                    df.meta, Actions.PROFILER_DTYPE.value, col_name)
+                    df.meta, Actions.INFERRED_TYPE.value, col_name)
 
         return df
 
-    def cast(self, cols=None, dtype=None, output_cols=None, columns=None) -> DataFrameType:
+    def cast(self, cols=None, data_type=None, output_cols=None, columns=None) -> DataFrameType:
         """
         NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
         trnasformation like string to number in which should output nan.
@@ -511,7 +511,7 @@ class BaseColumns(ABC):
 
         :param cols: Columns names to be casted
         :param output_cols:
-        :param dtype: final data type
+        :param data_type: final data type
         :param columns: List of tuples of column names and types to be casted. This variable should have the
                 following structure:
                 colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
@@ -522,7 +522,7 @@ class BaseColumns(ABC):
         df = self.root
 
         if columns is None:
-            columns = prepare_columns(df, cols, output_cols, args=dtype)
+            columns = prepare_columns(df, cols, output_cols, args=data_type)
 
         func_map = {
             "float": "to_float",
@@ -792,11 +792,11 @@ class BaseColumns(ABC):
         df = self.root.new(df)
         return df
 
-    # def is_match(self, cols="*", dtype, invert=False):
+    # def is_match(self, cols="*", data_type, invert=False):
     #     """
     #     Find the rows that match a data type
     #     :param columns:
-    #     :param dtype: data type to match
+    #     :param data_type: data type to match
     #     :param invert: Invert the match
     #     :return:
     #     """
@@ -804,7 +804,7 @@ class BaseColumns(ABC):
     #     dfd = df.data
     #     columns = parse_columns(df, columns)
     #
-    #     f = profiler_dtype_func(dtype)
+    #     f = inferred_type_func(data_type)
     #     if f is not None:
     #         for col_name in columns:
     #             dfd = dfd[col_name].apply(f)
@@ -883,18 +883,18 @@ class BaseColumns(ABC):
 
         return df.cols.select(columns)
 
-    def dtypes(self, columns="*") -> dict:
+    def data_types(self, columns="*") -> dict:
         """
         Return the column(s) data type as string
         :param columns: Columns to be processed
-        :return: {col_name: dtype}
+        :return: {col_name: data_type}
         """
         df = self.root
         columns = parse_columns(df, columns)
         data_types = ({k: str(v) for k, v in dict(df.data.dtypes).items()})
         return {col_name: data_types[col_name] for col_name in columns}
 
-    def schema_dtype(self, columns="*"):
+    def schema_data_type(self, columns="*"):
         """
         Return the column(s) data type as Type
         :param columns: Columns to be processed
@@ -1410,7 +1410,7 @@ class BaseColumns(ABC):
 
         cols = parse_columns(df, cols)
         for col_name in cols:
-            dtype = df.cols.dtypes(col_name)
+            dtype = df.cols.data_types(col_name)
 
             if dtype != np.object:
                 filtered_columns.append(col_name)
@@ -1426,9 +1426,9 @@ class BaseColumns(ABC):
         return self.apply(cols, self.F.lower, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
 
-    def infer_dtypes(self, cols="*", output_cols=None) -> DataFrameType:
-        dtypes = self.root[cols].cols.dtypes()
-        return self.apply(cols, self.F.infer_dtypes, args=(dtypes,), func_return_type=str,
+    def infer_data_types(self, cols="*", output_cols=None) -> DataFrameType:
+        dtypes = self.root[cols].cols.data_types()
+        return self.apply(cols, self.F.infer_data_types, args=(dtypes,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
 
@@ -2148,14 +2148,14 @@ class BaseColumns(ABC):
         :param compute:
         Infer the datatype and return the match. mismatch and profiler datatype  for every column.
         In case of date it returns also the format datatype
-        :return: {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
+        :return: {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'inferred_type': 'object'}}
         """
 
         df = self.root
 
         # if a dict is passed to cols, assumes it contains the data types
         if not is_dict(cols):
-            cols = df.cols.infer_profiler_dtypes(cols)
+            cols = df.cols.infer_data_types(cols)
 
         result = {}
         profiler_to_mask_func = {
@@ -2164,7 +2164,8 @@ class BaseColumns(ABC):
 
         for col_name, props in cols.items():
             # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
-            dtype = profiler_to_mask_func.get(props["dtype"], props["dtype"])
+            dtype = profiler_to_mask_func.get(
+                props["data_type"], props["data_type"])
 
             matches_mismatches = getattr(df[col_name].mask, dtype)(
                 col_name).cols.frequency()
@@ -2185,16 +2186,16 @@ class BaseColumns(ABC):
                                 "missing": missing, "mismatch": mismatches}
 
         for col_name in cols.keys():
-            result[col_name].update({"profiler_dtype": cols[col_name]})
+            result[col_name].update({"inferred_type": cols[col_name]})
 
         return result
 
     @staticmethod
     @abstractmethod
-    def count_by_dtypes(cols, infer=False, str_funcs=None, int_funcs=None) -> dict:
+    def count_by_data_types(cols, infer=False, str_funcs=None, int_funcs=None) -> dict:
         pass
 
-    def infer_profiler_dtypes(self, cols="*") -> dict:
+    def infer_data_types(self, cols="*") -> dict:
         """
         Infer datatypes in a dataframe from a sample. First it identify the data type of every value in every cell.
         After that it takes all ghe values apply som heuristic to try to better identify the datatype.
@@ -2211,7 +2212,7 @@ class BaseColumns(ABC):
         sample = df.cols.select(cols).rows.limit(
             INFER_PROFILER_ROWS).to_optimus_pandas()
         rows_count = sample.rows.count()
-        sample_dtypes = sample.cols.infer_dtypes().cols.frequency()
+        sample_dtypes = sample.cols.infer_data_types().cols.frequency()
 
         _unique_counts = sample.cols.count_uniques()
 
@@ -2254,7 +2255,7 @@ class BaseColumns(ABC):
                 is_categorical = True
 
             cols_and_inferred_dtype[col_name] = {
-                "dtype": _dtype, "categorical": is_categorical}
+                "data_type": _dtype, "categorical": is_categorical}
             if dtype == ProfilerDataTypes.DATETIME.value:
                 # pydatainfer do not accepts None value so we must filter them
                 filtered_dates = [i for i in sample[col_name].to_list() if i]
@@ -2349,9 +2350,9 @@ class BaseColumns(ABC):
 
         return stats
 
-    def names(self, col_names="*", by_dtypes=None, invert=False, is_regex=False) -> list:
+    def names(self, col_names="*", by_data_types=None, invert=False, is_regex=False) -> list:
 
-        cols = parse_columns(self.root, col_names, filter_by_column_dtypes=by_dtypes, invert=invert,
+        cols = parse_columns(self.root, col_names, filter_by_column_types=by_data_types, invert=invert,
                              is_regex=is_regex)
         return cols
 
@@ -2559,8 +2560,8 @@ class BaseColumns(ABC):
     def any_empty(self, cols="*", inverse=False, tidy=True):
         return self._any_mask(cols, "empty", inverse=inverse, tidy=tidy)
 
-    def any_mismatch(self, cols="*", dtype=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "mismatch", dtype=dtype, inverse=inverse, tidy=tidy)
+    def any_mismatch(self, cols="*", data_type=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "mismatch", data_type=data_type, inverse=inverse, tidy=tidy)
 
     def any_duplicated(self, cols="*", keep="first", inverse=False, tidy=True):
         return self._any_mask(cols, "duplicated", keep=keep, inverse=inverse, tidy=tidy)
@@ -2568,11 +2569,11 @@ class BaseColumns(ABC):
     # def any_uniques(self, cols="*", keep="first", inverse=False, tidy=True):
     #     return self._any_mask(cols, "unique", keep=keep, inverse=inverse, tidy=tidy)
 
-    def any_match(self, cols="*", regex=None, dtype=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "match", regex=regex, dtype=dtype, inverse=inverse, tidy=tidy)
+    def any_match(self, cols="*", regex=None, data_type=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "match", regex=regex, data_type=data_type, inverse=inverse, tidy=tidy)
 
-    def any_match_dtype(self, cols="*", dtype=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "match_dtype", dtype=dtype, inverse=inverse, tidy=tidy)
+    def any_match_data_type(self, cols="*", data_type=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "match_data_type", data_type=data_type, inverse=inverse, tidy=tidy)
 
     def any_match_regex(self, cols="*", regex=None, inverse=False, tidy=True):
         return self._any_mask(cols, "match_regex", regex=regex, inverse=inverse, tidy=tidy)
@@ -2683,8 +2684,8 @@ class BaseColumns(ABC):
     def count_empty(self, cols="*", tidy=True):
         return self._count_mask(cols, "empty", tidy=tidy)
 
-    def count_mismatch(self, cols="*", dtype=None, tidy=True):
-        return self._count_mask(cols, "mismatch", dtype=dtype, tidy=tidy)
+    def count_mismatch(self, cols="*", data_type=None, tidy=True):
+        return self._count_mask(cols, "mismatch", data_type=data_type, tidy=tidy)
 
     def count_duplicated(self, cols="*", keep="first", tidy=True):
         return self._count_mask(cols, "duplicated", keep=keep, tidy=tidy)
@@ -2692,11 +2693,11 @@ class BaseColumns(ABC):
     # def count_uniques(self, cols="*", keep="first", tidy=True):
     #     return self._count_mask(cols, "unique", keep=keep, tidy=tidy)
 
-    def count_match(self, cols="*", regex=None, dtype=None, tidy=True):
-        return self._count_mask(cols, "match", regex=regex, dtype=dtype, tidy=tidy)
+    def count_match(self, cols="*", regex=None, data_type=None, tidy=True):
+        return self._count_mask(cols, "match", regex=regex, data_type=data_type, tidy=tidy)
 
-    def count_dtype(self, cols="*", dtype=None, tidy=True):
-        return self._count_mask(cols, "match_dtype", dtype=dtype, tidy=tidy)
+    def count_data_type(self, cols="*", data_type=None, tidy=True):
+        return self._count_mask(cols, "match_data_type", data_type=data_type, tidy=tidy)
 
     def count_regex(self, cols="*", regex=None, tidy=True):
         return self._count_mask(cols, "match_regex", regex=regex, tidy=tidy)
@@ -2813,9 +2814,9 @@ class BaseColumns(ABC):
     def empty(self, cols="*", output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "empty", output_cols, rename_func=not drop)
 
-    def mismatch(self, cols="*", dtype=None, output_cols=None, drop=True) -> DataFrameType:
-        rename_func = False if drop else lambda n: f"{n}_mismatch_{dtype}"
-        return self._mask(cols, "mismatch", output_cols, rename_func, dtype=dtype)
+    def mismatch(self, cols="*", data_type=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_mismatch_{data_type}"
+        return self._mask(cols, "mismatch", output_cols, rename_func, data_type=data_type)
 
     def duplicated(self, cols="*", keep="first", output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "duplicated", output_cols, rename_func=not drop, keep=keep)
@@ -2823,19 +2824,19 @@ class BaseColumns(ABC):
     def unique(self, cols="*", keep="first", output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "unique", output_cols, rename_func=not drop, keep=keep)
 
-    def match(self, cols="*", regex=None, dtype=None, output_cols=None, drop=True) -> DataFrameType:
-        if dtype is None:
+    def match(self, cols="*", regex=None, data_type=None, output_cols=None, drop=True) -> DataFrameType:
+        if data_type is None:
             return self.match_regex(cols=cols, regex=regex, output_cols=output_cols, drop=drop)
         else:
-            return self.match_dtype(cols=cols, dtype=dtype, output_cols=output_cols, drop=drop)
+            return self.match_data_type(cols=cols, data_type=data_type, output_cols=output_cols, drop=drop)
 
     def match_regex(self, cols="*", regex=None, output_cols=None, drop=True) -> DataFrameType:
         rename_func = False if drop else lambda n: f"{n}_match_{regex}"
         return self._mask(cols, "match_regex", output_cols, rename_func, regex=regex)
 
-    def match_dtype(self, cols="*", dtype=None, output_cols=None, drop=True) -> DataFrameType:
-        rename_func = False if drop else lambda n: f"{n}_match_{dtype}"
-        return self._mask(cols, "match_dtype", output_cols, rename_func, dtype=dtype)
+    def match_data_type(self, cols="*", data_type=None, output_cols=None, drop=True) -> DataFrameType:
+        rename_func = False if drop else lambda n: f"{n}_match_{data_type}"
+        return self._mask(cols, "match_data_type", output_cols, rename_func, data_type=data_type)
 
     def match_pattern(self, cols="*", pattern=None, output_cols=None, drop=True) -> DataFrameType:
         return self._mask(cols, "pattern", output_cols, rename_func=not drop, pattern=pattern)
@@ -3043,7 +3044,7 @@ class BaseColumns(ABC):
                           meta_action=Actions.DOUBLE_METAPHONE.value, mode="map", func_type="column_expr")
 
     def levenshtein(self, col_A, col_B, output_cols=None):
-        return self.apply(cols, self.F.levenshtein, args=(col_A, col_B,), func_return_type=str,
+        return self.apply(None, self.F.levenshtein, args=(col_A, col_B,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
 

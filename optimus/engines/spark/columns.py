@@ -49,7 +49,7 @@ from infer import Infer
 
 from optimus.infer import is_, is_type, is_function, is_list_value, is_tuple, is_list_of_str, \
     is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int
-from optimus.infer_spark import parse_spark_class_dtypes, is_list_of_spark_dataframes
+from optimus.infer_spark import SPARK_DTYPES_TO_INFERRED, parse_spark_class_dtypes, is_list_of_spark_dataframes
 # NUMERIC_TYPES, NOT_ARRAY_TYPES, STRING_TYPES, ARRAY_TYPES
 from optimus.engines.spark.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 
@@ -63,9 +63,8 @@ class Cols(BaseColumns):
     def _names(self):
         return list(self.root.data.columns)
 
-    @staticmethod
     @dispatch(str, object)
-    def append(col_name=None, value=None):
+    def append(self, col_name=None, value=None):
         """
         Append a column to a Dataframe
         :param col_name: Name of the new column
@@ -93,7 +92,7 @@ class Cols(BaseColumns):
 
         return self.root.new(dfd)
 
-    def parse_profiler_dtypes(self, col_data_type):
+    def parse_inferred_types(self, col_data_type):
         """
            Parse a spark data type to a profiler data type
            :return:
@@ -101,16 +100,16 @@ class Cols(BaseColumns):
 
         columns = {}
         for col_name, data_type_count in col_data_type.items():
-            columns[col_name] = {data_type: 0 for data_type in ["null", "missing"]}
+            columns[col_name] = {
+                data_type: 0 for data_type in ["null", "missing"]}
             for data_type, count in data_type_count.items():
-                for profiler_data_type, spark_data_type in SPARK_DTYPES_TO_PROFILER.items():
-                    if data_type in SPARK_DTYPES_TO_PROFILER[profiler_data_type]:
+                for profiler_data_type, spark_data_type in SPARK_DTYPES_TO_INFERRED.items():
+                    if data_type in SPARK_DTYPES_TO_INFERRED[profiler_data_type]:
                         columns[col_name][profiler_data_type] = count
         return columns
 
-    @staticmethod
     @dispatch((list, pyspark.sql.dataframe.DataFrame))
-    def append(cols_values=None):
+    def append(self, cols_values=None):
         """
         Append a column or a Dataframe to a Dataframe
         :param cols_values: New Column Names and data values
@@ -147,7 +146,7 @@ class Cols(BaseColumns):
     #     :return:
     #     """
     #     df = self
-    #     columns = parse_columns(df, columns, is_regex=regex, filter_by_column_dtypes=data_type, invert=invert)
+    #     columns = parse_columns(df, columns, is_regex=regex, filter_by_column_types=data_type, invert=invert)
     #     if columns is not None:
     #         df = df.select(columns)
     #         # Metadata get lost when using select(). So we copy here again.
@@ -224,7 +223,7 @@ class Cols(BaseColumns):
         """
         func_return_type = {str: "string", int: "int", float: "float", bool: "boolean"}.get(func_return_type)
         df = self.root
-        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_types=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
 
         def expr(_when):
@@ -247,7 +246,7 @@ class Cols(BaseColumns):
         return self.root.new(dfd)
 
     @staticmethod
-    def apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None):
+    def apply_by_data_type(columns, func, func_return_type, args=None, func_type=None, data_type=None):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param columns: Columns in which the function is going to be applied
@@ -347,7 +346,7 @@ class Cols(BaseColumns):
     #     return Cols.rename([(old_column, new_column)], None)
 
     # TODO: Maybe should be possible to cast and array of integer for example to array of double
-    def cast(self, input_cols="*", dtype=None, output_cols=None, columns=None):
+    def cast(self, input_cols="*", data_type=None, output_cols=None, columns=None):
         """
         Cast a column or a list of columns to a specific data type
         :param input_cols: Columns names to be casted
@@ -373,7 +372,7 @@ class Cols(BaseColumns):
                 output_cols = get_output_cols(input_cols, output_cols)
 
                 for _ in builtins.range(0, len(input_cols)):
-                    _dtype.append(dtype)
+                    _dtype.append(data_type)
         else:
 
             input_cols = list([c[0] for c in columns])
@@ -445,7 +444,7 @@ class Cols(BaseColumns):
             r = re.compile(regex)
             columns = [c for c in list(df.cols.names()) if re.match(r, c)]
 
-        columns = parse_columns(df, columns, filter_by_column_dtypes=data_type)
+        columns = parse_columns(df, columns, filter_by_column_types=data_type)
         check_column_numbers(columns, "*")
 
         dfd = df.data.drop(*columns)
@@ -599,7 +598,8 @@ class Cols(BaseColumns):
         :param relative_error: Relative error calculating the media
         :return:
         """
-        columns = parse_columns(self.root, columns, filter_by_column_dtypes=self.root.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         result = {}
@@ -638,7 +638,8 @@ class Cols(BaseColumns):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        columns = parse_columns(self.root, columns, filter_by_column_dtypes=self.root.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         return format_dict(Cols.agg_exprs(columns, F.kurtosis))
@@ -650,7 +651,8 @@ class Cols(BaseColumns):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        columns = parse_columns(self.root, columns, filter_by_column_dtypes=self.root.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         return format_dict(Cols.agg_exprs(columns, F.mean))
@@ -662,7 +664,8 @@ class Cols(BaseColumns):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        columns = parse_columns(self.root, columns, filter_by_column_dtypes=self.root.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         return format_dict(Cols.agg_exprs(columns, F.skewness))
@@ -674,7 +677,8 @@ class Cols(BaseColumns):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        columns = parse_columns(self.root, columns, filter_by_column_dtypes=self.root.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         return format_dict(Cols.agg_exprs(columns, F.sum))
@@ -686,7 +690,8 @@ class Cols(BaseColumns):
         :param columns: '*', list of columns names or a single column name.
         :return:
         """
-        columns = parse_columns(self.root, columns, filter_by_column_dtypes=self.root.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         return format_dict(Cols.agg_exprs(columns, F.variance))
@@ -701,7 +706,8 @@ class Cols(BaseColumns):
         # TODO: make this in one pass.
         df = self.root
 
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            df, columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
         # Abs not accepts column's string names. Convert to Spark Column
 
@@ -815,7 +821,8 @@ class Cols(BaseColumns):
         :return:
         """
 
-        input_cols = parse_columns(self.root, input_cols, filter_by_column_dtypes=self.root.constants.STRING_TYPES)
+        input_cols = parse_columns(
+            self.root, input_cols, filter_by_column_types=self.root.constants.STRING_TYPES)
         check_column_numbers(input_cols, "*")
 
         df = self.replace(input_cols, [f"\\{s}" for s in string.punctuation], "", "chars", output_cols=output_cols)
@@ -996,7 +1003,7 @@ class Cols(BaseColumns):
             filter_dtype = [df.constants.NUMERIC_TYPES]
 
         columns = prepare_columns(df.data, input_cols, output_cols)
-        # columns = prepare_columns(df.data, input_cols, output_cols, filter_by_column_dtypes=filter_dtype)
+        # columns = prepare_columns(df.data, input_cols, output_cols, filter_by_column_types=filter_dtype)
         dfd = df.data
         for input_col, output_col in columns:
             dfd = func(dfd, input_col, output_col, search, replace_by)
@@ -1039,7 +1046,7 @@ class Cols(BaseColumns):
 
         if data_type == "continuous":
             input_cols = parse_columns(df, input_cols,
-                                       filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+                                       filter_by_column_types=df.constants.NUMERIC_TYPES)
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
@@ -1055,7 +1062,7 @@ class Cols(BaseColumns):
         elif data_type == "categorical":
 
             input_cols = parse_columns(df, input_cols,
-                                       filter_by_column_dtypes=df.constants.STRING_TYPES)
+                                       filter_by_column_types=df.constants.STRING_TYPES)
             check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
@@ -1095,12 +1102,12 @@ class Cols(BaseColumns):
                     new_value = F.array(*[F.lit(v) for v in value])
                 func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
             else:
-                if df.cols.dtypes(input_col)[input_col] == parse_python_dtypes(type(value).__name__):
+                if df.cols.data_types(input_col)[input_col] == parse_python_dtypes(type(value).__name__):
 
                     new_value = value
                     func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
                 else:
-                    RaiseIt.type_error(value, [df.cols.dtypes(input_col)])
+                    RaiseIt.type_error(value, [df.cols.data_types(input_col)])
 
             df = df.cols.apply(input_col, func=func, output_cols=output_col, meta_action=Actions.FILL_NA.value)
 
@@ -1257,7 +1264,8 @@ class Cols(BaseColumns):
         """
         iqr_result = {}
         df = self.root
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            df, columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
@@ -1303,7 +1311,7 @@ class Cols(BaseColumns):
 
         if shape is "vector":
             input_cols = parse_columns(df, input_cols,
-                                       filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+                                       filter_by_column_types=df.constants.NUMERIC_TYPES)
             output_col = one_list_to_val(output_col)
             vector_assembler = VectorAssembler(
                 inputCols=input_cols,
@@ -1512,8 +1520,7 @@ class Cols(BaseColumns):
         #     # print(df.agg(hist_agg(col_name, self, buckets)))
         # return result
 
-    @staticmethod
-    def count_by_dtypes(cols, infer=False, str_funcs=None, int_funcs=None):
+    def count_by_data_types(self, cols, infer=False, str_funcs=None, int_funcs=None):
         """
         Use rdd to count the inferred data type in a row
         :param cols: Columns to be processed
@@ -1526,11 +1533,11 @@ class Cols(BaseColumns):
         df = self.root
 
         cols = parse_columns(df, cols)
-        columns_dtypes = df.cols.dtypes()
+        columns_data_types = df.cols.data_types()
 
         df_count = (df.select(cols).rdd
                     .flatMap(lambda x: x.asDict().items())
-                    .map(lambda x: Infer.parse(x, infer, columns_dtypes, str_funcs, int_funcs))
+                    .map(lambda x: Infer.parse(x, infer, columns_data_types, str_funcs, int_funcs))
                     .reduceByKey(lambda a, b: (a + b)))
 
         result = {}
@@ -1544,9 +1551,9 @@ class Cols(BaseColumns):
                     result[col_name][result_dtype] = count[0]
 
         if infer is True:
-            result = fill_missing_var_types(result, columns_dtypes)
+            result = fill_missing_var_types(result, columns_data_types)
         else:
-            result = parse_profiler_dtypes(result)
+            result = self.parse_inferred_types(result)
         return result
 
     def frequency(self, columns="*", n=10, percentage=False, total_rows=None, count_uniques=False, compute=True):
@@ -1612,7 +1619,8 @@ class Cols(BaseColumns):
         df = self.root
 
         # Values in columns can not be null. Warn user
-        input_cols = parse_columns(df, input_cols, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        input_cols = parse_columns(
+            df, input_cols, filter_by_column_types=df.constants.NUMERIC_TYPES)
 
         # Input is not a vector transform to a vector
         output_col = name_col(input_cols, "correlation")
@@ -1658,7 +1666,7 @@ class Cols(BaseColumns):
 
         return {"cols": input_cols, "data": result}
 
-    def schema_dtype(self, columns="*"):
+    def schema_data_type(self, columns="*"):
         """
         Return the column(s) data type as Type
         :param columns: Columns to be processed
@@ -1669,7 +1677,7 @@ class Cols(BaseColumns):
         return format_dict([df.data.schema[col_name].dataType for col_name in columns])
 
     # @staticmethod
-    # def dtypes(columns="*"):
+    # def data_types(columns="*"):
     #     """
     #     Return the column(s) data type as string
     #     :param columns: Columns to be processed
@@ -1677,19 +1685,19 @@ class Cols(BaseColumns):
     #     """
     #
     #     columns = parse_columns(self, columns)
-    #     data_types = tuple_to_dict(self.dtypes)
+    #     data_types = tuple_to_dict(self.data_types)
     #     return {col_name: data_types[col_name] for col_name in columns}
 
     # @staticmethod
-    # def names(col_names="*", by_dtypes=None, invert=False):
+    # def names(col_names="*", by_data_types=None, invert=False):
     #     """
     #     Get columns names
     #     :param col_names: Columns names to be processed '*' for all or a list of column names
-    #     :param by_dtypes: Data type used to select the columns
+    #     :param by_data_types: Data type used to select the columns
     #     :param invert: Invert the columns selection
     #     :return:
     #     """
-    #     columns = parse_columns(self, col_names, filter_by_column_dtypes=by_dtypes, invert=invert)
+    #     columns = parse_columns(self, col_names, filter_by_column_types=by_data_types, invert=invert)
     #     return columns
 
     def qcut(self, columns, quantiles, handle_invalid="skip"):
@@ -1701,7 +1709,8 @@ class Cols(BaseColumns):
         :return:
         """
         df = self.root
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            df, columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         for col_name in columns:
@@ -1723,7 +1732,8 @@ class Cols(BaseColumns):
 
         df = self.root
 
-        columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            df, columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         def _clip(_col_name, args):

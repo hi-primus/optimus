@@ -115,10 +115,10 @@ class DaskBaseColumns():
 
     # TODO: Check if we must use * to select all the columns
 
-    def count_by_dtypes(self, cols="*", infer=False, str_funcs=None, int_funcs=None, mismatch=None):
+    def count_by_data_types(self, cols="*", infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.root.data
         cols = parse_columns(df, cols)
-        columns_dtypes = df.cols.dtypes()
+        columns_data_types = df.cols.data_types()
 
         def value_counts(series):
             return series.value_counts()
@@ -127,7 +127,7 @@ class DaskBaseColumns():
 
         for col_name in cols:
             a = df.map_partitions(lambda df: df[col_name].apply(
-                lambda row: Infer.parse((col_name, row), infer, columns_dtypes, str_funcs, int_funcs,
+                lambda row: Infer.parse((col_name, row), infer, columns_data_types, str_funcs, int_funcs,
                                         full=False))).compute()
 
             f = df.functions.map_delayed(a, value_counts)
@@ -141,9 +141,9 @@ class DaskBaseColumns():
             result.update(i)
 
         if infer is True:
-            result = fill_missing_var_types(result, columns_dtypes)
+            result = fill_missing_var_types(result, columns_data_types)
         else:
-            result = self.parse_profiler_dtypes(result)
+            result = self.parse_inferred_types(result)
 
         return result
 

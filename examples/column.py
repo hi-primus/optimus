@@ -365,7 +365,7 @@ df.display()
 #
 # Sometimes there are columns with for example with numbers even when are supposed to be only of words or letters. 
 #
-# In order to solve this problem, apply_by_dtypes() function can be used. 
+# In order to solve this problem, apply_by_data_type() function can be used.
 #
 # In the next example we replace a number in a string column with "new string"
 
@@ -374,7 +374,8 @@ def func(val, attr):
     return attr
 
 
-df.cols.apply_by_dtypes("filter", func, "string", "new string", data_type="integer").table()
+df.cols.apply_by_data_type("filter", func, "string",
+                           "new string", data_type="integer").table()
 
 
 # -
@@ -531,7 +532,7 @@ df_zeros.cols.count_zeros("*")
 
 # ## Column Data Types
 
-df.cols.dtypes('*')
+df.cols.data_types('*')
 
 # ## Replace
 

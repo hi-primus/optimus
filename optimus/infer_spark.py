@@ -18,7 +18,7 @@ SPARK_DTYPES_DICT_OBJECTS = \
      "bigint": LongType(), "date": DateType(), "byte": ByteType(), "short": ShortType(),
      "datetime": TimestampType(), "binary": BinaryType(), "null": NullType()
      }
-SPARK_DTYPES_TO_PROFILER = {"int": ["smallint", "tinyint", "bigint", "int"], "decimal": ["float", "double"],
+SPARK_DTYPES_TO_INFERRED = {"int": ["smallint", "tinyint", "bigint", "int"], "decimal": ["float", "double"],
                             "string": "string", "date": {"date", "timestamp"}, "boolean": "boolean", "binary": "binary",
                             "array": "array", "object": "object", "null": "null", "missing": "missing"}
 PYSPARK_NUMERIC_TYPES = ["byte", "short", "big", "int", "double", "float"]
