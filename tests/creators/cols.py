@@ -51,14 +51,22 @@ def create():
     for operation in operations:
         method = "cols."+operation
         t.create(method=method, variant="all", cols="*")
-        t.create(method=method, variant="string", cols=["names"])
-        t.create(method=method, variant="numeric_int", cols=["rank"])
-        t.create(method=method, variant="numeric_float", cols=["height(ft)"])
-        t.create(method=method, variant="NoneType", cols=["NullType"])
-        t.create(method=method, variant="list", cols=["attributes"])
-        t.create(method=method, variant="bytearray", cols=["function(binary)"])
-        t.create(method=method, variant="datetime", cols=["last date seen"])
-        t.create(method=method, variant="bool", cols=["Cybertronian"])
+        t.create(method=method, variant="string",
+                 cols=["names"], select_cols=True)
+        t.create(method=method, variant="numeric_int",
+                 cols=["rank"], select_cols=True)
+        t.create(method=method, variant="numeric_float",
+                 cols=["height(ft)"], select_cols=True)
+        t.create(method=method, variant="NoneType",
+                 cols=["NullType"], select_cols=True)
+        t.create(method=method, variant="list",
+                 cols="attributes", select_cols=True)
+        t.create(method=method, variant="bytearray",
+                 cols="function(binary)", select_cols=True)
+        t.create(method=method, variant="datetime",
+                 cols="last date seen", select_cols=True)
+        t.create(method=method, variant="bool",
+                 cols="Cybertronian", select_cols=True)
         t.create(method=method, variant="multiple", compare_by="json",
                  cols=["NullType", "weight(t)", "japanese name", "timestamp", "function", "age", "Date Type", "last position seen", "date arrival"])
 

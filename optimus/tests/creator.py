@@ -126,7 +126,7 @@ class TestCreator:
         for method, variant in self.created:
             self.delete(method, variant)
 
-    def create(self, method=None, variant=None, df=None, compare_by="dict", additional_method=[], args=(), **kwargs):
+    def create(self, method=None, variant=None, df=None, compare_by="df", select_cols=False, additional_method=[], args=(), **kwargs):
         """
         This is a helper function that output python tests for Spark DataFrames.
         :param method: Method to be tested
@@ -172,15 +172,24 @@ class TestCreator:
         add_buffer("\n")
         add_buffer("def " + func_test_name + ":\n")
 
+        if select_cols == True:
+            select_cols = kwargs["cols"] if "cols" in kwargs else args[0] if len(
+                args) else False
+
         if df is None and self.df is None and (len(args)+len(kwargs)):
             df = self.op.create.dataframe(*args, **kwargs)
             df_func = df
 
         if df is None:
             # Use the main df
-            add_buffer("    df = self.df\n")
             df = self.df
-            df_func = self.df
+            if select_cols:
+                df = df.cols.select(select_cols)
+                add_buffer(
+                    f"    df = self.df.cols.select({pformat(select_cols, compact=True)})\n")
+            else:
+                add_buffer(f"    df = self.df\n")
+            df_func = df
         elif isinstance(df, (BaseDataFrame,)):
             add_buffer(
                 "    df = self.create_dataframe(dict=" + df.export() + ")\n")
@@ -227,13 +236,13 @@ class TestCreator:
             add_buffer("    result = df." + method + "(" + _args + separator + ','.join(
                 _kwargs) + ")" + ams + "\n")
 
-        # print("df_result", df_result)
+        # print("expected_df", expected_df)
 
         failed = False
 
         # Apply function
         if method is None:
-            df_result = df_func
+            expected_df = df_func
         else:
             # Here we construct the method to be applied to the source object
             _df_func = df_func
@@ -241,41 +250,47 @@ class TestCreator:
                 df_func = getattr(df_func, f)
 
             try:
-                df_result = df_func(*args, **kwargs)
+                expected_df = df_func(*args, **kwargs)
             except Exception as e:
                 warnings.warn(
                     f"The operation on test creation {func_test_name} failed, passing the same dataset instead")
                 print(e)
                 failed = True
-                df_result = _df_func
+                expected_df = _df_func
         # Additional Methods
         for m in additional_method:
-            df_result = getattr(df_result, m)()
+            expected_df = getattr(expected_df, m)()
 
         # Checks if output is ok
-        if not isinstance(df_result, (BaseDataFrame,)):
-            if compare_by == "df":
-                compare_by = "json"
-        else:
-            df_result = df_result.export(dtypes=False)
+
+        expected_is_df = isinstance(expected_df, (BaseDataFrame,))
+
+        if compare_by == "df" and not expected_is_df:
+            compare_by = "json"
+
+        if compare_by != "df" and expected_is_df:
             add_buffer("    result = result.to_dict()\n")
+
+        if expected_is_df:
+            expected_df = expected_df.export(dtypes=False)
+
         if failed:
             add_buffer(
                 "    # The following value does not represent a correct output of the operation\n")
-            df_result = 'self.dict'
+            expected_df = 'self.dict'
 
-        if compare_by == "df":
+        if compare_by == "df" and not failed:
             add_buffer(
-                f"    expected = self.create_dataframe(dict={df_result})\n")
+                f"    expected = self.create_dataframe(dict={expected_df})\n")
         else:
-            add_buffer(f"    expected = {df_result}\n")
+            add_buffer(f"    expected = {expected_df}\n")
 
         # Output
         if compare_by == "df":
             add_buffer("    self.assertTrue(result.equals(expected))\n")
         elif compare_by == "dict":
             add_buffer(
-                "    self.assertDictEqual(deep_sort(result), deep_sort(expected))\n")
+                "    self.assertDictEqual(result, expected)\n")
         elif compare_by == "json":
             add_buffer(
                 "    self.assertEqual(json_encoding(result), json_encoding(expected))\n")
