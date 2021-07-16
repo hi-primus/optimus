@@ -47,8 +47,9 @@ class BaseCreate:
     def dataframe(self, dict: dict = None, dfd: InternalDataFrameType = None, force_dtypes=False, n_partitions: int = 1, *args, **kwargs) -> DataFrameType:
         """
         Creates a dictionary using the form 
-        {"Column name": ["value 1", "value 2"], ...} or {("Column name", "str", True): ["value 1", "value 2"]}
-        Where the tuple keys uses the form (str, str, boolean) for (column name, data type, allow nulls)
+        {"Column name": ["value 1", "value 2"], ...} or {("Column name", "str", True, True): ["value 1", "value 2"]}
+        Where the tuple uses the form (str, str, boolean, boolean) for (name, data type, allow nulls, force data type in creation)
+        You can also pass 2-length and 3-length tuples.
         :param dict: A dictionary to construct the dataframe for
         :param dfd: A pandas dataframe, ignores dict when passed
         :return: BaseDataFrame
