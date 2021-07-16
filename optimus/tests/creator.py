@@ -187,7 +187,7 @@ class TestCreator:
             df_func = df
         else:
             add_buffer("    df = self.create_dataframe(dict=" +
-                       pformat(df, sort_dicts=False) + ")\n")
+                       pformat(df, compact=True, sort_dicts=False) + ")\n")
             df_func = df
 
         # Process simple arguments
@@ -199,7 +199,7 @@ class TestCreator:
                 _df = "    self.create_dataframe(dict=" + v.export() + ")\n"
                 _args.append(_df)
             elif isinstance(v, (str, bool, dict, list)):
-                _args.append(pformat(v))
+                _args.append(pformat(v, compact=True, sort_dicts=False))
             else:
                 _args.append(str(v))
 
@@ -208,7 +208,8 @@ class TestCreator:
 
         # Process keywords arguments
         for k, v in kwargs.items():
-            _kwargs.append(k + "=" + pformat(v))
+            _kwargs.append(
+                k + "=" + pformat(v, compact=True, sort_dicts=False))
 
         # Separator if we have positional and keyword arguments
         separator = ""
@@ -258,17 +259,16 @@ class TestCreator:
         else:
             df_result = df_result.export(dtypes=False)
             add_buffer("    result = result.to_dict()\n")
-
-        if compare_by == "df":
-            expected = f"    expected = self.create_dataframe(dict={df_result})\n"
-
-        else:
-            expected = f"    expected = {df_result}\n"
-
         if failed:
             add_buffer(
                 "    # The following value does not represent a correct output of the operation\n")
-        add_buffer(expected)
+            df_result = 'self.dict'
+
+        if compare_by == "df":
+            add_buffer(
+                f"    expected = self.create_dataframe(dict={df_result})\n")
+        else:
+            add_buffer(f"    expected = {df_result}\n")
 
         # Output
         if compare_by == "df":
