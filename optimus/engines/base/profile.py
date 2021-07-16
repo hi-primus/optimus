@@ -44,14 +44,13 @@ class BaseProfile(ABC):
 
         return one_list_to_val(dtype)
 
-    def __call__(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False) -> dict:
-        # def profile(self, columns="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False):
+    def __call__(self, cols="*", bins: int = MAX_BUCKETS, output: str = None, flush: bool = False, size=False) -> dict:
         """
-        Return a dict the profile of the dataset
-        :param columns:
-        :param bins:
+        Returns a dict the profile of the dataset
+        :param cols: Columns to get the profile from
+        :param bins: Number of buckets
         :param output:
-        :param flush:
+        :param flush: Flushes the cache of the whole profile to process it again
         :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
         :return:
         """
@@ -64,8 +63,8 @@ class BaseProfile(ABC):
         if not profile:
             flush = True
 
-        if columns or flush:
-            columns = parse_columns(df, columns) if columns else []
+        if cols or flush:
+            cols = parse_columns(df, cols) if cols else []
             transformations = Meta.get(meta, "transformations") or []
 
             calculate = False
@@ -74,15 +73,15 @@ class BaseProfile(ABC):
                 calculate = True
 
             else:
-                for col in columns:
+                for col in cols:
                     if col not in profile["columns"]:
                         calculate = True
 
             if calculate:
-                df = df[columns].calculate_profile(columns, bins, flush, size)
+                df = df[cols].calculate_profile(cols, bins, flush, size)
                 profile = Meta.get(df.meta, "profile")
                 self.root.meta = df.meta
-            profile["columns"] = {key: profile["columns"][key] for key in columns}
+            profile["columns"] = {key: profile["columns"][key] for key in cols}
 
         if output == "json":
             profile = dump_json(profile)

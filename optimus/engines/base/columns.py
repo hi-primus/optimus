@@ -543,6 +543,19 @@ class BaseColumns(ABC):
     def astype(*args, **kwargs):
         pass
 
+    def profile(self, cols="*", bins: int = MAX_BUCKETS, flush: bool = False) -> dict:
+        """
+        Returns the profile of selected columns
+        :param cols: Columns to get the profile from
+        :param bins: Number of buckets
+        :param flush: Flushes the cache of the whole profile to process it again
+        """
+        # Uses profile on self instead of calculate_profile to get the data only when it's neccessary
+        self.root.profile(cols=cols, bins=bins, flush=flush)
+        df = self.root
+
+        return df.profile.columns(cols)
+
     def pattern(self, cols="*", output_cols=None, mode=0) -> DataFrameType:
         """
         Replace alphanumeric and punctuation chars for canned chars. We aim to help to find string patterns
@@ -2086,25 +2099,33 @@ class BaseColumns(ABC):
             result = d.compute()
         return result
 
-    def count_mismatch(self, columns_type: dict = None, compute=True) -> dict:
+    def quality(self, cols: dict = None, compute=True) -> dict:
         """
-        Count mismatches values in columns
-        :param columns_type:
+        :param cols:
+        :param infer:
         :param compute:
+        Infer the datatype and return the match. mismatch and profiler datatype  for every column.
+        In case of date it returns also the format datatype
         :return: {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'profiler_dtype': 'object'}}
         """
+
         df = self.root
+
+        # if a dict is passed to cols, assumes it contains the data types
+        if not is_dict(cols):
+            cols = df.cols.infer_profiler_dtypes(cols)
 
         result = {}
         profiler_to_mask_func = {
             "decimal": "float"
         }
 
-        for col_name, props in columns_type.items():
+        for col_name, props in cols.items():
             # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
             dtype = profiler_to_mask_func.get(props["dtype"], props["dtype"])
 
-            matches_mismatches = getattr(df[col_name].mask, dtype)(col_name).cols.frequency()
+            matches_mismatches = getattr(df[col_name].mask, dtype)(
+                col_name).cols.frequency()
 
             values = {list(j.values())[0]: list(j.values())[1] for j in
                       matches_mismatches["frequency"][col_name]["values"]}
@@ -2129,17 +2150,6 @@ class BaseColumns(ABC):
     @abstractmethod
     def count_by_dtypes(cols, infer=False, str_funcs=None, int_funcs=None) -> dict:
         pass
-
-    def quality(self, cols="*") -> dict:
-        """
-        Infer the datatype and return the match. mismatch and profiler datatype  for every column.
-        In case of date it returns also the format datatype
-        :param cols:
-        :return:
-        """
-        df = self.root
-        a = df.cols.infer_profiler_dtypes(cols)
-        return df.cols.count_mismatch(a)
 
     def infer_profiler_dtypes(self, cols="*") -> dict:
         """

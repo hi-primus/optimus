@@ -8,7 +8,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
+from optimus.infer import is_dict, is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
     regex_credit_card_number, regex_zip_code, regex_gender, regex_ip, regex_email, \
     is_datetime, is_list, is_bool, is_object, regex_full_url
 
@@ -79,7 +79,13 @@ class Mask(ABC):
         """
 
         df = self.root
+
+        if is_dict(cols) and dtype is None:
+            dtype = [col["dtype"] for key, col in cols.items()]
+            cols = [col for col in cols]
+
         cols = one_list_to_val(parse_columns(df, cols))
+        dtype = one_list_to_val(dtype)
 
         mask_match = df[cols].mask.match(cols, dtype)
         mask_null = df[cols].mask.null(cols)

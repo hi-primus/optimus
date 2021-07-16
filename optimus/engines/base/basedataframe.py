@@ -8,10 +8,8 @@ import humanize
 import imgkit
 import jinja2
 import simplejson as json
-from dask import dataframe as dd
 from glom import assign
 from tabulate import tabulate
-from pprint import pformat
 
 from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
@@ -42,6 +40,10 @@ class BaseDataFrame(ABC):
         self.buffer = None
         self.updated = None
         self.meta = {}
+
+        # .profile and .set are properties to support docstrings
+        self.profile = BaseProfile(self)
+        self.set = BaseSet(self)
 
     def __del__(self):
         del self.data
@@ -102,6 +104,9 @@ class BaseDataFrame(ABC):
     @abstractmethod
     def _base_to_dfd(self, pdf, n_partitions) -> InternalDataFrameType:
         pass
+
+    def _compute(self, *args, **kwargs):
+        return (*(a for a in args), *(kwargs[k] for k in kwargs))
 
     @abstractmethod
     def to_optimus_pandas(self) -> DataFrameType:
@@ -257,14 +262,6 @@ class BaseDataFrame(ABC):
 
     def cols(self):
         return BaseColumns
-
-    @property
-    def profile(self):
-        return BaseProfile(self)
-
-    @property
-    def set(self):
-        return BaseSet(self)
 
     @property
     def plot(self):
@@ -661,7 +658,7 @@ class BaseDataFrame(ABC):
         df.meta = {}
         return df
 
-    def calculate_profile(self, columns="*", bins: int = MAX_BUCKETS, flush: bool = False, size=False):
+    def calculate_profile(self, cols="*", bins: int = MAX_BUCKETS, flush: bool = False, size=False):
         """
         Returns a new dataframe with the profile data in its added to the meta property
         :param columns:
@@ -677,9 +674,9 @@ class BaseDataFrame(ABC):
         meta = self.meta
 
         if flush is False:
-            cols_to_profile = df._cols_to_profile(columns) or []
+            cols_to_profile = df._cols_to_profile(cols) or []
         else:
-            cols_to_profile = parse_columns(df, columns) or []
+            cols_to_profile = parse_columns(df, cols) or []
 
         profiler_data = Meta.get(meta, "profile")
 
@@ -715,7 +712,7 @@ class BaseDataFrame(ABC):
                                for col in cols_to_profile}
 
             _t = time.process_time()
-            mismatch = df.cols.count_mismatch(cols_dtypes)
+            mismatch = df.cols.quality(cols_dtypes)
             profiler_time["count_mismatch"] = {
                 "columns": cols_dtypes, "elapsed_time": time.process_time() - _t}
 
@@ -799,7 +796,7 @@ class BaseDataFrame(ABC):
 
             dtypes = df.cols.dtypes("*")
 
-            hist, freq, sliced_freq, mismatch = dd.compute(
+            hist, freq, sliced_freq, mismatch = self._compute(
                 hist, freq, sliced_freq, mismatch)
 
             freq = {**freq, **sliced_freq}
