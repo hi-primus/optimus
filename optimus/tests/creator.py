@@ -56,7 +56,7 @@ class TestCreator:
         _imports = [
             "from optimus.tests.base import TestBase",
             "import datetime",
-            "Timestamp = lambda t: datetime.datetime.strptime(t,\"%Y-%m-%d %H:%M:%S\")"
+            "Timestamp = lambda t: datetime.datetime.strptime(t,\"%Y-%m-%d %H:%M:%S\")",
             "nan = float(\"nan\")",
             "inf = float(\"inf\")",
             "from optimus.helpers.json import json_encoding",
