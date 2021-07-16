@@ -34,7 +34,7 @@ class Cols(DataFrameBaseColumns, BaseColumns):
         dfd = pd.concat([dfs.data.reset_index(drop=True), dfd.reset_index(drop=True)], axis=1)
         return self.root.new(dfd)
 
-    def dtypes(self, columns="*"):
+    def data_types(self, columns="*"):
         df = self.root
         columns = parse_columns(df, columns)
         return dict(df.data[columns].schema().items())
@@ -85,7 +85,7 @@ class Cols(DataFrameBaseColumns, BaseColumns):
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
               meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
-        columns = prepare_columns(self.root, input_cols, output_cols, filter_by_column_dtypes=filter_col_by_dtypes,
+        columns = prepare_columns(self.root, input_cols, output_cols, filter_by_column_types=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
         kw_columns = {}
         if args is None:
@@ -98,8 +98,7 @@ class Cols(DataFrameBaseColumns, BaseColumns):
             kw_columns.update({output_col: func(self.root.data[input_col], *args)})
         return self.root.new(self.root.data.mutate(**kw_columns))
 
-    @staticmethod
-    def find(columns, sub, ignore_case=False):
+    def find(self, columns, sub, ignore_case=False):
         """
         Find the start and end position for a char or substring
         :param columns:
@@ -137,7 +136,7 @@ class Cols(DataFrameBaseColumns, BaseColumns):
     def heatmap(columns, buckets=10):
         pass
 
-    def count_by_dtypes(self, cols, dtype):
+    def count_by_data_types(self, cols, data_type):
 
         df = self.root
         result = {}
@@ -147,9 +146,9 @@ class Cols(DataFrameBaseColumns, BaseColumns):
             #     if j == df[col_name].dtype.type:
             #         _dtype = df.constants.SHORT_DTYPES[i]
 
-            # _dtype = df.cols.dtypes(col_name)[col_name]
+            # _dtype = df.cols.data_types(col_name)[col_name]
 
-            mismatches_count = df.cols.is_match(col_name, dtype).value_counts().to_dict().get(False)
+            mismatches_count = df.cols.is_match(col_name, data_type).value_counts().to_dict().get(False)
             mismatches_count = 0 if mismatches_count is None else mismatches_count
             result[col_name] = {"match": df_len - na_count, "missing": na_count,
                                 "mismatch": mismatches_count - na_count}

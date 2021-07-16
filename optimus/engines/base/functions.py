@@ -480,12 +480,12 @@ class Functions(ABC):
     def email_domain(self, series):
         return series.str.split('@').str[1]
 
-    def infer_dtypes(self, value, cols_dtype):
+    def infer_data_types(self, value, cols_data_types):
         """
         Infer the data types.
         Please be aware that the order in which the value is checked is important and will change the final result
         :param value:
-        :param cols_dtype:
+        :param cols_data_types:
         :return:
         """
 

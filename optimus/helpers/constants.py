@@ -23,7 +23,7 @@ class Actions(Enum):
     Actions that modify a columns/rows.
     """
     # COLUMNS
-    PROFILER_DTYPE = "profiler_dtype"
+    INFERRED_TYPE = "inferred_type"
     MATCH = "match"
     LOWER = "lower"
     UPPER = "upper"

@@ -121,8 +121,8 @@ class BaseSet():
     def missing(self, cols, value=None, default_value=None, args=[]) -> DataFrameType:
         return self._mask(cols, true_value=value, default_value=default_value, args=args, method="missing")
 
-    def mismatch(self, cols, value=None, default_value=None, args=[], dtype=None) -> DataFrameType:
-        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="mismatch", dtype=dtype)
+    def mismatch(self, cols, value=None, default_value=None, args=[], data_type=None) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="mismatch", data_type=data_type)
 
     def duplicated(self, cols, value=None, default_value=None, args=[], keep="first") -> DataFrameType:
         return self._mask(cols, true_value=value, default_value=default_value, args=args, method="duplicated", keep=keep)
@@ -130,14 +130,14 @@ class BaseSet():
     def unique(self, cols, value=None, default_value=None, args=[], keep="first") -> DataFrameType:
         return self._mask(cols, true_value=value, default_value=default_value, args=args, method="unique", keep=keep)
 
-    def match(self, cols, value=None, default_value=None, args=[], regex=None, dtype=None) -> DataFrameType:
-        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_dtype", regex=regex, dtype=dtype)
+    def match(self, cols, value=None, default_value=None, args=[], regex=None, data_type=None) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_data_type", regex=regex, data_type=data_type)
 
     def match_regex(self, cols, value=None, default_value=None, args=[], regex=None) -> DataFrameType:
         return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_regex", regex=regex)
 
-    def match_dtype(self, cols, value=None, default_value=None, args=[], dtype=None) -> DataFrameType:
-        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_dtype", dtype=dtype)
+    def match_data_type(self, cols, value=None, default_value=None, args=[], data_type=None) -> DataFrameType:
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_data_type", data_type=data_type)
 
     def match_pattern(self, cols, value=None, default_value=None, args=[], pattern=None) -> DataFrameType:
         return self._mask(cols, true_value=value, default_value=default_value, args=args, method="match_pattern", pattern=pattern)

@@ -177,18 +177,18 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
     def max_abs_scaler(self, cols="*", output_cols=None):
         raise NotImplementedError('Not implemented yet')
 
-    def is_match(self, cols="*", dtype=None, invert=False):
+    def is_match(self, cols="*", data_type=None, invert=False):
         """
         Find the rows that match a data type
         :param cols:
-        :param dtype: data type to match
+        :param data_type: data type to match
         :param invert: Invert the match
         :return:
         """
         df = self.root
         cols = parse_columns(df, cols)
 
-        f = profiler_dtype_func(dtype)
+        f = inferred_type_func(data_type)
         if f is not None:
             for col_name in cols:
                 df = df[col_name].to_pandas().apply(f)
@@ -216,7 +216,7 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
         return {"hist": result}
 
-    def count_by_dtypes(self, cols="*", infer=False, str_funcs=None, int_funcs=None):
+    def count_by_data_types(self, cols="*", infer=False, str_funcs=None, int_funcs=None):
         df = self.root
         result = {}
         df_len = len(df)

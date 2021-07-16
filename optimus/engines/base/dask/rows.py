@@ -128,7 +128,7 @@ class DaskBaseRows(BaseRows):
         """
         df = self.root
         # TODO: should process string or dates
-        # columns = parse_columns(df, columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        # columns = parse_columns(df, columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
         columns = parse_columns(df, columns)
         if bounds is None:
             bounds = [(lower_bound, upper_bound)]

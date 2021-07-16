@@ -93,7 +93,8 @@ class Plot:
         """
         df = self.df
 
-        columns = parse_columns(df, cols_args=columns, filter_by_column_dtypes=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(
+            df, cols_args=columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
 
         if columns is not None:
             sample_data = df.sample(n=n, random=True)

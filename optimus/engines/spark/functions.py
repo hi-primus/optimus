@@ -348,8 +348,7 @@ class SparkFunctions(Functions):
 
             return exprs
 
-
-        dtype = df.cols.dtypes(col_name)
+        dtype = df.cols.data_types(col_name)
         if dtype is not None:
             col_dtype = dtype[col_name]
             if col_dtype == "int" or col_dtype == "decimal":

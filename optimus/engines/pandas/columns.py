@@ -51,18 +51,19 @@ class Cols(DataFrameBaseColumns, BaseColumns):
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
         return {"x": {"name": col_x, "values": heatmap.T.tolist()}, "y": {"name": col_y, "values": extent}}
 
-    def count_by_dtypes(self, cols="*", dtype=None):
+    def count_by_data_types(self, cols="*", data_type=None):
         df = self.root
         result = {}
         df_len = len(df.data)
         for col_name, na_count in df.cols.count_na(cols, tidy=False)["count_na"].items():
             # for i, j in df.constants.DTYPES_DICT.items():
-            #     if j == df[col_name].dtype.type:
-            #         _dtype = df.constants.SHORT_DTYPES[i]
+            #     if j == df[col_name].data_type.type:
+            #         _data_type = df.constants.SHORT_DTYPES[i]
 
-            # _dtype = df.cols.dtypes(col_name)[col_name]
+            # _data_type = df.cols.data_types(col_name)[col_name]
 
-            mismatches_count = df.cols.match_dtype(col_name, dtype).data.value_counts().to_dict().get(False)
+            mismatches_count = df.cols.match_data_type(
+                col_name, data_type).data.value_counts().to_dict().get(False)
             mismatches_count = 0 if mismatches_count is None else mismatches_count
             result[col_name] = {"match": df_len - na_count, "missing": na_count,
                                 "mismatch": mismatches_count - na_count}

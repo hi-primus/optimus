@@ -36,10 +36,10 @@ class Cols(CUDFBaseColumns, DaskBaseColumns, BaseColumns):
         le = preprocessing.LabelEncoder()
         return index_to_string(df, cols, output_cols, le)
 
-    def count_by_dtypes(self, cols, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
+    def count_by_data_types(self, cols, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.root
         cols = parse_columns(df, cols)
-        dtypes = df.cols.dtypes()
+        dtypes = df.cols.data_types()
 
         result = {}
         for col_name in cols:
@@ -52,7 +52,7 @@ class Cols(CUDFBaseColumns, DaskBaseColumns, BaseColumns):
             for k in result.keys():
                 result[k] = fill_missing_var_types(result[k])
         else:
-            result = self.parse_profiler_dtypes(result)
+            result = self.parse_inferred_types(result)
 
         return result
 

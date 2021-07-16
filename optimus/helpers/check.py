@@ -7,7 +7,7 @@ import pandas as pd
 
 from optimus.helpers.core import val_to_list, one_list_to_val
 # TODO: can be confused with is_type
-from optimus.helpers.parser import parse_dtypes
+from optimus.helpers.parser import parse_data_types
 from optimus.helpers.raiseit import RaiseIt
 # from optimus.new_optimus import SparkDataFrame
 
@@ -22,7 +22,7 @@ def has_(value, _type):
     return any(isinstance(elem, _type) for elem in value)
 
 
-def is_column_a(df, column=None, dtypes="str"):
+def is_column_a(df, column=None, data_types="str"):
     """
     Check if column match a list of data types
     :param df: spark or dask dataframe
@@ -34,12 +34,12 @@ def is_column_a(df, column=None, dtypes="str"):
 
     if len(column) > 1:
         RaiseIt.length_error(column, 1)
-    data_type = tuple(val_to_list(parse_dtypes(df, dtypes)))
+    data_type = tuple(val_to_list(parse_data_types(df, data_types)))
     column = one_list_to_val(column)
 
     # Filter columns by data type
     # print("df",type(df),df)
-    v = df.cols.schema_dtype(column)
+    v = df.cols.schema_data_type(column)
 
     if is_spark_dataframe(df.data):
         result = isinstance(v, data_type)
@@ -147,8 +147,6 @@ def is_pandas_series(value):
     :return:
     """
     return isinstance(value, pd.Series)
-
-
 
 
 def equal_function(f1, f2):

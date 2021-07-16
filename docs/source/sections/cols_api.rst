@@ -543,7 +543,7 @@ Returns one or multiple dataframe columns which match with the data type provide
 |  3|
 +---+
 
-cols.apply_by_dtypes(columns, func, func_return_type, args=None, func_type=None, data_type=None)
+cols.apply_by_data_type(columns, func, func_return_type, args=None, func_type=None, data_type=None)
 ---------------------------------------------------------------------------------------------
 
 Apply a function using pandas udf or udf if apache arrow is not available.
@@ -555,7 +555,7 @@ In the next example we replace a number in a string column with "new string":
     def func(val, attr):
         return attr
 
-    df.cols.apply_by_dtypes("filter", func, "string", "new string", data_type="integer").table()
+    df.cols.apply_by_data_type("filter", func, "string", "new string", data_type="integer").table()
 
 +-------------------+---+-------+-----+-------------+----------+-----+-----------------+---------+
 |              words|num|animals|thing|  two strings|    filter|num 2|        col_array|  col_int|

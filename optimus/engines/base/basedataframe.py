@@ -8,10 +8,8 @@ import humanize
 import imgkit
 import jinja2
 import simplejson as json
-from dask import dataframe as dd
 from glom import assign
 from tabulate import tabulate
-from pprint import pformat
 
 from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
@@ -42,6 +40,10 @@ class BaseDataFrame(ABC):
         self.buffer = None
         self.updated = None
         self.meta = {}
+
+        # .profile and .set are properties to support docstrings
+        self.profile = BaseProfile(self)
+        self.set = BaseSet(self)
 
     def __del__(self):
         del self.data
@@ -85,12 +87,12 @@ class BaseDataFrame(ABC):
         return df
 
     @staticmethod
-    def __operator__(df, dtype, multiple_columns=False) -> DataFrameType:
+    def __operator__(df, data_type, multiple_columns=False) -> DataFrameType:
         if isinstance(df, (BaseDataFrame,)):
             col1 = "*" if multiple_columns else df.cols.names(0)[0]
 
-            if dtype:
-                df = df.cols.cast(col1, dtype).data
+            if data_type:
+                df = df.cols.cast(col1, data_type).data
             else:
                 df = df.data
 
@@ -103,37 +105,40 @@ class BaseDataFrame(ABC):
     def _base_to_dfd(self, pdf, n_partitions) -> InternalDataFrameType:
         pass
 
+    def _compute(self, *args, **kwargs):
+        return (*(a for a in args), *(kwargs[k] for k in kwargs))
+
     @abstractmethod
     def to_optimus_pandas(self) -> DataFrameType:
         pass
 
-    def unary_operation(self, df, opb, dtype=None) -> DataFrameType:
+    def unary_operation(self, df, opb, data_type=None) -> DataFrameType:
         """
         Helper to process binary operations
         :param df: Left
         :param opb: Operator
-        :param dtype: 
+        :param data_type: 
         :return:
         """
-        df = BaseDataFrame.__operator__(df, dtype, True)
+        df = BaseDataFrame.__operator__(df, data_type, True)
 
         return self.new(opb(df))
 
-    def operation(self, df1, df2, opb, dtype=None) -> DataFrameType:
+    def operation(self, df1, df2, opb, data_type=None) -> DataFrameType:
         """
         Helper to process binary operations
         :param df1: Left
         :param df2: Right
         :param opb: Operator
-        :param dtype:
+        :param data_type:
         :return:
         """
         if not isinstance(df1, (BaseDataFrame,)) or not isinstance(df2, (BaseDataFrame,)):
             multiple_columns = True
         else:
             multiple_columns = df1.cols.names() == df2.cols.names()
-        df1 = BaseDataFrame.__operator__(df1, dtype, multiple_columns)
-        df2 = BaseDataFrame.__operator__(df2, dtype, multiple_columns)
+        df1 = BaseDataFrame.__operator__(df1, data_type, multiple_columns)
+        df2 = BaseDataFrame.__operator__(df2, data_type, multiple_columns)
 
         if multiple_columns:
             df = self.new(opb(df1, df2))
@@ -257,14 +262,6 @@ class BaseDataFrame(ABC):
 
     def cols(self):
         return BaseColumns
-
-    @property
-    def profile(self):
-        return BaseProfile(self)
-
-    @property
-    def set(self):
-        return BaseSet(self)
 
     @property
     def plot(self):
@@ -396,7 +393,7 @@ class BaseDataFrame(ABC):
 
     def size(self, deep=True, format=None):
         """
-        Get the size of a dask in bytes
+        Get the size of the dataframe in bytes
         :return:
         """
         df = self.data
@@ -565,11 +562,11 @@ class BaseDataFrame(ABC):
         template = template_env.get_template("table.html")
 
         # Filter only the columns and data type info need it
-        dtypes = [(k, v) for k, v in df.cols.dtypes().items()]
+        data_types = [(k, v) for k, v in df.cols.data_types().items()]
 
         # Remove not selected columns
         final_columns = []
-        for i in dtypes:
+        for i in data_types:
             for j in columns:
                 if i[0] == j:
                     final_columns.append(i)
@@ -620,7 +617,7 @@ class BaseDataFrame(ABC):
         limit = min(limit, df.rows.approx_count())
         return tabulate(df.rows.limit(limit + 1).cols.select(columns).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i,
-                                 j in df.cols.dtypes().items()],
+                                 j in df.cols.data_types().items()],
                         tablefmt="simple",
                         showindex="never")+"\n"
 
@@ -665,7 +662,7 @@ class BaseDataFrame(ABC):
         df.meta = {}
         return df
 
-    def calculate_profile(self, columns="*", bins: int = MAX_BUCKETS, flush: bool = False, size=False):
+    def calculate_profile(self, cols="*", bins: int = MAX_BUCKETS, flush: bool = False, size=False):
         """
         Returns a new dataframe with the profile data in its added to the meta property
         :param columns:
@@ -681,9 +678,9 @@ class BaseDataFrame(ABC):
         meta = self.meta
 
         if flush is False:
-            cols_to_profile = df._cols_to_profile(columns) or []
+            cols_to_profile = df._cols_to_profile(cols) or []
         else:
-            cols_to_profile = parse_columns(df, columns) or []
+            cols_to_profile = parse_columns(df, cols) or []
 
         profiler_data = Meta.get(meta, "profile")
 
@@ -691,7 +688,7 @@ class BaseDataFrame(ABC):
 
         if profiler_data is None:
             profiler_data = {}
-        cols_dtypes = None
+        cols_data_types = None
 
         profiler_time["beginning"] = {"elapsed_time": time.process_time() - _t}
         if cols_to_profile or not is_cached or flush is True:
@@ -702,34 +699,34 @@ class BaseDataFrame(ABC):
             hist_cols = []
             freq_cols = []
 
-            cols_dtypes = {}
+            cols_data_types = {}
             cols_to_infer = [*cols_to_profile]
 
             for col_name in cols_to_profile:
-                _props = Meta.get(df.meta, f"columns_dtypes.{col_name}")
+                _props = Meta.get(df.meta, f"columns_data_types.{col_name}")
 
                 if _props is not None:
-                    cols_dtypes[col_name] = _props
+                    cols_data_types[col_name] = _props
                     cols_to_infer.remove(col_name)
 
             if cols_to_infer:
-                cols_dtypes = {**cols_dtypes, **
-                               df.cols.infer_profiler_dtypes(cols_to_infer)}
-                cols_dtypes = {col: cols_dtypes[col]
+                cols_data_types = {**cols_data_types, **
+                               df.cols.infer_data_types(cols_to_infer)}
+                cols_data_types = {col: cols_data_types[col]
                                for col in cols_to_profile}
 
             _t = time.process_time()
-            mismatch = df.cols.count_mismatch(cols_dtypes)
+            mismatch = df.cols.quality(cols_data_types)
             profiler_time["count_mismatch"] = {
-                "columns": cols_dtypes, "elapsed_time": time.process_time() - _t}
+                "columns": cols_data_types, "elapsed_time": time.process_time() - _t}
 
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
-            cols_properties = cols_dtypes.items()
+            cols_properties = cols_data_types.items()
             for col_name, properties in cols_properties:
                 if properties.get("categorical") is True \
-                        or properties.get("dtype") == ProfilerDataTypes.EMAIL.value \
-                        or properties.get("dtype") == ProfilerDataTypes.URL.value \
-                        or properties.get("dtype") == ProfilerDataTypes.OBJECT.value:
+                        or properties.get("data_type") == ProfilerDataTypes.EMAIL.value \
+                        or properties.get("data_type") == ProfilerDataTypes.URL.value \
+                        or properties.get("data_type") == ProfilerDataTypes.OBJECT.value:
                     freq_cols.append(col_name)
                 else:
                     hist_cols.append(col_name)
@@ -778,7 +775,7 @@ class BaseDataFrame(ABC):
                 profiler_time["frequency"] = {
                     "columns": freq_cols, "elapsed_time": time.process_time() - _t}
 
-            def merge(_columns, _hist, _freq, _mismatch, _dtypes, _count_uniques):
+            def merge(_columns, _hist, _freq, _mismatch, _data_types, _count_uniques):
                 _c = {}
 
                 _hist = {} if _hist is None else _hist.get("hist", {})
@@ -786,7 +783,7 @@ class BaseDataFrame(ABC):
 
                 for _col_name in _columns:
                     _c[_col_name] = {
-                        "stats": _mismatch[_col_name], "dtype": _dtypes[_col_name]}
+                        "stats": _mismatch[_col_name], "data_type": _data_types[_col_name]}
                     if _col_name in _freq:
                         f = _freq[_col_name]
                         _c[_col_name]["stats"]["frequency"] = f["values"]
@@ -801,15 +798,15 @@ class BaseDataFrame(ABC):
             # Nulls
             total_count_na = 0
 
-            dtypes = df.cols.dtypes("*")
+            data_types = df.cols.data_types("*")
 
-            hist, freq, sliced_freq, mismatch = dd.compute(
+            hist, freq, sliced_freq, mismatch = self._compute(
                 hist, freq, sliced_freq, mismatch)
 
             freq = {**freq, **sliced_freq}
 
             updated_columns = merge(
-                cols_to_profile, hist, freq, mismatch, dtypes, count_uniques)
+                cols_to_profile, hist, freq, mismatch, data_types, count_uniques)
             profiler_data = update_dict(profiler_data, updated_columns)
 
             assign(profiler_data, "name", Meta.get(df.meta, "name"), dict)
@@ -823,10 +820,10 @@ class BaseDataFrame(ABC):
                 data_set_info.update({'size': df.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
-            dtypes_list = list(set(df.cols.dtypes("*").values()))
-            assign(profiler_data, "summary.dtypes_list", dtypes_list, dict)
-            assign(profiler_data, "summary.total_count_dtypes",
-                   len(set([i for i in dtypes.values()])), dict)
+            data_types_list = list(set(df.cols.data_types("*").values()))
+            assign(profiler_data, "summary.data_types_list", data_types_list, dict)
+            assign(profiler_data, "summary.total_count_data_types",
+                   len(set([i for i in data_types.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
             assign(profiler_data, "summary.p_missing", round(
                 total_count_na / df.rows.count() * 100, 2))
@@ -843,9 +840,9 @@ class BaseDataFrame(ABC):
                                     for key in all_columns_names if key in actual_columns}
         meta = Meta.set(meta, "profile", profiler_data)
 
-        if cols_dtypes is not None:
+        if cols_data_types is not None:
             df.meta = meta
-            df = df.cols.set_dtype(cols_dtypes, True)
+            df = df.cols.set_data_type(cols_data_types, True)
             meta = df.meta
 
         # Reset Actions
@@ -856,17 +853,69 @@ class BaseDataFrame(ABC):
         return df
 
     def graph(self) -> dict:
-        """
-        Return a dict the Dask tasks graph
-        :return:
-        """
-        dfd = self.data
-
-        return dfd.__dask_graph__().layers
+        raise NotImplementedError(f"Not supported using {type(self).__name__}")
 
     def get_series(self):
         col1 = self.cols.names(0)[0]
         return self.data[col1]
+
+    def join(self, df_right: DataFrameType, how="left", on=None, left_on=None, right_on=None, key_middle=False) -> DataFrameType:
+        """
+        Join 2 dataframes SQL style
+        :param df_right:
+        :param how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
+        :param on:
+        :param left_on:
+        :param right_on:
+        :param key_middle: Order the columns putting the left df columns before the key column and the right df columns
+
+        :return:
+        """
+        # if not is_(df_right, BaseDataFrame):
+        #     RaiseIt.type_error(df_right, ["BaseDataFrame"])
+
+        suffix_left = "_left"
+        suffix_right = "_right"
+
+        df_left = self.root
+
+        if on is not None:
+            left_on = on
+            right_on = on
+
+        if df_left.cols.data_types(left_on) == "category":
+            df_left[left_on] = df_left[left_on].cat.as_ordered()
+
+        if df_right.cols.data_types(right_on) == "category":
+            df_right[right_on] = df_right[right_on].cat.as_ordered()
+
+        # Join does not work with different data types.
+        df_left[left_on] = df_left[left_on].cols.cast("*", "str")
+        df_left.data.set_index(left_on)
+
+        df_right[right_on] = df_right[right_on].cols.cast("*", "str")
+        df_right.data.set_index(right_on)
+
+        # Used to reorder the output
+        left_names = df_left.cols.names()
+        right_names = df_right.cols.names()
+
+        df = self.root.new(df_left.data.merge(df_right.data, how=how, left_on=left_on, right_on=right_on,
+                                              suffixes=(suffix_left, suffix_right)))
+
+        # Reorder
+        last_column_name = left_names[-1]
+        if key_middle is True:
+            names = df.cols.names()
+            last_column_name = last_column_name if last_column_name in names else last_column_name + suffix_left
+            left_on = left_on if left_on in names else left_on + suffix_left
+            right_on = right_on if right_on in names else right_on + suffix_right
+            if left_on in names:
+                df = df.cols.move(left_on, "before", last_column_name)
+            if right_on in names:
+                df = df.cols.move(right_on, "before", last_column_name)
+
+        return df
 
     def string_clustering(self, columns="*", algorithm="fingerprint", *args, **kwargs):
         return string_clustering(self, columns, algorithm, *args, **kwargs)
@@ -949,7 +998,7 @@ class BaseDataFrame(ABC):
             if "hist" in col["stats"]:
                 hist_dict = col["stats"]["hist"]
 
-                if col["column_dtype"] == "date":
+                if col["column_data_type"] == "date":
                     hist_year = plot_hist(
                         {col_name: hist_dict["years"]}, "base64", "years")
                     hist_month = plot_hist(
@@ -963,8 +1012,8 @@ class BaseDataFrame(ABC):
                     hist_pic = {"hist_years": hist_year, "hist_months": hist_month, "hist_weekdays": hist_weekday,
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
 
-                elif col["column_dtype"] == "int" or col["column_dtype"] == "string" or col[
-                        "column_dtype"] == "decimal":
+                elif col["column_data_type"] == "int" or col["column_data_type"] == "string" or col[
+                        "column_data_type"] == "decimal":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
             if "frequency" in col:

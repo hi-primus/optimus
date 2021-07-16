@@ -82,7 +82,7 @@ class SparkDataFrame(BaseDataFrame):
         for col_names in self.cols.names():
             name = col_names
 
-            data_type = self.cols.schema_dtype(col_names)
+            data_type = self.cols.schema_data_type(col_names)
             if isinstance(data_type, ArrayType):
                 data_type = "ArrayType(" + str(data_type.elementType) + "()," + str(data_type.containsNull) + ")"
             else:

@@ -8,7 +8,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
+from optimus.infer import is_dict, is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
     regex_credit_card_number, regex_zip_code, regex_gender, regex_ip, regex_email, \
     is_datetime, is_list, is_bool, is_object, regex_full_url
 
@@ -70,57 +70,63 @@ class Mask(ABC):
         """
         return self.null(cols) | self.empty(cols)
 
-    def mismatch(self, cols="*", dtype=None) -> MaskDataFrameType:
+    def mismatch(self, cols="*", data_type=None) -> MaskDataFrameType:
         """
         Return missing values
         :param cols:
-        :param dtype:
+        :param data_type:
         :return:
         """
 
         df = self.root
-        cols = one_list_to_val(parse_columns(df, cols))
 
-        mask_match = df[cols].mask.match(cols, dtype)
+        if is_dict(cols) and data_type is None:
+            data_type = [col["data_type"] for key, col in cols.items()]
+            cols = [col for col in cols]
+
+        cols = one_list_to_val(parse_columns(df, cols))
+        data_type = one_list_to_val(data_type)
+
+        mask_match = df[cols].mask.match(cols, data_type)
         mask_null = df[cols].mask.null(cols)
         return ~(mask_match | mask_null)
 
-    def match(self, cols="*", regex=None, dtype=None) -> MaskDataFrameType:
-        if dtype is None:
+    def match(self, cols="*", regex=None, data_type=None) -> MaskDataFrameType:
+        if data_type is None:
             return self.match_regex(cols=cols, regex=regex)
         else:
-            return self.match_dtype(cols=cols, dtype=dtype)
+            return self.match_data_type(cols=cols, data_type=data_type)
 
     def match_regex(self, cols="*", regex="") -> MaskDataFrameType:
         return self.root[cols].cols.apply(cols, self.root.cols.F.match, args=(regex,))
 
-    def match_dtype(self, cols="*", dtype=None) -> MaskDataFrameType:
+    def match_data_type(self, cols="*", data_type=None) -> MaskDataFrameType:
         """
         Return values that match with a datatype
         :param cols:
-        :param dtype:
+        :param data_type:
         :return:
         """
         df = self.root
         cols = one_list_to_val(parse_columns(df, cols))
 
-        if dtype is None:
-            profiled_dtype = df.profile.dtypes(cols)
-            if profiled_dtype is None:
-                RaiseIt.value_error(dtype, ProfilerDataTypes.list(),
-                                    "dtype not found in cache. Need to passed as dtype param")
+        if data_type is None:
+            inferred_type = df.profile.data_types(cols)
+            if inferred_type is None:
+                RaiseIt.value_error(data_type, ProfilerDataTypes.list(),
+                                    "data_type not found in cache. Need to passed as data_type param")
             else:
-                dtype = profiled_dtype
+                data_type = inferred_type
 
-        if is_list(dtype):
+        if is_list(data_type):
             mask_match = None
-            for i, j in zip(cols, dtype):
+            for i, j in zip(cols, data_type):
                 if mask_match is None:
                     mask_match = getattr(df[i].mask, j)(i)
                 else:
                     mask_match[i] = getattr(df[i].mask, j)(i)
         else:
-            mask_match = getattr(df[cols].mask, dtype)(cols)
+            mask_match = getattr(df[cols].mask, data_type)(cols)
 
         return mask_match
 
@@ -343,7 +349,7 @@ class Mask(ABC):
 
     def datetime(self, cols="*") -> MaskDataFrameType:
         # df = self.root
-        # if df[cols].cols.dtype  == df.constants.
+        # if df[cols].cols.data_type  == df.constants.
         return self.root[cols].cols.apply(cols, is_datetime)
         # return self.match_regex(cols, regex_date)
 

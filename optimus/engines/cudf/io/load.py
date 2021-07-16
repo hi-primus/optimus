@@ -59,14 +59,14 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=True, dtype=None,
+            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=True, data_type=None,
             *args, **kwargs):
 
         """
         Return a dataframe from a csv file.
         params
 
-        :param dtype:
+        :param data_type:
         :param cache:
         :param na_filter:
         :param path: path or location of the file.
@@ -96,13 +96,13 @@ class Load(BaseLoad):
             elif header is False:
                 header = None
             # The str to ["str] is due to a bug in cudf https://github.com/rapidsai/cudf/issues/6606
-            if dtype == str or dtype is None:
-                dtype = ["str"]
+            if data_type == str or data_type is None:
+                data_type = ["str"]
 
             cdf = cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
                                 quoting=quoting, error_bad_lines=error_bad_lines,
                                 keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows,
-                                na_filter=na_filter, dtype=dtype, *args, **kwargs)
+                                na_filter=na_filter, dtype=data_type, *args, **kwargs)
             df = CUDFDataFrame(cdf)
             df.meta = Meta.set(df.meta, None,
                                {"file_name": path, "max_cell_length": df.cols.len("*").cols.max()})

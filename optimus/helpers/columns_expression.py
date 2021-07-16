@@ -54,14 +54,14 @@ def range_agg(col_name):
     return F.create_map(F.lit("min"), F.min(col_name), F.lit("max"), F.max(col_name))
 
 
-def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
+def hist_agg(col_name, df, buckets, min_max=None, data_type=None):
     """
     Create a columns expression to calculate a column histogram
     :param col_name:
     :param df:
     :param buckets:
     :param min_max: Min and max vaule neccesary to calculate the buckets
-    :param dtype: Column datatype to calculate the related histogram. Int, String and Dates return different histograms
+    :param data_type: Column datatype to calculate the related histogram. Int, String and Dates return different histograms
 
     :return:
     """
@@ -156,13 +156,13 @@ def hist_agg(col_name, df, buckets, min_max=None, dtype=None):
 
         return exprs
 
-    if dtype is not None:
-        col_dtype = dtype[col_name]["dtype"]
-        if col_dtype == "int" or col_dtype == "decimal":
+    if data_type is not None:
+        col_data_type = data_type[col_name]["data_type"]
+        if col_data_type == "int" or col_data_type == "decimal":
             exprs = hist_numeric(min_max, buckets)
-        elif col_dtype == "string":
+        elif col_data_type == "string":
             exprs = hist_string(buckets)
-        elif col_dtype == "date":
+        elif col_data_type == "date":
             exprs = hist_date()
         else:
             exprs = None
