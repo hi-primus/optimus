@@ -36,7 +36,7 @@ from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, is_str, is_list_value, is_one_element, \
-    is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int, is_
+    is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int
 from optimus.profiler.constants import MAX_BUCKETS
 
 TOTAL_PREVIEW_ROWS = 30
@@ -750,67 +750,6 @@ class BaseColumns(ABC):
         df = df.groupby(by=by).agg(compact).reset_index()
         df.columns = (val_to_list(by) + val_to_list(list(agg.keys())))
         df = self.root.new(df)
-        return df
-
-    def join(self, df_right: DataFrameType, how="left", on=None, left_on=None, right_on=None, key_middle=False) -> DataFrameType:
-        """
-        Join 2 dataframes SQL style
-        :param df_right:
-        :param how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
-        :param on:
-        :param left_on:
-        :param right_on:
-        :param key_middle: Order the columns putting the left df columns before the key column and the right df columns
-
-        :return:
-        """
-        # if not is_(df_right, BaseDataFrame):
-        #     RaiseIt.type_error(df_right, ["BaseDataFrame"])
-
-        suffix_left = "_left"
-        suffix_right = "_right"
-
-        df_left = self.root
-
-        if on is not None:
-            left_on = on
-            right_on = on
-
-        if df_left.cols.dtypes(left_on) == "category":
-            df_left[left_on] = df_left[left_on].cat.as_ordered()
-
-        if df_right.cols.dtypes(right_on) == "category":
-            df_right[right_on] = df_right[right_on].cat.as_ordered()
-
-        # Join do not work with different data types.
-        # Use set_index to return a index in the dataframe
-
-        df_left[left_on] = df_left[left_on].cols.cast("*", "str")
-        df_left.data.set_index(left_on)
-
-        df_right[right_on] = df_right[right_on].cols.cast("*", "str")
-        df_right.data.set_index(right_on)
-
-        left_names = df_left.cols.names()
-        right_names = df_right.cols.names()
-
-        last_column_name = left_names[-1]
-        # Use to reorder de output
-
-        df = self.root.new(df_left.data.merge(df_right.data, how=how, left_on=left_on, right_on=right_on,
-                                              suffixes=(suffix_left, suffix_right)))
-
-        # Remove duplicated index if the name is the same. If the index name are not the same
-        if key_middle is True:
-            names = df.cols.names()
-            last_column_name = last_column_name if last_column_name in names else last_column_name + suffix_left
-            left_on = left_on if left_on in names else left_on + suffix_left
-            right_on = right_on if right_on in names else right_on + suffix_right
-            if left_on in names:
-                df = df.cols.move(left_on, "before", last_column_name)
-            if right_on in names:
-                df = df.cols.move(right_on, "before", last_column_name)
-
         return df
 
     # def is_match(self, cols="*", dtype, invert=False):
