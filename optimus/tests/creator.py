@@ -56,6 +56,7 @@ class TestCreator:
         _imports = [
             "from optimus.tests.base import TestBase",
             "import datetime",
+            "Timestamp = lambda t: datetime.datetime.strptime(t,\"%Y-%m-%d %H:%M:%S\")"
             "nan = float(\"nan\")",
             "inf = float(\"inf\")",
             "from optimus.helpers.json import json_encoding",
@@ -259,11 +260,10 @@ class TestCreator:
             add_buffer("    result = result.to_dict()\n")
 
         if compare_by == "df":
-            expected = "    expected = self.create_dataframe(dict=" + \
-                df_result + ")\n"
+            expected = f"    expected = self.create_dataframe(dict={df_result})\n"
 
         else:
-            expected = "    expected = " + df_result + "\n"
+            expected = f"    expected = {df_result}\n"
 
         if failed:
             add_buffer(

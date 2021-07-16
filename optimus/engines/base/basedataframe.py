@@ -632,14 +632,16 @@ class BaseDataFrame(ABC):
         df_dict = self.to_dict(n=n)
 
         if not dtypes:
-            df_data = pformat(df_dict, sort_dicts=False)
+            df_data = pformat(df_dict, sort_dicts=False,
+                              width=800, compact=True)
         else:
             df_dtypes = self.cols.dtypes()
             df_data = []
             for col_name in df_dict.keys():
                 value = pformat((col_name, df_dtypes[col_name]))
                 value += ": "
-                value += pformat(df_dict[col_name], sort_dicts=False)
+                value += pformat(df_dict[col_name],
+                                 sort_dicts=False, width=800, compact=True)
                 df_data.append(value)
 
             df_data = "{" + ", ".join(df_data) + "}"
