@@ -967,11 +967,11 @@ class BaseColumns(ABC):
 
     def min(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.min, compute=compute, tidy=tidy, parallel=True)
+        return df.cols.agg_exprs(cols, self.F.min, compute=compute, tidy=tidy, parallel=False)
 
     def max(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.max, compute=compute, tidy=tidy, parallel=True)
+        return df.cols.agg_exprs(cols, self.F.max, compute=compute, tidy=tidy, parallel=False)
 
     def mode(self, cols="*", tidy=True, compute=True):
         df = self.root

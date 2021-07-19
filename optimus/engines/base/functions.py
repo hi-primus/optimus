@@ -50,10 +50,10 @@ class Functions(ABC):
 
     # Aggregation
     def min(self, series):
-        return series.min()
+        return self.to_float(series).min()
 
     def max(self, series):
-        return series.max()
+        return self.to_float(series).max()
 
     def mean(self, series):
         return self.to_float(series).mean()
