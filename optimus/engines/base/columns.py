@@ -1163,7 +1163,6 @@ class BaseColumns(ABC):
         df = self.root
 
         if is_int(mode):
-            print("is int")
             df = df.cols.round(cols, decimals=mode, output_cols=output_cols)
         else:
             modes = {
@@ -1725,8 +1724,6 @@ class BaseColumns(ABC):
                 for replace_by, search in replace.items():
                     _replace_by.append(replace_by)
                     _search.append(search)
-                print(_search)
-                print(_replace_by)
                 df = df.cols._replace(
                     col, _search, _replace_by, search_by="chars")
 
