@@ -1,3 +1,4 @@
+from pprint import pformat
 import operator
 from optimus.engines.base.set import BaseSet
 from optimus.helpers.types import DataFrameType, InternalDataFrameType
@@ -632,7 +633,7 @@ class BaseDataFrame(ABC):
             df_data = pformat(df_dict, sort_dicts=False,
                               width=800, compact=True)
         else:
-            df_dtypes = self.cols.dtypes()
+            df_dtypes = self.cols.data_types()
             df_data = []
             for col_name in df_dict.keys():
                 value = pformat((col_name, df_dtypes[col_name]))
