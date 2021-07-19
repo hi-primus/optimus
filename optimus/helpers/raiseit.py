@@ -1,30 +1,48 @@
-from optimus.helpers.core import one_list_to_val
+from optimus.helpers.core import one_list_to_val, val_to_list
+
 
 
 class RaiseIt:
 
     @staticmethod
-    def type_error(var, data_types):
+    def _or(values):
+        values = val_to_list(values)
+        if len(values) == 1:
+            return f"'{values[0]}'"
+        return ", ".join([f"'{v}'" for v in values[0:-1]]) + " or " +  f"'{values[-1]}'"
+
+    @staticmethod
+    def _and(values):
+        values = val_to_list(values)
+        if len(values) == 1:
+            return  f"'{values[0]}'"
+        return ", ".join([f"'{v}'" for v in values[0:-1]]) + " and " +  f"'{values[-1]}'"
+
+    @classmethod
+    def type_error(cls, vars, data_types):
         """
         Raise a TypeError exception
         :param var:
         :param data_types: data types expected as strings
         :return:
         """
-
         from optimus.helpers.debug import get_var_name
-        if len(data_types) == 1:
-            divisor = ""
-        elif len(data_types) == 2:
-            divisor = " or "
-        elif len(data_types) > 2:
-            divisor = ", "
 
-        _type = divisor.join(map(lambda x: "'" + x + "'", data_types))
+        if get_var_name(vars):
+            vars = (vars,)
 
-        raise TypeError(
-            "'{var_name}' must be of type {type}, received '{var_type}'".format(var_name=get_var_name(var), type=_type,
-                                                                                var_type=type(var)))
+        var_names = []
+        var_types = []
+
+        for arg in vars:
+            var_names.append(get_var_name(arg))
+            var_types.append(type(arg))
+
+        var_names = cls._and(var_names)
+        var_types = cls._and(var_types)
+        data_types = cls._or(data_types)
+
+        raise TypeError(f"{var_names} must be of type {data_types}, received {var_types}")
 
     @staticmethod
     def length_error(var1: list, var2: (list, int)) -> Exception:
@@ -48,8 +66,8 @@ class RaiseIt:
     def not_ready_error(message):
         raise NotReady(message)
 
-    @staticmethod
-    def value_error(var=None, data_values=None, extra_text=""):
+    @classmethod
+    def value_error(cls, vars, data_values=None, extra_text=""):
         """
         Raise a ValueError exception
         :param var:
@@ -59,21 +77,21 @@ class RaiseIt:
         """
         from optimus.helpers.debug import get_var_name
 
-        if not isinstance(data_values, list):
-            data_values = [data_values]
+        if get_var_name(vars):
+            vars = (vars,)
 
-        if len(data_values) == 1:
-            divisor = ""
-        elif len(data_values) == 2:
-            divisor = " or "
-        elif len(data_values) > 2:
-            divisor = ", "
+        var_names = []
+        var_values = []
 
-        raise ValueError("'{var_name}' must be {type}, received '{var_type}'. {extra_text}"
-                         .format(var_name=get_var_name(var),
-                                 type=divisor.join(map(
-                                     lambda x: "'" + x + "'",
-                                     data_values)), var_type=one_list_to_val(var), extra_text=extra_text))
+        for arg in vars:
+            var_names.append(get_var_name(arg))
+            var_values.append(arg)
+
+        var_names = cls._and(var_names)
+        var_values = cls._and(var_values)
+        data_values = cls._or(val_to_list(data_values))
+
+        raise ValueError(f"{var_names} must be {data_values}, received {var_values}. {extra_text}")
 
     @staticmethod
     def type(cls, var):
