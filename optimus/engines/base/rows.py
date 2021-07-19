@@ -224,40 +224,6 @@ class BaseRows(ABC):
         cols = val_to_list(parse_columns(dfd, cols))
         return self.root.new(dfd[lower_bound: upper_bound][cols])
 
-    def between(self, cols="*", lower_bound=None, upper_bound=None, equal=False, bounds=None, drop=False, how="any") -> DataFrameType:
-        
-        df = self.root
-        
-        if bounds is None:
-            bounds = [(lower_bound, upper_bound)]
-
-        mask = None
-
-        for bound in bounds:
-            if equal:
-                _mask = (df[cols] >= bound[0]) & (df[cols] <= bound[1])
-            else:
-                _mask = (df[cols] > bound[0]) & (df[cols] < bound[1])
-            
-            if mask is None:
-                mask = _mask
-            else:
-                mask = mask | _mask
-
-        if how=="any":
-            mask = mask.mask.any()
-        elif how=="all":
-            mask = mask.mask.all()
-        else:
-            RaiseIt.value_error(how, ["any", "all"])
-
-        if drop:
-            mask = ~mask
-     
-        df = df.rows.select(mask)
-        
-        return df
-
     def limit(self, count=10) -> DataFrameType:
         """
         Limit the number of rows
@@ -309,6 +275,9 @@ class BaseRows(ABC):
 
     def numeric(self, cols="*", drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="numeric", drop=drop, how=how)
+
+    def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, drop=False, how="any") -> DataFrameType:
+        return self._mask(cols, method="between", drop=drop, how=how, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def greater_than_equal(self, cols="*", value=None, drop=False, how="any") -> DataFrameType:
         return self._mask(cols, method="greater_than_equal", drop=drop, value=value, how=how)
@@ -446,6 +415,9 @@ class BaseRows(ABC):
 
     def drop_less_than(self, cols="*", value=None, how="any") -> DataFrameType:
         return self._mask(cols, method="less_than", drop=True, value=value, how=how)
+
+    def drop_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, how="any") -> DataFrameType:
+        return self._mask(cols, method="between", drop=True, how=how, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def drop_equal(self, cols="*", value=None, how="any") -> DataFrameType:
         return self._mask(cols, method="equal", drop=True, value=value, how=how)
