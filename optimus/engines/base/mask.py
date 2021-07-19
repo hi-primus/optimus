@@ -54,6 +54,39 @@ class Mask(ABC):
         df = self.root
         return df[cols] <= value
 
+    def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None) -> MaskDataFrameType:
+        
+        dfc = self.root[cols]
+        
+        if bounds is None:
+            if lower_bound is None and upper_bound is None:
+                RaiseIt.type_error((lower_bound, upper_bound), (int, float))
+            else:
+                bounds = [(lower_bound, upper_bound)]
+
+        mask = None
+
+        for lb, ub in bounds:
+            
+            if ub is not None and lb is not None:
+                if ub < lb:
+                    ub, lb = lb, ub
+
+                if equal:
+                    _mask = (dfc >= lb) & (dfc <= ub)
+                else:
+                    _mask = (dfc > lb) & (dfc < ub)
+            else:
+                if equal:
+                    _mask = (dfc >= lb) if lb is not None else (dfc <= ub)
+                else:
+                    _mask = (dfc > lb) if lb is not None else (dfc < ub)
+
+            mask = _mask if mask is None else (mask | _mask)
+
+        return mask
+
+
     def equal(self, cols="*", value=None) -> MaskDataFrameType:
         df = self.root
         return df[cols] == value

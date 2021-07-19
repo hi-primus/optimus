@@ -2539,6 +2539,9 @@ class BaseColumns(ABC):
     def any_less_than_equal(self, cols="*", value=None, inverse=False, tidy=True):
         return self._any_mask(cols, "less_than_equal", value=value, inverse=inverse, tidy=tidy)
 
+    def any_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, inverse=False, tidy=True):
+        return self._any_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds, inverse=inverse, tidy=tidy)
+
     def any_equal(self, cols="*", value=None, inverse=False, tidy=True):
         return self._any_mask(cols, "equal", value=value, inverse=inverse, tidy=tidy)
 
@@ -2662,6 +2665,9 @@ class BaseColumns(ABC):
 
     def count_less_than_equal(self, cols="*", value=None, tidy=True):
         return self._count_mask(cols, "less_than_equal", value=value, tidy=tidy)
+
+    def count_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, tidy=True):
+        return self._count_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds, tidy=tidy)
 
     def count_equal(self, cols="*", value=None, tidy=True):
         return self._count_mask(cols, "equal", value=value, tidy=tidy)
@@ -2790,6 +2796,11 @@ class BaseColumns(ABC):
     def less_than_equal(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
         rename_func = False if drop else lambda n: f"{n}_less_than_equal_{value}"
         return self._mask(cols, "less_than_equal", output_cols, rename_func, value=value)
+
+    def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, output_cols=None, drop=True) -> DataFrameType:
+        value = str(bounds) if bounds else str((lower_bound, upper_bound))
+        rename_func = False if drop else lambda n: f"{n}_between_{value}"
+        return self._mask(cols, "between", output_cols, rename_func, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def equal(self, cols="*", value=None, output_cols=None, drop=True) -> DataFrameType:
         rename_func = False if drop else lambda n: f"{n}_equal_{value}"

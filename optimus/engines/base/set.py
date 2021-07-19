@@ -112,6 +112,9 @@ class BaseSet():
     def less_than_equal(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
         return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="less_than_equal", value=value)
 
+    def between(self, cols, true_value=None, default_value=None, args=[], lower_bound=None, upper_bound=None, equal=True, bounds=None) -> DataFrameType:
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
+
     def equal(self, cols, true_value=None, default_value=None, args=[], value=None) -> DataFrameType:
         return self._mask(cols, true_value=true_value, default_value=default_value, args=args, method="equal", value=value)
 

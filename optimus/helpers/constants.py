@@ -66,6 +66,7 @@ class Actions(Enum):
     CUT = "cut"
     TO_FLOAT = "to_float"
     TO_INTEGER = "to_integer"
+    TO_BOOL = "to_bool"
     TO_BOOLEAN = "to_boolean"
     TO_STRING = "to_string"
     YEAR = "years"
@@ -132,6 +133,7 @@ class ProfilerDataTypes(Enum):
     INT = "int"
     DECIMAL = "decimal"
     STRING = "str"
+    BOOL = "bool"
     BOOLEAN = "boolean"
     DATETIME = "datetime"
     ARRAY = "array"
@@ -396,7 +398,8 @@ PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "bin
 PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "float": "numeric",
                       "decimal": "numeric", "date": "date", "array": "array", "binary": "binary", "null": "null"}
 
-PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value,
+PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOL.value,
+                               ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value,
                                ProfilerDataTypes.STRING.value, ProfilerDataTypes.HTTP_CODE.value,
                                ProfilerDataTypes.INT.value, ProfilerDataTypes.IP.value, ProfilerDataTypes.GENDER.value,
                                ProfilerDataTypes.PHONE_NUMBER.value, ProfilerDataTypes.US_STATE.value,

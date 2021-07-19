@@ -46,7 +46,7 @@ class BaseConstants:
                     "long": "bigint",
                     "float": "float",
                     "double": "double",
-                    "bool": "boolean",
+                    "bool": "boolean", # TO DO: bool: (True, False), boolean: (True, False, Null)
                     "boolean": "boolean",
                     "struct": "struct",
                     "array": "array",
