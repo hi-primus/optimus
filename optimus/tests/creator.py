@@ -47,7 +47,7 @@ class TestCreator:
         :return:
         """
 
-        filename = self.create_path + "/" + "test_" + self.name + ".py"
+        filename = self.create_path + "/" + "test_created__" + self.name + ".py"
 
         test_file = open(filename, 'w', encoding='utf-8')
         print("Creating file " + filename)

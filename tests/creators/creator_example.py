@@ -16,7 +16,7 @@ def create():
         "Dask2": {"engine": "dask", "n_partitions": 2}
     }
 
-    t = TestCreator(op, df, name="string", configs=configs)
+    t = TestCreator(op, df, name="example", configs=configs)
     t.create(method="cols.upper", variant="single", cols=["name"])
     t.create(method="cols.upper", variant="multiple",
              compare_by="json", cols=["name", "age (M)"])
