@@ -53,30 +53,23 @@ examples/test\.csv/
 examples/test\.json/
 examples/temp
 
-node_modules
-
+node_modules/
+**/dask-worker-space/
+dask-worker-space/
+examples/data/
+server/
+conda/recipes/conda
+conda/recipes/conda-build
 
 *bumblebee\.ini
 examples/many-columns\.csv
 examples/many=columns\.parquet/
 examples/many-columns.parquet/
 examples/sandbox.ipynb
-examples/dask-worker-space/
 examples/yellow_tripdata_2009-01.csv
 examples/yellow_tripdata_2009-02.csv
 examples/noncomm_use_subset/
 examples/scheduling/dask-worker-space/
 examples/corona.ipynb
 examples/mydask.png
-examples/data/
-server/
-
-
-
-tests/creator/dask-worker-space/
-
-conda/recipes/conda
-
-conda/recipes/conda-build
-
 examples/store.csv

@@ -101,7 +101,10 @@ def to_float(series, *args):
     # if value is None or isinstance(value, str):
     #     return None
     # else:
-    return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
+    try:
+        return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
+    except:
+        return pd.to_numeric(series, errors='coerce')
 
     # try:
     #     # fastnumbers can only handle string or numeric values. Not None, dates or list

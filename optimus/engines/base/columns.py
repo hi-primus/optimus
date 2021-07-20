@@ -967,11 +967,11 @@ class BaseColumns(ABC):
 
     def min(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.min, compute=compute, tidy=tidy, parallel=True)
+        return df.cols.agg_exprs(cols, self.F.min, compute=compute, tidy=tidy, parallel=False)
 
     def max(self, cols="*", tidy=True, compute=True):
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.max, compute=compute, tidy=tidy, parallel=True)
+        return df.cols.agg_exprs(cols, self.F.max, compute=compute, tidy=tidy, parallel=False)
 
     def mode(self, cols="*", tidy=True, compute=True):
         df = self.root
@@ -1163,7 +1163,6 @@ class BaseColumns(ABC):
         df = self.root
 
         if is_int(mode):
-            print("is int")
             df = df.cols.round(cols, decimals=mode, output_cols=output_cols)
         else:
             modes = {
@@ -1725,8 +1724,6 @@ class BaseColumns(ABC):
                 for replace_by, search in replace.items():
                     _replace_by.append(replace_by)
                     _search.append(search)
-                print(_search)
-                print(_replace_by)
                 df = df.cols._replace(
                     col, _search, _replace_by, search_by="chars")
 
@@ -2141,7 +2138,7 @@ class BaseColumns(ABC):
             result = d.compute()
         return result
 
-    def quality(self, cols: dict = None, compute=True) -> dict:
+    def quality(self, cols="*", compute=True) -> dict:
         """
         :param cols:
         :param infer:
@@ -2155,7 +2152,7 @@ class BaseColumns(ABC):
 
         # if a dict is passed to cols, assumes it contains the data types
         if not is_dict(cols):
-            cols = df.cols.infer_data_types(cols)
+            cols = df.cols.infer_types(cols)
 
         result = {}
         profiler_to_mask_func = {
@@ -2195,7 +2192,7 @@ class BaseColumns(ABC):
     def count_by_data_types(cols, infer=False, str_funcs=None, int_funcs=None) -> dict:
         pass
 
-    def infer_data_types(self, cols="*") -> dict:
+    def infer_types(self, cols="*") -> dict:
         """
         Infer datatypes in a dataframe from a sample. First it identify the data type of every value in every cell.
         After that it takes all ghe values apply som heuristic to try to better identify the datatype.

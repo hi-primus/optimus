@@ -712,7 +712,7 @@ class BaseDataFrame(ABC):
 
             if cols_to_infer:
                 cols_data_types = {**cols_data_types, **
-                               df.cols.infer_data_types(cols_to_infer)}
+                               df.cols.infer_types(cols_to_infer)}
                 cols_data_types = {col: cols_data_types[col]
                                for col in cols_to_profile}
 
