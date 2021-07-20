@@ -96,7 +96,7 @@ class Meta:
         if not is_list_value(value):
             value = [value]
         for v in value:
-            meta = Meta.update(meta, ACTIONS_PATH, {name: v}, list)
+            meta = Meta.update(meta, ACTIONS_PATH, {"name": name, "columns": v}, list)
         return meta
 
     @staticmethod

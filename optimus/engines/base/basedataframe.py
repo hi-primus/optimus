@@ -486,31 +486,34 @@ class BaseDataFrame(ABC):
             else:
                 modified_columns = []
                 # Operations need to be processed int the same order that created
-                for l in Meta.get(df.meta, "transformations.actions"):
+                for action in Meta.get(df.meta, "transformations.actions"):
                     dropped_columns = []
-                    for action_name, column in l.items():
-                        if is_tuple(column):
-                            source, target = column
+                    
+                    action_name = action.get("name", "action")
+                    column = action.get("column", None)
 
-                        elif is_str(column):
-                            source = target = column
+                    if is_tuple(column):
+                        source, target = column
 
-                        if action_name == Actions.COPY.value and source in profiler_columns:
-                            profiler_columns[target] = profiler_columns[source]
+                    elif is_str(column):
+                        source = target = column
 
-                        elif action_name == Actions.RENAME.value and source in profiler_columns:
-                            profiler_columns[target] = profiler_columns[source]
-                            profiler_columns.pop(source)
-                            if source in new_columns:
-                                new_columns.pop(source)
-                                new_columns.push(target)
+                    if action_name == Actions.COPY.value and source in profiler_columns:
+                        profiler_columns[target] = profiler_columns[source]
 
-                        elif action_name == Actions.DROP.value and source in profiler_columns:
-                            profiler_columns.pop(source)
-                            dropped_columns.append(source)
+                    elif action_name == Actions.RENAME.value and source in profiler_columns:
+                        profiler_columns[target] = profiler_columns[source]
+                        profiler_columns.pop(source)
+                        if source in new_columns:
+                            new_columns.pop(source)
+                            new_columns.push(target)
 
-                        else:
-                            modified_columns.append(source)
+                    elif action_name == Actions.DROP.value and source in profiler_columns:
+                        profiler_columns.pop(source)
+                        dropped_columns.append(source)
+
+                    else:
+                        modified_columns.append(source)
 
                 profiled_columns = list(profiler_columns.keys())
 
