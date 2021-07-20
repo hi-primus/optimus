@@ -21,7 +21,7 @@ class TestBase(unittest.TestCase):
         self.op = Optimus(self.config["engine"])
 
         if self.dict:
-            self.df = self.create_dataframe(self.dict)
+            self.df = self.create_dataframe(self.dict, force_data_types=True)
         elif self.load:
             if isinstance(self.load, str):
                 self.df = self.load_dataframe(self.load)
