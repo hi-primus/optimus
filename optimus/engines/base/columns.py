@@ -67,6 +67,55 @@ class BaseColumns(ABC):
     def _names(self):
         pass
 
+    def _transformed(self, updated=[]):
+        actions = Meta.get(self.root.meta, "transformations.actions") or []
+        transformed_columns = []
+        updated = val_to_list(updated)
+
+        for action in actions:
+            action_cols = action.get("columns", None)
+            action_stats = action.get("updated_stats", [])
+            
+            if not action_cols:
+                continue
+            
+            if is_tuple(action_cols):
+                action_cols = action_cols[1]
+
+            if len(updated) and all(stat in action_stats for stat in updated):
+                continue
+            
+            action_cols = val_to_list(action_cols)
+            transformed_columns += action_cols
+
+        return list(set(transformed_columns))
+
+
+    def _set_transformed_stat(self, cols="*", stats=None):
+
+        cols = parse_columns(self.root, cols)
+        actions = Meta.get(self.root.meta, "transformations.actions") 
+        stats = val_to_list(stats)
+
+        for i, action in enumerate(actions):
+            action_cols = action.get("columns", None)
+            action_stats = action.get("updated_stats", [])
+            
+            if not action_cols:
+                continue
+            
+            if is_tuple(action_cols):
+                action_cols = action_cols[1]
+
+            action_cols = val_to_list(action_cols)
+
+            if all(col in cols for col in action_cols):
+                action.update({"updated_stats": list(set([*action_stats, *stats]))})
+
+            actions[i] = action
+        
+        self.root.meta = Meta.set(self.root.meta, "transformations.actions", actions)
+
     @abstractmethod
     def append(self, dfs: DataFrameTypeList) -> DataFrameType:
         pass
@@ -2139,7 +2188,7 @@ class BaseColumns(ABC):
             result = d.compute()
         return result
 
-    def quality(self, cols="*", compute=True) -> dict:
+    def quality(self, cols="*", flush=False, compute=True) -> dict:
         """
         :param cols:
         :param infer:
@@ -2152,15 +2201,31 @@ class BaseColumns(ABC):
         df = self.root
 
         # if a dict is passed to cols, assumes it contains the data types
-        if not is_dict(cols):
-            cols = df.cols.infer_types(cols)
+        if is_dict(cols):
+            cols_types = cols
+        else:
+            cols_types = self.root.cols.infer_types(cols)
 
         result = {}
         profiler_to_mask_func = {
             "decimal": "float"
         }
 
-        for col_name, props in cols.items():
+        quality_props = ["match", "missing", "mismatch"]
+
+        transformed = self._transformed(quality_props)
+
+        for col_name, props in cols_types.items():
+
+            # Gets cached quality
+            if col_name not in transformed and not flush:
+                cached_props = Meta.get(self.root.meta, f"columns.{col_name}.stats")
+                if cached_props and all(prop in cached_props for prop in quality_props):
+                    result[col_name] = {"match": cached_props.get("match"),
+                                        "missing": cached_props.get("missing"),
+                                        "mismatch": cached_props.get("mismatch")}
+                    continue
+
             # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
             dtype = profiler_to_mask_func.get(
                 props["data_type"], props["data_type"])
@@ -2168,9 +2233,9 @@ class BaseColumns(ABC):
             matches_mismatches = getattr(df[col_name].mask, dtype)(
                 col_name).cols.frequency()
 
+            missing = df.mask.null(col_name).cols.sum()
             values = {list(j.values())[0]: list(j.values())[1] for j in
                       matches_mismatches["frequency"][col_name]["values"]}
-            missing = df.mask.null(col_name).cols.sum()
 
             matches = values.get(True)
             mismatches = values.get(False, missing) - missing
@@ -2183,8 +2248,13 @@ class BaseColumns(ABC):
             result[col_name] = {"match": matches,
                                 "missing": missing, "mismatch": mismatches}
 
-        for col_name in cols.keys():
-            result[col_name].update({"inferred_type": cols[col_name]})
+        for col_name in cols_types.keys():
+            result[col_name].update({"inferred_type": cols_types[col_name]})
+
+        for col in result:
+            self.root.meta = Meta.set(self.root.meta, f"columns.{col}.stats", result[col])
+
+        self._set_transformed_stat(list(result.keys()), ["match", "missing", "mismatch"])
 
         return result
 
@@ -2193,7 +2263,7 @@ class BaseColumns(ABC):
     def count_by_data_types(cols, infer=False, str_funcs=None, int_funcs=None) -> dict:
         pass
 
-    def infer_types(self, cols="*") -> dict:
+    def infer_types(self, cols="*", sample=INFER_PROFILER_ROWS) -> dict:
         """
         Infer datatypes in a dataframe from a sample. First it identify the data type of every value in every cell.
         After that it takes all ghe values apply som heuristic to try to better identify the datatype.
@@ -2207,12 +2277,11 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols)
 
         # Infer the data type from every element in a Series.
-        sample = df.cols.select(cols).rows.limit(
-            INFER_PROFILER_ROWS).to_optimus_pandas()
-        rows_count = sample.rows.count()
-        sample_dtypes = sample.cols.infer_data_types().cols.frequency()
+        sample_df = df.cols.select(cols).rows.limit(sample).to_optimus_pandas()
+        rows_count = sample_df.rows.count()
+        sample_dtypes = sample_df.cols.infer_data_types().cols.frequency()
 
-        _unique_counts = sample.cols.count_uniques()
+        _unique_counts = sample_df.cols.count_uniques()
 
         cols_and_inferred_dtype = {}
         for col_name in cols:
@@ -2256,9 +2325,12 @@ class BaseColumns(ABC):
                 "data_type": _dtype, "categorical": is_categorical}
             if dtype == ProfilerDataTypes.DATETIME.value:
                 # pydatainfer do not accepts None value so we must filter them
-                filtered_dates = [i for i in sample[col_name].to_list() if i]
+                filtered_dates = [i for i in sample_df[col_name].to_list() if i]
                 cols_and_inferred_dtype[col_name].update(
                     {"format": pydateinfer.infer_dtypes(filtered_dates)})
+
+        for col in cols_and_inferred_dtype:
+            self.root.meta = Meta.set(self.root.meta, f"columns.{col}.stats.inferred_type", cols_and_inferred_dtype[col])
 
         return cols_and_inferred_dtype
 
