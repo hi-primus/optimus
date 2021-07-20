@@ -13,11 +13,11 @@ from glom import assign
 from tabulate import tabulate
 
 from optimus.engines.base.stringclustering import string_clustering
-from optimus.helpers.check import df_dicts_equal, is_notebook
+from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes, RELATIVE_ERROR
 from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
+from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.infer import is_str, is_tuple, is_list

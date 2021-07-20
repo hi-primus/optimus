@@ -60,8 +60,7 @@ class TestCreator:
             "nan = float(\"nan\")",
             "inf = float(\"inf\")",
             "from optimus.helpers.json import json_encoding",
-            "from optimus.helpers.functions import deep_sort"
-            "from optimus.helpers.check import df_dicts_equal"
+            "from optimus.helpers.functions import deep_sort, df_dicts_equal"
         ]
 
         if self.options.get("imports", None) is not None:

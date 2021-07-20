@@ -660,6 +660,17 @@ def match_date(value):
 
     return "".join(exprs)
 
+def df_dicts_equal(df1, df2, decimal=True):
+    import numpy as np
+    if decimal == True:
+        decimal = 7
+    for k in df1:
+        try:
+            np.testing.assert_almost_equal(df1[k], df2[k], decimal=decimal)
+        except Exception:
+            if df1[k] != df2[k]:
+                return False
+    return True
 
 # Taken from https://github.com/Kemaweyan/singleton_decorator/
 class _SingletonWrapper:
