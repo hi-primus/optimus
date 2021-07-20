@@ -13,7 +13,7 @@ from glom import assign
 from tabulate import tabulate
 
 from optimus.engines.base.stringclustering import string_clustering
-from optimus.helpers.check import is_notebook
+from optimus.helpers.check import df_dicts_equal, is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes, RELATIVE_ERROR
 from optimus.helpers.core import val_to_list
@@ -246,12 +246,36 @@ class BaseDataFrame(ABC):
         """
         return self.data.values
 
-    def equals(self, df2: DataFrameType) -> bool:
-        if isinstance(df2, (BaseDataFrame,)):
-            df2 = df2.data
-            return self.data.equals(df2)
+    def equals_dataframe(self, df2: DataFrameType) -> bool:
+        df2 = df2.data
+        return self.data.equals(df2)
+
+    def equals(self, df2: DataFrameType, decimal=None) -> bool:
+        df2_is_dataframe = isinstance(df2, (BaseDataFrame,))
+
+        # checks by column names
+        if df2_is_dataframe:
+            cols2 = df2.cols.names()
         else:
-            return self.to_dict(n="all") == df2
+            cols2 = list(df2.keys())
+        
+        if cols2 != self.cols.names():
+            return False
+
+        if decimal is not None:
+            # checks by each column
+            if df2_is_dataframe:
+                df2 = df2.to_dict(n="all")
+            df1 = self.to_dict(n="all")
+
+            return df_dicts_equal(df1, df2, decimal)
+
+        else:
+            # checks by dataframe
+            if df2_is_dataframe:
+                return self.equals_dataframe(df2)
+            else:
+                return self.to_dict(n="all") == df2
 
     @abstractmethod
     def save(self):

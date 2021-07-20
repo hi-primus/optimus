@@ -11,6 +11,17 @@ from optimus.helpers.parser import parse_data_types
 from optimus.helpers.raiseit import RaiseIt
 # from optimus.new_optimus import SparkDataFrame
 
+def df_dicts_equal(df1, df2, decimal=True):
+    import numpy as np
+    if decimal == True:
+        decimal = 7
+    for k in df1:
+        try:
+            np.testing.assert_almost_equal(df1[k], df2[k], decimal=decimal)
+        except Exception:
+            if df1[k] != df2[k]:
+                return False
+    return True
 
 def has_(value, _type):
     """
