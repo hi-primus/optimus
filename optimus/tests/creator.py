@@ -190,10 +190,14 @@ class TestCreator:
                 add_buffer(f"    df = self.df\n")
             df_func = df
         elif isinstance(df, (BaseDataFrame,)):
+            if select_cols:
+                df = df.cols.select(select_cols)
             add_buffer(
                 "    df = self.create_dataframe(dict=" + df.export(data_types="internal") + ", force_data_types=True)\n")
             df_func = df
         else:
+            if select_cols:
+                df = [df[col] for col in df if df in select_cols] if select_cols != "*" else df
             add_buffer("    df = self.create_dataframe(dict=" +
                        pformat(df, compact=True, sort_dicts=False) + ", force_data_types=True)\n")
             df_func = df
