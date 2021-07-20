@@ -314,6 +314,8 @@ class TestCreator:
         for b in buffer:
             test_file.write(b)
 
+        test_file.close()
+
         self.created.append((method, variant))
 
         # return "".join(buffer)
