@@ -27,38 +27,12 @@ class BaseConstants:
                    "float": np.float, "float64": np.float64, "boolean": np.bool, "array": np.array,
                    "bigint": np.int64, "object": np.object_}
 
-    SHORT_DTYPES = {"string": "string",
-                    "str": "string",
+    SHORT_DTYPES = {"str": "string",
                     "integer": "int",
-                    "int": "int",
-
-                    "uint8": "uint8",
-                    "uint16": "uint16",
-                    "uint32": "uint32",
-                    "uint64": "uint64",
-                    "int8": "int8",
-                    "int16": "int16",
-                    "int32": "int32",
-                    "int64": "int64",
-
-                    "float64": "float64",
                     "big": "bigint",
                     "long": "bigint",
-                    "float": "float",
-                    "double": "double",
                     "bool": "boolean", # TO DO: bool: (True, False), boolean: (True, False, Null)
-                    "boolean": "boolean",
-                    "struct": "struct",
-                    "array": "array",
-                    "date": "date",
-                    "datetime": "datetime",
-                    "byte": "byte",
-                    "short": "short",
-                    "binary": "binary",
-                    "null": "null",
-                    "vector": "vector",
-                    "timestamp": "datetime",
-                    "object": "object"
+                    "timestamp": "datetime"
                     }
 
     NUMERIC_TYPES = ["int8", "int16", "int32", "int64",

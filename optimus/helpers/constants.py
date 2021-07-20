@@ -156,9 +156,6 @@ class ProfilerDataTypes(Enum):
     def list():
         return list(map(lambda c: c.value, ProfilerDataTypes))
 
-    # NULL = "null"
-    # MISSING = "missing"
-
 
 class Schemas(Enum):
     S3 = 's3://'
