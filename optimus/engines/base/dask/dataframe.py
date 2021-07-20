@@ -60,17 +60,6 @@ class DaskBaseDataFrame(BaseDataFrame):
     def visualize(self):
         return display(self.data.visualize())
 
-    def export(self):
-        """
-        Helper function to export all the dataframe in text format. Aimed to be used in test functions
-        :return:
-        """
-        df = self.root
-        df_data = df.to_json()
-        df_schema = df.cols.data_types()
-
-        return f"{df_schema}, {df_data}"
-
     def _reset_buffer(self):
         if self.buffer:
             Variable(self.buffer).delete()

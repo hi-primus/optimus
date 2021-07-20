@@ -13,8 +13,6 @@ from optimus.helpers.logger import logger
 
 class TestCreator:
 
-    created = []
-
     def __init__(self, op=None, df=None, name=None, path="", create_path="..", configs={}, **kwargs):
         """
         Create python code with unit test functions for Optimus.
@@ -39,6 +37,7 @@ class TestCreator:
         self.create_path = create_path
         self.options = kwargs
         self.configs = configs
+        self.created = []
 
     def run(self, clear=True):
         """
@@ -85,7 +84,7 @@ class TestCreator:
 
         # Global Dataframe
         if self.df is not None:
-            test_file.write("    dict = " + self.df.export() + "\n")
+            test_file.write("    dict = " + self.df.export(data_types="internal") + "\n")
 
         test_file.write("    maxDiff = None\n")
 
@@ -190,12 +189,16 @@ class TestCreator:
                 add_buffer(f"    df = self.df\n")
             df_func = df
         elif isinstance(df, (BaseDataFrame,)):
+            if select_cols:
+                df = df.cols.select(select_cols)
             add_buffer(
-                "    df = self.create_dataframe(dict=" + df.export() + ")\n")
+                "    df = self.create_dataframe(dict=" + df.export(data_types="internal") + ", force_data_types=True)\n")
             df_func = df
         else:
+            if select_cols:
+                df = [df[col] for col in df if df in select_cols] if select_cols != "*" else df
             add_buffer("    df = self.create_dataframe(dict=" +
-                       pformat(df, compact=True, sort_dicts=False) + ")\n")
+                       pformat(df, compact=True, sort_dicts=False) + ", force_data_types=True)\n")
             df_func = df
 
         # Process simple arguments
@@ -204,7 +207,7 @@ class TestCreator:
             if is_function(v):
                 _args.append(v.__qualname__)
             elif isinstance(v, (BaseDataFrame,)):
-                _df = "    self.create_dataframe(dict=" + v.export() + ")\n"
+                _df = "    self.create_dataframe(dict=" + v.export(data_types="internal") + ", force_data_types=True)\n"
                 _args.append(_df)
             elif isinstance(v, (str, bool, dict, list)):
                 _args.append(pformat(v, compact=True, sort_dicts=False))
@@ -270,18 +273,18 @@ class TestCreator:
         if compare_by != "df" and expected_is_df:
             add_buffer("    result = result.to_dict()\n")
 
-        if expected_is_df:
-            expected_df = expected_df.export(dtypes=False)
-
         if failed:
             add_buffer(
                 "    # The following value does not represent a correct output of the operation\n")
             expected_df = 'self.dict'
-
-        if compare_by == "df" and not failed:
+        elif compare_by == "df":
+            if expected_is_df:
+                expected_df = expected_df.export(data_types="internal")
             add_buffer(
-                f"    expected = self.create_dataframe(dict={expected_df})\n")
+                f"    expected = self.create_dataframe(dict={expected_df}, force_data_types=True)\n")
         else:
+            if expected_is_df:
+                expected_df = expected_df.export(data_types=False)
             add_buffer(f"    expected = {expected_df}\n")
 
         # Output
@@ -309,6 +312,8 @@ class TestCreator:
 
         for b in buffer:
             test_file.write(b)
+
+        test_file.close()
 
         self.created.append((method, variant))
 

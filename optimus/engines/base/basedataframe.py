@@ -649,18 +649,22 @@ class BaseDataFrame(ABC):
                         tablefmt="simple",
                         showindex="never")+"\n"
 
-    def export(self, n="all", dtypes=True):
+    def export(self, n="all", data_types="inferred"):
         """
         Helper function to export all the dataframe in dict format. Aimed to be used in test functions
         :return:
         """
         df_dict = self.to_dict(n=n)
 
-        if not dtypes:
+        if not data_types:
             df_data = pformat(df_dict, sort_dicts=False,
                               width=800, compact=True)
         else:
-            df_dtypes = self.cols.data_types()
+            if data_types == "internal":
+                df_dtypes = self.cols.data_types()
+            else:
+                df_dtypes = self.cols.infer_types()
+                df_dtypes = { col: df_dtypes[col]["data_type"] for col in df_dtypes }
             df_data = []
             for col_name in df_dict.keys():
                 value = pformat((col_name, df_dtypes[col_name]))

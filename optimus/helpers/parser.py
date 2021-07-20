@@ -84,7 +84,6 @@ def parse_data_types(df, value):
 
     for v in value:
         v = df.constants.SHORT_DTYPES.get(v, v)
-        # v = df.constants.DTYPES_DICT.get(v, v)
         data_type.append(v)
 
     return one_list_to_val(data_type)
