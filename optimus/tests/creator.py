@@ -14,8 +14,6 @@ from optimus.helpers.logger import logger
 
 class TestCreator:
 
-    created = []
-
     def __init__(self, op=None, df=None, name=None, path="", create_path="..", configs={}, **kwargs):
         """
         Create python code with unit test functions for Optimus.
@@ -40,6 +38,7 @@ class TestCreator:
         self.create_path = create_path
         self.options = kwargs
         self.configs = configs
+        self.created = []
 
     def run(self, clear=True):
         """
