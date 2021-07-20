@@ -1,6 +1,5 @@
 import errno
 from optimus.helpers.core import val_to_list
-from optimus.api.code import generate_code
 import warnings
 import os
 from io import UnsupportedOperation
@@ -290,7 +289,7 @@ class TestCreator:
 
         # Output
         if compare_by == "df":
-            add_buffer("    self.assertTrue(result.equals(expected))\n")
+            add_buffer("    self.assertTrue(result.equals(expected, decimal=True))\n")
         elif compare_by == "dict":
             add_buffer(
                 "    self.assertTrue(df_dicts_equal(result, expected))\n")
