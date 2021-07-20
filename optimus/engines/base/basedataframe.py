@@ -17,7 +17,7 @@ from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes, RELATIVE_ERROR
 from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import absolute_path, reduce_mem_usage, update_dict
+from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.infer import is_str, is_tuple, is_list
@@ -246,12 +246,36 @@ class BaseDataFrame(ABC):
         """
         return self.data.values
 
-    def equals(self, df2: DataFrameType) -> bool:
-        if isinstance(df2, (BaseDataFrame,)):
-            df2 = df2.data
-            return self.data.equals(df2)
+    def equals_dataframe(self, df2: DataFrameType) -> bool:
+        df2 = df2.data
+        return self.data.equals(df2)
+
+    def equals(self, df2: DataFrameType, decimal=None) -> bool:
+        df2_is_dataframe = isinstance(df2, (BaseDataFrame,))
+
+        # checks by column names
+        if df2_is_dataframe:
+            cols2 = df2.cols.names()
         else:
-            return self.to_dict(n="all") == df2
+            cols2 = list(df2.keys())
+        
+        if cols2 != self.cols.names():
+            return False
+
+        if decimal is not None:
+            # checks by each column
+            if df2_is_dataframe:
+                df2 = df2.to_dict(n="all")
+            df1 = self.to_dict(n="all")
+
+            return df_dicts_equal(df1, df2, decimal)
+
+        else:
+            # checks by dataframe
+            if df2_is_dataframe:
+                return self.equals_dataframe(df2)
+            else:
+                return self.to_dict(n="all") == df2
 
     @abstractmethod
     def save(self):
@@ -462,31 +486,34 @@ class BaseDataFrame(ABC):
             else:
                 modified_columns = []
                 # Operations need to be processed int the same order that created
-                for l in Meta.get(df.meta, "transformations.actions"):
+                for action in Meta.get(df.meta, "transformations.actions"):
                     dropped_columns = []
-                    for action_name, column in l.items():
-                        if is_tuple(column):
-                            source, target = column
+                    
+                    action_name = action.get("name", "action")
+                    column = action.get("column", None)
 
-                        elif is_str(column):
-                            source = target = column
+                    if is_tuple(column):
+                        source, target = column
 
-                        if action_name == Actions.COPY.value and source in profiler_columns:
-                            profiler_columns[target] = profiler_columns[source]
+                    elif is_str(column):
+                        source = target = column
 
-                        elif action_name == Actions.RENAME.value and source in profiler_columns:
-                            profiler_columns[target] = profiler_columns[source]
-                            profiler_columns.pop(source)
-                            if source in new_columns:
-                                new_columns.pop(source)
-                                new_columns.push(target)
+                    if action_name == Actions.COPY.value and source in profiler_columns:
+                        profiler_columns[target] = profiler_columns[source]
 
-                        elif action_name == Actions.DROP.value and source in profiler_columns:
-                            profiler_columns.pop(source)
-                            dropped_columns.append(source)
+                    elif action_name == Actions.RENAME.value and source in profiler_columns:
+                        profiler_columns[target] = profiler_columns[source]
+                        profiler_columns.pop(source)
+                        if source in new_columns:
+                            new_columns.pop(source)
+                            new_columns.push(target)
 
-                        else:
-                            modified_columns.append(source)
+                    elif action_name == Actions.DROP.value and source in profiler_columns:
+                        profiler_columns.pop(source)
+                        dropped_columns.append(source)
+
+                    else:
+                        modified_columns.append(source)
 
                 profiled_columns = list(profiler_columns.keys())
 

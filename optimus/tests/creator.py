@@ -60,7 +60,7 @@ class TestCreator:
             "nan = float(\"nan\")",
             "inf = float(\"inf\")",
             "from optimus.helpers.json import json_encoding",
-            "from optimus.helpers.functions import deep_sort"
+            "from optimus.helpers.functions import deep_sort, df_dicts_equal"
         ]
 
         if self.options.get("imports", None) is not None:
@@ -290,7 +290,7 @@ class TestCreator:
             add_buffer("    self.assertTrue(result.equals(expected))\n")
         elif compare_by == "dict":
             add_buffer(
-                "    self.assertDictEqual(result, expected)\n")
+                "    self.assertTrue(df_dicts_equal(result, expected))\n")
         elif compare_by == "json":
             add_buffer(
                 "    self.assertEqual(json_encoding(result), json_encoding(expected))\n")

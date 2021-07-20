@@ -11,7 +11,6 @@ from optimus.helpers.parser import parse_data_types
 from optimus.helpers.raiseit import RaiseIt
 # from optimus.new_optimus import SparkDataFrame
 
-
 def has_(value, _type):
     """
     Check if a list has a element of a specific data type

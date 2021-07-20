@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from optimus.helpers.types import DataFrameType
 
 import dask
 import humanize
@@ -187,7 +188,7 @@ class DaskBaseDataFrame(BaseDataFrame):
     def partitions(self):
         return self.data.npartitions
 
-    def equals(self, df2) -> bool:
+    def equals_dataframe(self, df2: DataFrameType) -> bool:
         if isinstance(df2, (BaseDataFrame,)):
             return df2.to_dict(n="all") == self.to_dict(n="all")
         else:
