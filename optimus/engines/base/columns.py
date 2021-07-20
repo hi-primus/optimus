@@ -85,7 +85,7 @@ class BaseColumns(ABC):
         df = self.root
         cols = parse_columns(df, cols, is_regex=regex, filter_by_column_types=data_type, invert=invert,
                              accepts_missing_cols=accepts_missing_cols)
-        meta = df.meta
+        meta = Meta.select_columns(df.meta, cols)
         dfd = df.data
         if cols is not None:
             dfd = dfd[cols]
@@ -149,6 +149,7 @@ class BaseColumns(ABC):
 
         dfd = df.data.drop(columns=cols)
         meta = Meta.action(df.meta, Actions.DROP.value, cols)
+        meta = Meta.drop_columns(meta, cols)
 
         return self.root.new(dfd, meta=meta)
 

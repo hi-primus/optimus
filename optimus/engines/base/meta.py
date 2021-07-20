@@ -3,7 +3,7 @@ import copy
 from glom import glom, assign, delete
 
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_list_value
+from optimus.infer import is_dict, is_list_value
 
 ACTIONS_PATH = "transformations.actions"
 
@@ -132,3 +132,23 @@ class Meta:
                 _element = _element[ele]
 
         return new_meta
+
+    @staticmethod
+    def drop_columns(meta, cols):
+        for col in cols:
+            meta = Meta.reset(meta, f'columns_data_types.{col}')
+            meta = Meta.reset(meta, f'max_cell_length.{col}')
+            meta = Meta.reset(meta, f'profile.columns.{col}')
+        return meta
+
+    @staticmethod
+    def select_columns(meta, cols):
+        all_cols = []
+
+        for _cols in ['columns_data_types', 'max_cell_length', 'profile.columns']:
+            found = Meta.get(meta, _cols)
+            if is_dict(found):
+                all_cols += list(found.keys())
+
+        to_drop = list(set(all_cols) - set(cols))
+        return Meta.drop_columns(meta, to_drop)
