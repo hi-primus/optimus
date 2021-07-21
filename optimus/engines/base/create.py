@@ -1,4 +1,5 @@
 from abc import abstractmethod
+import warnings
 from optimus.engines.base.meta import Meta
 from optimus.infer import is_tuple
 from optimus.helpers.types import DataFrameType, InternalDataFrameType
@@ -64,7 +65,10 @@ class BaseCreate:
 
         df = self._df_from_dfd(dfd, n_partitions=n_partitions, *args, **kwargs)
         
-        df.meta = Meta.set(df.meta, value={"max_cell_length": df.cols.len("*").cols.max()})
+        try:
+            df.meta = Meta.set(df.meta, value={"max_cell_length": df.cols.len("*").cols.max()})
+        except:
+            warnings.warn("Could not set max_cell_length")
         
         for (name, dtype, nulls, force_dtype) in dict:
             if dtype and not force_dtype:
