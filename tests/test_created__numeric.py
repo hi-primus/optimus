@@ -163,43 +163,49 @@ class TestNumericPandas(TestBase):
     
     def test_cols_log(self):
         df = self.create_dataframe(dict={('log_test', 'float64'): [10.0, nan, inf, -356.0, 0.5314, 0.0]}, force_data_types=True)
-        result = df.cols.log(cols=['log_test'],base=[10])
+        result = df.cols.log(cols=['log_test'],base=10)
         expected = self.create_dataframe(dict={('log_test', 'float64'): [1.0, nan, inf, nan, -0.2745784499257413, -inf]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_log_1(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.log(cols=['height(ft)'],base=100.3)
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, 0.6148245379175669, 0.7070267767453151, 0.5566096202361945, nan, 1.2377555088534953]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_log_2(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.log(cols=['height(ft)'],base=2.7182)
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, 2.8332986361508996, 3.258194620955827, 2.5650265736386784, nan, 5.70395418341788]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_log_3(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.log(cols=['height(ft)'],base=-3)
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_log_all(self):
         df = self.df
-        result = df.cols.log(cols='*',base=[12])
+        result = df.cols.log(cols='*',base=12)
         expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [nan, 1.1401689251779061, 1.3111545008338428, 1.032211555182713, nan, 2.2953709247559937], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [0.9266284080291269, 0.783091851446946, 0.783091851446946, 0.8368288369533894, 0.9266284080291269, 0.8368288369533894], ('Cybertronian', 'float64'): [0.0, 0.0, 0.0, 0.0, 0.0, -inf], ('Date Type', 'float64'): [16.835299971775452, 16.825821051580643, 16.81574204946761, 16.806596952083762, 16.796070282505955, 16.785634776139585], ('age', 'float64'): [6.207455910552758, 6.207455910552758, 6.207455910552758, 6.207455910552758, 6.207455910552758, 6.207455910552758], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [16.81574204946761, 16.81574204946761, 16.81574204946761, 16.81574204946761, 16.81574204946761, 16.81574204946761], ('weight(t)', 'float64'): [0.5869898665303819, 0.2789429456511298, 0.5578858913022596, 0.23654275501748367, 0.7004151141810467, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_log_multiple(self):
         df = self.df
-        result = df.cols.log(cols=['NullType', 'weight(t)', 'japanese name'],base=[21],output_cols=['nt', 'wt', 'jn'])
+        result = df.cols.log(cols=['NullType', 'weight(t)', 'japanese name'],base=21,output_cols=['nt', 'wt', 'jn'])
         expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [0.4790948506821362, 0.227670248696953, 0.455340497393906, 0.1930636666096123, 0.5716713246304594, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
-    def test_cols_log_numeric1(self):
+    def test_cols_log_numeric(self):
         df = self.df.cols.select(['height(ft)'])
-        result = df.cols.log(cols=['height(ft)'],base=[100.3])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, 0.6148245379175669, 0.7070267767453151, 0.5566096202361945, nan, 1.2377555088534953]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True))
-    
-    def test_cols_log_numeric2(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.log(cols=['height(ft)'],base=[2.7182])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, 2.8332986361508996, 3.258194620955827, 2.5650265736386784, nan, 5.70395418341788]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True))
-    
-    def test_cols_log_numeric3(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.log(cols=['height(ft)'],base=[-3])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
+        result = df.cols.log(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, 1.2304489213782739, 1.414973347970818, 1.1139433523068367, nan, 2.477121254719662]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_log_string(self):
         df = self.df.cols.select(['names'])
-        result = df.cols.log(cols=['names'],base=[2],output_cols=['names_2'])
+        result = df.cols.log(cols=['names'],base=2,output_cols=['names_2'])
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
@@ -259,9 +265,8 @@ class TestNumericPandas(TestBase):
     
     def test_cols_mod(self):
         df = self.create_dataframe(dict={('mod_test', 'float64'): [10.0, nan, inf, -356.0, 0.5314, 0.0]}, force_data_types=True)
-        result = df.cols.mod(cols=['mod_test'],divisor=[3])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.mod(cols=['mod_test'],divisor=3)
+        expected = self.create_dataframe(dict={('mod_test', 'float64'): [1.0, nan, nan, 1.0, 0.5314, 0.0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_modified_z_score_all(self):
@@ -288,95 +293,94 @@ class TestNumericPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
+    def test_cols_mod_1(self):
+        df = self.create_dataframe(dict={('mod_test', 'float64'): [10.0, nan, inf, -356.0, 0.5314, 0.0]}, force_data_types=True)
+        result = df.cols.mod(cols=['mod_test'],divisor=100.3)
+        expected = self.create_dataframe(dict={('mod_test', 'float64'): [10.0, nan, nan, 45.19999999999999, 0.5314, 0.0]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_mod_2(self):
+        df = self.create_dataframe(dict={('mod_test', 'float64'): [10.0, nan, inf, -356.0, 0.5314, 0.0]}, force_data_types=True)
+        result = df.cols.mod(cols=['mod_test'],divisor=6)
+        expected = self.create_dataframe(dict={('mod_test', 'float64'): [4.0, nan, nan, 4.0, 0.5314, 0.0]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_mod_3(self):
+        df = self.create_dataframe(dict={('mod_test', 'float64'): [10.0, nan, inf, -356.0, 0.5314, 0.0]}, force_data_types=True)
+        result = df.cols.mod(cols=['mod_test'],divisor=-12)
+        expected = self.create_dataframe(dict={('mod_test', 'float64'): [-2.0, nan, nan, -8.0, -11.4686, -0.0]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
     def test_cols_mod_all(self):
         df = self.df
-        result = df.cols.mod(cols='*',divisor=[5])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.mod(cols='*',divisor=5)
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [2.0, 2.0, 1.0, 3.0, nan, 0.0], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [0.0, 2.0, 2.0, 3.0, 0.0, 3.0], ('Cybertronian', 'float64'): [1.0, 1.0, 1.0, 1.0, 1.0, 0.0], ('Date Type', 'int64'): [0, 0, 0, 0, 0, 0], ('age', 'float64'): [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'int64'): [0, 0, 0, 0, 0, 0], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 0.7000000000000002, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_mod_multiple(self):
         df = self.df
-        result = df.cols.mod(cols=['NullType', 'weight(t)', 'japanese name'],divisor=[10],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.mod(cols=['NullType', 'weight(t)', 'japanese name'],divisor=10,output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
-    def test_cols_mod_numeric1(self):
+    def test_cols_mod_numeric(self):
         df = self.df.cols.select(['height(ft)'])
-        result = df.cols.mod(cols=['height(ft)'],divisor=[100.3])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True))
-    
-    def test_cols_mod_numeric2(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.mod(cols=['height(ft)'],divisor=[6])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True))
-    
-    def test_cols_mod_numeric3(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.mod(cols=['height(ft)'],divisor=[-12])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.mod(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [0.0, 1.0, 0.0, 1.0, nan, 0.0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_mod_string(self):
         df = self.df.cols.select(['names'])
-        result = df.cols.mod(cols=['names'],divisor=[4],output_cols=['names_2'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.mod(cols=['names'],divisor=4,output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_pow(self):
         df = self.create_dataframe(dict={('pow_test', 'float64'): [10.0, nan, -inf, -356.0, 0.5314, 0.0]}, force_data_types=True)
-        result = df.cols.pow(cols=['pow_test'],power=[2])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.pow(cols=['pow_test'],power=2)
+        expected = self.create_dataframe(dict={('pow_test', 'float64'): [100.0, nan, inf, 126736.0, 0.28238596, 0.0]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_pow_1(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.pow(cols=['height(ft)'],power=0.5)
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, 4.123105625617661, 5.0990195135927845, 3.605551275463989, nan, 17.320508075688775]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_pow_2(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.pow(cols=['height(ft)'],power=10)
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [296196766695424.0, 2015993900449.0, 141167095653376.0, 137858491849.0, nan, 5.9049e+24]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_pow_3(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.pow(cols=['height(ft)'],power=-5)
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [-5.8104510025584576e-08, 7.042962777237426e-07, 8.416533573215762e-08, 2.693290743429044e-06, nan, 4.1152263374485594e-13]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_pow_all(self):
         df = self.df
-        result = df.cols.pow(cols='*',power=[3])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.pow(cols='*',power=3)
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-21952.0, 4913.0, 17576.0, 2197.0, nan, 27000000.0], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [1000.0, 343.0, 343.0, 512.0, 1000.0, 512.0], ('Cybertronian', 'float64'): [1.0, 1.0, 1.0, 1.0, 1.0, 0.0], ('Date Type', 'int64'): [-502151358451810304, 8052154658761736192, -6133058267548483584, 6773413839565225984, 7298083196153888768, -4253649848051433472], ('age', 'float64'): [1.25e+20, 1.25e+20, 1.25e+20, 1.25e+20, 1.25e+20, 1.25e+20], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'int64'): [-6133058267548483584, -6133058267548483584, -6133058267548483584, -6133058267548483584, -6133058267548483584, -6133058267548483584], ('weight(t)', 'float64'): [79.50699999999999, 8.0, 64.0, 5.832000000000001, 185.193, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_pow_multiple(self):
         df = self.df
-        result = df.cols.pow(cols=['NullType', 'weight(t)', 'japanese name'],power=[117],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.pow(cols=['NullType', 'weight(t)', 'japanese name'],power=117,output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [1.3055974789624274e+74, 1.661534994731145e+35, 2.7606985387162255e+70, 7.360089527435959e+29, 2.73752512412485e+88, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
-    def test_cols_pow_numeric1(self):
+    def test_cols_pow_numeric(self):
         df = self.df.cols.select(['height(ft)'])
-        result = df.cols.pow(cols=['height(ft)'],power=[0.5])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True))
-    
-    def test_cols_pow_numeric2(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.pow(cols=['height(ft)'],power=[10])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True))
-    
-    def test_cols_pow_numeric3(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.pow(cols=['height(ft)'],power=[-5])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.pow(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [784.0, 289.0, 676.0, 169.0, nan, 90000.0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_pow_string(self):
         df = self.df.cols.select(['names'])
-        result = df.cols.pow(cols=['names'],power=[3.7],output_cols=['names_2'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.pow(cols=['names'],power=3.7,output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_reciprocal(self):
@@ -411,51 +415,50 @@ class TestNumericPandas(TestBase):
     
     def test_cols_round(self):
         df = self.create_dataframe(dict={('round_test', 'float64'): [10.0, nan, -inf, -356.312312, 0.5314, 1.000009]}, force_data_types=True)
-        result = df.cols.round(cols=['round_test'],decimals=[2])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.round(cols=['round_test'],decimals=2)
+        expected = self.create_dataframe(dict={('round_test', 'float64'): [10.0, nan, -inf, -356.31, 0.53, 1.0]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_round_1(self):
+        df = self.create_dataframe(dict={('round_test', 'float64'): [10.0, nan, -inf, -356.312312, 0.5314, 1.000009]}, force_data_types=True)
+        result = df.cols.round(cols=['round_test'],decimals=1)
+        expected = self.create_dataframe(dict={('round_test', 'float64'): [10.0, nan, -inf, -356.3, 0.5, 1.0]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_round_2(self):
+        df = self.create_dataframe(dict={('round_test', 'float64'): [10.0, nan, -inf, -356.312312, 0.5314, 1.000009]}, force_data_types=True)
+        result = df.cols.round(cols=['round_test'],decimals=2)
+        expected = self.create_dataframe(dict={('round_test', 'float64'): [10.0, nan, -inf, -356.31, 0.53, 1.0]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True))
+    
+    def test_cols_round_3(self):
+        df = self.create_dataframe(dict={('round_test', 'float64'): [10.0, nan, -inf, -356.312312, 0.5314, 1.000009]}, force_data_types=True)
+        result = df.cols.round(cols=['round_test'],decimals=5)
+        expected = self.create_dataframe(dict={('round_test', 'float64'): [10.0, nan, -inf, -356.31231, 0.5314, 1.00001]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_round_all(self):
         df = self.df
-        result = df.cols.round(cols='*',decimals=[4])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.round(cols='*',decimals=4)
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [10.0, 7.0, 7.0, 8.0, 10.0, 8.0], ('Cybertronian', 'float64'): [1.0, 1.0, 1.0, 1.0, 1.0, 0.0], ('Date Type', 'int64'): [1473465600000000000, 1439164800000000000, 1403568000000000000, 1372032000000000000, 1336608000000000000, 1302393600000000000], ('age', 'float64'): [5000000.0, 5000000.0, 5000000.0, 5000000.0, 5000000.0, 5000000.0], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'int64'): [1403568000000000000, 1403568000000000000, 1403568000000000000, 1403568000000000000, 1403568000000000000, 1403568000000000000], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_round_multiple(self):
         df = self.df
-        result = df.cols.round(cols=['NullType', 'weight(t)', 'japanese name'],decimals=[21],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.round(cols=['NullType', 'weight(t)', 'japanese name'],decimals=21,output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
-    def test_cols_round_numeric1(self):
+    def test_cols_round_numeric(self):
         df = self.df.cols.select(['height(ft)'])
-        result = df.cols.round(cols=['height(ft)'],decimals=[0.5])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True))
-    
-    def test_cols_round_numeric2(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.round(cols=['height(ft)'],decimals=[1])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True))
-    
-    def test_cols_round_numeric3(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.round(cols=['height(ft)'],decimals=[-5])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.round(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_round_string(self):
         df = self.df.cols.select(['names'])
-        result = df.cols.round(cols=['names'],decimals=[5],output_cols=['names_2'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.cols.round(cols=['names'],decimals=5,output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_sqrt(self):
