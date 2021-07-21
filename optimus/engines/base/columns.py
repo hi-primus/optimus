@@ -1412,45 +1412,45 @@ class BaseColumns(ABC):
         return df.cols.apply(cols, self.F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def extract(self, cols, regex, output_cols=None) -> DataFrameType:
+    def extract(self, cols="*", regex=None, output_cols=None) -> DataFrameType:
 
         return self.apply(cols, self.F.extract, args=(regex,), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.EXTRACT.value, mode="vectorized")
 
         # def replace_regex(cols, regex=None, value=None, output_cols=None):
 
-    def slice(self, cols, start, stop, step=None, output_cols=None) -> DataFrameType:
+    def slice(self, cols="*", start=None, stop=None, step=None, output_cols=None) -> DataFrameType:
         def _slice(value, _start, _stop, _step):
             return self.F.slice(value, _start, _stop, _step)
 
         return self.apply(cols, _slice, args=(start, stop, step), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.SLICE.value, mode="vectorized")
 
-    def left(self, cols, n, output_cols=None) -> DataFrameType:
+    def left(self, cols="*", n=None, output_cols=None) -> DataFrameType:
 
         df = self.apply(cols, self.F.left, args=(n,), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.LEFT.value, mode="vectorized")
         return df
 
-    def right(self, cols, n, output_cols=None) -> DataFrameType:
+    def right(self, cols="*", n=None, output_cols=None) -> DataFrameType:
         df = self.apply(cols, self.F.right, args=(n,), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.RIGHT.value, mode="vectorized")
         return df
 
-    def mid(self, cols, start=0, n=1, output_cols=None) -> DataFrameType:
+    def mid(self, cols="*", start=0, n=1, output_cols=None) -> DataFrameType:
         df = self.apply(cols, self.F.mid, args=(start, n), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
 
-    def to_float(self, cols, output_cols=None) -> DataFrameType:
+    def to_float(self, cols="*", output_cols=None) -> DataFrameType:
         return self.apply(cols, self.F.to_float, func_return_type=float,
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
 
-    def to_integer(self, cols, output_cols=None) -> DataFrameType:
+    def to_integer(self, cols="*", output_cols=None) -> DataFrameType:
         return self.apply(cols, self.F.to_integer, func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="vectorized")
 
-    def to_boolean(self, cols, output_cols=None) -> DataFrameType:
+    def to_boolean(self, cols="*", output_cols=None) -> DataFrameType:
         return self.apply(cols, self.F.to_boolean, func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="map")
 
