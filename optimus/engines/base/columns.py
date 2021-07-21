@@ -1412,45 +1412,45 @@ class BaseColumns(ABC):
         return df.cols.apply(cols, self.F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
-    def extract(self, cols, regex, output_cols=None) -> DataFrameType:
+    def extract(self, cols="*", regex=None, output_cols=None) -> DataFrameType:
 
         return self.apply(cols, self.F.extract, args=(regex,), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.EXTRACT.value, mode="vectorized")
 
         # def replace_regex(cols, regex=None, value=None, output_cols=None):
 
-    def slice(self, cols, start, stop, step=None, output_cols=None) -> DataFrameType:
+    def slice(self, cols="*", start=None, stop=None, step=None, output_cols=None) -> DataFrameType:
         def _slice(value, _start, _stop, _step):
             return self.F.slice(value, _start, _stop, _step)
 
         return self.apply(cols, _slice, args=(start, stop, step), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.SLICE.value, mode="vectorized")
 
-    def left(self, cols, n, output_cols=None) -> DataFrameType:
+    def left(self, cols="*", n=None, output_cols=None) -> DataFrameType:
 
         df = self.apply(cols, self.F.left, args=(n,), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.LEFT.value, mode="vectorized")
         return df
 
-    def right(self, cols, n, output_cols=None) -> DataFrameType:
+    def right(self, cols="*", n=None, output_cols=None) -> DataFrameType:
         df = self.apply(cols, self.F.right, args=(n,), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.RIGHT.value, mode="vectorized")
         return df
 
-    def mid(self, cols, start=0, n=1, output_cols=None) -> DataFrameType:
+    def mid(self, cols="*", start=0, n=1, output_cols=None) -> DataFrameType:
         df = self.apply(cols, self.F.mid, args=(start, n), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
 
-    def to_float(self, cols, output_cols=None) -> DataFrameType:
+    def to_float(self, cols="*", output_cols=None) -> DataFrameType:
         return self.apply(cols, self.F.to_float, func_return_type=float,
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
 
-    def to_integer(self, cols, output_cols=None) -> DataFrameType:
+    def to_integer(self, cols="*", output_cols=None) -> DataFrameType:
         return self.apply(cols, self.F.to_integer, func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="vectorized")
 
-    def to_boolean(self, cols, output_cols=None) -> DataFrameType:
+    def to_boolean(self, cols="*", output_cols=None) -> DataFrameType:
         return self.apply(cols, self.F.to_boolean, func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="map")
 
@@ -1915,7 +1915,7 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
-    def _math(self, cols="*", operator=None, output_col=None) -> DataFrameType:
+    def _math(self, cols="*", value=None, operator=None, output_cols=None, output_col=None, name="") -> DataFrameType:
         """
         Helper to process arithmetic operation between columns. If a
         :param cols: Columns to be used to make the calculation
@@ -1923,54 +1923,71 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.root
-        cols = parse_columns(df, cols)
-        expr = reduce(operator, [df[col_name].cols.fill_na(
-            "*", 0).cols.to_float() for col_name in cols])
-        return df.cols.assign({output_col: expr})
+        parsed_cols = parse_columns(df, cols)
 
-    def add(self, cols="*", output_col=None) -> DataFrameType:
+        if value is None:
+            if not output_col:
+                output_col = name+"_"+"_".join(cols)
+            expr = reduce(operator, [df[col_name].cols.fill_na(
+                "*", 0).cols.to_float() for col_name in parsed_cols])
+            return df.cols.assign({output_col: expr})
+
+        else:
+            output_cols = get_output_cols(cols, output_cols)
+            cols = {}
+            for input_col, output_col in zip(parsed_cols, output_cols):
+                cols.update({output_col: operator(df[input_col], value)})
+            return df.cols.assign(cols)
+
+    def add(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
         """
         Add two or more columns
         :param cols: '*', list of columns names or a single column name
-        :param output_col:
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
         :return:
         """
-        if not output_col:
-            output_col = "sum_"+"_".join(cols)
-        return self._math(cols, lambda x, y: x + y, output_col)
+        return self._math(cols=cols, value=value, operator=lambda x, y: x + y, output_cols=output_cols, output_col=output_col, name="add")
 
-    def sub(self, cols="*", output_col=None) -> DataFrameType:
+    def sub(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
         """
         Subs two or more columns
         :param cols: '*', list of columns names or a single column name
-        :param output_col:
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
         :return:
         """
-        if not output_col:
-            output_col = "sub_"+"_".join(cols)
-        return self._math(cols, lambda x, y: x - y, output_col)
+        return self._math(cols=cols, value=value, operator=lambda x, y: x - y, output_cols=output_cols, output_col=output_col, name="sub")
 
-    def mul(self, cols="*", output_col=None) -> DataFrameType:
+    def mul(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
         """
         Multiply two or more columns
         :param cols: '*', list of columns names or a single column name
-        :param output_col:
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
         :return:
         """
-        if not output_col:
-            output_col = "mul_"+"_".join(cols)
-        return self._math(cols, lambda x, y: x * y, output_col)
+        return self._math(cols=cols, value=value, operator=lambda x, y: x * y, output_cols=output_cols, output_col=output_col, name="mul")
 
-    def div(self, cols="*", output_col=None) -> DataFrameType:
+    def div(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
         """
         Divide two or more columns
         :param columns: '*', list of columns names or a single column name
-        :param output_col:
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
         :return:
         """
-        if not output_col:
-            output_col = "div_"+"_".join(cols)
-        return self._math(cols, lambda x, y: x / y, output_col)
+        return self._math(cols=cols, value=value, operator=lambda x, y: x / y, output_cols=output_cols, output_col=output_col, name="div")
+
+    def rdiv(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
+        """
+        Divide two or more columns
+        :param columns: '*', list of columns names or a single column name
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
+        :return:
+        """
+        return self._math(cols=cols, value=value, operator=lambda x, y: y / x, output_cols=output_cols, output_col=output_col, name="rdiv")
 
     def z_score(self, cols="*", output_cols=None) -> DataFrameType:
 
