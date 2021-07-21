@@ -1006,10 +1006,11 @@ class BaseColumns(ABC):
 
     @staticmethod
     def exec_agg(exprs, compute):
-        try:
-            return exprs[0].to_dict()
-        except Exception:
-            return exprs
+        while isinstance(exprs, (list, tuple)):
+            exprs = exprs[0]
+        if getattr(exprs, "to_dict", None):
+            exprs = exprs.to_dict()
+        return exprs
 
     def mad(self, cols="*", relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
         df = self.root
