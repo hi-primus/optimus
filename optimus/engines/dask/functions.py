@@ -57,6 +57,9 @@ class DaskFunctions(DaskBaseFunctions, Functions):
     def sqrt(self, series):
         return da.sqrt(self._to_float(series))
 
+    def reciprocal(self, series):
+        return da.reciprocal(self.to_float(series))
+
     def unique_values(self, series, *args):
         # print("args",args)
         # Cudf can not handle null so we fill it with non zero values.
