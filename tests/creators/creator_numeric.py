@@ -44,7 +44,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.abs", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.abs", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.abs", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -56,7 +56,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.exp", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.exp", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.exp", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -68,7 +68,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.ln", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.ln", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.ln", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -80,7 +80,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.sqrt", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.sqrt", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.sqrt", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -93,7 +93,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.reciprocal", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.reciprocal", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.reciprocal", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -106,7 +106,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.floor", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.floor", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.floor", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -118,7 +118,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.ceil", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.ceil", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.ceil", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     t.create(method="cols.z_score", variant="all", cols="*")
@@ -126,7 +126,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.z_score", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.z_score", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.z_score", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     t.create(method="cols.modified_z_score", variant="all", cols="*")
@@ -134,7 +134,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.modified_z_score", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.modified_z_score", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.modified_z_score", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     t.create(method="cols.min_max_scaler", variant="all", cols="*")
@@ -142,7 +142,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.min_max_scaler", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.min_max_scaler", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.min_max_scaler", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     t.create(method="cols.standard_scaler", variant="all", cols="*")
@@ -150,7 +150,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.standard_scaler", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.standard_scaler", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.standard_scaler", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     t.create(method="cols.max_abs_scaler", variant="all", cols="*")
@@ -158,7 +158,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.max_abs_scaler", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.max_abs_scaler", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.max_abs_scaler", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -171,7 +171,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.to_float", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.to_float", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.to_float", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -184,7 +184,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.to_integer", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.to_integer", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.to_integer", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -201,7 +201,7 @@ def create():
              cols=["height(ft)"], divisor=[-12], select_cols=True)
     t.create(method="cols.mod", variant="string", cols=[
              "names"], divisor=[4], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.mod", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.mod", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], divisor=[10], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -218,7 +218,7 @@ def create():
              cols=["height(ft)"], base=[-3], select_cols=True)
     t.create(method="cols.log", variant="string", cols=[
              "names"], base=[2], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.log", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.log", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], base=[21], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -235,7 +235,7 @@ def create():
              cols=["height(ft)"], power=[-5], select_cols=True)
     t.create(method="cols.pow", variant="string", cols=[
              "names"], power=[3.7], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.pow", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.pow", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], power=[117], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -252,7 +252,7 @@ def create():
              cols=["height(ft)"], decimals=[-5], select_cols=True)
     t.create(method="cols.round", variant="string", cols=[
              "names"], decimals=[5], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.round", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.round", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], decimals=[21], output_cols=["nt", "wt", "jn"])
 
     t.run()
@@ -268,7 +268,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.sin", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.sin", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.sin", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -280,7 +280,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.cos", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.cos", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.cos", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -292,7 +292,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.tan", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.tan", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.tan", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -304,7 +304,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.asin", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.asin", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.asin", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -316,7 +316,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.acos", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.acos", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.acos", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -328,7 +328,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.atan", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.atan", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.atan", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -340,7 +340,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.sinh", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.sinh", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.sinh", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -352,7 +352,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.cosh", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.cosh", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.cosh", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -364,7 +364,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.tanh", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.tanh", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.tanh", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -377,7 +377,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.asinh", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.asinh", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.asinh", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -390,7 +390,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.acosh", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.acosh", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.acosh", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -403,7 +403,7 @@ def create():
              cols=["height(ft)"], select_cols=True)
     t.create(method="cols.atanh", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.atanh", variant="multiple", compare_by="json", cols=[
+    t.create(method="cols.atanh", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     t.run()
