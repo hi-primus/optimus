@@ -1915,7 +1915,7 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
-    def _math(self, cols="*", operator=None, output_col=None) -> DataFrameType:
+    def _math(self, cols="*", value=None, operator=None, output_cols=None, output_col=None, name="") -> DataFrameType:
         """
         Helper to process arithmetic operation between columns. If a
         :param cols: Columns to be used to make the calculation
@@ -1923,54 +1923,71 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.root
-        cols = parse_columns(df, cols)
-        expr = reduce(operator, [df[col_name].cols.fill_na(
-            "*", 0).cols.to_float() for col_name in cols])
-        return df.cols.assign({output_col: expr})
+        parsed_cols = parse_columns(df, cols)
 
-    def add(self, cols="*", output_col=None) -> DataFrameType:
+        if value is None:
+            if not output_col:
+                output_col = name+"_"+"_".join(cols)
+            expr = reduce(operator, [df[col_name].cols.fill_na(
+                "*", 0).cols.to_float() for col_name in parsed_cols])
+            return df.cols.assign({output_col: expr})
+
+        else:
+            output_cols = get_output_cols(cols, output_cols)
+            cols = {}
+            for input_col, output_col in zip(parsed_cols, output_cols):
+                cols.update({output_col: operator(df[input_col], value)})
+            return df.cols.assign(cols)
+
+    def add(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
         """
         Add two or more columns
         :param cols: '*', list of columns names or a single column name
-        :param output_col:
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
         :return:
         """
-        if not output_col:
-            output_col = "sum_"+"_".join(cols)
-        return self._math(cols, lambda x, y: x + y, output_col)
+        return self._math(cols=cols, value=value, operator=lambda x, y: x + y, output_cols=output_cols, output_col=output_col, name="add")
 
-    def sub(self, cols="*", output_col=None) -> DataFrameType:
+    def sub(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
         """
         Subs two or more columns
         :param cols: '*', list of columns names or a single column name
-        :param output_col:
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
         :return:
         """
-        if not output_col:
-            output_col = "sub_"+"_".join(cols)
-        return self._math(cols, lambda x, y: x - y, output_col)
+        return self._math(cols=cols, value=value, operator=lambda x, y: x - y, output_cols=output_cols, output_col=output_col, name="sub")
 
-    def mul(self, cols="*", output_col=None) -> DataFrameType:
+    def mul(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
         """
         Multiply two or more columns
         :param cols: '*', list of columns names or a single column name
-        :param output_col:
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
         :return:
         """
-        if not output_col:
-            output_col = "mul_"+"_".join(cols)
-        return self._math(cols, lambda x, y: x * y, output_col)
+        return self._math(cols=cols, value=value, operator=lambda x, y: x * y, output_cols=output_cols, output_col=output_col, name="mul")
 
-    def div(self, cols="*", output_col=None) -> DataFrameType:
+    def div(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
         """
         Divide two or more columns
         :param columns: '*', list of columns names or a single column name
-        :param output_col:
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
         :return:
         """
-        if not output_col:
-            output_col = "div_"+"_".join(cols)
-        return self._math(cols, lambda x, y: x / y, output_col)
+        return self._math(cols=cols, value=value, operator=lambda x, y: x / y, output_cols=output_cols, output_col=output_col, name="div")
+
+    def rdiv(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
+        """
+        Divide two or more columns
+        :param columns: '*', list of columns names or a single column name
+        :param output_cols:
+        :param output_col: Single output column in case no value is passed
+        :return:
+        """
+        return self._math(cols=cols, value=value, operator=lambda x, y: y / x, output_cols=output_cols, output_col=output_col, name="rdiv")
 
     def z_score(self, cols="*", output_cols=None) -> DataFrameType:
 
