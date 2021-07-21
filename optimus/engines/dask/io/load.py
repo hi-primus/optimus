@@ -66,7 +66,7 @@ class Load(BaseLoad):
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=False,
-            na_filter=False, null_value=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
+            na_filter=True, null_value=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -103,14 +103,15 @@ class Load(BaseLoad):
             # This is handle in this way to preserve compatibility with others dataframe technologies.
             logger.print(f"{remove_param} is not supported. Used to preserve compatibility with Optimus Pandas")
             kwargs.pop(remove_param)
-        # if engine=="pandas":
 
         try:
             # From the panda docs using na_flailter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            if engine == "python":
 
+            na_filter = na_filter if null_value else False
+
+            if engine == "python":
                 # na_filter=na_filter, error_bad_lines and low_memory are not support by pandas engine
                 dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
                                   quoting=quoting, lineterminator=lineterminator,
@@ -119,8 +120,9 @@ class Load(BaseLoad):
 
             elif engine == "c":
                 dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                                  quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                                  keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
+                                  quoting=quoting, lineterminator=lineterminator,
+                                  error_bad_lines=error_bad_lines, keep_default_na=True, na_values=None,
+                                  engine=engine, na_filter=na_filter, null_value=val_to_list(null_value),
                                   storage_options=storage_options, low_memory=False, *args, **kwargs)
 
             if n_rows > -1:
