@@ -8,7 +8,7 @@ from optimus.engines.base.meta import Meta
 from optimus.helpers.core import val_to_list
 from optimus.helpers.columns import parse_columns, get_output_cols, name_col
 from optimus.helpers.constants import Actions
-from optimus.infer import is_list_value
+from optimus.infer import is_list_value, is_tuple
 from optimus.profiler.functions import fill_missing_var_types
 
 
@@ -23,9 +23,11 @@ class DaskBaseColumns():
         """
 
         if compute:
-            result = dask.compute(exprs)[0]
-            if is_list_value(exprs):
-                result = result[0].to_dict()
+            result = dask.compute(exprs)
+            while isinstance(result, (list, tuple)):
+                result = result[0]
+            if getattr(result, "to_dict", None):
+                result = result.to_dict()
         else:
             result = delayed(exprs)
 

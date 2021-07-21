@@ -125,7 +125,7 @@ class Load(BaseLoad):
                 kwargs["chunksize"] = psutil.virtual_memory().free * 0.75
 
             def _read(_filepath_or_buffer):
-                return pd.read_csv(_filepath_or_buffer, sep=sep, header=0 if header else -1, encoding=encoding,
+                return pd.read_csv(_filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
                                    nrows=n_rows,
                                    quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
                                    na_filter=na_filter, index_col=False, storage_options=storage_options, *args,

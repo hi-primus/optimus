@@ -374,9 +374,9 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
 
     start_mem_usg = df.size()
     dfd = df.data
-    ints = dfd.applymap(isint).sum().compute().to_dict()
-    floats = dfd.applymap(isfloat).sum().compute().to_dict()
-    nulls = dfd.isnull().sum().compute().to_dict()
+    ints = df.cols.exec_agg(dfd.applymap(isint).sum(), True)
+    floats = df.cols.exec_agg(dfd.applymap(isfloat).sum(), True)
+    nulls = df.cols.exec_agg(dfd.isnull().sum(), True)
     total_rows = len(dfd)
 
     columns_dtype = {}
@@ -432,7 +432,7 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
     #             final[col_name] = "category"
 
     dfd = dfd.astype(final)
-    mem_usg = dfd.size()
+    mem_usg = dfd.size
 
     if verbose is True:
         print("Memory usage after optimization:", humanize.naturalsize(start_mem_usg))

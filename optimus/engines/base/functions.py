@@ -43,10 +43,10 @@ class Functions(ABC):
         return self.to_integer(series)
 
     def to_string(self, series):
-        return series
+        return series if str(series.dtype) in ["string"] else series.astype("string")
 
     def to_string_accessor(self, series):
-        return self.to_string(series).str
+        return (series if str(series.dtype) in ["string"] else series.astype("string")).str
 
     # Aggregation
     def min(self, series):
