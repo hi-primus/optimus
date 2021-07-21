@@ -276,7 +276,7 @@ class TestCreator:
         if failed:
             add_buffer(
                 "    # The following value does not represent a correct output of the operation\n")
-            expected_df = 'self.dict'
+            add_buffer("    expected = self.dict\n")
         elif compare_by == "df":
             if expected_is_df:
                 expected_df = expected_df.export(data_types="internal")
