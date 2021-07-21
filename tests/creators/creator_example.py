@@ -7,8 +7,10 @@ def create():
     from optimus.tests.creator import TestCreator
 
     op = Optimus("pandas")
-    df = op.create.dataframe({('name', 'string'): (
-        'Optimus', 'Bumblebee', 'Eject'), ('age (M)', 'int'): [5, 5, 5]})
+    df = op.create.dataframe({
+        ('name', 'string'): ('Optimus', 'Bumblebee', 'Eject'),
+        ('age (M)', 'int'): [5, 5, 5]
+    })
 
     configs = {
         "Pandas": {"engine": "pandas"},
@@ -18,8 +20,7 @@ def create():
 
     t = TestCreator(op, df, name="example", configs=configs)
     t.create(method="cols.upper", variant="single", cols=["name"])
-    t.create(method="cols.upper", variant="multiple",
-             compare_by="json", cols=["name", "age (M)"])
+    t.create(method="cols.upper", variant="multiple", compare_by="json", cols=["name", "age (M)"])
     t.run()
 
 
