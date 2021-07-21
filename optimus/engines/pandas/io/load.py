@@ -14,6 +14,7 @@ from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
+from optimus.helpers.core import val_to_list
 from optimus.infer import is_str, is_list, is_url
 
 
@@ -75,7 +76,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
-            null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
+            null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=True,
             storage_options=None, conn=None,
             *args, **kwargs):
         """
@@ -124,11 +125,13 @@ class Load(BaseLoad):
                 kwargs.pop("chunk_size")
                 kwargs["chunksize"] = psutil.virtual_memory().free * 0.75
 
+            na_filter = na_filter if null_value else False
+
             def _read(_filepath_or_buffer):
                 return pd.read_csv(_filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
                                    nrows=n_rows,
                                    quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
-                                   na_filter=na_filter, index_col=False, storage_options=storage_options, *args,
+                                   na_filter=na_filter, na_values=val_to_list(null_value), index_col=False, storage_options=storage_options, *args,
                                    **kwargs)
 
             if is_list(filepath_or_buffer):

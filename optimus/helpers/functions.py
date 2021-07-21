@@ -667,6 +667,8 @@ def df_dicts_equal(df1, df2, decimal=True):
     for k in df1:
         try:
             np.testing.assert_almost_equal(df1[k], df2[k], decimal=decimal)
+        except AssertionError:
+            return False
         except Exception:
             if df1[k] != df2[k]:
                 return False
