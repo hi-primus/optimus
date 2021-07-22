@@ -2,7 +2,7 @@
 # Must return None if the data type can not be handle
 
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import dask
 import dask.array as da
@@ -12,7 +12,6 @@ from dask.array import stats
 from optimus.engines.base.commons.functions import to_float, to_integer, to_boolean, to_datetime, word_tokenize
 from optimus.engines.base.functions import Functions
 from optimus.engines.base.dask.functions import DaskBaseFunctions
-from optimus.helpers.core import val_to_list
 
 
 class DaskFunctions(DaskBaseFunctions, Functions):
