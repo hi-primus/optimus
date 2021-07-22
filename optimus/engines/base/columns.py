@@ -1998,30 +1998,24 @@ class BaseColumns(ABC):
         return self._math(cols=cols, value=value, operator=lambda x, y: y / x, output_cols=output_cols, output_col=output_col, name="rdiv")
 
     def z_score(self, cols="*", output_cols=None) -> DataFrameType:
-
-        df = self.root
-        return df.cols.apply(cols, self.F.z_score, func_return_type=float, output_cols=output_cols,
+        return self.root.cols.apply(cols, "z_score", func_return_type=float, output_cols=output_cols,
                              meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
     def modified_z_score(self, cols="*", output_cols=None) -> DataFrameType:
-        df = self.root
-        return df.cols.apply(cols, self.F.modified_z_score, func_return_type=float, output_cols=output_cols,
+        return self.root.cols.apply(cols, "modified_z_score", func_return_type=float, output_cols=output_cols,
                              meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
-    @staticmethod
-    @abstractmethod
-    def min_max_scaler(cols="*", output_cols=None) -> DataFrameType:
-        pass
+    def standard_scaler(self, cols="*", output_cols=None):
+        return self.root.cols.apply(cols, func="standard_scaler", output_cols=output_cols,
+                             meta_action=Actions.STANDARD_SCALER.value)
 
-    @staticmethod
-    @abstractmethod
-    def standard_scaler(cols="*", output_cols=None) -> DataFrameType:
-        pass
+    def max_abs_scaler(self, cols="*", output_cols=None):
+        return self.root.cols.apply(cols, func="max_abs_scaler", output_cols=output_cols,
+                             meta_action=Actions.MAX_ABS_SCALER.value)
 
-    @staticmethod
-    @abstractmethod
-    def max_abs_scaler(cols="*", output_cols=None) -> DataFrameType:
-        pass
+    def min_max_scaler(self, cols="*", output_cols=None):
+        return self.root.cols.apply(cols, func="min_max_scaler", output_cols=output_cols,
+                             meta_action=Actions.MIN_MAX_SCALER.value)
 
     def iqr(self, cols="*", more=None, relative_error=RELATIVE_ERROR):
         """

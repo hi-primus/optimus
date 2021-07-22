@@ -59,12 +59,6 @@ class DaskBaseColumns():
     def heatmap(self, cols="*", buckets=10):
         raise NotImplementedError('Not implemented yet')
 
-    def standard_scaler(self, cols="*", output_cols=None):
-        raise NotImplementedError('Not implemented yet')
-
-    def max_abs_scaler(self, cols="*", output_cols=None):
-        raise NotImplementedError('Not implemented yet')
-
     def min_max_scaler(self, cols="*", output_cols=None):
         # https://github.com/dask/dask/issues/2690
 
