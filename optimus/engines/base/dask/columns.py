@@ -59,33 +59,6 @@ class DaskBaseColumns():
     def heatmap(self, cols="*", buckets=10):
         raise NotImplementedError('Not implemented yet')
 
-    def standard_scaler(self, cols="*", output_cols=None):
-        raise NotImplementedError('Not implemented yet')
-
-    def max_abs_scaler(self, cols="*", output_cols=None):
-        raise NotImplementedError('Not implemented yet')
-
-    def min_max_scaler(self, cols="*", output_cols=None):
-        # https://github.com/dask/dask/issues/2690
-
-        df = self.df
-
-        scaler = MinMaxScaler()
-
-        cols = parse_columns(df, cols)
-        output_cols = get_output_cols(cols, output_cols)
-
-        # _df = df[cols]
-        scaler.fit(df[cols])
-        # print(type(scaler.transform(_df)))
-        arr = scaler.transform(df[cols])
-        darr = dd.from_array(arr)
-        # print(type(darr))
-        darr.name = 'z'
-        df = df.merge(darr)
-
-        return df
-
     # Date operations
     def to_timestamp(self, cols="*", date_format=None, output_cols=None):
         raise NotImplementedError('Not implemented yet')

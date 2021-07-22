@@ -4,10 +4,11 @@ import cudf
 
 from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
 from optimus.helpers.core import val_to_list
+from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
 from optimus.engines.base.functions import Functions
 
 
-class CUDFFunctions(Functions):
+class CUDFFunctions(DataFrameBaseFunctions, Functions):
 
     def word_tokenize(self, series):
         pass

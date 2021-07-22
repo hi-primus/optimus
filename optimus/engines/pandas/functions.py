@@ -7,10 +7,11 @@ import numpy as np
 import pandas as pd
 import re
 from optimus.engines.base.commons.functions import to_string, to_integer, to_float, to_boolean, word_tokenize
+from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
 from optimus.engines.base.functions import Functions
 
 
-class PandasFunctions(Functions):
+class PandasFunctions(DataFrameBaseFunctions, Functions):
 
     def _to_float(self, value):
         return value.map(to_float)

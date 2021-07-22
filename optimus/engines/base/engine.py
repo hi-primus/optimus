@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from optimus.engines.base.contants import BaseConstants
 
 from optimus.engines.base.io.connect import Connect
 from optimus.helpers.logger import logger
@@ -36,9 +37,9 @@ class BaseEngine:
     def create(self):
         pass
 
-    @abstractmethod
+    @property
     def constants(self):
-        pass
+        return BaseConstants()
 
     @abstractmethod
     def load(self):

@@ -23,7 +23,7 @@ from optimus.helpers.output import print_html
 from optimus.infer import is_str, is_tuple, is_list
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
-from .columns import BaseColumns
+from optimus.engines.base.contants import BaseConstants
 from .meta import Meta
 from .profile import BaseProfile
 from ...outliers.outliers import Outliers
@@ -285,8 +285,13 @@ class BaseDataFrame(ABC):
     def rows(self):
         pass
 
+    @abstractmethod
     def cols(self):
-        return BaseColumns
+        pass
+
+    @property
+    def constants(self):
+        return BaseConstants()
 
     @property
     def plot(self):

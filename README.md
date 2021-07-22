@@ -1,4 +1,4 @@
-[![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.8/images/logoOptimus.png)](https://hi-optimus.com)
+[![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.8/images/optimus-logo.png)](https://hi-optimus.com)
 
 ![Build](https://travis-ci.com/hi-primus/optimus.svg?branch=develop-21.8)
 [![PyPI Latest Release](https://img.shields.io/pypi/v/pyoptimus.svg)](https://pypi.org/project/pyoptimus/) 

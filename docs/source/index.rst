@@ -6,7 +6,7 @@
 Welcome to Optimus's documentation!
 ===================================
 
-.. image:: sections/images/logoOptimus.png
+.. image:: sections/images/optimus-logo.png
 
 As data scientists, we care about extracting the best information out of our data. Data is the new soil, you have to get in and get your hands dirty, without cleaning and preparing it, it just useless.
 

@@ -1,7 +1,7 @@
 Overview
 =============
 
-.. image:: images/logoOptimus.png
+.. image:: images/optimus-logo.png
 
 Description
 ------------

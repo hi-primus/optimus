@@ -5,8 +5,6 @@ from optimus.infer import is_dict
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.core import val_to_list
 
-from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
-
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import Actions
 
@@ -77,36 +75,6 @@ class DataFrameBaseColumns():
             RaiseIt.value_error(output, ["dict", "dataframe"])
 
         return result
-
-    def standard_scaler(self, cols="*", output_cols=None):
-        df = self.root
-
-        def _standard_scaler(_value):
-            return StandardScaler().fit_transform(_value.values.reshape(-1, 1))
-
-        return df.cols.apply(cols, func=_standard_scaler, output_cols=output_cols,
-                             meta_action=Actions.STANDARD_SCALER.value)
-
-    def max_abs_scaler(self, cols="*", output_cols=None):
-
-        df = self.root
-
-        def _max_abs_scaler(_value):
-            return MaxAbsScaler().fit_transform(_value.values.reshape(-1, 1))
-
-        return df.cols.apply(cols, func=_max_abs_scaler, output_cols=output_cols,
-                             meta_action=Actions.MAX_ABS_SCALER.value)
-
-    def min_max_scaler(self, cols="*", output_cols=None):
-        # https://github.com/dask/dask/issues/2690
-
-        df = self.root
-
-        def _min_max_scaler(_value):
-            return MinMaxScaler().fit_transform(_value.values.reshape(-1, 1))
-
-        return df.cols.apply(cols, func=_min_max_scaler, output_cols=output_cols,
-                             meta_action=Actions.MIN_MAX_SCALER.value)
 
     def replace_regex(self, cols="*", regex=None, value="", output_cols=None):
         """
