@@ -5,6 +5,7 @@ import dask
 import humanize
 from dask.distributed import Variable
 from dask.utils import parse_bytes
+import numpy as np
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
@@ -26,6 +27,10 @@ class DaskBaseDataFrame(BaseDataFrame):
             for key in kw_columns:
                 kw_column = kw_columns[key]
                 if not is_one_element(kw_column) and not callable(kw_column) and not getattr(kw_column, "known_divisions", None):
+                    if isinstance(kw_column, (np.ndarray,)):
+                        # is a numpy array
+                        kw_column = dask.dataframe.from_array(kw_column)
+
                     _dfd = kw_column.reset_index().set_index('index')
                     if key in _dfd:
                         # the incoming series has the same column key
