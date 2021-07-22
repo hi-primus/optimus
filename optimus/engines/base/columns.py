@@ -266,6 +266,14 @@ class BaseColumns(ABC):
         dfd = df.data
         meta = df.meta
 
+        if is_str(func):
+            _func = getattr(df.functions, func, False)
+
+            if not _func:
+                raise NotImplementedError(f"\"{func}\" is not available using {type(df).__name__}")
+            else:
+                func = _func
+
         for input_col, output_col in columns:
             if mode == "vectorized":
                 # kw_columns[output_col] = self.F.delayed(func)(part, *args)
