@@ -9,37 +9,42 @@ class TestBase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        
         if not cls.config:
             raise Exception("Please initialize device before running tests")
         if not cls.dict and not cls.load:
             raise Exception("No dataframe was defined for this test")
 
-    def setUp(self):
         import sys
         sys.path.append("..")
         from optimus import Optimus
-        self.op = Optimus(self.config["engine"])
+        cls.op = Optimus(cls.config["engine"])
+        print(f"optimus using {cls.op.engine}")
 
-        if self.dict:
-            self.df = self.create_dataframe(self.dict, force_data_types=True)
-        elif self.load:
-            if isinstance(self.load, str):
-                self.df = self.load_dataframe(self.load)
+
+        if cls.dict:
+            cls.df = cls.create_dataframe(cls.dict, force_data_types=True)
+        elif cls.load:
+            if isinstance(cls.load, str):
+                cls.df = cls.load_dataframe(cls.load)
             else:
-                self.df = self.load_dataframe(**self.load)
-        self.post_create()
+                cls.df = cls.load_dataframe(**cls.load)
+        cls.post_create()
 
-    def create_dataframe(self, dict=None, **kwargs):
-        if not "n_partitions" in kwargs and "n_partitions" in self.config:
-            kwargs["n_partitions"] = self.config["n_partitions"]
+    @classmethod
+    def create_dataframe(cls, dict=None, **kwargs):
+        if not "n_partitions" in kwargs and "n_partitions" in cls.config:
+            kwargs["n_partitions"] = cls.config["n_partitions"]
 
-        return self.op.create.dataframe(dict, **kwargs)
+        return cls.op.create.dataframe(dict, **kwargs)
 
-    def load_dataframe(self, path=None, type='file', **kwargs):
-        if not "n_partitions" in kwargs and "n_partitions" in self.config:
-            kwargs["n_partitions"] = self.config["n_partitions"]
+    @classmethod
+    def load_dataframe(cls, path=None, type='file', **kwargs):
+        if not "n_partitions" in kwargs and "n_partitions" in cls.config:
+            kwargs["n_partitions"] = cls.config["n_partitions"]
 
-        return getattr(self.op.load, type)(path, **kwargs)
+        return getattr(cls.op.load, type)(path, **kwargs)
 
-    def post_create(self):
+    @classmethod
+    def post_create(cls):
         pass

@@ -212,15 +212,13 @@ class TestNumericPandas(TestBase):
     def test_cols_max_abs_scaler_all(self):
         df = self.df
         result = df.cols.max_abs_scaler(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-0.09333333333333334, 0.056666666666666664, 0.08666666666666667, 0.043333333333333335, nan, 1.0], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [1.0, 0.7, 0.7, 0.8, 1.0, 0.8], ('Cybertronian', 'float64'): [1.0, 1.0, 1.0, 1.0, 1.0, 0.0], ('Date Type', 'float64'): [1.0, 0.9767210038700598, 0.9525624486923889, 0.9311598451976076, 0.9071185645596341, 0.8838982056995426], ('age', 'float64'): [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], ('weight(t)', 'float64'): [0.7543859649122806, 0.3508771929824561, 0.7017543859649122, 0.3157894736842105, 1.0, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_max_abs_scaler_multiple(self):
         df = self.df
         result = df.cols.max_abs_scaler(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [0.7543859649122806, 0.3508771929824561, 0.7017543859649122, 0.3157894736842105, 1.0, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_max_abs_scaler_numeric(self):
@@ -232,22 +230,19 @@ class TestNumericPandas(TestBase):
     def test_cols_max_abs_scaler_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.max_abs_scaler(cols=['names'],output_cols=['names_2'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_min_max_scaler_all(self):
         df = self.df
         result = df.cols.min_max_scaler(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [0.0, 0.13719512195121952, 0.16463414634146342, 0.125, nan, 1.0], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [1.0, 0.0, 0.0, 0.3333333333333335, 1.0, 0.3333333333333335], ('Cybertronian', 'float64'): [1.0, 1.0, 1.0, 1.0, 1.0, 0.0], ('Date Type', 'float64'): [1.0000000000000009, 0.7994949494949504, 0.5914141414141421, 0.4070707070707078, 0.20000000000000018, 0.0], ('age', 'float64'): [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], ('weight(t)', 'float64'): [0.641025641025641, 0.051282051282051266, 0.5641025641025641, 0.0, 1.0, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_min_max_scaler_multiple(self):
         df = self.df
         result = df.cols.min_max_scaler(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [0.641025641025641, 0.051282051282051266, 0.5641025641025641, 0.0, 1.0, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_min_max_scaler_numeric(self):
@@ -259,8 +254,7 @@ class TestNumericPandas(TestBase):
     def test_cols_min_max_scaler_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.min_max_scaler(cols=['names'],output_cols=['names_2'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_mod(self):
@@ -494,15 +488,13 @@ class TestNumericPandas(TestBase):
     def test_cols_standard_scaler_all(self):
         df = self.df
         result = df.cols.standard_scaler(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-0.7888071163227179, -0.4095729257829497, -0.333726087674996, -0.44328263160870685, nan, 1.9753887613893708], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [1.3363062095621216, -1.069044967649698, -1.069044967649698, -0.2672612419124249, 1.3363062095621216, -0.2672612419124249], ('Cybertronian', 'float64'): [0.4472135954999578, 0.4472135954999578, 0.4472135954999578, 0.4472135954999578, 0.4472135954999578, -2.23606797749979], ('Date Type', 'float64'): [1.4683126020200388, 0.879900654171497, 0.26925651685764507, -0.2717267601315684, -0.8794066055167122, -1.4663364074009], ('age', 'float64'): [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], ('weight(t)', 'float64'): [0.5022984399896845, -1.0588994140323083, 0.2986639372911638, -1.1946557491646554, 1.4525927859161152, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_standard_scaler_multiple(self):
         df = self.df
         result = df.cols.standard_scaler(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [0.5022984399896845, -1.0588994140323083, 0.2986639372911638, -1.1946557491646554, 1.4525927859161152, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_standard_scaler_numeric(self):
@@ -514,8 +506,7 @@ class TestNumericPandas(TestBase):
     def test_cols_standard_scaler_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.standard_scaler(cols=['names'],output_cols=['names_2'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_to_float(self):
