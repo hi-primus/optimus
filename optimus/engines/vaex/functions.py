@@ -1,3 +1,4 @@
+import vaex
 import numpy as np
 
 from optimus.engines.base.commons.functions import to_float, to_float_vaex
@@ -5,6 +6,10 @@ from optimus.engines.base.functions import Functions
 
 
 class VaexFunctions(Functions):
+
+    @property
+    def _engine(self):
+        return vaex
 
     @staticmethod
     def count_zeros(series, *args):
@@ -46,13 +51,10 @@ class VaexFunctions(Functions):
         pass
 
     def to_float(self, series):
-        return to_float_vaex
-
-    def _to_float(self, series):
         return series.apply(to_float_vaex)
 
     def sin(self, series):
-        return np.sin(self._to_float(series))
+        return np.sin(self.to_float(series))
 
     @staticmethod
     def cos(series):

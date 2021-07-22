@@ -6,6 +6,18 @@ import dask.dataframe as dd
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
 class DaskBaseFunctions():
+
+    @property
+    def _engine(self):
+        return dask
+
+    @property
+    def _functions(self):
+        return self._engine.dataframe
+
+    def _new_series(self, *args, **kwargs):
+        return self._functions.from_array(*args, **kwargs)
+
     def word_tokenize(self, series):
         pass
 
@@ -21,21 +33,6 @@ class DaskBaseFunctions():
     def to_delayed(self, value):
         return value.to_delayed()
 
-    def to_float(self, series, *args):
-        return series.map_partitions(self._to_float_partition, meta=float)
-
-    def _to_float(self, series):
-        return self.to_float(series)
-
-    def _to_integer(self, series):
-        return self.to_integer(series)
-
-    def to_integer(self, series, *args):
-        return series.map_partitions(self._to_integer_partition, meta=int)
-
-    def to_string(self, series):
-        return series.astype(str)
-
     def min(self, series):
         return series.min()
 
@@ -43,7 +40,7 @@ class DaskBaseFunctions():
         return series.max()
 
     def count_zeros(self, series):
-        return int((self._to_float(series).values == 0).sum())
+        return int((self.to_float(series).values == 0).sum())
 
     def standard_scaler(self, series):
         # TO-DO: this creates a numpy array

@@ -1,4 +1,5 @@
 # DataFrame = pd.DataFrame
+import ibis
 import re
 from datetime import datetime, timedelta
 
@@ -10,11 +11,13 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 
 
 class IbisFunctions(Functions):
-    def _to_float(self, series, *args):
-        return series.cast("float64")
 
-    # def _to_float(self, series, *args):
-    #     return series.map_partitions(to_float_cudf, meta=float)
+    @property
+    def _engine(self):
+        return ibis
+
+    def to_float(self, series, *args):
+        return series.cast("float64")
 
     def to_string(self, series):
         return series.cast("string")
@@ -35,16 +38,16 @@ class IbisFunctions(Functions):
         return int((series.to_float().values == 0).sum())
 
     def kurtosis(self, series, *args):
-        return self._to_float(series).kurt()
+        return self.to_float(series).kurt()
 
     def skew(self, series, *args):
-        return self._to_float(series).skew()
+        return self.to_float(series).skew()
 
     def exp(self, series, *args):
-        return self._to_float(series).exp()
+        return self.to_float(series).exp()
 
     def sqrt(self, series, *args):
-        return self._to_float(series).sqrt()
+        return self.to_float(series).sqrt()
 
     def radians(self):
         series = self.series
@@ -55,20 +58,20 @@ class IbisFunctions(Functions):
         return np.degrees(series.to_float())
 
     def ln(self, series, *args):
-        return self._to_float(series).log()
+        return self.to_float(series).log()
 
     def log(self, series, base=10):
-        return self._to_float(series).log() / np.log(base)
+        return self.to_float(series).log() / np.log(base)
 
     def ceil(self, series, *args):
-        return self._to_float(series).ceil()
+        return self.to_float(series).ceil()
 
     def sin(self):
         series = self.series
         return np.sin(series.to_float())
 
     def cos(self, series, *args):
-        return self._to_float(series).cos()
+        return self.to_float(series).cos()
 
     def tan(self):
         series = self.series

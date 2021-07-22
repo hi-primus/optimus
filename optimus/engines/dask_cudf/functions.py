@@ -18,11 +18,16 @@ import dask.dataframe as dd
 import numpy as np
 
 class DaskCUDFFunctions(DaskBaseFunctions, Functions):
+    
+    @property
+    def _partition_engine(self):
+        return cudf
+
     def _to_float_partition(self, series):
-        return to_float_cudf(series)
+        return series.map_partitions(to_float_cudf)
 
     def _to_integer_partition(self, series):
-        return to_integer_cudf(series)
+        return series.map_partitions(to_integer_cudf)
 
     def kurtosis(self, series):
         return series.map_partitions(lambda _series: _series.kurtosis())

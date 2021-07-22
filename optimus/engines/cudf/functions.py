@@ -10,6 +10,10 @@ from optimus.engines.base.functions import Functions
 
 class CUDFFunctions(DataFrameBaseFunctions, Functions):
 
+    @property
+    def _engine(self):
+        return cudf
+
     def word_tokenize(self, series):
         pass
 
@@ -18,9 +22,6 @@ class CUDFFunctions(DataFrameBaseFunctions, Functions):
 
     def to_integer(self, series):
         return to_integer_cudf(series)
-
-    def to_string(self, series):
-        return series.astype(str)
 
     def to_boolean(self, series):
         return series.astype(bool)

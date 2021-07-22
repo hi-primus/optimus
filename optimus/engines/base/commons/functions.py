@@ -89,12 +89,11 @@ def to_string_vaex(series):
 
 
 # Pandas Dask
-def to_integer(value, *args):
+def to_integer(series, *args):
     try:
-        # fastnumbers can only handle string or numeric values. Not None, dates or list
-        return fastnumbers.fast_forceint(value, default=0)
+        return pd.Series(np.vectorize(fast_int)(series, default=np.nan).flatten())
     except TypeError:
-        return np.nan
+        return pd.Series(pd.to_numeric(series, errors='coerce')).astype('int')
 
 
 def to_float(series, *args):
