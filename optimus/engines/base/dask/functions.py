@@ -3,7 +3,8 @@ import dask
 
 from optimus.helpers.core import val_to_list
 import dask.dataframe as dd
-from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
+from sklearn.preprocessing import MaxAbsScaler
+from dask_ml.preprocessing import MinMaxScaler, StandardScaler
 
 class DaskBaseFunctions():
 
@@ -43,16 +44,13 @@ class DaskBaseFunctions():
         return int((self.to_float(series).values == 0).sum())
 
     def standard_scaler(self, series):
-        # TO-DO: this creates a numpy array
-        return StandardScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
+        return StandardScaler().fit_transform(series.to_frame())[series.name]
 
     def max_abs_scaler(self, series):
-        # TO-DO: this creates a numpy array
-        return MaxAbsScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
+        return MaxAbsScaler().fit_transform(series.to_dask_array(lengths=True).reshape(-1,1))
 
     def min_max_scaler(self, series):
-        # TO-DO: this creates a numpy array
-        return MinMaxScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
+        return MinMaxScaler().fit_transform(series.to_frame())[series.name]
 
     def replace_chars(self, series, search, replace_by):
         regex=False
