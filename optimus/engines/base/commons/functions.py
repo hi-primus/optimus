@@ -15,130 +15,13 @@ from optimus.helpers.core import val_to_list
 from optimus.infer import is_str
 
 
-def is_string(series):
-    def _is_string(value):
-        if isinstance(value, str):
-            return True
-        else:
-            return False
-
-    return pd.Series(np.vectorize(_is_string)(series.values).flatten())
-
-
-def is_integer(series):
-    return pd.Series(np.vectorize(isintlike)(series).flatten())
-
-
-def is_float(series):
-    return pd.Series(np.vectorize(isfloat)(series).flatten())
-
-
-def is_numeric(series):
-    return pd.Series(np.vectorize(isreal)(series).flatten())
-
-
 def word_tokenize(series):
     import nltk
     return nltk.word_tokenize(series)
 
 
-def is_integer_cudf(series):
-    return series.str.isinteger()
-
-
-def is_float_cudf(series):
-    return series.str.isfloat()
-
-
-def is_numeric_cudf(series):
-    return series.str.isnumeric()
-
-
-def is_string_cudf(series):
-    return series.str.isalpha()
-
-
-# Convertion functions
-# cuDF
-def to_integer_cudf(series):
-    import cudf
-    return cudf.to_numeric(series, errors="ignore", downcast="integer")
-
-
-def to_float_cudf(series):
-    import cudf
-    return cudf.to_numeric(series, errors="ignore", downcast="float")
-
-
-def to_string_cudf(series):
-    return series.astype(str)
-
-
-# Vaex
-
-def to_integer_vaex(series):
-    return fast_int(series, default=np.nan)
-
-
-def to_float_vaex(series):
-    return fast_float(series, default=np.nan)
-
-
-def to_string_vaex(series):
-    return series.astype(str)
-
-
-# Pandas Dask
-def to_integer(value, *args):
-    try:
-        # fastnumbers can only handle string or numeric values. Not None, dates or list
-        return fastnumbers.fast_forceint(value, default=0)
-    except TypeError:
-        return np.nan
-
-
-def to_float(series, *args):
-    # if value is None or isinstance(value, str):
-    #     return None
-    # else:
-    try:
-        return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
-    except:
-        return pd.Series(pd.to_numeric(series, errors='coerce')).astype('float')
-
-    # try:
-    #     # fastnumbers can only handle string or numeric values. Not None, dates or list
-    #     return fastnumbers.fast_float(value, default=np.nan)
-    # except TypeError:
-    #     return np.nan
-
-
-def to_string(value, *args):
-    try:
-        return value.astype(str)
-    except TypeError:
-        return np.nan
-
-
-def to_boolean(value, *args):
-    try:
-        # fastnumbers can only handle string or numeric values. Not None, dates or list
-        return bool(value)
-    except TypeError:
-        return np.nan
-
-
-def to_datetime(value, format):
-    return pd.to_datetime(value, format=format, errors="coerce")
-
-
 def hist(series, bins):
     return np.histogram(series.to_float(), bins=bins)
-
-
-def to_datetime_cudf(value, format):
-    import cudf
-    return cudf.to_datetime(value, format=format, errors="coerce")
 
 
 def impute(df, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):

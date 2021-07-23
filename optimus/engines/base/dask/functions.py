@@ -1,11 +1,32 @@
 import re
 import dask
+import dask.dataframe as dd
+from sklearn.preprocessing import MaxAbsScaler
+from dask_ml.preprocessing import MinMaxScaler, StandardScaler
 
 from optimus.helpers.core import val_to_list
-import dask.dataframe as dd
-from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
 class DaskBaseFunctions():
+
+    @property
+    def _engine(self):
+        return dask
+
+    @property
+    def _functions(self):
+        return dd
+
+    def _new_series(self, series, *args, **kwargs):
+        if isinstance(series, dd.Series):
+            return series
+        return dd.from_array(series, *args, **kwargs)
+
+    def all(self, series):
+        return series.all()
+    
+    def any(self, series):
+        return series.any()
+
     def word_tokenize(self, series):
         pass
 
@@ -21,21 +42,6 @@ class DaskBaseFunctions():
     def to_delayed(self, value):
         return value.to_delayed()
 
-    def to_float(self, series, *args):
-        return series.map_partitions(self._to_float_partition, meta=float)
-
-    def _to_float(self, series):
-        return self.to_float(series)
-
-    def _to_integer(self, series):
-        return self.to_integer(series)
-
-    def to_integer(self, series, *args):
-        return series.map_partitions(self._to_integer_partition, meta=int)
-
-    def to_string(self, series):
-        return series.astype(str)
-
     def min(self, series):
         return series.min()
 
@@ -43,19 +49,16 @@ class DaskBaseFunctions():
         return series.max()
 
     def count_zeros(self, series):
-        return int((self._to_float(series).values == 0).sum())
+        return int((self.to_float(series).values == 0).sum())
 
     def standard_scaler(self, series):
-        # TO-DO: this creates a numpy array
-        return StandardScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
+        return StandardScaler().fit_transform(series.to_frame())[series.name]
 
     def max_abs_scaler(self, series):
-        # TO-DO: this creates a numpy array
-        return MaxAbsScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
+        return MaxAbsScaler().fit_transform(series.to_dask_array(lengths=True).reshape(-1,1))
 
     def min_max_scaler(self, series):
-        # TO-DO: this creates a numpy array
-        return MinMaxScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
+        return MinMaxScaler().fit_transform(series.to_frame())[series.name]
 
     def replace_chars(self, series, search, replace_by):
         regex=False

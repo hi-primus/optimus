@@ -24,3 +24,17 @@ def one_list_to_val(val):
         result = val
 
     return result
+
+
+def one_tuple_to_val(val):
+    """
+    Convert a single tuple element to val
+    :param val:
+    :return:
+    """
+    if isinstance(val, tuple) and len(val) == 1:
+        result = val[0]
+    else:
+        result = val
+
+    return result

@@ -1,28 +1,13 @@
-# These function can return and Column Expression or a list of columns expression
-# Must return None if the data type can not be handle
-
-# from dask_cudf.core import DataFrame as DaskCUDFDataFrame
-
-import random
-import string
-
 import cudf
-import dask
-
-from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
 from optimus.engines.base.functions import Functions
 from optimus.engines.base.dask.functions import DaskBaseFunctions
-from optimus.helpers.core import val_to_list
-import dask.dataframe as dd
+from optimus.engines.base.cudf.functions import CUDFBaseFunctions
 
-import numpy as np
-
-class DaskCUDFFunctions(DaskBaseFunctions, Functions):
-    def _to_float_partition(self, series):
-        return to_float_cudf(series)
-
-    def _to_integer_partition(self, series):
-        return to_integer_cudf(series)
+class DaskCUDFFunctions(DaskBaseFunctions, CUDFBaseFunctions, Functions):
+    
+    @property
+    def _partition_engine(self):
+        return cudf
 
     def kurtosis(self, series):
         return series.map_partitions(lambda _series: _series.kurtosis())

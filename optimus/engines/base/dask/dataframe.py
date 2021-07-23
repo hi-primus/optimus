@@ -1,14 +1,18 @@
 from abc import abstractmethod
-from optimus.helpers.types import DataFrameType
 
 import dask
+import dask.array as da
+import dask.dataframe as dd
 import humanize
 from dask.distributed import Variable
 from dask.utils import parse_bytes
 import numpy as np
+import pandas as pd
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
+from optimus.helpers.core import one_tuple_to_val
+from optimus.helpers.types import DataFrameType
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_one_element
@@ -23,21 +27,38 @@ class DaskBaseDataFrame(BaseDataFrame):
 
         dfd = self.root.data
 
-        if dfd.known_divisions:
-            for key in kw_columns:
-                kw_column = kw_columns[key]
-                if not is_one_element(kw_column) and not callable(kw_column) and not getattr(kw_column, "known_divisions", None):
-                    if isinstance(kw_column, (np.ndarray,)):
-                        # is a numpy array
-                        kw_column = dask.dataframe.from_array(kw_column)
+        for key in kw_columns:
+            kw_column = kw_columns[key]
+            
+            if isinstance(kw_column, (list,)):
+                kw_column = pd.Series(kw_column)
 
-                    _dfd = kw_column.reset_index().set_index('index')
-                    if key in _dfd:
+            if isinstance(kw_column, (np.ndarray, da.Array)):
+                kw_column = dd.from_array(kw_column)
+
+            if not isinstance(kw_column, pd.Series):
+
+                if isinstance(kw_column, dd.Series):
+                    kw_column = kw_column.to_frame()
+
+                if isinstance(kw_column, dd.DataFrame):
+                    kw_column.divisions = dfd.divisions
+
+                
+                if dfd.known_divisions:
+                    if not is_one_element(kw_column) and not callable(kw_column) and not getattr(kw_column, "known_divisions", None):
+                        kw_column = kw_column.reset_index().set_index('index')
+                
+                if isinstance(kw_column, dd.DataFrame):
+                    if key in kw_column:
                         # the incoming series has the same column key
-                        kw_columns[key] = _dfd[key]
+                        kw_column = kw_column[key]
                     else:
                         # the incoming series has no column key
-                        kw_columns[key] = _dfd[0]
+                        kw_column = kw_column[list(kw_column.columns)[0]]
+
+            kw_columns[key] = kw_column
+
         return dfd.assign(**kw_columns)
 
     @staticmethod
@@ -60,7 +81,8 @@ class DaskBaseDataFrame(BaseDataFrame):
         return df.compute()
 
     def _compute(self, *args, **kwargs):
-        return dask.compute(*(*(a for a in args), *(kwargs[k] for k in kwargs)))
+        result = dask.compute(*(*(a for a in args), *(kwargs[k] for k in kwargs)))
+        return one_tuple_to_val(result)
 
     def visualize(self):
         return display(self.data.visualize())

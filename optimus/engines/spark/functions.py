@@ -1,5 +1,6 @@
 import datetime
 import itertools
+import pyspark
 
 from pyspark.sql import functions as F
 
@@ -13,6 +14,10 @@ from optimus.infer import is_numeric, regex_full_url
 
 
 class SparkFunctions(Functions):
+
+    @property
+    def _engine(self):
+        return pyspark
 
     @staticmethod
     def replace_chars(col, search, replace_by):
@@ -40,10 +45,7 @@ class SparkFunctions(Functions):
     def to_float(self, col_name):
         return F.col(col_name).cast("float")
 
-    def _to_float(self, col_name):
-        return F.col(col_name).cast("float")
-
-    def to_integer(self, col_name):
+    def to_integer(self, col_name, default=None):
         return F.col(col_name).cast("int")
 
     @staticmethod
@@ -119,31 +121,31 @@ class SparkFunctions(Functions):
         pass
 
     def sin(self, series):
-        return F.sin(self._to_float(series))
+        return F.sin(self.to_float(series))
 
     def cos(self, series):
-        return F.cos(self._to_float(series))
+        return F.cos(self.to_float(series))
 
     def tan(self, series):
-        return F.tan(self._to_float(series))
+        return F.tan(self.to_float(series))
 
     def asin(self, series):
-        return F.asin(self._to_float(series))
+        return F.asin(self.to_float(series))
 
     def acos(self, series):
-        return F.acos(self._to_float(series))
+        return F.acos(self.to_float(series))
 
     def atan(self, series):
-        return F.atan(self._to_float(series))
+        return F.atan(self.to_float(series))
 
     def sinh(self, series):
-        return F.sinh(self._to_float(series))
+        return F.sinh(self.to_float(series))
 
     def cosh(self, series):
-        return F.cosh(self._to_float(series))
+        return F.cosh(self.to_float(series))
 
     def tanh(self, series):
-        return F.tanh(self._to_float(series))
+        return F.tanh(self.to_float(series))
 
     def asinh(self, series):
         return F.log10(series + F.sqrt(F.pow(series, F.lit(2)) + F.lit(1)))

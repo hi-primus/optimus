@@ -1,38 +1,19 @@
-# DataFrame = pd.DataFrame
-from datetime import datetime, timedelta
-from optimus.infer import is_list, is_list_or_tuple
-from optimus.helpers.core import val_to_list
+from optimus.infer import is_list_or_tuple
 
 import numpy as np
 import pandas as pd
 import re
-from optimus.engines.base.commons.functions import to_string, to_integer, to_float, to_boolean, word_tokenize
+from optimus.engines.base.commons.functions import word_tokenize
 from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
+from optimus.engines.base.pandas.functions import PandasBaseFunctions
 from optimus.engines.base.functions import Functions
 
 
-class PandasFunctions(DataFrameBaseFunctions, Functions):
+class PandasFunctions(DataFrameBaseFunctions, PandasBaseFunctions, Functions):
 
-    def _to_float(self, value):
-        return value.map(to_float)
-
-    def to_float(self, series):
-        return to_float(series)
-
-    def to_string(self, series):
-        return to_float(series)
-
-    def _to_integer(self, value):
-        return value.map(to_integer)
-
-    def to_integer(self, series):
-        return to_integer(series)
-
-    def to_boolean(self, series):
-        return to_boolean(series)
-
-    def to_string(self, series):
-        return to_string(series)
+    @property
+    def _engine(self):
+        return pd
 
     def word_tokenize(self, value):
         return word_tokenize(value)

@@ -1,8 +1,7 @@
 from cuml import preprocessing
 from sklearn.preprocessing import StandardScaler
 
-from optimus.engines.base.commons.functions import string_to_index, index_to_string, find, to_float_cudf, \
-    to_string_cudf, to_integer_cudf
+from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
 from optimus.engines.base.cudf.columns import CUDFBaseColumns
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.base.columns import BaseColumns
@@ -61,19 +60,6 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
         df = find(df, cols, sub, ignore_case)
 
         return cudf.from_pandas(df)
-
-    def to_string(self, cols="*", output_cols=None):
-        df = self.root
-        return df.cols.apply(cols, to_string_cudf, output_cols=output_cols,
-                             meta_action=Actions.TO_STRING.value,
-                             mode="vectorized")
-
-    def to_integer(self, cols="*", output_cols=None):
-
-        df = self.root
-        return df.cols.apply(cols, to_integer_cudf, output_cols=output_cols,
-                             meta_action=Actions.TO_INTEGER.value,
-                             mode="pandas")
 
     def to_timestamp(self, cols="*", date_format=None, output_cols=None):
         raise NotImplementedError('Not implemented yet')

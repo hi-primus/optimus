@@ -2,28 +2,20 @@
 
 import cudf
 
-from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
 from optimus.helpers.core import val_to_list
 from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
+from optimus.engines.base.cudf.functions import CUDFBaseFunctions
 from optimus.engines.base.functions import Functions
 
 
-class CUDFFunctions(DataFrameBaseFunctions, Functions):
+class CUDFFunctions(DataFrameBaseFunctions, CUDFBaseFunctions, Functions):
+
+    @property
+    def _engine(self):
+        return cudf
 
     def word_tokenize(self, series):
         pass
-
-    def to_float(self, series):
-        return to_float_cudf(series)
-
-    def to_integer(self, series):
-        return to_integer_cudf(series)
-
-    def to_string(self, series):
-        return series.astype(str)
-
-    def to_boolean(self, series):
-        return series.astype(bool)
 
     def count_zeros(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.

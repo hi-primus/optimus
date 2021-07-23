@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from jsonschema._format import is_email
 import url_parser
+from fastnumbers import fast_float, fast_int
 
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list
@@ -30,23 +31,80 @@ class Functions(ABC):
     def to_delayed(self, delayed):
         return [delayed]
 
-    # def _to_float(self, series):
-    #     return series
+    
+    @property
+    def constants(self):
+        from optimus.engines.base.contants import BaseConstants
+        return BaseConstants()
 
-    def to_integer(self, series):
-        return series
+    @property
+    @abstractmethod
+    def _engine(self):
+        """
+        Gets the engine used
+        """
+        pass
 
-    def _to_float_partition(self, series):
-        return self.to_float(series)
+    @property
+    def _partition_engine(self):
+        """
+        Gets the internal engine used in partitioned DataFrame technologies
+        """
+        return self._engine
 
-    def _to_integer_partition(self, series):
-        return self.to_integer(series)
+    @property
+    def _functions(self):
+        """
+        Gets the set of functions available in the engine
+        """
+        return self._partition_engine
+    
+    def _new_series(self, *args, **kwargs):
+        """
+        Creates a new series (also known as column)
+        """
+        return self._functions.Series(*args, **kwargs)
+
+    def to_boolean(self, series):
+        """
+        Converts series to bool
+        """
+        return series.map(lambda v: bool(v), na_action=None).astype('bool')
+    
+    def to_boolean_none(self, series):
+        """
+        Converts series to boolean
+        """
+        return series.map(lambda v: bool(v), na_action='ignore').astype('object')
+
+    def to_float(self, series):
+        """
+        Converts a series values to floats
+        """
+        try:
+            return self._new_series(np.vectorize(fast_float)(series, default=np.nan).flatten())
+        except:
+            return self._new_series(self._functions.to_numeric(series, errors='coerce')).astype('float')
+
+    def to_integer(self, series, default=0):
+        """
+        Converts a series values to integers
+        """
+        try:
+            return self._new_series(np.vectorize(fast_int)(series, default=default).flatten())
+        except:
+            return self._new_series(self._functions.to_numeric(series, errors='coerce').fillna(default)).astype('int')
 
     def to_string(self, series):
-        return series if str(series.dtype) in ["string"] else series.astype("string")
+        if str(series.dtype) in self.constants.STRING_TYPES:
+            return series
+        return series.astype("string")
 
     def to_string_accessor(self, series):
-        return (series if str(series.dtype) in ["string"] else series.astype("string")).str
+        if str(series.dtype) in self.constants.STRING_TYPES:
+            return series.str
+        return series.astype("string").str
+
 
     # Aggregation
     def min(self, series):

@@ -1451,16 +1451,16 @@ class BaseColumns(ABC):
         return df
 
     def to_float(self, cols="*", output_cols=None) -> DataFrameType:
-        return self.apply(cols, self.F.to_float, func_return_type=float,
+        return self.apply(cols, "to_float", func_return_type=float,
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
 
-    def to_integer(self, cols="*", output_cols=None) -> DataFrameType:
-        return self.apply(cols, self.F.to_integer, func_return_type=int,
+    def to_integer(self, cols="*", default=0, output_cols=None) -> DataFrameType:
+        return self.apply(cols, "to_integer", args=(default,), func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="vectorized")
 
     def to_boolean(self, cols="*", output_cols=None) -> DataFrameType:
-        return self.apply(cols, self.F.to_boolean, func_return_type=int,
-                          output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="map")
+        return self.apply(cols, "to_boolean", func_return_type=int,
+                          output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="vectorized")
 
     def to_string(self, cols="*", output_cols=None) -> DataFrameType:
         filtered_columns = []
@@ -1474,7 +1474,7 @@ class BaseColumns(ABC):
                 filtered_columns.append(col_name)
 
         if len(filtered_columns) > 0:
-            return self.apply(cols, self.F.to_string, func_return_type=str,
+            return self.apply(cols, "to_string", func_return_type=str,
                               output_cols=output_cols, meta_action=Actions.TO_STRING.value, mode="vectorized",
                               func_type="column_expr")
         else:
@@ -1657,7 +1657,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        return self.apply(cols, self.F.to_datetime, func_return_type=str,
+        return self.apply(cols, "to_datetime", func_return_type=str,
                           output_cols=output_cols, args=format, mode="partitioned")
 
     def year(self, cols="*", format=None, output_cols=None) -> DataFrameType:
@@ -2586,22 +2586,25 @@ class BaseColumns(ABC):
 
         return self.append(append_df)
 
-    def _any_mask(self, cols="*", method: str = None, inverse=False, tidy=True, *args, **kwargs) -> bool:
+    def _any_mask(self, cols="*", method: str = None, inverse=False, tidy=True, compute=True, *args, **kwargs) -> bool:
 
         mask = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
         if inverse:
             # assigns True if there is any False value
-            values = {col: not bool(mask.data[col].all())
+            values = {col: not self.F.all(mask.data[col])
                       for col in mask.cols.names()}
         else:
             # assigns True if there is any True value
-            values = {col: bool(mask.data[col].any())
+            values = {col: self.F.any(mask.data[col])
                       for col in mask.cols.names()}
 
-        return format_dict(values, tidy)
+        if compute:
+            return self.root._compute(format_dict(values, tidy)) 
+        else:
+            return format_dict(values, tidy)
 
-    def _count_mask(self, cols="*", method: str = None, inverse=False, tidy=True, *args, **kwargs) -> bool:
+    def _count_mask(self, cols="*", method: str = None, inverse=False, tidy=True, compute=True, *args, **kwargs) -> bool:
 
         mask = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
@@ -2613,261 +2616,264 @@ class BaseColumns(ABC):
             # assigns True if there is any True value
             values = {col: mask.data[col].sum() for col in mask.cols.names()}
 
-        return format_dict(values, tidy)
+        if compute:
+            return self.root._compute(format_dict(values, tidy)) 
+        else:
+            return format_dict(values, tidy)
 
     # Any mask
 
-    def any_greater_than(self, cols="*", value=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "greater_than", value=value, inverse=inverse, tidy=tidy)
+    def any_greater_than(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "greater_than", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_greater_than_equal(self, cols="*", value=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "greater_than_equal", value=value, inverse=inverse, tidy=tidy)
+    def any_greater_than_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "greater_than_equal", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_less_than(self, cols="*", value=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "less_than", value=value, inverse=inverse, tidy=tidy)
+    def any_less_than(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "less_than", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_less_than_equal(self, cols="*", value=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "less_than_equal", value=value, inverse=inverse, tidy=tidy)
+    def any_less_than_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "less_than_equal", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds, inverse=inverse, tidy=tidy)
+    def any_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_equal(self, cols="*", value=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "equal", value=value, inverse=inverse, tidy=tidy)
+    def any_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "equal", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_not_equal(self, cols="*", value=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "not_equal", value=value, inverse=inverse, tidy=tidy)
+    def any_not_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "not_equal", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_missing(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "missing", inverse=inverse, tidy=tidy)
+    def any_missing(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "missing", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_null(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "null", inverse=inverse, tidy=tidy)
+    def any_null(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "null", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_none(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "none", inverse=inverse, tidy=tidy)
+    def any_none(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "none", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_nan(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "nan", inverse=inverse, tidy=tidy)
+    def any_nan(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "nan", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_empty(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "empty", inverse=inverse, tidy=tidy)
+    def any_empty(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "empty", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_mismatch(self, cols="*", data_type=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "mismatch", data_type=data_type, inverse=inverse, tidy=tidy)
+    def any_mismatch(self, cols="*", data_type=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "mismatch", data_type=data_type, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_duplicated(self, cols="*", keep="first", inverse=False, tidy=True):
-        return self._any_mask(cols, "duplicated", keep=keep, inverse=inverse, tidy=tidy)
+    def any_duplicated(self, cols="*", keep="first", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "duplicated", keep=keep, inverse=inverse, tidy=tidy, compute=compute)
 
-    # def any_uniques(self, cols="*", keep="first", inverse=False, tidy=True):
-    #     return self._any_mask(cols, "unique", keep=keep, inverse=inverse, tidy=tidy)
+    # def any_uniques(self, cols="*", keep="first", inverse=False, tidy=True, compute=True):
+    #     return self._any_mask(cols, "unique", keep=keep, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_match(self, cols="*", regex=None, data_type=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "match", regex=regex, data_type=data_type, inverse=inverse, tidy=tidy)
+    def any_match(self, cols="*", regex=None, data_type=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "match", regex=regex, data_type=data_type, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_match_data_type(self, cols="*", data_type=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "match_data_type", data_type=data_type, inverse=inverse, tidy=tidy)
+    def any_match_data_type(self, cols="*", data_type=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "match_data_type", data_type=data_type, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_match_regex(self, cols="*", regex=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "match_regex", regex=regex, inverse=inverse, tidy=tidy)
+    def any_match_regex(self, cols="*", regex=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "match_regex", regex=regex, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_starting_with(self, cols="*", value=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "starts_with", value=value, inverse=inverse, tidy=tidy)
+    def any_starting_with(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "starts_with", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_ending_with(self, cols="*", value=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "ends_with", value=value, inverse=inverse, tidy=tidy)
+    def any_ending_with(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "ends_with", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_containing(self, cols="*", value=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "contains", value=value, inverse=inverse, tidy=tidy)
+    def any_containing(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "contains", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_value_in(self, cols="*", values=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "value_in", values=values, inverse=inverse, tidy=tidy)
+    def any_value_in(self, cols="*", values=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "value_in", values=values, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_match_pattern(self, cols="*", pattern=None, inverse=False, tidy=True):
-        return self._any_mask(cols, "match_pattern", pattern=pattern, inverse=inverse, tidy=tidy)
+    def any_match_pattern(self, cols="*", pattern=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "match_pattern", pattern=pattern, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_expression(self, value=None, inverse=False, tidy=True):
-        return self._any_mask("*", "expression", value=value, inverse=inverse, tidy=tidy)
+    def any_expression(self, value=None, inverse=False, tidy=True, compute=True):
+        return self._any_mask("*", "expression", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
     # Any mask (type)
 
-    def any_str(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "str", inverse=inverse, tidy=tidy)
+    def any_str(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "str", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_int(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "int", inverse=inverse, tidy=tidy)
+    def any_int(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "int", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_float(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "float", inverse=inverse, tidy=tidy)
+    def any_float(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "float", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_numeric(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "numeric", inverse=inverse, tidy=tidy)
+    def any_numeric(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "numeric", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_email(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "email", inverse=inverse, tidy=tidy)
+    def any_email(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "email", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_ip(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "ip", inverse=inverse, tidy=tidy)
+    def any_ip(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "ip", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_url(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "url", inverse=inverse, tidy=tidy)
+    def any_url(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "url", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_gender(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "gender", inverse=inverse, tidy=tidy)
+    def any_gender(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "gender", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_boolean(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "boolean", inverse=inverse, tidy=tidy)
+    def any_boolean(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "boolean", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_zip_code(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "zip_code", inverse=inverse, tidy=tidy)
+    def any_zip_code(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "zip_code", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_credit_card_number(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "credit_card_number", inverse=inverse, tidy=tidy)
+    def any_credit_card_number(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "credit_card_number", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_datetime(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "datetime", inverse=inverse, tidy=tidy)
+    def any_datetime(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "datetime", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_object(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "object", inverse=inverse, tidy=tidy)
+    def any_object(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "object", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_array(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "array", inverse=inverse, tidy=tidy)
+    def any_array(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "array", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_phone_number(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "phone_number", inverse=inverse, tidy=tidy)
+    def any_phone_number(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "phone_number", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_social_security_number(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "social_security_number", inverse=inverse, tidy=tidy)
+    def any_social_security_number(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "social_security_number", inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_http_code(self, cols="*", inverse=False, tidy=True):
-        return self._any_mask(cols, "http_code", inverse=inverse, tidy=tidy)
+    def any_http_code(self, cols="*", inverse=False, tidy=True, compute=True):
+        return self._any_mask(cols, "http_code", inverse=inverse, tidy=tidy, compute=compute)
 
     # Count mask
 
-    def count_greater_than(self, cols="*", value=None, tidy=True):
-        return self._count_mask(cols, "greater_than", value=value, tidy=tidy)
+    def count_greater_than(self, cols="*", value=None, tidy=True, compute=True):
+        return self._count_mask(cols, "greater_than", value=value, tidy=tidy, compute=compute)
 
-    def count_greater_than_equal(self, cols="*", value=None, tidy=True):
-        return self._count_mask(cols, "greater_than_equal", value=value, tidy=tidy)
+    def count_greater_than_equal(self, cols="*", value=None, tidy=True, compute=True):
+        return self._count_mask(cols, "greater_than_equal", value=value, tidy=tidy, compute=compute)
 
-    def count_less_than(self, cols="*", value=None, tidy=True):
-        return self._count_mask(cols, "less_than", value=value, tidy=tidy)
+    def count_less_than(self, cols="*", value=None, tidy=True, compute=True):
+        return self._count_mask(cols, "less_than", value=value, tidy=tidy, compute=compute)
 
-    def count_less_than_equal(self, cols="*", value=None, tidy=True):
-        return self._count_mask(cols, "less_than_equal", value=value, tidy=tidy)
+    def count_less_than_equal(self, cols="*", value=None, tidy=True, compute=True):
+        return self._count_mask(cols, "less_than_equal", value=value, tidy=tidy, compute=compute)
 
-    def count_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, tidy=True):
-        return self._count_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds, tidy=tidy)
+    def count_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, tidy=True, compute=True):
+        return self._count_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds, tidy=tidy, compute=compute)
 
-    def count_equal(self, cols="*", value=None, tidy=True):
-        return self._count_mask(cols, "equal", value=value, tidy=tidy)
+    def count_equal(self, cols="*", value=None, tidy=True, compute=True):
+        return self._count_mask(cols, "equal", value=value, tidy=tidy, compute=compute)
 
-    def count_not_equal(self, cols="*", value=None, tidy=True):
-        return self._count_mask(cols, "not_equal", value=value, tidy=tidy)
+    def count_not_equal(self, cols="*", value=None, tidy=True, compute=True):
+        return self._count_mask(cols, "not_equal", value=value, tidy=tidy, compute=compute)
 
-    def count_missings(self, cols="*", tidy=True):
-        return self._count_mask(cols, "missing", tidy=tidy)
+    def count_missings(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "missing", tidy=tidy, compute=compute)
 
-    def count_nulls(self, cols="*", tidy=True):
-        return self._count_mask(cols, "null", tidy=tidy)
+    def count_nulls(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "null", tidy=tidy, compute=compute)
 
-    def count_none(self, cols="*", tidy=True):
-        return self._count_mask(cols, "none", tidy=tidy)
+    def count_none(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "none", tidy=tidy, compute=compute)
 
-    def count_nan(self, cols="*", tidy=True):
-        return self._count_mask(cols, "nan", tidy=tidy)
+    def count_nan(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "nan", tidy=tidy, compute=compute)
 
-    def count_empty(self, cols="*", tidy=True):
-        return self._count_mask(cols, "empty", tidy=tidy)
+    def count_empty(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "empty", tidy=tidy, compute=compute)
 
-    def count_mismatch(self, cols="*", data_type=None, tidy=True):
-        return self._count_mask(cols, "mismatch", data_type=data_type, tidy=tidy)
+    def count_mismatch(self, cols="*", data_type=None, tidy=True, compute=True):
+        return self._count_mask(cols, "mismatch", data_type=data_type, tidy=tidy, compute=compute)
 
-    def count_duplicated(self, cols="*", keep="first", tidy=True):
-        return self._count_mask(cols, "duplicated", keep=keep, tidy=tidy)
+    def count_duplicated(self, cols="*", keep="first", tidy=True, compute=True):
+        return self._count_mask(cols, "duplicated", keep=keep, tidy=tidy, compute=compute)
 
-    # def count_uniques(self, cols="*", keep="first", tidy=True):
-    #     return self._count_mask(cols, "unique", keep=keep, tidy=tidy)
+    # def count_uniques(self, cols="*", keep="first", tidy=True, compute=True):
+    #     return self._count_mask(cols, "unique", keep=keep, tidy=tidy, compute=compute)
 
-    def count_match(self, cols="*", regex=None, data_type=None, tidy=True):
-        return self._count_mask(cols, "match", regex=regex, data_type=data_type, tidy=tidy)
+    def count_match(self, cols="*", regex=None, data_type=None, tidy=True, compute=True):
+        return self._count_mask(cols, "match", regex=regex, data_type=data_type, tidy=tidy, compute=compute)
 
-    def count_data_type(self, cols="*", data_type=None, tidy=True):
-        return self._count_mask(cols, "match_data_type", data_type=data_type, tidy=tidy)
+    def count_data_type(self, cols="*", data_type=None, tidy=True, compute=True):
+        return self._count_mask(cols, "match_data_type", data_type=data_type, tidy=tidy, compute=compute)
 
-    def count_regex(self, cols="*", regex=None, tidy=True):
-        return self._count_mask(cols, "match_regex", regex=regex, tidy=tidy)
+    def count_regex(self, cols="*", regex=None, tidy=True, compute=True):
+        return self._count_mask(cols, "match_regex", regex=regex, tidy=tidy, compute=compute)
 
-    def count_starting_with(self, cols="*", value=None, tidy=True):
-        return self._count_mask(cols, "starts_with", value=value, tidy=tidy)
+    def count_starting_with(self, cols="*", value=None, tidy=True, compute=True):
+        return self._count_mask(cols, "starts_with", value=value, tidy=tidy, compute=compute)
 
-    def count_ending_with(self, cols="*", value=None, tidy=True):
-        return self._count_mask(cols, "ends_with", value=value, tidy=tidy)
+    def count_ending_with(self, cols="*", value=None, tidy=True, compute=True):
+        return self._count_mask(cols, "ends_with", value=value, tidy=tidy, compute=compute)
 
-    def count_containing(self, cols="*", value=None, tidy=True):
-        return self._count_mask(cols, "contains", value=value, tidy=tidy)
+    def count_containing(self, cols="*", value=None, tidy=True, compute=True):
+        return self._count_mask(cols, "contains", value=value, tidy=tidy, compute=compute)
 
-    def count_values_in(self, cols="*", values=None, tidy=True):
-        return self._count_mask(cols, "value_in", values=values, tidy=tidy)
+    def count_values_in(self, cols="*", values=None, tidy=True, compute=True):
+        return self._count_mask(cols, "value_in", values=values, tidy=tidy, compute=compute)
 
-    def count_match_pattern(self, cols="*", pattern=None, tidy=True):
-        return self._count_mask(cols, "match_pattern", pattern=pattern, tidy=tidy)
+    def count_match_pattern(self, cols="*", pattern=None, tidy=True, compute=True):
+        return self._count_mask(cols, "match_pattern", pattern=pattern, tidy=tidy, compute=compute)
 
-    def count_expression(self, value=None, inverse=False, tidy=True):
-        return self._count_mask("*", "expression", value=value, inverse=inverse)
+    def count_expression(self, value=None, inverse=False, tidy=True, compute=True):
+        return self._count_mask("*", "expression", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
     # Count mask (data types)
 
-    def count_str(self, cols="*", tidy=True):
-        return self._count_mask(cols, "str", tidy=tidy)
+    def count_str(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "str", tidy=tidy, compute=compute)
 
-    def count_int(self, cols="*", tidy=True):
-        return self._count_mask(cols, "int", tidy=tidy)
+    def count_int(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "int", tidy=tidy, compute=compute)
 
-    def count_float(self, cols="*", tidy=True):
-        return self._count_mask(cols, "float", tidy=tidy)
+    def count_float(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "float", tidy=tidy, compute=compute)
 
-    def count_numeric(self, cols="*", tidy=True):
-        return self._count_mask(cols, "numeric", tidy=tidy)
+    def count_numeric(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "numeric", tidy=tidy, compute=compute)
 
-    def count_email(self, cols="*", tidy=True):
-        return self._count_mask(cols, "email", tidy=tidy)
+    def count_email(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "email", tidy=tidy, compute=compute)
 
-    def count_ip(self, cols="*", tidy=True):
-        return self._count_mask(cols, "ip", tidy=tidy)
+    def count_ip(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "ip", tidy=tidy, compute=compute)
 
-    def count_url(self, cols="*", tidy=True):
-        return self._count_mask(cols, "url", tidy=tidy)
+    def count_url(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "url", tidy=tidy, compute=compute)
 
-    def count_gender(self, cols="*", tidy=True):
-        return self._count_mask(cols, "gender", tidy=tidy)
+    def count_gender(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "gender", tidy=tidy, compute=compute)
 
-    def count_boolean(self, cols="*", tidy=True):
-        return self._count_mask(cols, "boolean", tidy=tidy)
+    def count_boolean(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "boolean", tidy=tidy, compute=compute)
 
-    def count_zip_code(self, cols="*", tidy=True):
-        return self._count_mask(cols, "zip_code", tidy=tidy)
+    def count_zip_code(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "zip_code", tidy=tidy, compute=compute)
 
-    def count_credit_card_number(self, cols="*", tidy=True):
-        return self._count_mask(cols, "credit_card_number", tidy=tidy)
+    def count_credit_card_number(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "credit_card_number", tidy=tidy, compute=compute)
 
-    def count_datetime(self, cols="*", tidy=True):
-        return self._count_mask(cols, "datetime", tidy=tidy)
+    def count_datetime(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "datetime", tidy=tidy, compute=compute)
 
-    def count_object(self, cols="*", tidy=True):
-        return self._count_mask(cols, "object", tidy=tidy)
+    def count_object(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "object", tidy=tidy, compute=compute)
 
-    def count_array(self, cols="*", tidy=True):
-        return self._count_mask(cols, "array", tidy=tidy)
+    def count_array(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "array", tidy=tidy, compute=compute)
 
-    def count_phone_number(self, cols="*", tidy=True):
-        return self._count_mask(cols, "phone_number", tidy=tidy)
+    def count_phone_number(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "phone_number", tidy=tidy, compute=compute)
 
-    def count_social_security_number(self, cols="*", tidy=True):
-        return self._count_mask(cols, "social_security_number", tidy=tidy)
+    def count_social_security_number(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "social_security_number", tidy=tidy, compute=compute)
 
-    def count_http_code(self, cols="*", tidy=True):
-        return self._count_mask(cols, "http_code", tidy=tidy)
+    def count_http_code(self, cols="*", tidy=True, compute=True):
+        return self._count_mask(cols, "http_code", tidy=tidy, compute=compute)
 
     # Append mask
 

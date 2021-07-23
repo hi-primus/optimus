@@ -9,17 +9,17 @@ import dask.array as da
 import pandas as pd
 from dask.array import stats
 
-from optimus.engines.base.commons.functions import to_float, to_integer, to_boolean, to_datetime, word_tokenize
-from optimus.engines.base.functions import Functions
+from optimus.engines.base.commons.functions import word_tokenize
 from optimus.engines.base.dask.functions import DaskBaseFunctions
+from optimus.engines.base.pandas.functions import PandasBaseFunctions
+from optimus.engines.base.functions import Functions
 
 
-class DaskFunctions(DaskBaseFunctions, Functions):
-
+class DaskFunctions(DaskBaseFunctions, PandasBaseFunctions, Functions):
+    
     @property
-    def constants(self):
-        from optimus.engines.base.dask.constants import Constants
-        return Constants()
+    def _partition_engine(self):
+        return pd
 
     def delayed(self, func):
         def wrapper(*args, **kwargs):
@@ -27,34 +27,20 @@ class DaskFunctions(DaskBaseFunctions, Functions):
 
         return wrapper
 
-    def to_float(self, series):
-        return to_float(series)
-
-    def to_integer(self, series):
-        return to_integer(series)
-
-    def to_boolean(self, series):
-        return to_boolean(series)
-
-    def to_string(self, series):
-        if str(series.dtype) in self.constants.STRING_TYPES:
-            return series
-        return series.astype(str)
-
     def word_tokenize(self, value):
         return word_tokenize(value)
 
     def kurtosis(self, series):
-        return stats.kurtosis(self._to_float(series))
+        return stats.kurtosis(self.to_float(series))
 
     def skew(self, series):
-        return stats.skew(self._to_float(series))
+        return stats.skew(self.to_float(series))
 
     def exp(self, series):
-        return da.exp(self._to_float(series))
+        return da.exp(self.to_float(series))
 
     def sqrt(self, series):
-        return da.sqrt(self._to_float(series))
+        return da.sqrt(self.to_float(series))
 
     def reciprocal(self, series):
         return da.reciprocal(self.to_float(series))
@@ -65,58 +51,58 @@ class DaskFunctions(DaskBaseFunctions, Functions):
         return self.to_string(series).unique()
 
     def radians(self, series):
-        return da.radians(self._to_float(series))
+        return da.radians(self.to_float(series))
 
     def degrees(self, series):
-        return da.degrees(self._to_float(series))
+        return da.degrees(self.to_float(series))
 
     def ln(self, series):
-        return da.log(self._to_float(series))
+        return da.log(self.to_float(series))
 
     def log(self, series, base=10):
-        return da.log(self._to_float(series)) / da.log(base)
+        return da.log(self.to_float(series)) / da.log(base)
 
     def ceil(self, series):
-        return da.ceil(self._to_float(series))
+        return da.ceil(self.to_float(series))
 
     def floor(self, series):
-        return da.floor(self._to_float(series))
+        return da.floor(self.to_float(series))
 
     def sin(self, series):
-        return da.sin(self._to_float(series))
+        return da.sin(self.to_float(series))
 
     def cos(self, series):
-        return da.cos(self._to_float(series))
+        return da.cos(self.to_float(series))
 
     def tan(self, series):
-        return da.tan(self._to_float(series))
+        return da.tan(self.to_float(series))
 
     def asin(self, series):
-        return da.arcsin(self._to_float(series))
+        return da.arcsin(self.to_float(series))
 
     def acos(self, series):
-        return da.arccos(self._to_float(series))
+        return da.arccos(self.to_float(series))
 
     def atan(self, series):
-        return da.arctan(self._to_float(series))
+        return da.arctan(self.to_float(series))
 
     def sinh(self, series):
-        return da.arcsinh(self._to_float(series))
+        return da.arcsinh(self.to_float(series))
 
     def cosh(self, series):
-        return da.cosh(self._to_float(series))
+        return da.cosh(self.to_float(series))
 
     def tanh(self, series):
-        return da.tanh(self._to_float(series))
+        return da.tanh(self.to_float(series))
 
     def asinh(self, series):
-        return da.arcsinh(self._to_float(series))
+        return da.arcsinh(self.to_float(series))
 
     def acosh(self, series):
-        return da.arccosh(self._to_float(series))
+        return da.arccosh(self.to_float(series))
 
     def atanh(self, series):
-        return da.arctanh(self._to_float(series))
+        return da.arctanh(self.to_float(series))
 
     def normalize_chars(self, series):
         # str.decode return a float column. We are forcing to return a string again
@@ -128,6 +114,3 @@ class DaskFunctions(DaskBaseFunctions, Functions):
     def days_between(self, series, date_format=None):
         return (pd.to_datetime(series, format=date_format,
                                errors="coerce").dt.date - datetime.now().date())
-
-    def to_datetime(self, series, format):
-        return to_datetime(series, format)
