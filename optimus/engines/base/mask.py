@@ -22,21 +22,17 @@ class Mask(ABC):
             return series.to_frame()
         return series
 
-    @abstractmethod
-    def str(self, cols="*") -> MaskDataFrameType:
-        pass
+    def numeric(self, cols="*"):
+        return self.root[cols].cols.apply(cols, "is_numeric")
 
-    @abstractmethod
-    def int(self, cols="*") -> MaskDataFrameType:
-        pass
+    def int(self, cols="*"):
+        return self.root[cols].cols.apply(cols, "is_integer")
 
-    @abstractmethod
-    def float(self, cols="*") -> MaskDataFrameType:
-        pass
+    def float(self, cols="*"):
+        return self.root[cols].cols.apply(cols, "is_float")
 
-    @abstractmethod
-    def numeric(self, cols="*") -> MaskDataFrameType:
-        pass
+    def str(self, cols="*"):
+        return self.root[cols].cols.apply(cols, "is_string")
 
     def greater_than(self, cols="*", value=None) -> MaskDataFrameType:
         df = self.root

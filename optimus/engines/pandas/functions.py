@@ -3,12 +3,13 @@ from optimus.infer import is_list_or_tuple
 import numpy as np
 import pandas as pd
 import re
-from optimus.engines.base.commons.functions import to_string, to_integer, to_float, to_boolean, word_tokenize
+from optimus.engines.base.commons.functions import word_tokenize
 from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
+from optimus.engines.base.pandas.functions import PandasBaseFunctions
 from optimus.engines.base.functions import Functions
 
 
-class PandasFunctions(DataFrameBaseFunctions, Functions):
+class PandasFunctions(DataFrameBaseFunctions, PandasBaseFunctions, Functions):
 
     @property
     def _engine(self):

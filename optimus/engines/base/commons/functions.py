@@ -15,47 +15,9 @@ from optimus.helpers.core import val_to_list
 from optimus.infer import is_str
 
 
-def is_string(series):
-    def _is_string(value):
-        if isinstance(value, str):
-            return True
-        else:
-            return False
-
-    return pd.Series(np.vectorize(_is_string)(series.values).flatten())
-
-
-def is_integer(series):
-    return pd.Series(np.vectorize(isintlike)(series).flatten())
-
-
-def is_float(series):
-    return pd.Series(np.vectorize(isfloat)(series).flatten())
-
-
-def is_numeric(series):
-    return pd.Series(np.vectorize(isreal)(series).flatten())
-
-
 def word_tokenize(series):
     import nltk
     return nltk.word_tokenize(series)
-
-
-def is_integer_cudf(series):
-    return series.str.isinteger()
-
-
-def is_float_cudf(series):
-    return series.str.isfloat()
-
-
-def is_numeric_cudf(series):
-    return series.str.isnumeric()
-
-
-def is_string_cudf(series):
-    return series.str.isalpha()
 
 
 # Convertion functions

@@ -12,12 +12,12 @@ import dask
 from optimus.engines.base.commons.functions import to_float_cudf, to_integer_cudf
 from optimus.engines.base.functions import Functions
 from optimus.engines.base.dask.functions import DaskBaseFunctions
-from optimus.helpers.core import val_to_list
+from optimus.engines.base.cudf.functions import CUDFBaseFunctions
 import dask.dataframe as dd
 
 import numpy as np
 
-class DaskCUDFFunctions(DaskBaseFunctions, Functions):
+class DaskCUDFFunctions(DaskBaseFunctions, CUDFBaseFunctions, Functions):
     
     @property
     def _partition_engine(self):
