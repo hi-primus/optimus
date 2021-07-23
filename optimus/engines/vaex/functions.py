@@ -1,7 +1,7 @@
 import vaex
 import numpy as np
+from fastnumbers import fast_float, fast_int
 
-from optimus.engines.base.commons.functions import to_float, to_float_vaex
 from optimus.engines.base.functions import Functions
 
 
@@ -51,7 +51,19 @@ class VaexFunctions(Functions):
         pass
 
     def to_float(self, series):
+        def to_float_vaex(series):
+            return fast_float(series, default=np.nan)
         return series.apply(to_float_vaex)
+
+    def to_integer(self, series):
+        def to_integer_vaex(series):
+            return fast_int(series, default=np.nan)
+        return series.apply(to_integer_vaex)
+
+    def to_string(self, series):
+        def to_string_vaex(series):
+            return series.astype(str)
+        return series.apply(to_string_vaex)
 
     def sin(self, series):
         return np.sin(self.to_float(series))

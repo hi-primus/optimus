@@ -1,10 +1,10 @@
 import re
 import dask
-
-from optimus.helpers.core import val_to_list
 import dask.dataframe as dd
 from sklearn.preprocessing import MaxAbsScaler
 from dask_ml.preprocessing import MinMaxScaler, StandardScaler
+
+from optimus.helpers.core import val_to_list
 
 class DaskBaseFunctions():
 
@@ -14,7 +14,7 @@ class DaskBaseFunctions():
 
     @property
     def _functions(self):
-        return self._engine.dataframe
+        return dd
 
     def _new_series(self, *args, **kwargs):
         return self._functions.from_array(*args, **kwargs)

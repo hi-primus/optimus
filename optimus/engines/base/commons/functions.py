@@ -20,86 +20,8 @@ def word_tokenize(series):
     return nltk.word_tokenize(series)
 
 
-# Convertion functions
-# cuDF
-def to_integer_cudf(series):
-    import cudf
-    return cudf.to_numeric(series, errors="ignore", downcast="integer")
-
-
-def to_float_cudf(series):
-    import cudf
-    return cudf.to_numeric(series, errors="ignore", downcast="float")
-
-
-def to_string_cudf(series):
-    return series.astype(str)
-
-
-# Vaex
-
-def to_integer_vaex(series):
-    return fast_int(series, default=np.nan)
-
-
-def to_float_vaex(series):
-    return fast_float(series, default=np.nan)
-
-
-def to_string_vaex(series):
-    return series.astype(str)
-
-
-# Pandas Dask
-def to_integer(series, *args):
-    try:
-        return pd.Series(np.vectorize(fast_int)(series, default=np.nan).flatten())
-    except TypeError:
-        return pd.Series(pd.to_numeric(series, errors='coerce')).astype('int')
-
-
-def to_float(series, *args):
-    # if value is None or isinstance(value, str):
-    #     return None
-    # else:
-    try:
-        return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
-    except:
-        return pd.Series(pd.to_numeric(series, errors='coerce')).astype('float')
-
-    # try:
-    #     # fastnumbers can only handle string or numeric values. Not None, dates or list
-    #     return fastnumbers.fast_float(value, default=np.nan)
-    # except TypeError:
-    #     return np.nan
-
-
-def to_string(value, *args):
-    try:
-        return value.astype(str)
-    except TypeError:
-        return np.nan
-
-
-def to_boolean(value, *args):
-    try:
-        # fastnumbers can only handle string or numeric values. Not None, dates or list
-        return bool(value)
-    except TypeError:
-        return np.nan
-
-
-def to_datetime(value, format):
-    return pd.to_datetime(value, format=format, errors="coerce")
-
-
 def hist(series, bins):
     return np.histogram(series.to_float(), bins=bins)
-
-
-def to_datetime_cudf(value, format):
-    import cudf
-    return cudf.to_datetime(value, format=format, errors="coerce")
 
 
 def impute(df, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):

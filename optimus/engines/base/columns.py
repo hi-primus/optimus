@@ -1474,7 +1474,7 @@ class BaseColumns(ABC):
                 filtered_columns.append(col_name)
 
         if len(filtered_columns) > 0:
-            return self.apply(cols, self.F.to_string, func_return_type=str,
+            return self.apply(cols, "to_string", func_return_type=str,
                               output_cols=output_cols, meta_action=Actions.TO_STRING.value, mode="vectorized",
                               func_type="column_expr")
         else:
@@ -1657,7 +1657,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        return self.apply(cols, self.F.to_datetime, func_return_type=str,
+        return self.apply(cols, "to_datetime", func_return_type=str,
                           output_cols=output_cols, args=format, mode="partitioned")
 
     def year(self, cols="*", format=None, output_cols=None) -> DataFrameType:
