@@ -16,8 +16,10 @@ class DaskBaseFunctions():
     def _functions(self):
         return dd
 
-    def _new_series(self, *args, **kwargs):
-        return self._functions.from_array(*args, **kwargs)
+    def _new_series(self, series, *args, **kwargs):
+        if isinstance(series, dd.Series):
+            return series
+        return dd.from_array(series, *args, **kwargs)
 
     def word_tokenize(self, series):
         pass
