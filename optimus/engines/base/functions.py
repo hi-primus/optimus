@@ -65,6 +65,18 @@ class Functions(ABC):
         """
         return self._functions.Series(*args, **kwargs)
 
+    def to_boolean(self, series):
+        """
+        Converts series to bool
+        """
+        return series.map(lambda v: bool(v), na_action=None).astype('bool')
+    
+    def to_boolean_none(self, series):
+        """
+        Converts series to boolean
+        """
+        return series.map(lambda v: bool(v), na_action='ignore').astype('object')
+
     def to_float(self, series):
         """
         Converts a series values to floats
@@ -93,8 +105,6 @@ class Functions(ABC):
             return series.str
         return series.astype("string").str
 
-    def to_boolean(self, series):
-        return series.map(lambda v: bool(v))
 
     # Aggregation
     def min(self, series):
