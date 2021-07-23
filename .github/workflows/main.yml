@@ -1,0 +1,28 @@
+name: Optimus Unit Tests
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements/pandas.txt ]; then pip install -r requirements/pandas.txt; fi
+          if [ -f requirements/dask.txt ]; then pip install -r requirements/dask.txt; fi
+      - name: Test with unittest
+        run: |
+          python -m unittest
