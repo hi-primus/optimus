@@ -1451,16 +1451,16 @@ class BaseColumns(ABC):
         return df
 
     def to_float(self, cols="*", output_cols=None) -> DataFrameType:
-        return self.apply(cols, self.F.to_float, func_return_type=float,
+        return self.apply(cols, "to_float", func_return_type=float,
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
 
     def to_integer(self, cols="*", output_cols=None) -> DataFrameType:
-        return self.apply(cols, self.F.to_integer, func_return_type=int,
+        return self.apply(cols, "to_integer", func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="vectorized")
 
     def to_boolean(self, cols="*", output_cols=None) -> DataFrameType:
-        return self.apply(cols, self.F.to_boolean, func_return_type=int,
-                          output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="map")
+        return self.apply(cols, "to_boolean", func_return_type=int,
+                          output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="vectorized")
 
     def to_string(self, cols="*", output_cols=None) -> DataFrameType:
         filtered_columns = []
