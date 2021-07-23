@@ -21,6 +21,12 @@ class DaskBaseFunctions():
             return series
         return dd.from_array(series, *args, **kwargs)
 
+    def all(self, series):
+        return series.all()
+    
+    def any(self, series):
+        return series.any()
+
     def word_tokenize(self, series):
         pass
 
