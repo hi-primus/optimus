@@ -542,31 +542,31 @@ class TestNumericPandas(TestBase):
     def test_cols_to_integer(self):
         df = self.create_dataframe(dict={('to_integer_test', 'object'): [inf, '12.342', 0.32, None, 1004.5, -27.7]}, force_data_types=True)
         result = df.cols.to_integer(cols=['to_integer_test'])
-        expected = self.create_dataframe(dict={('to_integer_test', 'int64'): [0, 0, 0, 0, 0, 0]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('to_integer_test', 'float64'): [inf, 12.0, 0.0, 0.0, 1004.0, -28.0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_to_integer_all(self):
         df = self.df
         result = df.cols.to_integer(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'int64'): [0, 0, 0, 0, 0, 0], ('attributes', 'int64'): [0, 0, 0, 0, 0, 0], ('date arrival', 'int64'): [0, 0, 0, 0, 0, 0], ('function(binary)', 'int64'): [0, 0, 0, 0, 0, 0], ('height(ft)', 'int64'): [0, 0, 0, 0, 0, 0], ('japanese name', 'int64'): [0, 0, 0, 0, 0, 0], ('last date seen', 'int64'): [0, 0, 0, 0, 0, 0], ('last position seen', 'int64'): [0, 0, 0, 0, 0, 0], ('rank', 'int64'): [0, 0, 0, 0, 0, 0], ('Cybertronian', 'int64'): [0, 0, 0, 0, 0, 0], ('Date Type', 'int64'): [0, 0, 0, 0, 0, 0], ('age', 'int64'): [0, 0, 0, 0, 0, 0], ('function', 'int64'): [0, 0, 0, 0, 0, 0], ('names', 'int64'): [0, 0, 0, 0, 0, 0], ('timestamp', 'int64'): [0, 0, 0, 0, 0, 0], ('weight(t)', 'int64'): [0, 0, 0, 0, 0, 0]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('NullType', 'int32'): [0, 0, 0, 0, 0, 0], ('attributes', 'int32'): [0, 0, 0, 0, 0, 0], ('date arrival', 'int32'): [0, 0, 0, 0, 0, 0], ('function(binary)', 'int32'): [0, 0, 0, 0, 0, 0], ('height(ft)', 'int32'): [-28, 17, 26, 13, 0, 300], ('japanese name', 'int32'): [0, 0, 0, 0, 0, 0], ('last date seen', 'int32'): [0, 0, 0, 0, 0, 0], ('last position seen', 'int32'): [0, 0, 0, 0, 0, 0], ('rank', 'int32'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'int32'): [1, 1, 1, 1, 1, 0], ('Date Type', 'int32'): [-2147483648, -2147483648, -2147483648, -2147483648, -2147483648, -2147483648], ('age', 'int32'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'int32'): [0, 0, 0, 0, 0, 0], ('names', 'int32'): [0, 0, 0, 0, 0, 0], ('timestamp', 'int32'): [-2147483648, -2147483648, -2147483648, -2147483648, -2147483648, -2147483648], ('weight(t)', 'int32'): [4, 2, 4, 1, 5, 0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_to_integer_multiple(self):
         df = self.df
         result = df.cols.to_integer(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'int64'): [0, 0, 0, 0, 0, 0], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'int64'): [0, 0, 0, 0, 0, 0], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'int64'): [0, 0, 0, 0, 0, 0]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'int32'): [0, 0, 0, 0, 0, 0], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'int32'): [0, 0, 0, 0, 0, 0], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'int32'): [4, 2, 4, 1, 5, 0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_to_integer_numeric(self):
         df = self.df.cols.select(['height(ft)'])
         result = df.cols.to_integer(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'int64'): [0, 0, 0, 0, 0, 0]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('height(ft)', 'int32'): [-28, 17, 26, 13, 0, 300]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_to_integer_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.to_integer(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'int64'): [0, 0, 0, 0, 0, 0]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'int32'): [0, 0, 0, 0, 0, 0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True))
     
     def test_cols_z_score_all(self):
@@ -596,5 +596,5 @@ class TestNumericPandas(TestBase):
 class TestNumericDask(TestNumericPandas):
     config = {'engine': 'dask', 'n_partitions': 1}
 
-class TestNumericDask2(TestNumericPandas):
+class TestNumericPartitionDask(TestNumericPandas):
     config = {'engine': 'dask', 'n_partitions': 2}

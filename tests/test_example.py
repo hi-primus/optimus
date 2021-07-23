@@ -1,6 +1,6 @@
 from optimus.tests.base import TestBase
 
-class TestCols(TestBase):
+class TestColsPandas(TestBase):
     dict = {"A": [-1, 2, 3, -10, -1.5, 50]}
     load = {}  # {"type": "csv", "path": "foo.csv"} | {"path": "foo.csv"} | "foo.csv"
 
@@ -20,13 +20,9 @@ class TestCols(TestBase):
         self.assertTrue(self.df.cols.abs().equals(expected_df))
 
 
-class TestColsDask(TestCols):
+
+class TestColsDask(TestColsPandas):
     config = {"engine": "dask", "n_partitions": 1}
 
-
-class TestColsDask2(TestCols):
+class TestColsPartitionDask(TestColsPandas):
     config = {"engine": "dask", "n_partitions": 2}
-
-
-class TestColsDask3(TestCols):
-    config = {"engine": "dask", "n_partitions": 3}

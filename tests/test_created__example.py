@@ -27,5 +27,5 @@ class TestExamplePandas(TestBase):
 class TestExampleDask(TestExamplePandas):
     config = {'engine': 'dask', 'n_partitions': 1}
 
-class TestExampleDask2(TestExamplePandas):
+class TestExamplePartitionDask(TestExamplePandas):
     config = {'engine': 'dask', 'n_partitions': 2}

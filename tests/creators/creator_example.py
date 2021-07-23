@@ -15,7 +15,7 @@ def create():
     configs = {
         "Pandas": {"engine": "pandas"},
         "Dask": {"engine": "dask", "n_partitions": 1},
-        "Dask2": {"engine": "dask", "n_partitions": 2}
+        "PartitionDask": {"engine": "dask", "n_partitions": 2}
     }
 
     t = TestCreator(op, df, name="example", configs=configs)

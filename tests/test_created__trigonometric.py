@@ -374,5 +374,5 @@ class TestTrigonometricPandas(TestBase):
 class TestTrigonometricDask(TestTrigonometricPandas):
     config = {'engine': 'dask', 'n_partitions': 1}
 
-class TestTrigonometricDask2(TestTrigonometricPandas):
+class TestTrigonometricPartitionDask(TestTrigonometricPandas):
     config = {'engine': 'dask', 'n_partitions': 2}
