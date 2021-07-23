@@ -1,9 +1,0 @@
-[run]
-omit =
-    optimus/*
-    setup.py
-    tests/creator/*
-[report]
-exclude_lines =
-    pragma: no cover
-    except RuntimeError as err:
