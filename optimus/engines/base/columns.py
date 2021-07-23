@@ -1454,8 +1454,8 @@ class BaseColumns(ABC):
         return self.apply(cols, "to_float", func_return_type=float,
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
 
-    def to_integer(self, cols="*", output_cols=None) -> DataFrameType:
-        return self.apply(cols, "to_integer", func_return_type=int,
+    def to_integer(self, cols="*", default=0, output_cols=None) -> DataFrameType:
+        return self.apply(cols, "to_integer", args=(default,), func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="vectorized")
 
     def to_boolean(self, cols="*", output_cols=None) -> DataFrameType:

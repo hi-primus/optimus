@@ -45,7 +45,7 @@ class SparkFunctions(Functions):
     def to_float(self, col_name):
         return F.col(col_name).cast("float")
 
-    def to_integer(self, col_name):
+    def to_integer(self, col_name, default=None):
         return F.col(col_name).cast("int")
 
     @staticmethod

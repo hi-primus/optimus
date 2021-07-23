@@ -86,14 +86,14 @@ class Functions(ABC):
         except:
             return self._new_series(self._functions.to_numeric(series, errors='coerce')).astype('float')
 
-    def to_integer(self, series):
+    def to_integer(self, series, default=0):
         """
         Converts a series values to integers
         """
         try:
-            return self._new_series(np.vectorize(fast_int)(series, default=np.nan).flatten())
+            return self._new_series(np.vectorize(fast_int)(series, default=default).flatten())
         except:
-            return self._new_series(self._functions.to_numeric(series, errors='coerce')).astype('int')
+            return self._new_series(self._functions.to_numeric(series, errors='coerce').fillna(default)).astype('int')
 
     def to_string(self, series):
         if str(series.dtype) in self.constants.STRING_TYPES:

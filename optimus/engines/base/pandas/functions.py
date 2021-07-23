@@ -1,3 +1,4 @@
+from optimus.infer import is_int_like
 import numpy as np
 import pandas as pd
 
@@ -27,20 +28,30 @@ class PandasBaseFunctions():
     def is_numeric(self, series):
         return pd.Series(np.vectorize(isreal)(series).flatten())\
 
-    def to_integer(self, series, *args):
+    def to_integer(self, series, default=0):
         try:
-            return pd.Series(np.vectorize(fast_int)(series, default=np.nan).flatten())
-        except TypeError:
-            return pd.Series(pd.to_numeric(series, errors='coerce')).astype('int')
+            series = pd.Series(np.vectorize(fast_int)(series, default=default).flatten())
+        except:
+            if is_int_like(default):
+                default = int(default)
+                series = np.floor(pd.to_numeric(series, errors='coerce')).fillna(default)
+                try:
+                    series = series.astype('int')
+                except:
+                    pass
+            else:
+                series = np.floor(pd.to_numeric(series, errors='coerce'))
+                series = series if default is None else series.fillna(default)
 
+        return series
 
-    def to_float(self, series, *args):
+    def to_float(self, series):
         try:
             return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
         except:
             return pd.Series(pd.to_numeric(series, errors='coerce')).astype('float')
 
-    def to_string(self, value, *args):
+    def to_string(self, value):
         try:
             return value.astype(str)
         except TypeError:
