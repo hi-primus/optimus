@@ -11,7 +11,6 @@ import pandas as pd
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
-from optimus.helpers.core import one_tuple_to_val
 from optimus.helpers.types import DataFrameType
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
@@ -79,10 +78,6 @@ class DaskBaseDataFrame(BaseDataFrame):
     def compute(self):
         df = self.data
         return df.compute()
-
-    def _compute(self, *args, **kwargs):
-        result = dask.compute(*(*(a for a in args), *(kwargs[k] for k in kwargs)))
-        return one_tuple_to_val(result)
 
     def visualize(self):
         return display(self.data.visualize())

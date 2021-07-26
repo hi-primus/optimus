@@ -16,7 +16,7 @@ from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes, RELATIVE_ERROR
-from optimus.helpers.core import one_tuple_to_val, val_to_list
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
@@ -105,9 +105,6 @@ class BaseDataFrame(ABC):
     @abstractmethod
     def _base_to_dfd(self, pdf, n_partitions) -> InternalDataFrameType:
         pass
-
-    def _compute(self, *args, **kwargs):
-        return one_tuple_to_val((*(a for a in args), *(kwargs[k] for k in kwargs)))
 
     @abstractmethod
     def to_optimus_pandas(self) -> DataFrameType:
@@ -837,7 +834,7 @@ class BaseDataFrame(ABC):
 
             data_types = df.cols.data_types("*")
 
-            hist, freq, sliced_freq, mismatch = self._compute(
+            hist, freq, sliced_freq, mismatch = self.functions.compute(
                 hist, freq, sliced_freq, mismatch)
 
             freq = {**freq, **sliced_freq}

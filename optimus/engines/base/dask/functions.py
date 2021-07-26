@@ -4,7 +4,7 @@ import dask.dataframe as dd
 from sklearn.preprocessing import MaxAbsScaler
 from dask_ml.preprocessing import MinMaxScaler, StandardScaler
 
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import one_tuple_to_val, val_to_list
 
 class DaskBaseFunctions():
 
@@ -20,6 +20,10 @@ class DaskBaseFunctions():
         if isinstance(series, dd.Series):
             return series
         return dd.from_array(series, *args, **kwargs)
+
+    def compute(self, *args, **kwargs):
+        result = dask.compute(*(*(a for a in args), *(kwargs[k] for k in kwargs)))
+        return one_tuple_to_val(result)
 
     def all(self, series):
         return series.all()

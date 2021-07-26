@@ -2600,7 +2600,7 @@ class BaseColumns(ABC):
                       for col in mask.cols.names()}
 
         if compute:
-            return self.root._compute(format_dict(values, tidy)) 
+            return self.F.compute(format_dict(values, tidy)) 
         else:
             return format_dict(values, tidy)
 
@@ -2617,7 +2617,7 @@ class BaseColumns(ABC):
             values = {col: mask.data[col].sum() for col in mask.cols.names()}
 
         if compute:
-            return self.root._compute(format_dict(values, tidy)) 
+            return self.F.compute(format_dict(values, tidy)) 
         else:
             return format_dict(values, tidy)
 

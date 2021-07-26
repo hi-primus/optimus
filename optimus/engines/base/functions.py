@@ -9,7 +9,7 @@ import url_parser
 from fastnumbers import fast_float, fast_int
 
 from optimus.helpers.constants import ProfilerDataTypes
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import one_tuple_to_val, val_to_list
 from optimus.infer import is_list, is_null, is_bool, \
     is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
     is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number, is_int_like
@@ -64,6 +64,9 @@ class Functions(ABC):
         Creates a new series (also known as column)
         """
         return self._functions.Series(*args, **kwargs)
+
+    def compute(self, *args, **kwargs):
+        return one_tuple_to_val((*(a for a in args), *(kwargs[k] for k in kwargs)))
 
     def to_boolean(self, series):
         """
