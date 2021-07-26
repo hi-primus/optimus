@@ -1,37 +1,25 @@
 FROM ubuntu:20.04
 
 RUN apt-get update && yes|apt-get upgrade && \
-    apt-get install -y nano && \
-    apt-get install -y git && \
-    apt-get install -y curl
+    apt-get install -y git curl nano bzip2 sudo net-tools && \
+    apt-get install -y --no-install-recommends apt-utils
 
-RUN apt-get install -y wget bzip2
+RUN curl -so /miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
+    chmod +x /miniconda.sh && \
+    /miniconda.sh -b -p /miniconda && \
+    rm /miniconda.sh
 
-RUN apt-get -y install sudo
-
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-
-RUN wget https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh && \
-    bash Anaconda3-2020.07-Linux-x86_64.sh -b && \
-    rm Anaconda3-2020.07-Linux-x86_64.sh
-
-RUN apt-get install -y net-tools
+ENV PATH="/miniconda/bin:${PATH}"
 
 RUN sudo apt-get update --fix-missing && \
-    sudo apt-get install -y gcc && \
+    sudo apt-get install -y gcc g++ && \
     sudo apt-get clean
 
 RUN sudo rm -rf /var/lib/apt/lists/*
 
-RUN sudo apt-get -y update && sudo apt-get -y upgrade && \
-    sudo apt-get -y install g++
-
-ENV PATH="/root/anaconda3/bin:${PATH}"
-
 RUN sudo chown -R root ~/anaconda3/bin && \
-    sudo chmod -R +x ~/anaconda3/bin
-
-RUN conda install -c conda-forge jupyterlab && \
+    sudo chmod -R +x ~/anaconda3/bin && \
+    conda install -c conda-forge jupyterlab && \
     conda install -c conda-forge dask-labextension && \
     jupyter serverextension enable dask_labextension && \
     conda install -c conda-forge jupyter_kernel_gateway && \
