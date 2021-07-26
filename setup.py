@@ -1,13 +1,12 @@
 import os
 import re
 import sys
-
-from setuptools import setup, find_packages
-
 from functools import reduce
 
-# Get version without importing, which avoids dependency issues
+from setuptools import setup, find_packages
+from setuptools.command.develop import develop
 
+# Get version without importing, which avoids dependency issues
 
 def get_version():
     with open('optimus/_version.py') as version_file:
@@ -20,7 +19,7 @@ if sys.version_info < (3, 7):
 
 
 def readme():
-    with open('README.md') as f:
+    with open('README.md', encoding="utf-8") as f:
         return f.read()
 
 
@@ -40,6 +39,9 @@ elif IN_COLAB:
 
 with open(requirements_file) as f:
     required = f.read().splitlines()
+    if "--no-git" in sys.argv:
+        required = [r for r in required if "git+" not in r]
+        sys.argv.remove("--no-git")
 
 extras_requirements_keys = ['spark', 'pandas',
                             'dask', 'vaex', 'cudf', 'ai', 'db', 'api']
