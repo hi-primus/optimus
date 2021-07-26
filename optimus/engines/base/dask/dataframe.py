@@ -39,10 +39,6 @@ class DaskBaseDataFrame(BaseDataFrame):
 
                 if isinstance(kw_column, dd.Series):
                     kw_column = kw_column.to_frame()
-
-                if isinstance(kw_column, dd.DataFrame):
-                    kw_column.divisions = dfd.divisions
-
                 
                 if dfd.known_divisions:
                     if not is_one_element(kw_column) and not callable(kw_column) and not getattr(kw_column, "known_divisions", None):
