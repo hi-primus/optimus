@@ -247,7 +247,7 @@ class BaseDataFrame(ABC):
         df2 = df2.data
         return self.data.equals(df2)
 
-    def equals(self, df2: DataFrameType, decimal=None) -> bool:
+    def equals(self, df2: DataFrameType, decimal=None, assertion=False) -> bool:
         df2_is_dataframe = isinstance(df2, (BaseDataFrame,))
 
         # checks by column names
@@ -257,22 +257,27 @@ class BaseDataFrame(ABC):
             cols2 = list(df2.keys())
         
         if cols2 != self.cols.names():
+            if assertion:
+                raise AssertionError("Column names are not equal")
             return False
 
-        if decimal is not None:
+        if decimal is not None or assertion:
             # checks by each column
             if df2_is_dataframe:
                 df2 = df2.to_dict(n="all")
             df1 = self.to_dict(n="all")
 
-            return df_dicts_equal(df1, df2, decimal)
+            return df_dicts_equal(df1, df2, decimal=decimal, assertion=assertion)
 
         else:
             # checks by dataframe
             if df2_is_dataframe:
-                return self.equals_dataframe(df2)
+                result = self.equals_dataframe(df2)
+                if not result and assertion:
+                    raise AssertionError("Dataframes are not equal")
+                return result
             else:
-                return self.to_dict(n="all") == df2
+                return df_dicts_equal(self.to_dict(n="all"), df2, decimal=decimal, assertion=assertion)
 
     @abstractmethod
     def save(self):

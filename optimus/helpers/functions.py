@@ -660,17 +660,21 @@ def match_date(value):
 
     return "".join(exprs)
 
-def df_dicts_equal(df1, df2, decimal=True):
+def df_dicts_equal(df1, df2, decimal=True, assertion=False):
     import numpy as np
     if decimal == True:
         decimal = 7
     for k in df1:
         try:
             np.testing.assert_almost_equal(df1[k], df2[k], decimal=decimal)
-        except AssertionError:
+        except AssertionError as e:
+            if assertion:
+                raise e
             return False
         except Exception:
             if df1[k] != df2[k]:
+                if assertion:
+                    raise AssertionError(f"Dataframes are not equal on column '{k}'")
                 return False
     return True
 

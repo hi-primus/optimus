@@ -289,10 +289,10 @@ class TestCreator:
 
         # Output
         if compare_by == "df":
-            add_buffer("    self.assertTrue(result.equals(expected, decimal=True))\n")
+            add_buffer("    self.assertTrue(result.equals(expected, decimal=True, assertion=True))\n")
         elif compare_by == "dict":
             add_buffer(
-                "    self.assertTrue(df_dicts_equal(result, expected))\n")
+                "    self.assertTrue(df_dicts_equal(result, expected, assertion=True))\n")
         elif compare_by == "json":
             add_buffer(
                 "    self.assertEqual(json_encoding(result), json_encoding(expected))\n")
