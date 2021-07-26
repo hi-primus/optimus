@@ -1,6 +1,9 @@
+# Optimus
+
 [![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.8/images/optimus-logo.png)](https://hi-optimus.com)
 
-![Build](https://travis-ci.com/hi-primus/optimus.svg?branch=develop-21.8)
+![Tests](https://github.com/hi-primus/optimus/actions/workflows/main.yml/badge.svg)
+![![Docker image updated](https://hub.docker.com/r/hiprimus/optimus)](https://github.com/hi-primus/optimus/actions/workflows/docker.yml/badge.svg)
 [![PyPI Latest Release](https://img.shields.io/pypi/v/pyoptimus.svg)](https://pypi.org/project/pyoptimus/) 
 [![GitHub release](https://img.shields.io/github/release/hi-primus/optimus.svg?include_prereleases)](https://github.com/hi-primus/optimus/releases)
 [![CalVer](https://img.shields.io/badge/calver-YY.MM.MICRO-22bfda.svg)](http://calver.org)
@@ -9,8 +12,11 @@
 [![Downloads](https://pepy.tech/badge/pyoptimus/month)](https://pepy.tech/project/pyoptimus/month)
 [![Downloads](https://pepy.tech/badge/pyoptimus/week)](https://pepy.tech/project/pyoptimus/week)
 [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience) 
+[![Slack](https://img.shields.io/badge/chat-slack-red.svg?logo=slack&color=36c5f0)](https://communityinviter.com/apps/hi-bumblebee/welcome)
 
-[![Slack](https://img.shields.io/badge/chat-slack-red.svg?logo=slack&logoColor)](https://communityinviter.com/apps/hi-bumblebee/welcome)
+# Get started 🏃
+
+## Try Optimus
 
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
@@ -22,7 +28,7 @@ To launch a live notebook server to test optimus using binder or Colab, click on
 In your terminal just type  ```pip install pyoptimus```
 
 ### Requirements
-* Python>=3.7
+* Python 3.7 or 3.8
 
 ## Examples
 
@@ -32,12 +38,6 @@ You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/
 Also you can go to [Examples](https://github.com/hi-primus/optimus/tree/develop-21.8/examples/examples.md) and found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
 Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-21.8/docs/cheatsheet/optimus_cheat_sheet.html)
-
-## Feedback
-
-Feedback is what drive Optimus future, so please take a couple of minutes to help shape the Optimus' Roadmap:  http://bit.ly/optimus_survey 
-
-Also if you want to a suggestion or feature request use https://github.com/hi-primus/optimus/issues
 
 ## Start Optimus
 
@@ -128,11 +128,19 @@ new_df = df\
     .cols.drop(["last position seen", "japanese name", "date arrival", "cybertronian", "nulltype"])
 ```
 
+# Need help? 🛠️
+
+## Feedback
+
+Feedback is what drive Optimus future, so please take a couple of minutes to help shape the Optimus' Roadmap:  http://bit.ly/optimus_survey 
+
+Also if you want to a suggestion or feature request use https://github.com/hi-primus/optimus/issues
+
 ## Troubleshooting
 
 If you have issues, see our [Troubleshooting Guide](https://github.com/hi-primus/optimus/tree/develop-21.8/troubleshooting.md)
 
-## Contributing to Optimus
+# Contributing to Optimus 💡
 
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions  
 including: 
@@ -145,7 +153,7 @@ including:
 * [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/) about Optimus and its many features. 
 * Helping others on our official chats
  
-## Backers and Sponsors
+# Backers and Sponsors
 
 Become a [backer](https://opencollective.com/optimus#backer) or a [sponsor](https://opencollective.com/optimus#sponsor) and get your image on our README on Github with a link to your site. 
 
