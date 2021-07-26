@@ -1,4 +1,4 @@
-name: Optimus Unit Tests
+name: tests
 
 on:
   workflow_dispatch:
