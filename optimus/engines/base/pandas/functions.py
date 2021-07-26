@@ -34,13 +34,13 @@ class PandasBaseFunctions():
         except:
             if is_int_like(default):
                 default = int(default)
-                series = np.floor(pd.to_numeric(series, errors='coerce')).fillna(default)
+                series = pd.Series(np.floor(pd.to_numeric(series, errors='coerce', downcast='integer'))).fillna(default)
                 try:
-                    series = series.astype('int')
+                    series = series.astype('int64')
                 except:
                     pass
             else:
-                series = np.floor(pd.to_numeric(series, errors='coerce'))
+                series = pd.Series(np.floor(pd.to_numeric(series, errors='coerce')))
                 series = series if default is None else series.fillna(default)
 
         return series
