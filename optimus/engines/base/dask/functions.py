@@ -59,7 +59,7 @@ class DaskBaseFunctions():
         return StandardScaler().fit_transform(series.to_frame())[series.name]
 
     def max_abs_scaler(self, series):
-        return MaxAbsScaler().fit_transform(series.to_dask_array(lengths=True).reshape(-1,1))
+        return MaxAbsScaler().fit_transform(self.compute(series).values.reshape(-1,1))
 
     def min_max_scaler(self, series):
         return MinMaxScaler().fit_transform(series.to_frame())[series.name]
