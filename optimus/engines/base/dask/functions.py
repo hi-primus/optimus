@@ -56,13 +56,15 @@ class DaskBaseFunctions():
         return int((self.to_float(series).values == 0).sum())
 
     def standard_scaler(self, series):
-        return StandardScaler().fit_transform(series.to_frame())[series.name]
+        dfd = StandardScaler().fit_transform(self.to_float(series).to_frame())
+        return dfd[dfd.columns[0]]
 
     def max_abs_scaler(self, series):
-        return MaxAbsScaler().fit_transform(self.compute(series).values.reshape(-1,1))
+        return MaxAbsScaler().fit_transform(self.compute(self.to_float(series)).values.reshape(-1,1))
 
     def min_max_scaler(self, series):
-        return MinMaxScaler().fit_transform(series.to_frame())[series.name]
+        dfd = MinMaxScaler().fit_transform(self.to_float(series).to_frame())
+        return dfd[dfd.columns[0]]
 
     def replace_chars(self, series, search, replace_by):
         regex=False

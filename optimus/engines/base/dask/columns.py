@@ -2,7 +2,6 @@ import dask
 import dask.dataframe as dd
 import pandas as pd
 from dask import delayed
-from sklearn.preprocessing import MinMaxScaler
 
 from optimus.engines.base.meta import Meta
 from optimus.helpers.core import val_to_list
