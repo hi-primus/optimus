@@ -24,7 +24,7 @@ RUN sudo chown -R root ~/anaconda3/bin && \
     conda install -c conda-forge jupyter_kernel_gateway && \
     conda clean -afy
 
-RUN echo "Version 21.8.0-beta3"
+RUN echo "Version 21.8.0-beta4"
 
 RUN pip install cytoolz --no-cache-dir && \
     pip install git+https://github.com/hi-primus/dateinfer.git --no-cache-dir && \
