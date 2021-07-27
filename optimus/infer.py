@@ -14,7 +14,7 @@ from dask import distributed
 from dask.dataframe.core import DataFrame as DaskDataFrame
 
 # This function return True or False if a string can be converted to any datatype.
-from optimus.helpers.constants import ProfilerDataTypes, CURRENCIES
+from optimus.helpers.constants import CURRENCIES
 
 
 def is_datetime_str(_value):
@@ -518,6 +518,14 @@ def is_numeric(value):
     :return:
     """
     return isinstance(value, (int, float))
+
+def is_numeric_like(value):
+    """
+    Check if a var is a single element
+    :param value:
+    :return:
+    """
+    return fastnumbers.isfloat(value) or fastnumbers.isintlike(value)
 
 
 def is_str(value):

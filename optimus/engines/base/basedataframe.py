@@ -88,7 +88,7 @@ class BaseDataFrame(ABC):
         return df
 
     @staticmethod
-    def __operator__(df, data_type, multiple_columns=False) -> DataFrameType:
+    def __operator__(df, data_type=None, multiple_columns=False) -> DataFrameType:
         if isinstance(df, (BaseDataFrame,)):
             col1 = "*" if multiple_columns else df.cols.names(0)[0]
 
@@ -133,8 +133,15 @@ class BaseDataFrame(ABC):
         """
         if not isinstance(df1, (BaseDataFrame,)) or not isinstance(df2, (BaseDataFrame,)):
             multiple_columns = True
+            if data_type == "auto":
+                # finds the type of the value
+                data_type = [type(d).__name__ for d in [df1, df2] if not isinstance(d, (BaseDataFrame,))][0]
+                data_type = "float" if data_type == "int" else data_type
         else:
             multiple_columns = df1.cols.names() == df2.cols.names()
+            if data_type == "auto":
+                data_type = None
+
         df1 = BaseDataFrame.__operator__(df1, data_type, multiple_columns)
         df2 = BaseDataFrame.__operator__(df2, data_type, multiple_columns)
 
@@ -168,10 +175,10 @@ class BaseDataFrame(ABC):
         return self.unary_operation(self, operator.neg)
 
     def __add__(self, df2) -> DataFrameType:
-        return self.operation(self, df2, operator.add)
+        return self.operation(self, df2, operator.add, "auto")
 
     def __radd__(self, df2) -> DataFrameType:
-        return self.operation(df2, self, operator.add)
+        return self.operation(df2, self, operator.add, "auto")
 
     def __sub__(self, df2) -> DataFrameType:
         return self.operation(self, df2, operator.sub, "float")

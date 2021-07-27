@@ -35,7 +35,7 @@ from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, is_str, is_list_value, is_one_element, \
+from optimus.infer import is_dict, is_numeric_like, is_str, is_list_value, is_one_element, \
     is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -1923,7 +1923,7 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
-    def _math(self, cols="*", value=None, operator=None, output_cols=None, output_col=None, name="") -> DataFrameType:
+    def _math(self, cols="*", value=None, operator=None, output_cols=None, output_col=None, name="", cast=False) -> DataFrameType:
         """
         Helper to process arithmetic operation between columns. If a
         :param cols: Columns to be used to make the calculation
@@ -1933,18 +1933,27 @@ class BaseColumns(ABC):
         df = self.root
         parsed_cols = parse_columns(df, cols)
 
+        if is_numeric_like(value):
+            value = float(value)
+
         if value is None:
             if not output_col:
                 output_col = name+"_"+"_".join(cols)
-            expr = reduce(operator, [df[col_name].cols.fill_na(
-                "*", 0).cols.to_float() for col_name in parsed_cols])
+            if cast:
+                expr = reduce(operator, [df[col_name].cols.to_float() for col_name in parsed_cols])
+            else:
+                expr = reduce(operator, [df[col_name] for col_name in parsed_cols])
             return df.cols.assign({output_col: expr})
 
         else:
             output_cols = get_output_cols(cols, output_cols)
             cols = {}
             for input_col, output_col in zip(parsed_cols, output_cols):
-                cols.update({output_col: operator(df[input_col], value)})
+                if cast:
+                    cols.update({output_col: operator(df[input_col].cols.to_float(), value)})
+                else:
+                    cols.update({output_col: operator(df[input_col], value)})
+                    
             return df.cols.assign(cols)
 
     def add(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
@@ -1955,7 +1964,7 @@ class BaseColumns(ABC):
         :param output_col: Single output column in case no value is passed
         :return:
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: x + y, output_cols=output_cols, output_col=output_col, name="add")
+        return self._math(cols=cols, value=value, operator=lambda x, y: x + y, output_cols=output_cols, output_col=output_col, name="add", cast=True)
 
     def sub(self, cols="*", value=None, output_cols=None, output_col=None) -> DataFrameType:
         """
