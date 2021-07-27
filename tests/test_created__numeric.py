@@ -263,30 +263,6 @@ class TestNumericPandas(TestBase):
         expected = self.create_dataframe(dict={('mod_test', 'float64'): [1.0, nan, nan, 1.0, 0.5314, 0.0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_modified_z_score_all(self):
-        df = self.df
-        result = df.cols.modified_z_score(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [3.3725, 0.0, 0.6745, 0.29977777777777775, nan, 21.20927777777778], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [1.349, 0.6745, 0.6745, 0.0, 1.349, 0.0], ('Cybertronian', 'float64'): [nan, nan, nan, nan, nan, inf], ('Date Type', 'float64'): [1.1268184498736311, 0.6756364785172704, 0.2074073294018534, 0.2074073294018534, 0.6733635214827296, 1.1234090143218196], ('age', 'float64'): [nan, nan, nan, nan, nan, nan], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [nan, nan, nan, nan, nan, nan], ('weight(t)', 'float64'): [0.11902941176470579, 0.7935294117647058, 0.0, 0.8728823529411763, 0.6745, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_modified_z_score_multiple(self):
-        df = self.df
-        result = df.cols.modified_z_score(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [0.11902941176470579, 0.7935294117647058, 0.0, 0.8728823529411763, 0.6745, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_modified_z_score_numeric(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.modified_z_score(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [3.3725, 0.0, 0.6745, 0.29977777777777775, nan, 21.20927777777778]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_modified_z_score_string(self):
-        df = self.df.cols.select(['names'])
-        result = df.cols.modified_z_score(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
     def test_cols_mod_1(self):
         df = self.create_dataframe(dict={('mod_test', 'float64'): [10.0, nan, inf, -356.0, 0.5314, 0.0]}, force_data_types=True)
         result = df.cols.mod(cols=['mod_test'],divisor=100.3)
@@ -326,6 +302,30 @@ class TestNumericPandas(TestBase):
     def test_cols_mod_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.mod(cols=['names'],divisor=4,output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_modified_z_score_all(self):
+        df = self.df
+        result = df.cols.modified_z_score(cols='*')
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [3.3725, 0.0, 0.6745, 0.29977777777777775, nan, 21.20927777777778], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [1.349, 0.6745, 0.6745, 0.0, 1.349, 0.0], ('Cybertronian', 'float64'): [nan, nan, nan, nan, nan, inf], ('Date Type', 'float64'): [1.1268184498736311, 0.6756364785172704, 0.2074073294018534, 0.2074073294018534, 0.6733635214827296, 1.1234090143218196], ('age', 'float64'): [nan, nan, nan, nan, nan, nan], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [nan, nan, nan, nan, nan, nan], ('weight(t)', 'float64'): [0.11902941176470579, 0.7935294117647058, 0.0, 0.8728823529411763, 0.6745, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_modified_z_score_multiple(self):
+        df = self.df
+        result = df.cols.modified_z_score(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [0.11902941176470579, 0.7935294117647058, 0.0, 0.8728823529411763, 0.6745, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_modified_z_score_numeric(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.modified_z_score(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [3.3725, 0.0, 0.6745, 0.29977777777777775, nan, 21.20927777777778]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_modified_z_score_string(self):
+        df = self.df.cols.select(['names'])
+        result = df.cols.modified_z_score(cols=['names'],output_cols=['names_2'])
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     

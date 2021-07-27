@@ -17,6 +17,30 @@ class TestTrigonometricPandas(TestBase):
         expected = self.create_dataframe(dict={('acos_test', 'float64'): [0.0, 1.5707963267948966, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
+    def test_cols_acos_all(self):
+        df = self.df
+        result = df.cols.acos(cols='*')
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [nan, nan, nan, nan, nan, nan], ('Cybertronian', 'float64'): [0.0, 0.0, 0.0, 0.0, 0.0, 1.5707963267948966], ('Date Type', 'float64'): [nan, nan, nan, nan, nan, nan], ('age', 'float64'): [nan, nan, nan, nan, nan, nan], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [nan, nan, nan, nan, nan, nan], ('weight(t)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_acos_multiple(self):
+        df = self.df
+        result = df.cols.acos(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_acos_numeric(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.acos(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_acos_string(self):
+        df = self.df.cols.select(['names'])
+        result = df.cols.acos(cols=['names'],output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
     def test_cols_acosh(self):
         df = self.create_dataframe(dict={('acosh_test', 'float64'): [nan, nan, 1.0, 0.0, -inf, 813.0]}, force_data_types=True)
         result = df.cols.acosh(cols=['acosh_test'])
@@ -47,34 +71,34 @@ class TestTrigonometricPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_acos_all(self):
-        df = self.df
-        result = df.cols.acos(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [nan, nan, nan, nan, nan, nan], ('Cybertronian', 'float64'): [0.0, 0.0, 0.0, 0.0, 0.0, 1.5707963267948966], ('Date Type', 'float64'): [nan, nan, nan, nan, nan, nan], ('age', 'float64'): [nan, nan, nan, nan, nan, nan], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [nan, nan, nan, nan, nan, nan], ('weight(t)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_acos_multiple(self):
-        df = self.df
-        result = df.cols.acos(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_acos_numeric(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.acos(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_acos_string(self):
-        df = self.df.cols.select(['names'])
-        result = df.cols.acos(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
     def test_cols_asin(self):
         df = self.create_dataframe(dict={('asin_test', 'object'): [1, '0', 10, nan, inf, None]}, force_data_types=True)
         result = df.cols.asin(cols=['asin_test'])
         expected = self.create_dataframe(dict={('asin_test', 'float64'): [1.5707963267948966, 0.0, nan, nan, nan, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_asin_all(self):
+        df = self.df
+        result = df.cols.asin(cols='*')
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [nan, nan, nan, nan, nan, nan], ('Cybertronian', 'float64'): [1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 0.0], ('Date Type', 'float64'): [nan, nan, nan, nan, nan, nan], ('age', 'float64'): [nan, nan, nan, nan, nan, nan], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [nan, nan, nan, nan, nan, nan], ('weight(t)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_asin_multiple(self):
+        df = self.df
+        result = df.cols.asin(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_asin_numeric(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.asin(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_asin_string(self):
+        df = self.df.cols.select(['names'])
+        result = df.cols.asin(cols=['names'],output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_asinh(self):
@@ -107,34 +131,34 @@ class TestTrigonometricPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_asin_all(self):
-        df = self.df
-        result = df.cols.asin(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [nan, nan, nan, nan, nan, nan], ('Cybertronian', 'float64'): [1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 0.0], ('Date Type', 'float64'): [nan, nan, nan, nan, nan, nan], ('age', 'float64'): [nan, nan, nan, nan, nan, nan], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [nan, nan, nan, nan, nan, nan], ('weight(t)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_asin_multiple(self):
-        df = self.df
-        result = df.cols.asin(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_asin_numeric(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.asin(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_asin_string(self):
-        df = self.df.cols.select(['names'])
-        result = df.cols.asin(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
     def test_cols_atan(self):
         df = self.create_dataframe(dict={('atan_test', 'object'): [1, '0', 11, nan, inf, None]}, force_data_types=True)
         result = df.cols.atan(cols=['atan_test'])
         expected = self.create_dataframe(dict={('atan_test', 'float64'): [0.7853981633974483, 0.0, 1.4801364395941514, nan, 1.5707963267948966, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_atan_all(self):
+        df = self.df
+        result = df.cols.atan(cols='*')
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-1.5350972141155728, 1.512040504079174, 1.5323537367737086, 1.4940244355251187, nan, 1.56746300580716], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [1.4711276743037347, 1.4288992721907328, 1.4288992721907328, 1.446441332248135, 1.4711276743037347, 1.446441332248135], ('Cybertronian', 'float64'): [0.7853981633974483, 0.7853981633974483, 0.7853981633974483, 0.7853981633974483, 0.7853981633974483, 0.0], ('Date Type', 'float64'): [1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966], ('age', 'float64'): [1.5707961267948967, 1.5707961267948967, 1.5707961267948967, 1.5707961267948967, 1.5707961267948967, 1.5707961267948967], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966], ('weight(t)', 'float64'): [1.3422996875030344, 1.1071487177940904, 1.3258176636680326, 1.0636978224025597, 1.3971251284533228, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_atan_multiple(self):
+        df = self.df
+        result = df.cols.atan(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [1.3422996875030344, 1.1071487177940904, 1.3258176636680326, 1.0636978224025597, 1.3971251284533228, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_atan_numeric(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.atan(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [-1.5350972141155728, 1.512040504079174, 1.5323537367737086, 1.4940244355251187, nan, 1.56746300580716]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_atan_string(self):
+        df = self.df.cols.select(['names'])
+        result = df.cols.atan(cols=['names'],output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_atanh(self):
@@ -167,34 +191,34 @@ class TestTrigonometricPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_atan_all(self):
-        df = self.df
-        result = df.cols.atan(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-1.5350972141155728, 1.512040504079174, 1.5323537367737086, 1.4940244355251187, nan, 1.56746300580716], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [1.4711276743037347, 1.4288992721907328, 1.4288992721907328, 1.446441332248135, 1.4711276743037347, 1.446441332248135], ('Cybertronian', 'float64'): [0.7853981633974483, 0.7853981633974483, 0.7853981633974483, 0.7853981633974483, 0.7853981633974483, 0.0], ('Date Type', 'float64'): [1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966], ('age', 'float64'): [1.5707961267948967, 1.5707961267948967, 1.5707961267948967, 1.5707961267948967, 1.5707961267948967, 1.5707961267948967], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966, 1.5707963267948966], ('weight(t)', 'float64'): [1.3422996875030344, 1.1071487177940904, 1.3258176636680326, 1.0636978224025597, 1.3971251284533228, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_atan_multiple(self):
-        df = self.df
-        result = df.cols.atan(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [1.3422996875030344, 1.1071487177940904, 1.3258176636680326, 1.0636978224025597, 1.3971251284533228, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_atan_numeric(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.atan(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [-1.5350972141155728, 1.512040504079174, 1.5323537367737086, 1.4940244355251187, nan, 1.56746300580716]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_atan_string(self):
-        df = self.df.cols.select(['names'])
-        result = df.cols.atan(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
     def test_cols_cos(self):
         df = self.create_dataframe(dict={('cos_test', 'float64'): [3.151592, nan, 78.0, 0.0, inf, -12.0]}, force_data_types=True)
         result = df.cols.cos(cols=['cos_test'])
         expected = self.create_dataframe(dict={('cos_test', 'float64'): [-0.9999500069522407, nan, -0.8578030932449878, 1.0, nan, 0.8438539587324921]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_cos_all(self):
+        df = self.df
+        result = df.cols.cos(cols='*')
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-0.9626058663135666, -0.27516333805159693, 0.6469193223286404, 0.9074467814501962, nan, -0.022096619278683942], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [-0.8390715290764524, 0.7539022543433046, 0.7539022543433046, -0.14550003380861354, -0.8390715290764524, -0.14550003380861354], ('Cybertronian', 'float64'): [0.5403023058681398, 0.5403023058681398, 0.5403023058681398, 0.5403023058681398, 0.5403023058681398, 1.0], ('Date Type', 'float64'): [0.9389507026950656, -0.9897935466735063, -0.6638500853796738, -0.4576431097589368, 0.953692953031811, 0.45261672525172086], ('age', 'float64'): [-0.21532488687824783, -0.21532488687824783, -0.21532488687824783, -0.21532488687824783, -0.21532488687824783, -0.21532488687824783], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [-0.6638500853796738, -0.6638500853796738, -0.6638500853796738, -0.6638500853796738, -0.6638500853796738, -0.6638500853796738], ('weight(t)', 'float64'): [-0.40079917207997545, -0.4161468365471424, -0.6536436208636119, -0.2272020946930871, 0.8347127848391598, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_cos_multiple(self):
+        df = self.df
+        result = df.cols.cos(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [-0.40079917207997545, -0.4161468365471424, -0.6536436208636119, -0.2272020946930871, 0.8347127848391598, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_cos_numeric(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.cos(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [-0.9626058663135666, -0.27516333805159693, 0.6469193223286404, 0.9074467814501962, nan, -0.022096619278683942]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_cos_string(self):
+        df = self.df.cols.select(['names'])
+        result = df.cols.cos(cols=['names'],output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_cosh(self):
@@ -227,34 +251,34 @@ class TestTrigonometricPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_cos_all(self):
-        df = self.df
-        result = df.cols.cos(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-0.9626058663135666, -0.27516333805159693, 0.6469193223286404, 0.9074467814501962, nan, -0.022096619278683942], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [-0.8390715290764524, 0.7539022543433046, 0.7539022543433046, -0.14550003380861354, -0.8390715290764524, -0.14550003380861354], ('Cybertronian', 'float64'): [0.5403023058681398, 0.5403023058681398, 0.5403023058681398, 0.5403023058681398, 0.5403023058681398, 1.0], ('Date Type', 'float64'): [0.9389507026950656, -0.9897935466735063, -0.6638500853796738, -0.4576431097589368, 0.953692953031811, 0.45261672525172086], ('age', 'float64'): [-0.21532488687824783, -0.21532488687824783, -0.21532488687824783, -0.21532488687824783, -0.21532488687824783, -0.21532488687824783], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [-0.6638500853796738, -0.6638500853796738, -0.6638500853796738, -0.6638500853796738, -0.6638500853796738, -0.6638500853796738], ('weight(t)', 'float64'): [-0.40079917207997545, -0.4161468365471424, -0.6536436208636119, -0.2272020946930871, 0.8347127848391598, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_cos_multiple(self):
-        df = self.df
-        result = df.cols.cos(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [-0.40079917207997545, -0.4161468365471424, -0.6536436208636119, -0.2272020946930871, 0.8347127848391598, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_cos_numeric(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.cos(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [-0.9626058663135666, -0.27516333805159693, 0.6469193223286404, 0.9074467814501962, nan, -0.022096619278683942]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_cos_string(self):
-        df = self.df.cols.select(['names'])
-        result = df.cols.cos(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
     def test_cols_sin(self):
         df = self.create_dataframe(dict={('sin_test', 'float64'): [3.151592, nan, 320.0, 0.0, -inf, -10.0]}, force_data_types=True)
         result = df.cols.sin(cols=['sin_test'])
         expected = self.create_dataframe(dict={('sin_test', 'float64'): [-0.009999179777050457, nan, -0.42815542808445156, 0.0, nan, 0.5440211108893698]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_sin_all(self):
+        df = self.df
+        result = df.cols.sin(cols='*')
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-0.27090578830786904, -0.9613974918795568, 0.7625584504796027, 0.4201670368266409, nan, -0.9997558399011495], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [-0.5440211108893698, 0.6569865987187891, 0.6569865987187891, 0.9893582466233818, -0.5440211108893698, 0.9893582466233818], ('Cybertronian', 'float64'): [0.8414709848078965, 0.8414709848078965, 0.8414709848078965, 0.8414709848078965, 0.8414709848078965, 0.0], ('Date Type', 'float64'): [0.344051708189979, -0.14250871890337624, -0.7478656725250864, 0.8891359761533495, -0.30078189994988713, 0.891705164290534], ('age', 'float64'): [-0.9765424686570829, -0.9765424686570829, -0.9765424686570829, -0.9765424686570829, -0.9765424686570829, -0.9765424686570829], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [-0.7478656725250864, -0.7478656725250864, -0.7478656725250864, -0.7478656725250864, -0.7478656725250864, -0.7478656725250864], ('weight(t)', 'float64'): [-0.9161659367494549, 0.9092974268256817, -0.7568024953079282, 0.9738476308781951, -0.5506855425976376, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_sin_multiple(self):
+        df = self.df
+        result = df.cols.sin(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [-0.9161659367494549, 0.9092974268256817, -0.7568024953079282, 0.9738476308781951, -0.5506855425976376, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_sin_numeric(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.sin(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [-0.27090578830786904, -0.9613974918795568, 0.7625584504796027, 0.4201670368266409, nan, -0.9997558399011495]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_sin_string(self):
+        df = self.df.cols.select(['names'])
+        result = df.cols.sin(cols=['names'],output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_sinh(self):
@@ -287,34 +311,34 @@ class TestTrigonometricPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_sin_all(self):
-        df = self.df
-        result = df.cols.sin(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [-0.27090578830786904, -0.9613974918795568, 0.7625584504796027, 0.4201670368266409, nan, -0.9997558399011495], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [-0.5440211108893698, 0.6569865987187891, 0.6569865987187891, 0.9893582466233818, -0.5440211108893698, 0.9893582466233818], ('Cybertronian', 'float64'): [0.8414709848078965, 0.8414709848078965, 0.8414709848078965, 0.8414709848078965, 0.8414709848078965, 0.0], ('Date Type', 'float64'): [0.344051708189979, -0.14250871890337624, -0.7478656725250864, 0.8891359761533495, -0.30078189994988713, 0.891705164290534], ('age', 'float64'): [-0.9765424686570829, -0.9765424686570829, -0.9765424686570829, -0.9765424686570829, -0.9765424686570829, -0.9765424686570829], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [-0.7478656725250864, -0.7478656725250864, -0.7478656725250864, -0.7478656725250864, -0.7478656725250864, -0.7478656725250864], ('weight(t)', 'float64'): [-0.9161659367494549, 0.9092974268256817, -0.7568024953079282, 0.9738476308781951, -0.5506855425976376, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_sin_multiple(self):
-        df = self.df
-        result = df.cols.sin(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [-0.9161659367494549, 0.9092974268256817, -0.7568024953079282, 0.9738476308781951, -0.5506855425976376, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_sin_numeric(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.sin(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [-0.27090578830786904, -0.9613974918795568, 0.7625584504796027, 0.4201670368266409, nan, -0.9997558399011495]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_sin_string(self):
-        df = self.df.cols.select(['names'])
-        result = df.cols.sin(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
     def test_cols_tan(self):
         df = self.create_dataframe(dict={('tan_test', 'float64'): [3.151592, nan, 91.0, 0.0, -inf, -15.0]}, force_data_types=True)
         result = df.cols.tan(cols=['tan_test'])
         expected = self.create_dataframe(dict={('tan_test', 'float64'): [0.009999679691514851, nan, -0.10658787210537021, 0.0, nan, 0.8559934009085188]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_tan_all(self):
+        df = self.df
+        result = df.cols.tan(cols='*')
+        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [0.28142960456426525, 3.49391564547484, 1.1787535542062797, 0.4630211329364896, nan, 45.244742070819356], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [0.6483608274590866, 0.8714479827243188, 0.8714479827243188, -6.799711455220379, 0.6483608274590866, -6.799711455220379], ('Cybertronian', 'float64'): [1.5574077246549023, 1.5574077246549023, 1.5574077246549023, 1.5574077246549023, 1.5574077246549023, 0.0], ('Date Type', 'float64'): [0.36642148219544335, 0.14397822594653087, 1.1265580723656332, -1.942858872324553, -0.315386518264285, 1.9701109449603655], ('age', 'float64'): [4.535204837744807, 4.535204837744807, 4.535204837744807, 4.535204837744807, 4.535204837744807, 4.535204837744807], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [1.1265580723656332, 1.1265580723656332, 1.1265580723656332, 1.1265580723656332, 1.1265580723656332, 1.1265580723656332], ('weight(t)', 'float64'): [2.28584787736698, -2.185039863261519, 1.1578212823495777, -4.286261674628062, -0.6597305715207762, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_tan_multiple(self):
+        df = self.df
+        result = df.cols.tan(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [2.28584787736698, -2.185039863261519, 1.1578212823495777, -4.286261674628062, -0.6597305715207762, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_tan_numeric(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.tan(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [0.28142960456426525, 3.49391564547484, 1.1787535542062797, 0.4630211329364896, nan, 45.244742070819356]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_tan_string(self):
+        df = self.df.cols.select(['names'])
+        result = df.cols.tan(cols=['names'],output_cols=['names_2'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_tanh(self):
@@ -344,30 +368,6 @@ class TestTrigonometricPandas(TestBase):
     def test_cols_tanh_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.tanh(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_tan_all(self):
-        df = self.df
-        result = df.cols.tan(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'float64'): [nan, nan, nan, nan, nan, nan], ('date arrival', 'float64'): [nan, nan, nan, nan, nan, nan], ('function(binary)', 'float64'): [nan, nan, nan, nan, nan, nan], ('height(ft)', 'float64'): [0.28142960456426525, 3.49391564547484, 1.1787535542062797, 0.4630211329364896, nan, 45.244742070819356], ('japanese name', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('last position seen', 'float64'): [nan, nan, nan, nan, nan, nan], ('rank', 'float64'): [0.6483608274590866, 0.8714479827243188, 0.8714479827243188, -6.799711455220379, 0.6483608274590866, -6.799711455220379], ('Cybertronian', 'float64'): [1.5574077246549023, 1.5574077246549023, 1.5574077246549023, 1.5574077246549023, 1.5574077246549023, 0.0], ('Date Type', 'float64'): [0.36642148219544335, 0.14397822594653087, 1.1265580723656332, -1.942858872324553, -0.315386518264285, 1.9701109449603655], ('age', 'float64'): [4.535204837744807, 4.535204837744807, 4.535204837744807, 4.535204837744807, 4.535204837744807, 4.535204837744807], ('function', 'float64'): [nan, nan, nan, nan, nan, nan], ('names', 'float64'): [nan, nan, nan, nan, nan, nan], ('timestamp', 'float64'): [1.1265580723656332, 1.1265580723656332, 1.1265580723656332, 1.1265580723656332, 1.1265580723656332, 1.1265580723656332], ('weight(t)', 'float64'): [2.28584787736698, -2.185039863261519, 1.1578212823495777, -4.286261674628062, -0.6597305715207762, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_tan_multiple(self):
-        df = self.df
-        result = df.cols.tan(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'float64'): [nan, nan, nan, nan, nan, nan], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'float64'): [nan, nan, nan, nan, nan, nan], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'float64'): [2.28584787736698, -2.185039863261519, 1.1578212823495777, -4.286261674628062, -0.6597305715207762, nan]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_tan_numeric(self):
-        df = self.df.cols.select(['height(ft)'])
-        result = df.cols.tan(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'float64'): [0.28142960456426525, 3.49391564547484, 1.1787535542062797, 0.4630211329364896, nan, 45.244742070819356]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-    
-    def test_cols_tan_string(self):
-        df = self.df.cols.select(['names'])
-        result = df.cols.tan(cols=['names'],output_cols=['names_2'])
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'float64'): [nan, nan, nan, nan, nan, nan]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
