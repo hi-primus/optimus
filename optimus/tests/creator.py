@@ -89,6 +89,7 @@ class TestCreator:
         test_file.write("    maxDiff = None\n")
 
         for root, dirs, files in os.walk(self.create_path):
+            files.sort()
             for file in files:
                 if file.endswith(".test"):
                     full_path = os.path.join(root, file)
