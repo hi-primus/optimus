@@ -57,7 +57,6 @@ node_modules/
 **/dask-worker-space/
 dask-worker-space/
 examples/data/
-server/
 conda/recipes/conda
 conda/recipes/conda-build
 

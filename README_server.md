@@ -5,6 +5,6 @@ Actually we are testing this concept with [bumblebee](https://github.com/hi-prim
 
 To run the server:
 ```
-set "FLASK_APP=run.py"
+set "FLASK_APP=optimus/server/app.py"
 flask run
 ```  

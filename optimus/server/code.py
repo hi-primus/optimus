@@ -86,7 +86,7 @@ def _arguments(args, args_properties=None):
                 else:
                     args[arg] = args[arg]
             # Native types
-            elif is_str(arg) and args_properties[arg].get("type", None) == dict:
+            elif is_str(arg) and arg in args_properties and args_properties[arg].get("type", None) == dict:
                 pass
             else:
                 args[arg] = pformat(args[arg])
