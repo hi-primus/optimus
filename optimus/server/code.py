@@ -2,6 +2,9 @@ import re
 import inspect
 from inspect import signature
 from pprint import pformat
+from typing import List, Union, Optional
+from multipledispatch.dispatcher import MethodDispatcher
+
 
 from optimus.engines.base.basedataframe import BaseDataFrame as dataframe_class
 from optimus.infer import is_list, is_str
@@ -47,13 +50,13 @@ dataframe_accessors = {
 
 accessors = {**engine_accessors, **dataframe_accessors}
 
-def _create_new_variable(base_name, names):
+def _create_new_variable(base_name: str, names: List[str]):
     while base_name in names:
         base_name = _increment_variable_name(base_name)
         
     return base_name
     
-def _increment_variable_name(variable_name):
+def _increment_variable_name(variable_name: str):
     match = re.search(r'\d+$', variable_name)
     if match:
         variable_name = variable_name[0:match.start()] + str(int(variable_name[match.start():match.endpos])+1)
@@ -61,7 +64,7 @@ def _increment_variable_name(variable_name):
         variable_name = variable_name + "2"
     return variable_name
 
-def _arguments(args, args_properties=None):
+def _arguments(args: dict, args_properties: Optional[dict]=None):
     
     args_list = []
     
@@ -94,7 +97,7 @@ def _arguments(args, args_properties=None):
         
     return ", ".join([f'{arg}={args[arg]}' for arg in args_list if arg in args])
 
-def _generate_code_target(body, properties, target):
+def _generate_code_target(body: dict, properties: dict, target: str):
 
     arguments = _arguments(body, properties["arguments"])
     
@@ -113,7 +116,7 @@ def _generate_code_target(body, properties, target):
     else:
         return code, []
 
-def _generate_code_dataframe_transformation(body, properties, variables):
+def _generate_code_dataframe_transformation(body: dict, properties: dict, variables):
 
     target = body.get("target")
 
@@ -258,11 +261,11 @@ def optimus_variables():
     from optimus.helpers.functions import engines, dataframes, clusters, connections
     return [ *engines(), *dataframes(), *clusters(), *connections() ]
 
-def available_variable(name, variables):
+def available_variable(name: str, variables: dict):
     return _create_new_variable(name, [*variables, *optimus_variables()])
 
 
-def method_properties(func, method_root_type):
+def method_properties(func: Union[callable, MethodDispatcher], method_root_type):
     
     try:
         fp = signature(func)
@@ -275,7 +278,6 @@ def method_properties(func, method_root_type):
                 func_properties["parameters"].update(fp.parameters)
                 if fp.return_annotation:
                     func_properties["return_annotation"] = fp.return_annotation
-            print(func_properties)
         else:
             raise e
 
@@ -304,7 +306,7 @@ def method_properties(func, method_root_type):
         "generator": _get_generator(func_properties, method_root_type)
     }
 
-def generate_code(body=None, variables=[], get_updated=False, **kwargs):
+def generate_code(body: Optional[dict]=None, variables: List[str]=[], get_updated: bool=False, **kwargs):
 
     if not body:
         body = kwargs
