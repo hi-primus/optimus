@@ -1,6 +1,6 @@
 from pprint import pformat
 import operator
-from optimus.helpers.types import DataFrameType, InternalDataFrameType
+from optimus.helpers.types import *
 import time
 from abc import abstractmethod, ABC
 
@@ -43,7 +43,7 @@ class BaseDataFrame(ABC):
     Optimus DataFrame
     """
 
-    def __init__(self, data: InternalDataFrameType):
+    def __init__(self, data: 'InternalDataFrameType'):
         self.data = data
         self.buffer = None
         self.updated = None
@@ -57,7 +57,7 @@ class BaseDataFrame(ABC):
         del self.data
 
     @property
-    def root(self) -> DataFrameType:
+    def root(self) -> 'DataFrameType':
         return self
 
     def _repr_html_(self):
@@ -88,14 +88,14 @@ class BaseDataFrame(ABC):
     def __len__(self):
         return self.rows.count()
 
-    def new(self, dfd, meta=None) -> DataFrameType:
+    def new(self, dfd, meta=None) -> 'DataFrameType':
         df = self.__class__(dfd)
         if meta is not None:
             df.meta = meta
         return df
 
     @staticmethod
-    def __operator__(df, data_type=None, multiple_columns=False) -> DataFrameType:
+    def __operator__(df, data_type=None, multiple_columns=False) -> 'DataFrameType':
         if isinstance(df, (BaseDataFrame,)):
             col1 = "*" if multiple_columns else df.cols.names(0)[0]
 
@@ -110,14 +110,14 @@ class BaseDataFrame(ABC):
         return df
 
     @abstractmethod
-    def _base_to_dfd(self, pdf, n_partitions) -> InternalDataFrameType:
+    def _base_to_dfd(self, pdf, n_partitions) -> 'InternalDataFrameType':
         pass
 
     @abstractmethod
-    def to_optimus_pandas(self) -> DataFrameType:
+    def to_optimus_pandas(self) -> 'DataFrameType':
         pass
 
-    def unary_operation(self, df, opb, data_type=None) -> DataFrameType:
+    def unary_operation(self, df, opb, data_type=None) -> 'DataFrameType':
         """
         Helper to process binary operations
         :param df: Left
@@ -129,7 +129,7 @@ class BaseDataFrame(ABC):
 
         return self.new(opb(df))
 
-    def operation(self, df1, df2, opb, data_type=None) -> DataFrameType:
+    def operation(self, df1, df2, opb, data_type=None) -> 'DataFrameType':
         """
         Helper to process binary operations
         :param df1: Left
@@ -175,79 +175,79 @@ class BaseDataFrame(ABC):
 
         return df
 
-    def __invert__(self) -> DataFrameType:
+    def __invert__(self) -> 'DataFrameType':
         return self.unary_operation(self, operator.invert)
 
-    def __neg__(self) -> DataFrameType:
+    def __neg__(self) -> 'DataFrameType':
         return self.unary_operation(self, operator.neg)
 
-    def __add__(self, df2) -> DataFrameType:
+    def __add__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.add, "auto")
 
-    def __radd__(self, df2) -> DataFrameType:
+    def __radd__(self, df2) -> 'DataFrameType':
         return self.operation(df2, self, operator.add, "auto")
 
-    def __sub__(self, df2) -> DataFrameType:
+    def __sub__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.sub, "float")
 
-    def __rsub__(self, df2) -> DataFrameType:
+    def __rsub__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.sub, "float")
 
-    def __mul__(self, df2) -> DataFrameType:
+    def __mul__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.mul, "float")
 
-    def __rmul__(self, df2) -> DataFrameType:
+    def __rmul__(self, df2) -> 'DataFrameType':
         return self.operation(df2, self, operator.mul, "float")
 
-    def __truediv__(self, df2) -> DataFrameType:
+    def __truediv__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.truediv, "float")
 
-    def __rtruediv__(self, df2) -> DataFrameType:
+    def __rtruediv__(self, df2) -> 'DataFrameType':
         return self.operation(df2, self, operator.truediv, "float")
 
-    def __floordiv__(self, df2) -> DataFrameType:
+    def __floordiv__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.floordiv, "float")
 
-    def __rfloordiv__(self, df2) -> DataFrameType:
+    def __rfloordiv__(self, df2) -> 'DataFrameType':
         return self.operation(df2, self, operator.floordiv, "float")
 
-    def __mod__(self, df2) -> DataFrameType:
+    def __mod__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.mod, "float")
 
-    def __rmod__(self, df2) -> DataFrameType:
+    def __rmod__(self, df2) -> 'DataFrameType':
         return self.operation(df2, self, operator.mod, "float")
 
-    def __pow__(self, df2) -> DataFrameType:
+    def __pow__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.pow, "float")
 
-    def __rpow__(self, df2) -> DataFrameType:
+    def __rpow__(self, df2) -> 'DataFrameType':
         return self.operation(df2, self, operator.pow, "float")
 
-    def __eq__(self, df2) -> DataFrameType:
+    def __eq__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.eq)
 
-    def __gt__(self, df2) -> DataFrameType:
+    def __gt__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.gt, "float")
 
-    def __lt__(self, df2) -> DataFrameType:
+    def __lt__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.lt, "float")
 
-    def __ne__(self, df2) -> DataFrameType:
+    def __ne__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.ne)
 
-    def __ge__(self, df2) -> DataFrameType:
+    def __ge__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.ge, "float")
 
-    def __le__(self, df2) -> DataFrameType:
+    def __le__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.le, "float")
 
-    def __and__(self, df2) -> DataFrameType:
+    def __and__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.__and__, "bool")
 
-    def __or__(self, df2) -> DataFrameType:
+    def __or__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.__or__, "bool")
 
-    def __xor__(self, df2) -> DataFrameType:
+    def __xor__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.__xor__, "bool")
 
     def _to_values(self):
@@ -257,11 +257,11 @@ class BaseDataFrame(ABC):
         """
         return self.data.values
 
-    def equals_dataframe(self, df2: DataFrameType) -> bool:
+    def equals_dataframe(self, df2: 'DataFrameType') -> bool:
         df2 = df2.data
         return self.data.equals(df2)
 
-    def equals(self, df2: DataFrameType, decimal=None, assertion=False) -> bool:
+    def equals(self, df2: 'DataFrameType', decimal=None, assertion=False) -> bool:
         df2_is_dataframe = isinstance(df2, (BaseDataFrame,))
 
         # checks by column names
@@ -339,10 +339,10 @@ class BaseDataFrame(ABC):
     def visualize(self):
         raise NotImplementedError(f"\"visualize\" is not available using {type(self).__name__}")
 
-    def execute(self) -> DataFrameType:
+    def execute(self) -> 'DataFrameType':
         return self
 
-    def compute(self) -> InternalDataFrameType:
+    def compute(self) -> 'InternalDataFrameType':
         return self.data
 
     def _assign(self, kw_columns):
@@ -391,7 +391,7 @@ class BaseDataFrame(ABC):
     def to_pandas(self):
         pass
 
-    def stratified_sample(self, col_name, seed: int = 1) -> DataFrameType:
+    def stratified_sample(self, col_name, seed: int = 1) -> 'DataFrameType':
         """
         Stratified Sampling
         :param col_name:
@@ -400,7 +400,7 @@ class BaseDataFrame(ABC):
         """
         raise NotImplementedError(f"\"stratified_sample\" is not available using {type(self).__name__}")
 
-    def get_buffer(self) -> DataFrameType:
+    def get_buffer(self) -> 'DataFrameType':
         """
         Get buffer from the dataframe
         """
@@ -919,7 +919,7 @@ class BaseDataFrame(ABC):
         col1 = self.cols.names(0)[0]
         return self.data[col1]
 
-    def join(self, df_right: DataFrameType, how="left", on=None, left_on=None, right_on=None, key_middle=False) -> DataFrameType:
+    def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None, key_middle=False) -> 'DataFrameType':
         """
         Join 2 dataframes SQL style
         :param df_right:

@@ -1,6 +1,6 @@
 import copy
 from itertools import combinations_with_replacement
-from optimus.helpers.types import ClustersType
+from optimus.helpers.types import *
 
 import jellyfish as jellyfish
 import numpy as np
@@ -83,7 +83,7 @@ class Clusters:
         return self.to_dict(columns, limit_clusters, limit_suggestions, verbose)
 
 
-def string_clustering(df, input_cols="*", algorithm=None, *args, **kwargs) -> ClustersType:
+def string_clustering(df, input_cols="*", algorithm=None, *args, **kwargs) -> 'ClustersType':
     """
     Cluster a dataframe column based on the Fingerprint algorithm
     :return:

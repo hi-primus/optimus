@@ -1,8 +1,8 @@
-from optimus.helpers.types import DataFrameType
+from optimus.helpers.types import *
 
 
 class BaseEncoding:
-    def __init__(self, root: DataFrameType):
+    def __init__(self, root: 'DataFrameType'):
         self.root = root
 
     def n_gram(self, col, n=2):

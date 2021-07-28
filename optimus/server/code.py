@@ -5,7 +5,7 @@ from pprint import pformat
 
 from optimus.engines.base.basedataframe import BaseDataFrame as dataframe_class
 from optimus.infer import is_list, is_str
-from optimus.helpers.types import DataFrameType, ConnectionType, ClustersType, MaskDataFrameType, is_any_optimus_type
+from optimus.helpers.types import *
 from optimus.helpers.core import val_to_list, one_list_to_val
 
 from .prepare import prepare
@@ -22,7 +22,7 @@ from optimus.engines.base.columns import BaseColumns as cols_class
 from optimus.engines.base.rows import BaseRows as rows_class
 from optimus.engines.base.set import BaseSet as set_class
 from optimus.engines.base.mask import Mask as mask_class
-from optimus.engines.base.ml.models import ML as ml_class
+from optimus.engines.base.ml.models import BaseML as ml_class
 from optimus.plots.plots import Plot as plots_class
 from optimus.outliers.outliers import Outliers as outliers_class
 from optimus.engines.base.profile import BaseProfile as profile_class
@@ -155,22 +155,22 @@ def _get_generator(func_properties, method_root_type):
     if method_root_type == "dataframe":
     
         # If the method returns a dataframe, it's a transformation
-        if DataFrameType == func_properties["return_annotation"]:
+        if 'DataFrameType' == func_properties["return_annotation"]:
             return _generate_code_dataframe_transformation
         # TO-DO: should mask functions be treated as transformations? (MaskDataFrameType)
-        if MaskDataFrameType == func_properties["return_annotation"]:
+        if 'MaskDataFrameType' == func_properties["return_annotation"]:
             return _generate_code_dataframe_mask
         # If the method returns anything else, it's an output
-        elif ClustersType == func_properties["return_annotation"]:
+        elif 'ClustersType' == func_properties["return_annotation"]:
             return _generate_code_dataframe_clusters
         else:
             return _generate_code_output
     
     elif method_root_type == "engine":
     
-        if DataFrameType == func_properties["return_annotation"]:
+        if 'DataFrameType' == func_properties["return_annotation"]:
             return _generate_code_engine_dataframe
-        elif ConnectionType == func_properties["return_annotation"]:
+        elif 'ConnectionType' == func_properties["return_annotation"]:
             return _generate_code_engine_connection
         else:
             return _generate_code_output

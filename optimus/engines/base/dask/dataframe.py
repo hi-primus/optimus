@@ -11,7 +11,7 @@ import pandas as pd
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
-from optimus.helpers.types import DataFrameType
+from optimus.helpers.types import *
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_one_element
@@ -195,7 +195,7 @@ class DaskBaseDataFrame(BaseDataFrame):
     def partitions(self):
         return self.data.npartitions
 
-    def equals_dataframe(self, df2: DataFrameType) -> bool:
+    def equals_dataframe(self, df2: 'DataFrameType') -> bool:
         if isinstance(df2, (BaseDataFrame,)):
             return df2.to_dict(n="all") == self.to_dict(n="all")
         else:

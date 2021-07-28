@@ -2,7 +2,7 @@ from abc import abstractmethod
 import warnings
 from optimus.engines.base.meta import Meta
 from optimus.infer import is_tuple
-from optimus.helpers.types import DataFrameType, InternalDataFrameType
+from optimus.helpers.types import *
 import pandas as pd
 
 
@@ -38,14 +38,14 @@ class BaseCreate:
         return new_dict
 
     
-    def _dfd_from_dict(self, dict):
+    def _dfd_from_dict(self, dict) -> 'InternalDataFrameType':
         return pd.DataFrame({name: pd.Series(values, dtype=dtype if force_dtype else None) for (name, dtype, nulls, force_dtype), values in dict.items()})
 
     @abstractmethod
-    def _df_from_dfd(self, dfd, *args, **kwargs):
+    def _df_from_dfd(self, dfd, *args, **kwargs) -> 'DataFrameType':
         pass
 
-    def dataframe(self, dict: dict = None, dfd: InternalDataFrameType = None, force_data_types=False, n_partitions: int = 1, *args, **kwargs) -> DataFrameType:
+    def dataframe(self, dict: dict = None, dfd: 'InternalDataFrameType' = None, force_data_types=False, n_partitions: int = 1, *args, **kwargs) -> 'DataFrameType':
         """
         Creates a dictionary using the form 
         {"Column name": ["value 1", "value 2"], ...} or {("Column name", "str", True, True): ["value 1", "value 2"]}
