@@ -87,17 +87,6 @@ class VaexDataFrame(BaseDataFrame):
     def to_optimus_cudf(self):
         return CUDFDataFrame(self.root.to_pandas())
 
-    def visualize(self):
-        pass
-
-    @staticmethod
-    def execute():
-        pass
-
-    @staticmethod
-    def compute():
-        pass
-
     @staticmethod
     def sample(n=10, random=False):
         pass

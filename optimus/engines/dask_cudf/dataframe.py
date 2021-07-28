@@ -67,9 +67,6 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
     def create_id(column="id"):
         pass
 
-    def encoding(self):
-        pass
-
     def to_pandas(self):
         return self.data.compute().to_pandas()
 

@@ -21,10 +21,3 @@ class Outliers:
 
     def modified_z_score(self, columns, threshold, relative_error=RELATIVE_ERROR):
         return ModifiedZScore(self.df, columns, threshold, relative_error)
-
-
-# def outliers(self):
-#     return Outliers(self)
-
-
-

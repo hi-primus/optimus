@@ -13,12 +13,6 @@ class DataFrameBaseDataFrame():
         df = self.data
         return self.new(df, meta=self.meta)
 
-    def compute(self):
-        return self.data
-
-    def visualize(self):
-        raise UnsupportedOperationError
-
     def sample(self, n=10, random=False):
         """
         Return a n number of sample from a dataFrame

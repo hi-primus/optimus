@@ -22,14 +22,6 @@ class IbisDataFrame(BaseDataFrame):
         from optimus.engines.ibis.functions import IbisFunctions
         return IbisFunctions()
 
-
-    def execute(self):
-        return self.root
-
-    @staticmethod
-    def compute():
-        pass
-
     @staticmethod
     def sample(n=10, random=False):
         pass

@@ -300,9 +300,7 @@ class ML(BaseML):
     def logistic_regression(self, features, target, *args, **kwargs):
         """
         Runs a logistic regression for input (text) DataFrame.
-        :param df: Pyspark dataframe to analyze
-        :param input_col: Column to predict
-        :return: DataFrame with logistic regression and prediction run.
+        :return: Model with logistic regression and prediction run.
         """
 
         df = self.root
@@ -343,18 +341,6 @@ class ML(BaseML):
                             "standard deviation": score["test_score"].mean()}
         #
         return model
-
-    @staticmethod
-    def decision_tree(df, columns, input_col, **kwargs):
-        """
-        Runs a decision tree classifier for input DataFrame.
-        :param df: Pyspark dataframe to analyze.
-        :param columns: List of columns to select for prediction.
-        :param input_col: Column to predict.
-        :return: DataFrame with decision tree and prediction run.
-        """
-
-        pass
 
     def k_means(self, features, target, n_clusters, methods="k-means++", *args, **kwargs):
         df = self.root
@@ -407,7 +393,7 @@ class ML(BaseML):
 
         return model
 
-    def PCA(self, features, target=None, *args, **kwargs):
+    def pca(self, features, target=None, *args, **kwargs):
         import pandas as pd
         n_components = kwargs.pop('n_components', 2)
 
@@ -434,7 +420,7 @@ class ML(BaseML):
         Runs a random forest classifier for input DataFrame.
         :param features: List of columns to select for prediction.
         :param target: Column to predict.
-        :return: DataFrame with random forest and prediction run.
+        :return: Model with random forest and prediction run.
         """
 
         df = self.root
@@ -495,17 +481,5 @@ class ML(BaseML):
         # y_pred = regressor.predict(X_test
 
         return model
-
-    @staticmethod
-    def gbt(df, columns, input_col, **kwargs):
-        """
-        Runs a gradient boosting tree classifier for input DataFrame.
-        :param df: Pyspark dataframe to analyze.
-        :param columns: List of columns to select for prediction.
-        :param input_col: Column to predict.
-        :return: DataFrame with gradient boosting tree and prediction run.
-        """
-
-        pass
 
 
