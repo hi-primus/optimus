@@ -46,3 +46,6 @@ class BaseSave:
 
     def hdf5(self, path, *args, **kwargs):
         raise NotImplementedError("Not implemented yet")
+
+    def database_table(self, table, db, *args, **kwargs):
+        raise NotImplementedError("Not implemented yet")
