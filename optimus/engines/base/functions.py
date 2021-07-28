@@ -5,7 +5,6 @@ import jellyfish
 import numpy as np
 import pandas as pd
 from jsonschema._format import is_email
-import url_parser
 from fastnumbers import fast_float, fast_int
 
 from optimus.helpers.constants import ProfilerDataTypes
@@ -515,41 +514,51 @@ class Functions(ABC):
     def days_between(self, date_format=None):
         pass
 
-    def domain(self, value):
-        return url_parser.parse_url(value)["domain"]
+    def domain(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["domain"], na_action=None) 
 
-    def top_domain(self, value):
-        return url_parser.parse_url(value)["top_domain"]
+    def top_domain(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["top_domain"], na_action=None) 
 
-    def sub_domain(self, value):
-        return url_parser.parse_url(value)["sub_domain"]
+    def sub_domain(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["sub_domain"], na_action=None) 
 
-    def url_scheme(self, value):
-        return url_parser.parse_url(value)["protocol"]
+    def url_scheme(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["protocol"], na_action=None) 
 
-    def url_path(self, value):
-        return url_parser.parse_url(value)["path"]
+    def url_path(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["path"], na_action=None) 
 
-    def url_file(self, value):
-        return url_parser.parse_url(value)["file"]
+    def url_file(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["file"], na_action=None) 
 
-    def url_query(self, value):
-        return url_parser.parse_url(value)["query"]
+    def url_query(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["query"], na_action=None) 
 
-    def url_fragment(self, value):
-        return url_parser.parse_url(value)["fragment"]
+    def url_fragment(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["fragment"], na_action=None) 
 
-    def host(self, value):
-        return url_parser.parse_url(value)["host"]
+    def host(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["host"], na_action=None) 
 
-    def port(self, value):
-        return url_parser.parse_url(value)["port"]
+    def port(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["port"], na_action=None) 
 
     def email_username(self, series):
-        return series.str.split('@').str[0]
+        return self.to_string_accessor(series).split('@').str[0]
 
     def email_domain(self, series):
-        return series.str.split('@').str[1]
+        return self.to_string_accessor(series).split('@').str[1]
 
     def infer_data_types(self, value, cols_data_types):
         """

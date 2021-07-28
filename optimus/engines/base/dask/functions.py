@@ -85,3 +85,43 @@ class DaskBaseFunctions():
 
         series = self.to_string_accessor(series).replace(_search, _r, regex=regex)
         return series
+
+    def domain(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["domain"], na_action=None, meta=(series.name, "str")) 
+
+    def top_domain(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["top_domain"], na_action=None, meta=(series.name, "str")) 
+
+    def sub_domain(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["sub_domain"], na_action=None, meta=(series.name, "str")) 
+
+    def url_scheme(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["protocol"], na_action=None, meta=(series.name, "str")) 
+
+    def url_path(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["path"], na_action=None, meta=(series.name, "str")) 
+
+    def url_file(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["file"], na_action=None, meta=(series.name, "str")) 
+
+    def url_query(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["query"], na_action=None, meta=(series.name, "str")) 
+
+    def url_fragment(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["fragment"], na_action=None, meta=(series.name, "str")) 
+
+    def host(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["host"], na_action=None, meta=(series.name, "str")) 
+
+    def port(self, series):
+        import url_parser
+        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["port"], na_action=None, meta=(series.name, "str")) 
