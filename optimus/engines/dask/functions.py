@@ -27,8 +27,8 @@ class DaskFunctions(DaskBaseFunctions, PandasBaseFunctions, Functions):
 
         return wrapper
 
-    def word_tokenize(self, value):
-        return word_tokenize(value)
+    def word_tokenize(self, series):
+        return self.to_string(series).map(word_tokenize, na_action=None)
 
     def kurtosis(self, series):
         return stats.kurtosis(self.to_float(series))

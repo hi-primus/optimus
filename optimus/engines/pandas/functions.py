@@ -15,8 +15,8 @@ class PandasFunctions(DataFrameBaseFunctions, PandasBaseFunctions, Functions):
     def _engine(self):
         return pd
 
-    def word_tokenize(self, value):
-        return word_tokenize(value)
+    def word_tokenize(self, series):
+        return self.to_string(series).map(word_tokenize, na_action=None)
 
     def count_zeros(self, series, *args):
         return int((self.to_float(series).values == 0).sum())

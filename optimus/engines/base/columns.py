@@ -1538,10 +1538,10 @@ class BaseColumns(ABC):
                           output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="partitioned",
                           set_index=False)
 
-    def word_tokenizer(self, cols="*", output_cols=None) -> DataFrameType:
+    def word_tokenize(self, cols="*", output_cols=None) -> DataFrameType:
 
-        return self.apply(cols, self.F.word_tokenize, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.WORD_TOKENIZE.value, mode="map")
+        return self.apply(cols, "word_tokenize", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.WORD_TOKENIZE.value, mode="vectorized")
 
     def word_count(self, cols="*", output_cols=None) -> DataFrameType:
 
@@ -1550,7 +1550,7 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols)
         output_cols = get_output_cols(cols, output_cols)
 
-        return df.cols.word_tokenizer(cols, output_cols).cols.len(output_cols)
+        return df.cols.word_tokenize(cols, output_cols).cols.len(output_cols)
 
     def len(self, cols="*", output_cols=None) -> DataFrameType:
         return self.apply(cols, self.F.len, func_return_type=str, output_cols=output_cols,
