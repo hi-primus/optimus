@@ -2,11 +2,12 @@ import pandavro as pdx
 import os
 from optimus.helpers.logger import logger
 
+from optimus.helpers.types import *
 from optimus.engines.base.io.save import BaseSave
 
 
 class Save(BaseSave):
-    def __init__(self, root):
+    def __init__(self, root: 'DataFrameType'):
         self.root = root
 
     def json(self, path, orient="records", *args, **kwargs):

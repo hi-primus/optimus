@@ -3,11 +3,12 @@ import os
 from optimus.helpers.logger import logger
 from optimus.helpers.functions import prepare_path_local, path_is_local
 
+from optimus.helpers.types import *
 from optimus.engines.base.io.save import BaseSave
 
 
 class Save(BaseSave):
-    def __init__(self, root):
+    def __init__(self, root: 'DataFrameType'):
         self.root = root
 
     def hdf5(self, path, conn, *args, **kwargs):

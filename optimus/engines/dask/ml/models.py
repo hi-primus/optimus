@@ -5,11 +5,12 @@ from dask_ml.cluster import KMeans
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier
 
+from optimus.helpers.types import *
 from optimus.engines.base.ml.models import BaseML
 
 
 class ML(BaseML):
-    def __init__(self, root):
+    def __init__(self, root: 'DataFrameType'):
         self.root = root
 
     def linear_regression(self, features, target, *args, **kwargs):

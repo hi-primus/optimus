@@ -5,11 +5,12 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
 import pandas as pd
 
+from optimus.helpers.types import *
 from optimus.engines.base.ml.encoding import BaseEncoding
 
 
 class Encoding(BaseEncoding):
-    def __init__(self, root):
+    def __init__(self, root: 'DataFrameType'):
         self.root = root
 
     def n_gram(self, input_col, n=2):

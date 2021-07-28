@@ -5,12 +5,13 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import path_is_local, prepare_path_local
 from optimus.helpers.logger import logger
 
+from optimus.helpers.types import *
 from optimus.engines.base.io.save import BaseSave
 
 
 class Save(BaseSave):
 
-    def __init__(self, root):
+    def __init__(self, root: 'DataFrameType'):
         self.root = root
 
     def json(self, path, mode="overwrite", encoding="UTF-8", num_partitions=1):

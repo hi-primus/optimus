@@ -1,7 +1,7 @@
 from optimus.helpers.types import *
 
 class BaseML:
-    def __init__(self, root):
+    def __init__(self, root: 'DataFrameType'):
         self.root = root
 
     def linear_regression(self, features, target, *args, **kwargs) -> 'ModelType':

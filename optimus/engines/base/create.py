@@ -7,7 +7,7 @@ import pandas as pd
 
 
 class BaseCreate:
-    def __init__(self, root):
+    def __init__(self, root: 'DataFrameType'):
         self.root = root
 
     def _dictionary(self, dict, force_dtypes=False):
