@@ -3,8 +3,10 @@ import os
 from optimus.helpers.logger import logger
 from optimus.helpers.functions import prepare_path_local, path_is_local
 
+from optimus.engines.base.io.save import BaseSave
 
-class Save:
+
+class Save(BaseSave):
     def __init__(self, root):
         self.root = root
 

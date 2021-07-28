@@ -1,6 +1,5 @@
 from pprint import pformat
 import operator
-from optimus.engines.base.set import BaseSet
 from optimus.helpers.types import DataFrameType, InternalDataFrameType
 import time
 from abc import abstractmethod, ABC
@@ -24,11 +23,19 @@ from optimus.infer import is_str, is_tuple, is_list
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.engines.base.contants import BaseConstants
-from .meta import Meta
-from .profile import BaseProfile
-from ...outliers.outliers import Outliers
-from ...plots.functions import plot_hist, plot_frequency
-from ...plots.plots import Plot
+from optimus.engines.base.functions import Functions
+from optimus.engines.base.columns import BaseColumns
+from optimus.engines.base.rows import BaseRows
+from optimus.engines.base.mask import Mask
+from optimus.engines.base.set import BaseSet
+from optimus.engines.base.profile import BaseProfile
+from optimus.engines.base.meta import Meta
+from optimus.engines.base.ml.models import BaseML
+from optimus.engines.base.ml.encoding import BaseEncoding
+from optimus.engines.base.io.save import BaseSave
+from optimus.outliers.outliers import Outliers
+from optimus.plots.functions import plot_hist, plot_frequency
+from optimus.plots.plots import Plot
 
 
 class BaseDataFrame(ABC):
@@ -36,7 +43,7 @@ class BaseDataFrame(ABC):
     Optimus DataFrame
     """
 
-    def __init__(self, data):
+    def __init__(self, data: InternalDataFrameType):
         self.data = data
         self.buffer = None
         self.updated = None
@@ -50,7 +57,7 @@ class BaseDataFrame(ABC):
         del self.data
 
     @property
-    def root(self):
+    def root(self) -> DataFrameType:
         return self
 
     def _repr_html_(self):
@@ -287,56 +294,63 @@ class BaseDataFrame(ABC):
                 return df_dicts_equal(self.to_dict(n="all"), df2, decimal=decimal, assertion=assertion)
 
     @abstractmethod
-    def save(self):
-        pass
-
-    @abstractmethod
-    def rows(self):
-        pass
-
-    @abstractmethod
-    def cols(self):
+    @property
+    def save(self) -> BaseSave:
         pass
 
     @property
-    def constants(self):
+    def functions(self) -> Functions:
+        return Functions(self)
+
+    @property
+    def mask(self) -> Mask:
+        return Mask(self)
+
+    @property
+    def ml(self) -> BaseML:
+        return BaseML(self)
+
+    @abstractmethod
+    @property
+    def rows(self) -> BaseRows:
+        pass
+
+    @abstractmethod
+    @property
+    def cols(self) -> BaseColumns:
+        pass
+
+    @property
+    def constants(self) -> BaseConstants:
         return BaseConstants()
 
     @property
-    def plot(self):
+    def plot(self) -> Plot:
         return Plot(self)
 
     @property
-    def outliers(self):
+    def outliers(self) -> Outliers:
         return Outliers(self)
 
-    @abstractmethod
-    def encoding(self):
-        pass
+    @property
+    def encoding(self) -> BaseEncoding:
+        return BaseEncoding(self)
 
-    @abstractmethod
     def visualize(self):
-        pass
+        raise NotImplementedError(f"\"visualize\" is not available using {type(self).__name__}")
 
-    @staticmethod
-    @abstractmethod
-    def execute():
-        pass
+    def execute(self) -> DataFrameType:
+        return self
 
-    @staticmethod
-    @abstractmethod
-    def compute():
-        # We will handle all dataframe as if the could compute the result,
-        # something that only can be done in dask and in spark triggering and action.
-        # With this we expect to abstract the behavior and just use compute() a value from operation
-        pass
+    def compute(self) -> InternalDataFrameType:
+        return self.data
 
     def _assign(self, kw_columns):
 
         dfd = self.data
         return dfd.assign(**kw_columns)
 
-    def to_json(self, cols="*", n="all", orient="list"):
+    def to_json(self, cols="*", n="all", orient="list") -> str:
         """
         Return a json from a Dataframe
         :return:
@@ -344,7 +358,7 @@ class BaseDataFrame(ABC):
 
         return json.dumps(self.to_dict(cols, n, orient), ensure_ascii=False, default=json_converter)
 
-    def to_dict(self, cols="*", n=10, orient="list"):
+    def to_dict(self, cols="*", n=10, orient="list") -> dict:
         """
             Return a dict from a Collect result
             :param n:
@@ -363,7 +377,7 @@ class BaseDataFrame(ABC):
     def sample(n=10, random=False):
         pass
 
-    def columns_sample(self, columns="*"):
+    def columns_sample(self, columns="*") -> dict:
         """
         Return a dict of the sample of a Dataframe
         :return:
@@ -377,21 +391,19 @@ class BaseDataFrame(ABC):
     def to_pandas(self):
         pass
 
-    def stratified_sample(self, col_name, seed: int = 1):
+    def stratified_sample(self, col_name, seed: int = 1) -> DataFrameType:
         """
         Stratified Sampling
-        columns_type = parse_columns(df, columns_type.keys())
         :param col_name:
         :param seed:
         :return:
         """
-        df = self.data
-        # n = min(5, df[col_name].value_counts().min())
-        df = df.groupby(col_name).apply(lambda x: x.sample(2))
-        # df_.index = df_.index.droplevel(0)
-        return df
+        raise NotImplementedError(f"\"stratified_sample\" is not available using {type(self).__name__}")
 
-    def get_buffer(self):
+    def get_buffer(self) -> DataFrameType:
+        """
+        Get buffer from the dataframe
+        """
         return self.buffer
 
     @abstractmethod
@@ -406,7 +418,9 @@ class BaseDataFrame(ABC):
         self.meta = Meta.reset(self.meta, "buffer_time")
 
     def buffer_window(self, columns="*", lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
-
+        """
+        Get a window from the buffer of the dataframe
+        """
         df = self
 
         meta = df.meta

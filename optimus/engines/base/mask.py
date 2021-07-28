@@ -1,8 +1,5 @@
-
-import numpy as np
-
-from abc import abstractmethod, ABC
-from optimus.helpers.types import MaskDataFrameType
+from abc import ABC
+from optimus.helpers.types import DataFrameType, MaskDataFrameType
 
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import ProfilerDataTypes
@@ -14,7 +11,7 @@ from optimus.infer import is_dict, is_str, regex_http_code, regex_social_securit
 
 
 class Mask(ABC):
-    def __init__(self, root):
+    def __init__(self, root: DataFrameType):
         self.root = root
 
     def _to_frame(self, series):

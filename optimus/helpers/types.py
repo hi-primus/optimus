@@ -1,8 +1,13 @@
+from optimus.engines.base.engine import BaseEngine
+from optimus.engines.base.basedataframe import BaseDataFrame
 from typing import TypeVar, List
 
-DataFrameType = TypeVar("DataFrameType")
+EngineType = TypeVar("EngineType", bound=BaseEngine)
+InternalEngineType = TypeVar("InternalEngineType")
+
+DataFrameType = TypeVar("DataFrameType", bound=BaseDataFrame)
 InternalDataFrameType = TypeVar("InternalDataFrameType")
-MaskDataFrameType = TypeVar("MaskDataFrameType")
+MaskDataFrameType = TypeVar("MaskDataFrameType", bound=BaseDataFrame)
 ConnectionType = TypeVar("ConnectionType")
 ClustersType = TypeVar("ClustersType")
 ModelType = TypeVar("ModelType")

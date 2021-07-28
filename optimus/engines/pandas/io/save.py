@@ -2,8 +2,10 @@ import pandavro as pdx
 import os
 from optimus.helpers.logger import logger
 
+from optimus.engines.base.io.save import BaseSave
 
-class Save:
+
+class Save(BaseSave):
     def __init__(self, root):
         self.root = root
 

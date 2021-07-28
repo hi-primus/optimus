@@ -5,8 +5,10 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
 import pandas as pd
 
+from optimus.engines.base.ml.encoding import BaseEncoding
 
-class Encoding:
+
+class Encoding(BaseEncoding):
     def __init__(self, root):
         self.root = root
 

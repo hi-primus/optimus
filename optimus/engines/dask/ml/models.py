@@ -5,8 +5,10 @@ from dask_ml.cluster import KMeans
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier
 
+from optimus.engines.base.ml.models import BaseML
 
-class ML:
+
+class ML(BaseML):
     def __init__(self, root):
         self.root = root
 

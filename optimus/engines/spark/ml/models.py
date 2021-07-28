@@ -11,8 +11,9 @@ from optimus.engines.spark.ml.encoding import string_to_index, vector_assembler
 from optimus.engines.spark.spark import Spark
 from optimus.infer import is_str
 
+from optimus.engines.base.ml.models import BaseML
 
-class ML:
+class ML(BaseML):
     @staticmethod
     def logistic_regression_text(df, input_col):
         """

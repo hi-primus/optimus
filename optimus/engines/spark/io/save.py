@@ -5,8 +5,10 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import path_is_local, prepare_path_local
 from optimus.helpers.logger import logger
 
+from optimus.engines.base.io.save import BaseSave
 
-class Save:
+
+class Save(BaseSave):
 
     def __init__(self, root):
         self.root = root

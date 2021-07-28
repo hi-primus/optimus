@@ -64,7 +64,7 @@ class DaskDataFrame(DaskBaseDataFrame):
     @property
     def encoding(self):
         from optimus.engines.pandas.ml.encoding import Encoding
-        return Encoding()
+        return Encoding(self)
 
     def to_optimus_pandas(self):
         return PandasDataFrame(self.root.to_pandas())

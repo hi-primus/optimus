@@ -48,7 +48,7 @@ INFER_PROFILER_ROWS = 200
 class BaseColumns(ABC):
     """Base class for all Cols implementations"""
 
-    def __init__(self, root):
+    def __init__(self, root: DataFrameType):
         self.root = root
         self.F = self.root.functions
 

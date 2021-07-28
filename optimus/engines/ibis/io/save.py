@@ -2,10 +2,11 @@ import pandas as pd
 
 DataFrame = pd.DataFrame
 from optimus.helpers.logger import logger
+from optimus.engines.base.io.save import BaseSave
 
 
 def save(self: DataFrame):
-    class Save:
+    class Save(BaseSave):
         @staticmethod
         def json(path, *args, **kwargs):
             """

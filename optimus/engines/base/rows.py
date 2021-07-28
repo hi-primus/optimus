@@ -16,7 +16,7 @@ from optimus.infer import is_str, is_list_of_str_or_int
 class BaseRows(ABC):
     """Base class for all Rows implementations"""
 
-    def __init__(self, root):
+    def __init__(self, root: DataFrameType):
         self.root = root
 
     @staticmethod

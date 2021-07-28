@@ -4,7 +4,7 @@ from optimus.helpers.types import DataFrameType
 class BaseSet():
     """Base class for all set implementations"""
 
-    def __init__(self, root):
+    def __init__(self, root: DataFrameType):
         self.root = root
 
     def __call__(self, cols=None, value=None, default=None, args=[], where=None):

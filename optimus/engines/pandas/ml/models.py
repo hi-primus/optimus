@@ -18,6 +18,8 @@ from yellowbrick.classifier import ConfusionMatrix
 from yellowbrick.classifier import PrecisionRecallCurve
 from yellowbrick.classifier import ROCAUC
 
+from optimus.engines.base.ml.models import BaseML
+
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
@@ -185,7 +187,7 @@ class Model:
         joblib.dump(self.model, path)
 
 
-class ML:
+class ML(BaseML):
     def __init__(self, root):
         self.root = root
 

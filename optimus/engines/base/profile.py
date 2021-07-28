@@ -1,4 +1,5 @@
 from abc import ABC
+from optimus.helpers.types import DataFrameType
 
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns
@@ -11,7 +12,7 @@ from optimus.profiler.constants import MAX_BUCKETS
 class BaseProfile(ABC):
     """Base class for all profile implementations"""
 
-    def __init__(self, root):
+    def __init__(self, root: DataFrameType):
         self.root = root
 
     def summary(self, columns="*"):
