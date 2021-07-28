@@ -293,8 +293,8 @@ class BaseDataFrame(ABC):
             else:
                 return df_dicts_equal(self.to_dict(n="all"), df2, decimal=decimal, assertion=assertion)
 
-    @abstractmethod
     @property
+    @abstractmethod
     def save(self) -> BaseSave:
         pass
 
@@ -310,13 +310,13 @@ class BaseDataFrame(ABC):
     def ml(self) -> BaseML:
         return BaseML(self)
 
-    @abstractmethod
     @property
+    @abstractmethod
     def rows(self) -> BaseRows:
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def cols(self) -> BaseColumns:
         pass
 
