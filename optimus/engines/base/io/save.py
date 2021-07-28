@@ -1,7 +1,31 @@
-class BaseSave:
+import warnings
+from optimus.helpers.types import *
 
-    def file(self, path, *args, **kwargs):
-        raise NotImplementedError("Not implemented yet")
+
+class BaseSave:
+    def __init__(self, root: 'DataFrameType'):
+        self.root = root
+
+    def file(self, path:str, *args, **kwargs):
+        if "." not in path:
+            warnings.warn("No file extension found in path, saving to Parquet file.")
+            file_ext = "parquet"
+
+        file_ext = path.split(".")[-1]
+
+        funcs = {
+            'xls': 'excel',
+            'xlsx': 'excel'
+        }
+
+        func_name = funcs.get(file_ext, file_ext.lower())
+
+        func = getattr(self, func_name, None)
+
+        if not callable(func):
+            raise ValueError(f"No function found fot extension '{file_ext}'")
+
+        return func(path, *args, **kwargs)
     
     def csv(self, path, *args, **kwargs):
         raise NotImplementedError("Not implemented yet")
