@@ -101,12 +101,12 @@ class Functions(ABC):
     def to_string(self, series):
         if str(series.dtype) in self.constants.STRING_TYPES:
             return series
-        return series.astype("string")
+        return series.astype(str)
 
     def to_string_accessor(self, series):
         if str(series.dtype) in self.constants.STRING_TYPES:
             return series.str
-        return series.astype("string").str
+        return series.astype(str).str
 
 
     # Aggregation
@@ -390,7 +390,7 @@ class Functions(ABC):
         search = val_to_list(search)
         str_regex = [r'\b%s\b' % re.escape(s) for s in search]
         # str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
-        return series.replace(str_regex, replace_by, regex= True)
+        return self.to_string(series).replace(str_regex, replace_by, regex=True)
 
     def replace_full(self, series, search, replace_by):
         search = val_to_list(search)
