@@ -1861,13 +1861,7 @@ class BaseColumns(ABC):
 
     def lemmatize_verbs(self, cols="*", output_cols=None) -> DataFrameType:
 
-        w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
-        lemmatizer = nltk.stem.WordNetLemmatizer()
-
-        def lemmatize_text(text):
-            return " ".join([lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)])
-
-        return self.apply(cols, lemmatize_text, output_cols=output_cols, mode="map")
+        return self.apply(cols, "lemmatize_text", output_cols=output_cols, mode="vectorized")
 
     def stem_verbs(self, cols="*", stemmer="porter", language="english", output_cols=None) -> DataFrameType:
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
