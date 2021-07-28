@@ -2492,8 +2492,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        df = self.root
-        return df.cols.apply(cols, self.F.domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
+        return self.apply(cols, "domain", output_cols=output_cols, meta_action=Actions.DOMAIN.value,
                              mode="vectorized")
 
     def top_domain(self, cols="*", output_cols=None) -> DataFrameType:
@@ -2504,60 +2503,51 @@ class BaseColumns(ABC):
         :return:
         """
 
-        df = self.root
-        return df.cols.apply(cols, "top_domain", output_cols=output_cols, meta_action=Actions.TOP_DOMAIN.value,
+        return self.apply(cols, "top_domain", output_cols=output_cols, meta_action=Actions.TOP_DOMAIN.value,
                              mode="vectorized")
 
     def sub_domain(self, cols="*", output_cols=None) -> DataFrameType:
         # From https://www.hi-bumblebee.com:8080 it returns www
 
-        df = self.root
-        return df.cols.apply(cols, "sub_domain", output_cols=output_cols, meta_action=Actions.SUB_DOMAIN.value,
+        return self.apply(cols, "sub_domain", output_cols=output_cols, meta_action=Actions.SUB_DOMAIN.value,
                              mode="vectorized")
 
     def url_scheme(self, cols="*", output_cols=None) -> DataFrameType:
         # From https://www.hi-bumblebee.com it returns https
-        df = self.root
-        return df.cols.apply(cols, "url_scheme", output_cols=output_cols,
+        return self.apply(cols, "url_scheme", output_cols=output_cols,
                              meta_action=Actions.URL_SCHEME.value,
                              mode="vectorized")
 
     def url_path(self, cols="*", output_cols=None) -> DataFrameType:
 
-        df = self.root
-        return df.cols.apply(cols, "url_path", output_cols=output_cols,
+        return self.apply(cols, "url_path", output_cols=output_cols,
                              meta_action=Actions.URL_PATH.value,
                              mode="vectorized")
 
     def url_file(self, cols="*", output_cols=None) -> DataFrameType:
 
-        df = self.root
-        return df.cols.apply(cols, "url_file", output_cols=output_cols,
+        return self.apply(cols, "url_file", output_cols=output_cols,
                              meta_action=Actions.URL_FILE.value,
                              mode="vectorized")
 
     def url_query(self, cols="*", output_cols=None) -> DataFrameType:
 
-        df = self.root
-        return df.cols.apply(cols, "url_query", output_cols=output_cols, meta_action=Actions.URL_QUERY.value,
+        return self.apply(cols, "url_query", output_cols=output_cols, meta_action=Actions.URL_QUERY.value,
                              mode="vectorized")
 
     def url_fragment(self, cols="*", output_cols=None) -> DataFrameType:
 
-        df = self.root
-        return df.cols.apply(cols, "url_fragment", output_cols=output_cols, meta_action=Actions.URL_FRAGMENT.value,
+        return self.apply(cols, "url_fragment", output_cols=output_cols, meta_action=Actions.URL_FRAGMENT.value,
                              mode="vectorized")
 
     def host(self, cols="*", output_cols=None) -> DataFrameType:
 
-        df = self.root
-        return df.cols.apply(cols, "host", output_cols=output_cols, meta_action=Actions.HOST.value,
+        return self.apply(cols, "host", output_cols=output_cols, meta_action=Actions.HOST.value,
                              mode="vectorized")
 
     def port(self, cols="*", output_cols=None) -> DataFrameType:
 
-        df = self.root
-        return df.cols.apply(cols, "port", output_cols=output_cols, meta_action=Actions.PORT.value,
+        return self.apply(cols, "port", output_cols=output_cols, meta_action=Actions.PORT.value,
                              mode="vectorized")
 
     # Email functions
