@@ -103,7 +103,10 @@ class BaseLoad:
 
         if mime:
             if mime in ["text/plain", "application/csv"]:
-                file_type = "csv"
+                if mime_info["file_ext"] == "json":
+                    file_type = "json"
+                else:
+                    file_type = "csv"
             elif mime == "application/json":
                 file_type = "json"
             elif mime == "text/xml":
