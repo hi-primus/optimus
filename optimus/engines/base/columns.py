@@ -406,10 +406,10 @@ class BaseColumns(ABC):
         return new_df
 
     @dispatch(object, object)
-    def rename(self, columns_old_new=None, func=None) -> 'DataFrameType':
+    def rename(self, cols=None, func=None) -> 'DataFrameType':
         """"
         Changes the name of a column(s) dataFrame.
-        :param columns_old_new: List of tuples or list of strings. Each tuple has de following form: (oldColumnName, newColumnName).
+        :param cols: List of tuples or list of strings. Each tuple has de following form: (oldColumnName, newColumnName).
         :param func: can be lower, upper or any string transformation function
         """
 
@@ -418,15 +418,15 @@ class BaseColumns(ABC):
         meta = df.meta
 
         # Apply a transformation function
-        if is_list_of_tuples(columns_old_new):
-            validate_columns_names(df, columns_old_new)
-        elif is_list_of_str(columns_old_new):
-            validate_columns_names(df, columns_old_new)
-            columns_old_new = [(col, col) for col in columns_old_new]
+        if is_list_of_tuples(cols):
+            validate_columns_names(df, cols)
+        elif is_list_of_str(cols):
+            validate_columns_names(df, cols)
+            cols = [(col, col) for col in cols]
         else:
-            columns_old_new = [(col, col) for col in df.cols.names()]
+            cols = [(col, col) for col in df.cols.names()]
 
-        for col_name in columns_old_new:
+        for col_name in cols:
 
             old_col_name = col_name[0]
             new_col_name = col_name[1]
@@ -448,20 +448,29 @@ class BaseColumns(ABC):
         return self.root.new(dfd, meta=meta)
 
     @dispatch(list)
-    def rename(self, columns_old_new=None) -> 'DataFrameType':
-        return self.rename(columns_old_new, None)
+    def rename(self, cols=None) -> 'DataFrameType':
+        return self.rename(cols, None)
+
+    @dispatch(str)
+    def rename(self, col, name) -> 'DataFrameType':
+        pass
+
+    @dispatch(str, str)
+    def rename(self, col, name) -> 'DataFrameType':
+        return self.rename([(col, name)], None)
 
     @dispatch(object)
     def rename(self, func=None) -> 'DataFrameType':
         return self.rename(None, func)
 
-    @dispatch(str, str, object)
-    def rename(self, old_column, new_column, func=None) -> 'DataFrameType':
-        return self.rename([(old_column, new_column)], func)
+    @dispatch(str, object)
+    def rename(self, col, func=None) -> 'DataFrameType':
+        return self.rename([col], func)
 
-    @dispatch(str, str)
-    def rename(self, old_column, new_column) -> 'DataFrameType':
-        return self.rename([(old_column, new_column)], None)
+    @dispatch(str, str, object)
+    def rename(self, col, name, func=None) -> 'DataFrameType':
+        return self.rename([(col, name)], func)
+
 
     def parse_inferred_types(self, col_data_type):
         """
