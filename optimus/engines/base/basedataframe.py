@@ -348,6 +348,7 @@ class BaseDataFrame(ABC):
     def _assign(self, kw_columns):
 
         dfd = self.data
+        kw_columns = {str(key): kw_column for key, kw_column in kw_columns.items()}
         return dfd.assign(**kw_columns)
 
     def to_json(self, cols="*", n="all", orient="list") -> str:

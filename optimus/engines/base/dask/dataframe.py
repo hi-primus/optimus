@@ -22,7 +22,7 @@ class DaskBaseDataFrame(BaseDataFrame):
     def __init__(self, data):
         super().__init__(data)
 
-    def _assign(self, kw_columns):
+    def _assign(self, kw_columns: dict):
 
         dfd = self.root.data
 
@@ -31,6 +31,9 @@ class DaskBaseDataFrame(BaseDataFrame):
             
             if isinstance(kw_column, (list,)):
                 kw_column = pd.Series(kw_column)
+
+            if isinstance(kw_column, pd.Series):
+                kw_column = dd.from_pandas(kw_column, npartitions=dfd.npartitions)
 
             if isinstance(kw_column, (np.ndarray, da.Array)):
                 kw_column = dd.from_array(kw_column)
@@ -54,6 +57,7 @@ class DaskBaseDataFrame(BaseDataFrame):
 
             kw_columns[key] = kw_column
 
+        kw_columns = {str(key): kw_column for key, kw_column in kw_columns.items()}
         return dfd.assign(**kw_columns)
 
     @staticmethod
