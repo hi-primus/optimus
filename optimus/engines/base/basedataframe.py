@@ -276,10 +276,12 @@ class BaseDataFrame(ABC):
             cols2 = df2.cols.names()
         else:
             cols2 = list(df2.keys())
+
+        cols1 = self.cols.names()
         
-        if cols2 != self.cols.names():
+        if cols1 != cols2:
             if assertion:
-                raise AssertionError("Column names are not equal")
+                raise AssertionError(f"Column names are not equal: {cols1}, {cols2}")
             return False
 
         if decimal is not None or assertion:
