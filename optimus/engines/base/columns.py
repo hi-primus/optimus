@@ -1,3 +1,4 @@
+from optimus.helpers.functions import transform_date_format
 import re
 import string
 import time
@@ -1658,7 +1659,7 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.replace(cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
 
-    def to_datetime(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+    def to_datetime(self, cols="*", format=None, output_cols=None, transform_format=True) -> 'DataFrameType':
         """
 
         :param cols:
@@ -1666,6 +1667,8 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
+        format = transform_date_format(format) if transform_format and format else format
+
         return self.apply(cols, "to_datetime", func_return_type=str,
                           output_cols=output_cols, args=format, mode="partitioned")
 

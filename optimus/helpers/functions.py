@@ -2,6 +2,7 @@ import collections
 import functools
 import glob
 import ntpath
+from optimus.helpers.constants import DATE_FORMAT_ITEMS, DATE_FORMAT_ITEMS_MONTH
 import os
 import random
 import re
@@ -201,6 +202,22 @@ def check_env_vars(env_vars):
 
 
 # Reference https://nvie.com/posts/modifying-deeply-nested-structures/
+
+def transform_date_format(format: str):
+    """
+    Transform an incompatible date format like yyyy/mm/dd to a compatible one like %Y/%m/%d
+    """
+
+    has_time = "H" in format or "h" in format
+
+    items = DATE_FORMAT_ITEMS if has_time else DATE_FORMAT_ITEMS_MONTH
+
+    for i, j in items:
+        reg = re.compile(f"(?<![%])(?<!%-){i}")
+        format = re.sub(reg, j, format)
+
+    reg = re.compile("(?<![%])(?<!%-)[A-z]")
+    return re.sub(reg, lambda a: f"%{a.group()}", format)
 
 
 def ellipsis(data, length=20):
