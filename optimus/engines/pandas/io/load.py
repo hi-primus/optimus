@@ -24,7 +24,7 @@ class Load(BaseLoad):
         self.op = op
 
     @staticmethod
-    def json(path, multiline=False, n_rows=False, *args, **kwargs):
+    def json(path, multiline=False, n_rows=False, *args, n_partitions=1, **kwargs):
         """
         Loads a dataframe from a json file.
         :param path: path or location of the file.
@@ -60,7 +60,7 @@ class Load(BaseLoad):
 
 
     @staticmethod
-    def tsv(path, header=True, infer_schema=True, *args, **kwargs):
+    def tsv(path, header=True, infer_schema=True, *args, n_partitions=1, **kwargs):
         """
         Loads a dataframe from a tsv file.
         :param path: path or location of the file.
@@ -77,8 +77,7 @@ class Load(BaseLoad):
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=True,
-            storage_options=None, conn=None,
-            *args, **kwargs):
+            storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
         """
         Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -157,7 +156,7 @@ class Load(BaseLoad):
 
 
     @staticmethod
-    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
+    def parquet(path, columns=None, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
         """
         Loads a dataframe from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -187,7 +186,7 @@ class Load(BaseLoad):
 
 
     @staticmethod
-    def avro(path, storage_options=None, conn=None, *args, **kwargs):
+    def avro(path, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
         """
         Loads a dataframe from a avro file.
         :param storage_options:
@@ -217,7 +216,7 @@ class Load(BaseLoad):
 
 
     @staticmethod
-    def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
+    def excel(path, sheet_name=0, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
         """
         Loads a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -259,7 +258,7 @@ class Load(BaseLoad):
 
 
     @staticmethod
-    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs):
+    def orc(path, columns, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
         """
         Loads a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
@@ -288,7 +287,7 @@ class Load(BaseLoad):
 
 
     @staticmethod
-    def zip(zip_path, filename, dest=None, merge=False, storage_options=None, conn=None, *args, **kwargs):
+    def zip(zip_path, filename, dest=None, merge=False, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
         if dest is None:
             dest = str(uuid.uuid4()) + "/"
 

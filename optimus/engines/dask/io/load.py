@@ -119,18 +119,31 @@ class Load(BaseLoad):
                                   storage_options=storage_options, error_bad_lines=False, *args, **kwargs)
 
             elif engine == "c":
-                dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                                  quoting=quoting, lineterminator=lineterminator,
-                                  error_bad_lines=error_bad_lines, keep_default_na=True, na_values=None,
-                                  engine=engine, na_filter=na_filter, null_value=val_to_list(null_value),
+                dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding, quoting=quoting,
+                                  lineterminator=lineterminator, error_bad_lines=error_bad_lines, keep_default_na=True, 
+                                  engine=engine, na_filter=na_filter, na_values=val_to_list(null_value),
                                   storage_options=storage_options, low_memory=False, *args, **kwargs)
 
+            # error = True
+
+            # if error:
+            #     for col in dfd.columns:
+            #         dfd[col] = dd.from_array(dfd[col].values)
+
             if n_rows > -1:
-                dfd = dd.from_pandas(dfd.head(n=n_rows), npartitions=1).reset_index(drop=True)
+                dfd = dfd.head(n=n_rows, npartitions=n_partitions, compute=False)
+
+            dfd = dfd.persist()
 
             df = DaskDataFrame(dfd)
-            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path),
-                                               "max_cell_length": df.cols.len("*").cols.max()})
+            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
+
+            try:
+                max_cell_length = df.cols.len("*").cols.max()
+                df.meta = Meta.set(df.meta, value={"max_cell_length": max_cell_length})
+            except Exception as error:
+                pass
+                                                
         except IOError as error:
             logger.print(error)
             raise
