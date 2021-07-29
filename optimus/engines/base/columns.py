@@ -708,20 +708,22 @@ class BaseColumns(ABC):
 
     def assign(self, kw_columns):
 
-        if kw_columns.__class__ == self.root.__class__:
+        df = self.root
+
+        if kw_columns.__class__ == df.__class__:
             kw_columns = {name: kw_columns.data[name]
                           for name in kw_columns.cols.names()}
 
         for key in kw_columns:
-            if kw_columns[key].__class__ == self.root.__class__:
+            if kw_columns[key].__class__ == df.__class__:
                 name = kw_columns[key].cols.names()[0]
                 kw_columns[key] = kw_columns[key].cols.rename([(name, key)])
                 kw_columns[key] = kw_columns[key].data[key]
 
-        meta = Meta.action(self.root.meta, Actions.SET.value,
+        meta = Meta.action(df.meta, Actions.SET.value,
                            list(kw_columns.keys()))
 
-        return self.root.new(self.root._assign(kw_columns), meta=meta)
+        return self.root.new(df._assign(kw_columns), meta=meta)
 
     # TODO: Consider implement lru_cache for caching
     def calculate_pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> 'DataFrameType':
