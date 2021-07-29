@@ -138,7 +138,7 @@ class IbisFunctions(Functions):
         series = self.series
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
 
-    def date_format(self, current_format=None, output_format=None):
+    def format_date(self, current_format=None, output_format=None):
         series = self.series
         return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 

@@ -161,7 +161,7 @@ class SparkFunctions(Functions):
         pass
 
     @staticmethod
-    def date_format(self, current_format=None, output_format=None):
+    def format_date(self, current_format=None, output_format=None):
         pass
 
     @staticmethod

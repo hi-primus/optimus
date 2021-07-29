@@ -844,7 +844,7 @@ class Cols(BaseColumns):
                           meta_action=Actions.REMOVE_WHITE_SPACES.value)
 
     @staticmethod
-    def date_format(input_cols, current_format=None, output_format=None, output_cols=None):
+    def format_date(input_cols, current_format=None, output_format=None, output_cols=None):
         """
         Transform a column date to a specified format
         :param input_cols: Columns to be transformed.

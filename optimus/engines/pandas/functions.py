@@ -97,7 +97,7 @@ class PandasFunctions(DataFrameBaseFunctions, PandasBaseFunctions, Functions):
     def normalize_chars(self, series):
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
 
-    def date_format(self, series, current_format=None, output_format=None):
+    def format_date(self, series, current_format=None, output_format=None):
         return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format).reset_index(
             drop=True)
 

@@ -1014,6 +1014,17 @@ class BaseColumns(ABC):
 
         funcs = val_to_list(funcs)
 
+        for i, func in enumerate(funcs):
+            if is_str(func):
+                _func = getattr(df.functions, func, False)
+
+                if not _func:
+                    raise NotImplementedError(f"\"{func}\" is not available using {type(df).__name__}")
+                else:
+                    func = _func
+            
+            funcs[i] = func
+
         if parallel:
             all_funcs = [getattr(df[cols].data, func.__name__)()
                          for func in funcs]
@@ -1115,6 +1126,28 @@ class BaseColumns(ABC):
     def std(self, cols="*", tidy=True, compute=True):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.std, tidy=tidy, compute=compute)
+
+    def date_format(self, cols="*", tidy=True, compute=True, *args, **kwargs):
+
+        # Use format_date if arguments matches
+
+        if is_str(tidy):
+            kwargs.update({"current_format": tidy})
+        
+        if is_str(compute):
+            kwargs.update({"output_format": tidy})
+
+        if len(args):
+            kwargs.update({"output_cols": args[0]})
+
+        if any([v in kwargs for v in ["current_format", "output_format", "output_cols"]]):
+            warnings.warn("'date_format' is no longer used for changing the format of a column, use 'format_date' instead.")
+            return self.format_date(cols, **kwargs)
+
+        # date_format  
+
+        df = self.root
+        return df.cols.agg_exprs(cols, self.F.date_format, compute=compute, tidy=tidy)
 
     def item(self, cols="*", n=None, output_cols=None, mode="list") -> 'DataFrameType':
         """
@@ -1514,6 +1547,10 @@ class BaseColumns(ABC):
                           output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
 
+    def date_formats(self, cols="*", output_cols=None) -> 'DataFrameType':
+        return self.apply(cols, "date_formats", func_return_type=str, output_cols=output_cols,
+                        meta_action=Actions.INFER.value, mode="partitioned", func_type="column_expr")    
+
     def upper(self, cols="*", output_cols=None) -> 'DataFrameType':
         return self.apply(cols, self.F.upper, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.UPPER.value, mode="vectorized", func_type="column_expr")
@@ -1556,11 +1593,24 @@ class BaseColumns(ABC):
         return self.apply(cols, self.F.strip_html, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="map")
 
-    def date_format(self, cols="*", current_format=None, output_format=None, output_cols=None) -> 'DataFrameType':
+    def format_date(self, cols="*", current_format=None, output_format=None, output_cols=None) -> 'DataFrameType':
 
-        return self.apply(cols, self.F.date_format, args=(current_format, output_format), func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.DATE_FORMAT.value, mode="partitioned",
+        df = self.root
+
+        cols = parse_columns(df, cols)
+
+        if current_format is None:
+            format = df.cols.date_format(cols, tidy=False)["date_format"]
+            formats = [format[col] for col in cols]
+        elif not is_list(current_format):
+            formats = [current_format for col in cols]
+
+        for col, col_format in zip(cols, formats):
+            df = df.cols.apply(col, "format_date", args=(col_format, output_format), func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.FORMAT_DATE.value, mode="partitioned",
                           set_index=False)
+
+        return df
 
     def word_tokenize(self, cols="*", output_cols=None) -> 'DataFrameType':
 
@@ -1686,63 +1736,53 @@ class BaseColumns(ABC):
         return self.apply(cols, "to_datetime", func_return_type=str,
                           output_cols=output_cols, args=format, mode="partitioned")
 
-    def year(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+    def _date_format(self, cols="*", format=None, output_cols=None, func=None, meta_action=None) -> 'DataFrameType':
         """
 
         :param cols:
         :param format:
         :param output_cols:
+        :param func:
+        :param meta_action:
         :return:
         """
 
-        return self.apply(cols, self.F.year, args=format, output_cols=output_cols,
-                          meta_action=Actions.YEAR.value,
-                          mode="vectorized", set_index=True)
+        df = self.root
+
+        cols = parse_columns(df, cols)
+
+        if format is None:
+            format = df.cols.date_format(cols, tidy=False)["date_format"]
+            formats = [format[col] for col in cols]
+        elif not is_list(format):
+            formats = [format for col in cols]
+
+        for col, col_format in zip(cols, formats):
+            df = df.cols.apply(col, func, args=col_format, output_cols=output_cols,
+                               meta_action=meta_action, mode="vectorized", set_index=True)
+
+        return df
+
+    def year(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+        return self._date_format(cols, format, output_cols, "year", meta_action=Actions.YEAR.value)
 
     def month(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
-        """
-
-        :param cols:
-        :param format:
-        :param output_cols:
-        :return:
-        """
-
-        return self.apply(cols, self.F.month, args=format, output_cols=output_cols, mode="vectorized",
-                          set_index=True)
+        return self._date_format(cols, format, output_cols, "year", meta_action=Actions.MONTH.value)
 
     def day(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
-
-        return self.apply(cols, self.F.day, args=format, output_cols=output_cols, mode="vectorized",
-                          set_index=True)
+        return self._date_format(cols, format, output_cols, "day", meta_action=Actions.DAY.value)
 
     def hour(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
-
-        def _hour(value, _format):
-            return self.F.hour(value, _format)
-
-        return self.apply(cols, _hour, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
+        return self._date_format(cols, format, output_cols, "hour", meta_action=Actions.HOUR.value)
 
     def minute(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
-
-        def _minute(value, _format):
-            return self.F.minute(value, _format)
-
-        return self.apply(cols, _minute, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
+        return self._date_format(cols, format, output_cols, "minute", meta_action=Actions.MINUTE.value)
 
     def second(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
-
-        def _second(value, _format):
-            return self.F.second(value, _format)
-
-        return self.apply(cols, _second, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
+        return self._date_format(cols, format, output_cols, "second", meta_action=Actions.SECOND.value)
 
     def weekday(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
-
-        def _second(value, _format):
-            return self.F.weekday(value, _format)
-
-        return self.apply(cols, _second, args=format, output_cols=output_cols, mode="vectorized", set_index=True)
+        return self._date_format(cols, format, output_cols, "weekday", meta_action=Actions.WEEKDAY.value)
 
     def _td_between(self, cols="*", func=None, value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
 
@@ -2376,13 +2416,39 @@ class BaseColumns(ABC):
                 # pydatainfer do not accepts None value so we must filter them
                 filtered_dates = [i for i in sample_df[col_name].to_list() if i]
                 cols_and_inferred_dtype[col_name].update(
-                    {"format": pydateinfer.infer_dtypes(filtered_dates)})
+                    {"format": pydateinfer.infer(filtered_dates)})
 
         for col in cols_and_inferred_dtype:
             self.root.meta = Meta.set(self.root.meta, f"columns.{col}.stats.inferred_type", cols_and_inferred_dtype[col])
 
         return cols_and_inferred_dtype
 
+    def infer_date_formats(self, cols="*", sample=INFER_PROFILER_ROWS, tidy=True) -> dict:
+        """
+        Infer date formats in a dataframe from a sample.
+        This function use Pandas no matter the engine you are using.
+
+        :param cols: Columns in which you want to infer the datatype.
+        :return: Return a dict with the column and the inferred date format
+        """
+        df = self.root
+
+        cols = parse_columns(df, cols)
+
+        sample_df = df.cols.select(cols).rows.limit(sample).to_optimus_pandas()
+        sample_formats = sample_df.cols.date_formats().cols.frequency()
+
+        print(sample_formats)
+
+        result = {}
+        for col_name in cols:
+            infer_value_counts = sample_formats["frequency"][col_name]["values"]
+            # Common datatype in a column
+            date_format = infer_value_counts[0]["value"]
+            result.update({col_name: date_format})
+
+        return format_dict(result, tidy)
+    
     def frequency(self, cols="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True, tidy=False) -> dict:
         df = self.root

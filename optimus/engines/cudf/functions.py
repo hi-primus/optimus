@@ -109,7 +109,7 @@ class CUDFFunctions(DataFrameBaseFunctions, CUDFBaseFunctions, Functions):
         else:
             return series
 
-    def date_format(self, series, current_format=None, output_format=None):
+    def format_date(self, series, current_format=None, output_format=None):
 
         # Some formats are no supported yet. https://github.com/rapidsai/cudf/issues/5991
         return cudf.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)

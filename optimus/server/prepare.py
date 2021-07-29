@@ -185,6 +185,7 @@ alias_map_list = [
     ["trim", "cols.trim"],
     [["stripHtml", "strip_html"], "cols.strip_html"],
     [["dateFormat", "date_format"], "cols.date_format"],
+    [["formatDate", "format_date"], "cols.format_date"],
     [["wordTokenize", "word_tokenize"], "cols.word_tokenize"],
     [["wordCount", "word_count"], "cols.word_count"],
     ["len", "cols.len"],
