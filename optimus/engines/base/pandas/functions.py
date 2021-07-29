@@ -57,6 +57,9 @@ class PandasBaseFunctions():
         except TypeError:
             return np.nan
 
-    def to_datetime(self, value, format):
-        return pd.to_datetime(value, format=format, errors="coerce")
+    def to_datetime(self, value, format=None):
+        if format is None:
+            return pd.to_datetime(value, errors="coerce")
+        else:
+            return pd.to_datetime(value, format=format, errors="coerce")
    
