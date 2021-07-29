@@ -1,8 +1,8 @@
+import numpy as np
 from pprint import pformat
-import operator
-from optimus.helpers.types import *
-import time
 from abc import abstractmethod, ABC
+import operator
+import time
 
 import humanize
 import imgkit
@@ -11,6 +11,7 @@ import simplejson as json
 from glom import assign
 from tabulate import tabulate
 
+from optimus.helpers.types import *
 from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
@@ -138,6 +139,13 @@ class BaseDataFrame(ABC):
         :param data_type:
         :return:
         """
+
+        if isinstance(df1, (np.generic,)):
+            df1 = np.asscalar(df1)
+        
+        if isinstance(df2, (np.generic,)):
+            df2 = np.asscalar(df2)
+
         if not isinstance(df1, (BaseDataFrame,)) or not isinstance(df2, (BaseDataFrame,)):
             multiple_columns = True
             if data_type == "auto":
@@ -153,10 +161,9 @@ class BaseDataFrame(ABC):
         df2 = BaseDataFrame.__operator__(df2, data_type, multiple_columns)
 
         if multiple_columns:
-            df = self.new(opb(df1, df2))
+            dfd = opb(df1, df2)
 
         else:
-
             name_left = name_right = ""
 
             if not isinstance(df1, (int, float, str, dict, list)):
@@ -171,9 +178,9 @@ class BaseDataFrame(ABC):
             else:
                 name = name_left if name_left else name_right
 
-            df = self.new(opb(df1, df2).rename(name).to_frame())
+            dfd = opb(df1, df2).rename(name).to_frame()
 
-        return df
+        return self.new(dfd)
 
     def __invert__(self) -> 'DataFrameType':
         return self.unary_operation(self, operator.invert)
