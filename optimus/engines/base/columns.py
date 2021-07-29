@@ -133,7 +133,7 @@ class BaseColumns(ABC):
         """
 
         df = self.root
-        cols = parse_columns(df, cols, is_regex=regex, filter_by_column_types=data_type, invert=invert,
+        cols = parse_columns(df, cols if regex is None else regex, is_regex=regex is not None, filter_by_column_types=data_type, invert=invert,
                              accepts_missing_cols=accepts_missing_cols)
         meta = Meta.select_columns(df.meta, cols)
         dfd = df.data

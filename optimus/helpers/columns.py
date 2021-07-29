@@ -137,7 +137,7 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_types=None, acc
     This params can be used to create custom transformation functions. You can find and example in cols().cast()
     :param df: Dataframe in which the columns are going to be checked
     :param cols_args: Accepts * as param to return all the string columns in the spark
-    :param is_regex: Use True is col_attrs is a regex
+    :param is_regex: Use True is cols_args is a regex
     :param filter_by_column_types: A data type for which a columns list is going be filtered
     :param accepts_missing_cols: if true not check if column exist in the spark
     :param invert: Invert the final selection. For example if you want to select not integers
@@ -148,14 +148,17 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_types=None, acc
     # if columns value is * get all dataframes columns
 
     df_columns = df.cols._names()
+
     if is_regex is True:
         r = re.compile(cols_args)
         cols = list(filter(r.match, df_columns))
 
     elif cols_args == "*" or cols_args is None:
         cols = df_columns
+
     elif is_int(cols_args):
         cols = val_to_list(df_columns[cols_args])
+
     elif is_list_of_int(cols_args):
         cols = list(df_columns[i] for i in cols_args)
 
@@ -172,6 +175,7 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_types=None, acc
         # Extract a specific position in the tuple
         cols = [(i[0:1][0]) for i in cols_args]
         attrs = [(i[1:]) for i in cols_args]
+
     else:
         # if not a list convert to list
         cols = val_to_list(cols_args)
