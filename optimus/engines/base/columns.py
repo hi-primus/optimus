@@ -922,8 +922,12 @@ class BaseColumns(ABC):
         for col_name in column:
             new_columns.append(all_columns.pop(
                 all_columns.index(col_name)))  # delete
+        
         # Move the column to the new place
-        for col_name in new_columns[::-1]:
+        if new_index <= len(all_columns):
+            new_columns = new_columns[::-1]
+
+        for col_name in new_columns:
             # insert and delete a element
             all_columns.insert(new_index, col_name)
             # new_index = new_index + 1
