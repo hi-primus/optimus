@@ -1,4 +1,5 @@
 import re
+from typing import Union
 
 from ordered_set import OrderedSet
 
@@ -223,7 +224,7 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_types=None, acc
     return cols_params
 
 
-def prepare_columns(df, cols: [str, list], output_cols: [str, list] = None, is_regex=None,
+def prepare_columns(df, cols: Union[str, list], output_cols: Union[str, list] = None, is_regex=None,
                     filter_by_column_types=None, accepts_missing_cols=False, invert: bool = False, default=None,
                     cols_dict=None, auto_increment=False, args=None):
     """
@@ -306,7 +307,7 @@ def check_column_numbers(columns, number=0):
     # elif isinstance(columns,zip):
 
 
-def validate_columns_names(df, col_names: [str, list], index=0):
+def validate_columns_names(df, col_names: Union[str, list], index=0):
     """
     Check if a string or list of string are valid spark columns
     :param df: Dataframe to be analyzed
