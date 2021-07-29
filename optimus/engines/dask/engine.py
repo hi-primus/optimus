@@ -15,7 +15,7 @@ class DaskEngine(BaseEngine):
     __version__ = __version__
 
     # Using procces or threads https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
-    def __init__(self, session=None, address=None, n_workers=1, threads_per_worker=None, processes=False,
+    def __init__(self, session=None, address=None, n_workers=None, threads_per_worker=None, processes=False,
                  memory_limit='4GB', verbose=False, coiled_token=None, *args, **kwargs):
 
         if n_workers is None:
