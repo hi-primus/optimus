@@ -181,6 +181,16 @@ class BaseColumns(ABC):
 
         return df.cols.select(output_ordered_columns)
 
+    def duplicate(self, cols="*", output_cols=None, columns=None) -> 'DataFrameType':
+        """
+        Same as copy
+        :param cols: Source column to be copied
+        :param output_cols: Destination column
+        :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
+        :return:
+        """
+        return self.copy(cols, output_cols, columns)
+
     def drop(self, cols=None, regex=None, data_type=None) -> 'DataFrameType':
         """
         Drop a list of columns
