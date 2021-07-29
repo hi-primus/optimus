@@ -36,7 +36,7 @@ from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, is_numeric_like, is_str, is_list_value, is_one_element, \
+from optimus.infer import is_dict, is_int_like, is_numeric_like, is_str, is_list_value, is_one_element, \
     is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -881,9 +881,9 @@ class BaseColumns(ABC):
 
     def move(self, column, position, ref_col=None) -> 'DataFrameType':
         """
-        Move a column to specific position
-        :param column: Column to be moved
-        :param position: Column new position. Accepts 'after', 'before', 'beginning', 'end'
+        Move a column to a specific position
+        :param column: Column(s) to be moved
+        :param position: Column new position. Accepts 'after', 'before', 'beginning', 'end' or a numeric value, relative to 'ref_col'.
         :param ref_col: Column taken as reference
         :return: DataFrame
         """
@@ -894,18 +894,25 @@ class BaseColumns(ABC):
         # Get dataframe columns
         all_columns = df.cols.names()
 
+        position_int = is_int_like(position)
+        position_index = int(position) if position_int else 0
+
         # Get source and reference column index position
-        if ref_col:
-            ref_col = parse_columns(df, ref_col)
-            new_index = all_columns.index(ref_col[0])
+        if ref_col or position_int:
+            # Check if is a relative position
+            if ref_col:
+                ref_col = parse_columns(df, ref_col)
+                new_index = all_columns.index(ref_col[0])
+            else:
+                new_index = 0
+            new_index += position_index
             old_index = all_columns.index(column[0])
+            # Check if the movement is from right to left:
             left = -1 if new_index > old_index else 0
         else:
             new_index = all_columns
-        # Column to move
 
         if position == 'after':
-            # Check if the movement is from right to left:
             new_index = new_index + 1 + left
         elif position == 'before':
             new_index = new_index + left
@@ -913,6 +920,9 @@ class BaseColumns(ABC):
             new_index = 0
         elif position == 'end':
             new_index = len(all_columns)
+        elif position_int:
+            # Use the same new_index
+            pass
         else:
             RaiseIt.value_error(
                 position, ["after", "before", "beginning", "end"])
