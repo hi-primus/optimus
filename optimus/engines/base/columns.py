@@ -466,6 +466,10 @@ class BaseColumns(ABC):
     def rename(self, col, name) -> 'DataFrameType':
         pass
 
+    @dispatch(list, list)
+    def rename(self, cols, names) -> 'DataFrameType':
+        return self.rename([(col, name) for col, name in zip(cols, names)], None)
+
     @dispatch(str, str)
     def rename(self, col, name) -> 'DataFrameType':
         return self.rename([(col, name)], None)
