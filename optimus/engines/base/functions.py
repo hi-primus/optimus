@@ -109,6 +109,11 @@ class Functions(ABC):
 
 
     # Aggregation
+
+    def date_format(self, series):
+        import pydateinfer
+        return pydateinfer.infer(series.values)
+
     def min(self, series):
         return self.to_float(series).min()
 
@@ -604,6 +609,10 @@ class Functions(ABC):
             dtype = ProfilerDataTypes.OBJECT.value
 
         return dtype
+
+    def date_formats(self, series):
+        import pydateinfer
+        return series.map(lambda v: pydateinfer.infer([v]))
 
     def levenshtein(self, col_A, col_B):
         return jellyfish.levenshtein_distance(col_A,col_B)
