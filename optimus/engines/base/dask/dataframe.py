@@ -26,6 +26,8 @@ class DaskBaseDataFrame(BaseDataFrame):
 
         dfd = self.root.data
 
+        fix_indices = False
+
         for key in kw_columns:
             kw_column = kw_columns[key]
             
@@ -33,29 +35,37 @@ class DaskBaseDataFrame(BaseDataFrame):
                 kw_column = pd.Series(kw_column)
 
             if isinstance(kw_column, pd.Series):
+                # TO-DO: A Pandas Series should be assignable to a Dask DataFrame
                 kw_column = dd.from_pandas(kw_column, npartitions=dfd.npartitions)
 
             if isinstance(kw_column, (np.ndarray, da.Array)):
                 kw_column = dd.from_array(kw_column)
 
-            if not isinstance(kw_column, pd.Series):
+            if isinstance(kw_column, dd.Series):
+                kw_column = kw_column.to_frame()
+            
+            if isinstance(kw_column, dd.DataFrame):
+                if dfd.known_divisions and not kw_column.known_divisions:
+                    kw_column = kw_column.reset_index().set_index('index')
+                elif not dfd.known_divisions and kw_column.known_divisions:
+                    dfd = dfd.reset_index().set_index('index')
+                    fix_indices = True
 
-                if isinstance(kw_column, dd.Series):
-                    kw_column = kw_column.to_frame()
-                
-                if dfd.known_divisions:
-                    if not is_one_element(kw_column) and not callable(kw_column) and not getattr(kw_column, "known_divisions", None):
-                        kw_column = kw_column.reset_index().set_index('index')
-                
-                if isinstance(kw_column, dd.DataFrame):
-                    if key in kw_column:
-                        # the incoming series has the same column key
-                        kw_column = kw_column[key]
-                    else:
-                        # the incoming series has no column key
-                        kw_column = kw_column[list(kw_column.columns)[0]]
+                if key in kw_column:
+                    # the incoming series has the same column key
+                    kw_column = kw_column[key]
+                else:
+                    # the incoming series has no column key
+                    kw_column = kw_column[list(kw_column.columns)[0]]
 
             kw_columns[key] = kw_column
+
+        if fix_indices:
+            for key in kw_columns:
+                kw_column = kw_columns[key]
+                if isinstance(kw_column, dd.Series) and not kw_column.known_divisions:
+                    kw_columns[key] = kw_column.reset_index().set_index('index')
+
 
         kw_columns = {str(key): kw_column for key, kw_column in kw_columns.items()}
         return dfd.assign(**kw_columns)
