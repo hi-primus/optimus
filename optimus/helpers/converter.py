@@ -1,5 +1,3 @@
-from dask import dataframe as dd
-
 from optimus.infer import is_dict, is_dict_of_one_element, is_list_value, is_list_of_one_element
 
 
@@ -116,6 +114,7 @@ def cudf_to_dask_cudf(df, n_partitions=1):
 
 
 def pandas_to_dask_dataframe(pdf, n_partitions=1):
+    from dask import dataframe as dd
     return dd.from_pandas(pdf, npartitions=n_partitions)
 
 
