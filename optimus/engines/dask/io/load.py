@@ -66,7 +66,7 @@ class Load(BaseLoad):
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=False,
-            na_filter=True, null_value=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
+            na_filter=True, null_value=None, storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
 
         """
         Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -114,13 +114,14 @@ class Load(BaseLoad):
             if engine == "python":
                 # na_filter=na_filter, error_bad_lines and low_memory are not support by pandas engine
                 dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
-                                  quoting=quoting, lineterminator=lineterminator,
-                                  keep_default_na=True, na_values=None, engine=engine,
-                                  storage_options=storage_options, error_bad_lines=False, *args, **kwargs)
+                                  quoting=quoting, lineterminator=lineterminator, keep_default_na=True,
+                                  na_values=None, engine=engine, storage_options=storage_options,
+                                  error_bad_lines=False, *args, **kwargs)
 
             elif engine == "c":
-                dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding, quoting=quoting,
-                                  lineterminator=lineterminator, error_bad_lines=error_bad_lines, keep_default_na=True, 
+                dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                                  quoting=quoting, lineterminator=lineterminator,
+                                  error_bad_lines=error_bad_lines, keep_default_na=True, 
                                   engine=engine, na_filter=na_filter, na_values=val_to_list(null_value),
                                   storage_options=storage_options, low_memory=False, *args, **kwargs)
 
@@ -131,7 +132,10 @@ class Load(BaseLoad):
             #         dfd[col] = dd.from_array(dfd[col].values)
 
             if n_rows > -1:
-                dfd = dfd.head(n=n_rows, npartitions=n_partitions, compute=False)
+                dfd = dfd.head(n=n_rows, compute=False)
+
+            if n_partitions is not None:
+                dfd = dfd.repartition(npartitions=n_partitions)
 
             dfd = dfd.persist()
 
