@@ -1,3 +1,6 @@
+import pandas as pd
+import dask.dataframe as dd
+
 from optimus.engines.base.dask.dataframe import DaskBaseDataFrame
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.dask.io.save import Save
@@ -7,6 +10,12 @@ from optimus.helpers.converter import pandas_to_dask_dataframe
 
 class DaskDataFrame(DaskBaseDataFrame):
     def __init__(self, data):
+        if isinstance(data, (pd.DataFrame, pd.Series)):
+            data = pandas_to_dask_dataframe(data)
+        
+        if isinstance(data, dd.Series):
+            data = data.to_frame()
+            
         super().__init__(data)
 
     def _base_to_dfd(self, pdf, n_partitions):
