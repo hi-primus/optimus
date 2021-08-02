@@ -96,7 +96,7 @@ class BaseColumns(ABC):
     def _set_transformed_stat(self, cols="*", stats=None):
 
         cols = parse_columns(self.root, cols)
-        actions = Meta.get(self.root.meta, "transformations.actions") 
+        actions = Meta.get(self.root.meta, "transformations.actions")  or []
         stats = val_to_list(stats)
 
         for i, action in enumerate(actions):
