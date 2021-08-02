@@ -528,12 +528,12 @@ class BaseDataFrame(ABC):
                     dropped_columns = []
                     
                     action_name = action.get("name", "action")
-                    column = action.get("column", None)
+                    column = action.get("columns", None)
 
                     if is_tuple(column):
                         source, target = column
 
-                    elif is_str(column):
+                    else:
                         source = target = column
 
                     if action_name == Actions.COPY.value and source in profiler_columns:
