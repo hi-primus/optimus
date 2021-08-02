@@ -49,4 +49,5 @@ class CUDFEngine(BaseEngine):
         import uuid
         def _func():
             return func(*args, **kwargs)
-        return {"result": _func, "key": str(uuid.uuid4()), "status": "finished"}
+            
+        return type('MockFuture', (object,), {"result": _func, "key": str(uuid.uuid4()), "status": "finished"})
