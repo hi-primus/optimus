@@ -83,7 +83,7 @@ class Clusters:
         return self.to_dict(columns, limit_clusters, limit_suggestions, verbose)
 
 
-def string_clustering(df, input_cols="*", algorithm=None, *args, **kwargs) -> 'ClustersType':
+def string_clustering(df, cols="*", algorithm=None, *args, **kwargs) -> 'ClustersType':
     """
     Cluster a dataframe column based on the Fingerprint algorithm
     :return:
@@ -97,10 +97,10 @@ def string_clustering(df, input_cols="*", algorithm=None, *args, **kwargs) -> 'C
     else:
         RaiseIt.value_error(algorithm, funcs)
 
-    input_cols = parse_columns(df, input_cols)
+    cols = parse_columns(df, cols)
     result = {}
 
-    for input_col in input_cols:
+    for input_col in cols:
         if algorithm == "levenshtein":
             a = np.empty((0, 3))
             _df = df[input_col].rows.drop_duplicates()

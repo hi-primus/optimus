@@ -10,14 +10,14 @@ class Outliers:
     def __init__(self, df):
         self.df = df
 
-    def tukey(self, columns):
-        return Tukey(self.df, columns)
+    def tukey(self, cols):
+        return Tukey(self.df, cols)
 
-    def z_score(self, columns, threshold):
-        return ZScore(self.df, columns, threshold)
+    def z_score(self, cols, threshold):
+        return ZScore(self.df, cols, threshold)
 
-    def mad(self, columns, threshold, relative_error=RELATIVE_ERROR):
-        return MAD(self.df, columns, threshold, relative_error)
+    def mad(self, cols, threshold, relative_error=RELATIVE_ERROR):
+        return MAD(self.df, cols, threshold, relative_error)
 
-    def modified_z_score(self, columns, threshold, relative_error=RELATIVE_ERROR):
-        return ModifiedZScore(self.df, columns, threshold, relative_error)
+    def modified_z_score(self, cols, threshold, relative_error=RELATIVE_ERROR):
+        return ModifiedZScore(self.df, cols, threshold, relative_error)

@@ -506,17 +506,17 @@ class BaseColumns(ABC):
             columns[k] = result_default
         return columns
 
-    def inferred_types(self, columns="*"):
+    def inferred_types(self, cols="*"):
         """
         Get the profiler data types from the meta data
         :param columns:
         :return:
         """
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         result = {}
 
-        for col_name in columns:
+        for col_name in cols:
             column_meta = Meta.get(
                 df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
             result.update({col_name: column_meta})
@@ -561,16 +561,16 @@ class BaseColumns(ABC):
 
         return df
 
-    def unset_data_type(self, columns="*"):
+    def unset_data_type(self, cols="*"):
         """
         Unset profiler data type
         :param columns:
         :return:
         """
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
 
-        for col_name in columns:
+        for col_name in cols:
             props = Meta.get(df.meta, f"columns_data_types.{col_name}")
 
             if props is not None:
@@ -960,7 +960,7 @@ class BaseColumns(ABC):
             # new_index = new_index + 1
         return df[all_columns]
 
-    def sort(self, order: Union[str, list] = "asc", columns=None) -> 'DataFrameType':
+    def sort(self, order: Union[str, list] = "asc", cols=None) -> 'DataFrameType':
         """
         Sort data frames columns in asc or desc order
         :param order: 'asc' or 'desc' accepted
@@ -968,7 +968,7 @@ class BaseColumns(ABC):
         :return: DataFrame
         """
         df = self.root
-        if columns is None:
+        if cols is None:
             _reverse = None
             if order == "asc":
                 _reverse = False
@@ -977,33 +977,33 @@ class BaseColumns(ABC):
             else:
                 RaiseIt.value_error(order, ["asc", "desc"])
 
-            columns = df.cols.names()
-            columns.sort(key=lambda v: v.upper(), reverse=_reverse)
+            cols = df.cols.names()
+            cols.sort(key=lambda v: v.upper(), reverse=_reverse)
 
-        return df.cols.select(columns)
+        return df.cols.select(cols)
 
-    def data_types(self, columns="*") -> dict:
+    def data_types(self, cols="*") -> dict:
         """
         Return the column(s) data type as string
         :param columns: Columns to be processed
         :return: {col_name: data_type}
         """
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         data_types = ({k: str(v) for k, v in dict(df.data.dtypes).items()})
-        return {col_name: data_types[col_name] for col_name in columns}
+        return {col_name: data_types[col_name] for col_name in cols}
 
-    def schema_data_type(self, columns="*"):
+    def schema_data_type(self, cols="*"):
         """
         Return the column(s) data type as Type
         :param columns: Columns to be processed
         :return:
         """
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
         dfd = df.data
         result = {}
-        for col_name in columns:
+        for col_name in cols:
             if dfd[col_name].dtype.name == "category":
                 result[col_name] = "category"
             else:
@@ -2240,20 +2240,20 @@ class BaseColumns(ABC):
     def heatmap(self, col_x, col_y, bins_x=10, bins_y=10) -> dict:
         pass
 
-    def hist(self, columns="*", buckets=MAX_BUCKETS, compute=True) -> dict:
+    def hist(self, cols="*", buckets=MAX_BUCKETS, compute=True) -> dict:
 
         df = self.root
-        columns = parse_columns(df, columns)
+        cols = parse_columns(df, cols)
 
         @self.F.delayed
-        def _bins_col(_columns, _min, _max):
+        def _bins_col(_cols, _min, _max):
             return {col_name: list(np.linspace(float(_min["min"][col_name]), float(_max["max"][col_name]), num=buckets))
                     for
-                    col_name in _columns}
+                    col_name in _cols}
 
-        _min = df.cols.min(columns, compute=True, tidy=False)
-        _max = df.cols.max(columns, compute=True, tidy=False)
-        _bins = _bins_col(columns, _min, _max)
+        _min = df.cols.min(cols, compute=True, tidy=False)
+        _max = df.cols.max(cols, compute=True, tidy=False)
+        _bins = _bins_col(cols, _min, _max)
 
         @self.F.delayed
         def _hist(pdf, col_name, _bins):
@@ -2284,7 +2284,7 @@ class BaseColumns(ABC):
 
         partitions = self.F.to_delayed(df.data)
         c = [_hist(part[col_name], col_name, _bins)
-             for part in partitions for col_name in columns]
+             for part in partitions for col_name in cols]
 
         d = _agg_hist(c)
 

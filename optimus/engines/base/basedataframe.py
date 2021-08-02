@@ -387,15 +387,15 @@ class BaseDataFrame(ABC):
     def sample(n=10, random=False):
         pass
 
-    def columns_sample(self, columns="*") -> dict:
+    def columns_sample(self, cols="*") -> dict:
         """
         Return a dict of the sample of a Dataframe
         :return:
         """
         df = self
 
-        return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                "value": df.rows.to_list(columns)}
+        return {"columns": [{"title": col_name} for col_name in df.cols.select(cols).cols.names()],
+                "value": df.rows.to_list(cols)}
 
     @abstractmethod
     def to_pandas(self):
@@ -427,7 +427,7 @@ class BaseDataFrame(ABC):
         self._reset_buffer()
         self.meta = Meta.reset(self.meta, "buffer_time")
 
-    def buffer_window(self, columns="*", lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
+    def buffer_window(self, cols="*", lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
         """
         Get a window from the buffer of the dataframe
         """
@@ -439,12 +439,12 @@ class BaseDataFrame(ABC):
 
         if buffer_time and last_action_time:
             if buffer_time > last_action_time:
-                self.set_buffer(columns, n)
+                self.set_buffer(cols, n)
 
         if lower_bound is None or lower_bound < 0:
             lower_bound = 0
 
-        input_columns = parse_columns(df, columns)
+        input_columns = parse_columns(df, cols)
         return self._buffer_window(input_columns, lower_bound, upper_bound)
 
     def buffer_json(self, columns):
@@ -592,7 +592,7 @@ class BaseDataFrame(ABC):
             limit=limit, full=True), path, css=css)
         print_html("<img src='" + path + "'>")
 
-    def table_html(self, limit=10, columns=None, title=None, full=False, truncate=True, count=True, highlight=[]):
+    def table_html(self, limit=10, cols=None, title=None, full=False, truncate=True, count=True, highlight=[]):
         """
         Return a HTML table with the spark cols, data types and values
         :param columns: Columns to be printed
@@ -605,7 +605,7 @@ class BaseDataFrame(ABC):
         :return:
         """
 
-        columns = parse_columns(self, columns)
+        cols = parse_columns(self, cols)
         if limit is None:
             limit = 10
 
@@ -615,10 +615,10 @@ class BaseDataFrame(ABC):
 
         if limit == "all":
             limit = total_rows
-            data = df.cols.select(columns).to_dict(n="all", orient="records")
+            data = df.cols.select(cols).to_dict(n="all", orient="records")
         else:
             limit = min(limit, total_rows)
-            data = df.cols.select(columns).rows.limit(
+            data = df.cols.select(cols).rows.limit(
                 limit + 1).to_dict(n="all", orient="records")
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(
@@ -633,7 +633,7 @@ class BaseDataFrame(ABC):
         # Remove not selected columns
         final_columns = []
         for i in data_types:
-            for j in columns:
+            for j in cols:
                 if i[0] == j:
                     final_columns.append(i)
 
@@ -650,38 +650,38 @@ class BaseDataFrame(ABC):
             output = HEADER + output + FOOTER
         return output
 
-    def display(self, limit=10, columns=None, title=None, truncate=True, plain_text=False, highlight=[]):
+    def display(self, limit=10, cols=None, title=None, truncate=True, plain_text=False, highlight=[]):
         # TODO: limit, columns, title, truncate
         df = self
 
         if is_notebook() and not plain_text:
-            print_html(df.table(limit, columns, title, truncate, highlight))
+            print_html(df.table(limit, cols, title, truncate, highlight))
 
         else:
-            print(df.ascii(limit, columns))
+            print(df.ascii(limit, cols))
 
-    def print(self, limit=10, columns=None):
-        print(self.ascii(limit, columns))
+    def print(self, limit=10, cols=None):
+        print(self.ascii(limit, cols))
 
-    def table(self, limit=None, columns=None, title=None, truncate=True, highlight=[]):
+    def table(self, limit=None, cols=None, title=None, truncate=True, highlight=[]):
         df = self
         try:
             if is_notebook():
                 # TODO: move the html param to the ::: if is_notebook() and engine.output is "html":
-                return df.table_html(title=title, limit=limit, columns=columns, truncate=truncate, highlight=highlight)
+                return df.table_html(title=title, limit=limit, cols=cols, truncate=truncate, highlight=highlight)
 
         except NameError as e:
             print(e)
 
-        return df.ascii(limit, columns)
+        return df.ascii(limit, cols)
 
-    def ascii(self, limit=10, columns=None):
+    def ascii(self, limit=10, cols=None):
         df = self
-        if not columns:
-            columns = "*"
+        if not cols:
+            cols = "*"
 
         limit = min(limit, df.rows.approx_count())
-        return tabulate(df.rows.limit(limit + 1).cols.select(columns).to_pandas(),
+        return tabulate(df.rows.limit(limit + 1).cols.select(cols).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i,
                                  j in df.cols.data_types().items()],
                         tablefmt="simple",
@@ -987,8 +987,8 @@ class BaseDataFrame(ABC):
 
         return df
 
-    def string_clustering(self, columns="*", algorithm="fingerprint", *args, **kwargs):
-        return string_clustering(self, columns, algorithm, *args, **kwargs)
+    def string_clustering(self, cols="*", algorithm="fingerprint", *args, **kwargs):
+        return string_clustering(self, cols, algorithm, *args, **kwargs)
         # return clusters
 
     def agg(self, aggregations: dict, groupby=None, output="dict"):
@@ -1026,7 +1026,7 @@ class BaseDataFrame(ABC):
 
         return result
 
-    def report(self, df, columns="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR,
+    def report(self, df, cols="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR,
                approx_count=True,
                mismatch=None, advanced_stats=True):
         """
@@ -1042,8 +1042,8 @@ class BaseDataFrame(ABC):
         :return:
         """
 
-        columns = parse_columns(df, columns)
-        output = self.dataset(df, columns, buckets, infer, relative_error, approx_count, format="dict",
+        cols = parse_columns(df, cols)
+        output = self.dataset(df, cols, buckets, infer, relative_error, approx_count, format="dict",
                               mismatch=mismatch, advanced_stats=advanced_stats)
 
         # Load jinja
@@ -1060,7 +1060,7 @@ class BaseDataFrame(ABC):
 
         template = template_env.get_template("one_column.html")
         # Create every column stats
-        for col_name in columns:
+        for col_name in cols:
             hist_pic = None
             freq_pic = None
 

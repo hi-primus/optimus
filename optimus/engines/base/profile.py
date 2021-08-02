@@ -15,35 +15,35 @@ class BaseProfile(ABC):
     def __init__(self, root: 'DataFrameType'):
         self.root = root
 
-    def summary(self, columns="*"):
+    def summary(self, cols="*"):
 
         df = self.root
 
         return Meta.get(df.meta, f"profile.summary")
 
-    def columns(self, columns="*"):
+    def columns(self, cols="*"):
 
         df = self.root
-        columns = parse_columns(df, columns) if columns else []
+        cols = parse_columns(df, cols) if cols else []
 
-        if is_list(columns):
-            columns = [Meta.get(df.meta, f"profile.columns.{col}") for col in columns]
+        if is_list(cols):
+            cols = [Meta.get(df.meta, f"profile.columns.{col}") for col in cols]
         else:
-            columns = Meta.get(df.meta, f"profile.columns.{columns}")
+            cols = Meta.get(df.meta, f"profile.columns.{cols}")
 
-        return one_list_to_val(columns)
+        return one_list_to_val(cols)
 
-    def data_types(self, columns="*"):
+    def data_types(self, cols="*"):
 
         df = self.root
-        columns = parse_columns(df, columns) if columns else []
+        cols = parse_columns(df, cols) if cols else []
 
-        if is_list(columns):
+        if is_list(cols):
             dtype = [Meta.get(
-                df.meta, f"profile.columns.{col}.stats.inferred_type.dtype") for col in columns]
+                df.meta, f"profile.columns.{col}.stats.inferred_type.dtype") for col in cols]
         else:
             dtype = Meta.get(
-                df.meta, f"profile.columns.{columns}.stats.inferred_type.dtype")
+                df.meta, f"profile.columns.{cols}.stats.inferred_type.dtype")
 
         return one_list_to_val(dtype)
 
