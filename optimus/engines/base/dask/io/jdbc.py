@@ -9,7 +9,6 @@ from sqlalchemy.sql import elements
 
 # Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
-from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.base.contants import NUM_PARTITIONS, LIMIT_TABLE
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
@@ -82,6 +81,9 @@ class DaskBaseJDBC:
         print(self.uri)
         logger.print(self.uri)
 
+    def _dask_to_compatible(self, dfd):
+        return dfd
+    
     def tables(self, schema=None, database=None, limit=None):
         """
         Return all the tables in a database
@@ -140,7 +142,8 @@ class DaskBaseJDBC:
         # retrieved from the remote server
         # dfd = dfd.run()
         # dfd = dask_pandas_to_dask_cudf(dfd)
-        return DaskDataFrame(dfd)
+        from optimus.engines.dask.dataframe import DaskDataFrame
+        return DaskDataFrame(self._dask_to_compatible(dfd))
 
     def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
                 table_name=None):

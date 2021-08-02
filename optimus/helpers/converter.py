@@ -60,21 +60,18 @@ def format_dict(_dict, tidy=True):
             return _dict
 
 
-#
 # def cudf_series_to_pandas(serie):
 #     return serie.to_pandas()
-#
-#
-# def dask_dataframe_to_dask_cudf(df):
-#     import cudf
-#     return df.map_partitions(cudf.DataFrame.from_pandas)
-#
-#
-# # To cudf
-# def dask_dataframe_to_cudf(df):
-#     return pandas_to_cudf(dask_dataframe_to_pandas(df))
-#
-#
+
+
+def dask_dataframe_to_dask_cudf(df):
+    import cudf
+    return df.map_partitions(cudf.DataFrame.from_pandas)
+
+# To cudf
+def dask_dataframe_to_cudf(df):
+    return pandas_to_cudf(dask_dataframe_to_pandas(df))
+
 # def dask_cudf_to_cudf(df):
 #     return df.compute()
 
@@ -95,22 +92,17 @@ def dask_dataframe_to_pandas(df):
 def cudf_to_pandas(df):
     return df.to_pandas()
 
-
-#
 def cudf_to_dask_cudf(df, n_partitions=1):
     import dask_cudf
     return dask_cudf.from_cudf(df, npartitions=1)
 
-#
-#
 # def cudf_to_cupy_arr(df):
 #     import cupy as cp
 #     return cp.fromDlpack(df.to_dlpack())
-#
-#
-# def pandas_to_cudf(df):
-#     import cudf
-#     return cudf.from_pandas(df)
+
+def pandas_to_cudf(df):
+    import cudf
+    return cudf.from_pandas(df)
 
 
 def pandas_to_dask_dataframe(pdf, n_partitions=1):
