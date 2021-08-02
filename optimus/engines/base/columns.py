@@ -1127,7 +1127,7 @@ class BaseColumns(ABC):
     # Math Operations
     def abs(self, cols="*", output_cols=None) -> DataFrameType:
         """
-        Apply abs to column
+        Return the absolute numeric value of each value in a column
         :param cols:
         :param output_cols:
         :return:
@@ -1138,7 +1138,7 @@ class BaseColumns(ABC):
 
     def exp(self, cols="*", output_cols=None) -> DataFrameType:
         """
-        Returns Euler's number, e (~2.718) raised to a power.
+        Return Euler's number, e (~2.718) raised to the power of each value in a column
         :param cols:
         :param output_cols:
         :return:
@@ -1173,10 +1173,10 @@ class BaseColumns(ABC):
 
     def ln(self, cols="*", output_cols=None) -> DataFrameType:
         """
-        Apply mod to column
+        Return the natural logarithm of each value in a column
         :param cols:
         :param output_cols:
-        :return:(
+        :return:
         """
 
         return self.apply(cols, self.F.ln, output_cols=output_cols, meta_action=Actions.MATH.value,
@@ -1197,10 +1197,10 @@ class BaseColumns(ABC):
 
     def sqrt(self, cols="*", output_cols=None) -> DataFrameType:
         """
-        Apply sqrt to column
+        Return the square root of each value in a column
         :param cols:
         :param output_cols:
-        :return:(
+        :return:
         """
 
         return self.apply(cols, self.F.sqrt, output_cols=output_cols, meta_action=Actions.MATH.value,
@@ -1208,10 +1208,10 @@ class BaseColumns(ABC):
 
     def reciprocal(self, cols="*", output_cols=None) -> DataFrameType:
         """
-        Apply sqrt to column
+        Return the reciprocal of of each value in a column
         :param cols:
         :param output_cols:
-        :return:(
+        :return:
         """
 
         return self.apply(cols, self.F.reciprocal, output_cols=output_cols, meta_action=Actions.MATH.value,
@@ -1254,7 +1254,7 @@ class BaseColumns(ABC):
 
     def floor(self, cols="*", output_cols=None) -> DataFrameType:
         """
-
+        Round each number down to the nearest integer in a column
         :param cols:
         :param output_cols:
         :return:
@@ -1265,10 +1265,10 @@ class BaseColumns(ABC):
 
     def ceil(self, cols="*", output_cols=None) -> DataFrameType:
         """
-        Apply ceil to column
+        Round each number up to the nearest integer in a column
         :param cols:
         :param output_cols:
-        :return:(
+        :return:
         """
 
         df = self.root
