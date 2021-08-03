@@ -146,12 +146,24 @@ class BaseDataFrame(ABC):
         if isinstance(df2, (np.generic,)):
             df2 = np.asscalar(df2)
 
-        if not isinstance(df1, (BaseDataFrame,)) or not isinstance(df2, (BaseDataFrame,)):
+        df1_is_df = isinstance(df1, (BaseDataFrame,))
+        df2_is_df = isinstance(df2, (BaseDataFrame,))
+
+        if not df1_is_df or not df2_is_df:
             multiple_columns = True
             if data_type == "auto":
                 # finds the type of the value
-                data_type = [type(d).__name__ for d in [df1, df2] if not isinstance(d, (BaseDataFrame,))][0]
+                not_df = df2 if df1_is_df else df1
+                data_type = type(not_df).__name__
                 data_type = "float" if data_type == "int" else data_type
+            elif data_type in ["float", "int"]:
+                df1 = df1 if df1_is_df else float(df1)
+                df2 = df2 if df2_is_df else float(df2)
+            elif data_type == "str":
+                df1 = df1 if df1_is_df else str(df1)
+                df2 = df2 if df2_is_df else str(df2)
+
+
         else:
             multiple_columns = df1.cols.names() == df2.cols.names()
             if data_type == "auto":
