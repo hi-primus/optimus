@@ -94,9 +94,8 @@ class BaseRows(ABC):
                     expr = df[expr]
             else:
                 expr = eval(expr)
-        elif expr:
-            expr = expr.get_series()
-        dfd = dfd[expr]
+                
+        dfd = dfd[expr.get_series()]
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 
         df = self.root.new(dfd, meta=meta)
