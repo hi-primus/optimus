@@ -445,7 +445,7 @@ class BaseColumns(ABC):
 
             if is_int(old_col_name):
                 old_col_name = df.cols.names()[old_col_name]
-            if func:
+            if callable(func):
                 new_col_name = func(new_col_name)
 
             # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
@@ -474,6 +474,10 @@ class BaseColumns(ABC):
     @dispatch(str, str)
     def rename(self, col, name) -> 'DataFrameType':
         return self.rename([(col, name)], None)
+
+    @dispatch(list, str)
+    def rename(self, cols, name) -> 'DataFrameType':
+        return self.rename([(col, col+"_"+name) for col in cols], None)
 
     @dispatch(object)
     def rename(self, func=None) -> 'DataFrameType':
