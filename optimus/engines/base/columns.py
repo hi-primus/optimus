@@ -2680,7 +2680,10 @@ class BaseColumns(ABC):
 
     def _mask(self, cols="*", method: str = None, output_cols=None, rename_func=True, *args, **kwargs) -> 'DataFrameType':
 
-        append_df = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
+        append_df: 'DataFrameType' = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
+
+        if cols=="*":
+            cols = one_list_to_val(parse_columns(append_df, cols))
 
         if output_cols:
             append_df = append_df.cols.rename(cols, output_cols)
