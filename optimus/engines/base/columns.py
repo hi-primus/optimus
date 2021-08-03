@@ -356,9 +356,6 @@ class BaseColumns(ABC):
 
         assign_dict = {}
 
-        if where is not None:
-            where = where.get_series()
-
         move_cols = []
 
         for col_name in cols:
@@ -403,7 +400,7 @@ class BaseColumns(ABC):
                     value = dfd[temp_col_name]
                     del dfd[temp_col_name]
 
-                value = default.mask(where, value)
+                value = default.mask(where.get_series(), value)
 
             else:
                 if isinstance(value, self.root.__class__):
