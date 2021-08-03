@@ -181,7 +181,7 @@ class Mask(ABC):
         mask = None
 
         for col in cols:
-            series = df.data[col].str.startswith(value, na=False)
+            series = df.functions.to_string_accessor(df.data[col]).startswith(value, na=False)
             if mask is None:
                 mask = self._to_frame(series)
             else:
@@ -198,7 +198,7 @@ class Mask(ABC):
         mask = None
 
         for col in cols:
-            series = df.data[col].str.endswith(value, na=False)
+            series = df.functions.to_string_accessor(df.data[col]).endswith(value, na=False)
             if mask is None:
                 mask = self._to_frame(series)
             else:
@@ -214,7 +214,7 @@ class Mask(ABC):
         mask = None
 
         for col in cols:
-            series = df.data[col].str.contains(value, case=case, flags=flags, na=na, regex=regex)
+            series = df.functions.to_string_accessor(df.data[col]).contains(value, case=case, flags=flags, na=na, regex=regex)
             if mask is None:
                 mask = self._to_frame(series)
             else:
@@ -257,7 +257,7 @@ class Mask(ABC):
 
             mask = None
             for col in cols:
-                series = self.root.data[col].astype(str).str.match(value, na=False)
+                series = df.functions.to_string_accessor(df.data[col]).match(value, na=False)
                 if mask is None:
                     mask = self._to_frame(series)
                 else:
