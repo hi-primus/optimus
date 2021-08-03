@@ -865,7 +865,9 @@ class BaseDataFrame(ABC):
 
                 for _col_name in _columns:
                     _c[_col_name] = {
-                        "stats": _mismatch[_col_name], "data_type": _data_types[_col_name]}
+                        "stats": _mismatch[_col_name],
+                        "data_type": _data_types[_col_name]
+                    }
                     if _col_name in _freq:
                         f = _freq[_col_name]
                         _c[_col_name]["stats"]["frequency"] = f["values"]
@@ -889,6 +891,11 @@ class BaseDataFrame(ABC):
 
             updated_columns = merge(
                 cols_to_profile, hist, freq, mismatch, data_types, count_uniques)
+
+            for col in list(profiler_data.get("columns", {}).keys()):
+                if col in updated_columns["columns"]:
+                    del profiler_data["columns"][col]
+
             profiler_data = update_dict(profiler_data, updated_columns)
 
             assign(profiler_data, "name", Meta.get(df.meta, "name"), dict)
