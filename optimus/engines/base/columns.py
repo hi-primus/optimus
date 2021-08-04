@@ -351,10 +351,11 @@ class BaseColumns(ABC):
         df = self.root
         dfd = df.data
 
-        cols = parse_columns(df, cols)
+        cols = parse_columns(df, cols) if cols == "*" else cols
 
-        values = val_to_list(value)
-        eval_values = val_to_list(eval_value)
+        cols = val_to_list(cols)
+        values = val_to_list(value, allow_none=True)
+        eval_values = val_to_list(eval_value, allow_none=True)
 
         if len(cols) > len(values):
             values = [value]*len(cols)
