@@ -12,8 +12,6 @@ class TestBase(unittest.TestCase):
         
         if not cls.config:
             raise Exception("Please initialize device before running tests")
-        if not cls.dict and not cls.load:
-            raise Exception("No dataframe was defined for this test")
 
         import sys
         sys.path.append("..")
