@@ -9,12 +9,8 @@
 .vscode/
 
 # Optimus
-
-examples/checkPointFolder
-
 metastore_db
 spark-warehouse
-projectFilesBackup/tests.py
 
 # Distribution / packaging
 build/
@@ -31,44 +27,12 @@ __pycache__
 .coverage*
 .DS_Store
 .pytest_cache/
-data.json
-.pytest_cache/README.md
-examples/new-api-jar-test\.ipynb
 venv/
 
-# Test
-tests/test.csv/
-tests/test.json/
-tests/test.parquet/
 *.test
-
-examples/new-api-optimus-jars\.ipynb
-readme/credentials\.py
-readme/data/foo\.json/
-readme/data/foo\.parquet/
-readme/data/foo\.csv/
-
-examples/test\.parquet/
-examples/test\.csv/
-examples/test\.json/
-examples/temp
 
 node_modules/
 **/dask-worker-space/
 dask-worker-space/
-examples/data/
 conda/recipes/conda
 conda/recipes/conda-build
-
-*bumblebee\.ini
-examples/many-columns\.csv
-examples/many=columns\.parquet/
-examples/many-columns.parquet/
-examples/sandbox.ipynb
-examples/yellow_tripdata_2009-01.csv
-examples/yellow_tripdata_2009-02.csv
-examples/noncomm_use_subset/
-examples/scheduling/dask-worker-space/
-examples/corona.ipynb
-examples/mydask.png
-examples/store.csv
