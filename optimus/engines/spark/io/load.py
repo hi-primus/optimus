@@ -17,15 +17,15 @@ from optimus.helpers.functions import prepare_path
 class Load(BaseLoad):
 
     @staticmethod
-    def xml(path, *args, **kwargs) -> DataFrameType:
+    def xml(path, *args, **kwargs) -> 'DataFrameType':
         pass
 
     @staticmethod
-    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> DataFrameType:
+    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         pass
 
     @staticmethod
-    def hdf5(path, columns=None, *args, **kwargs) -> DataFrameType:
+    def hdf5(path, columns=None, *args, **kwargs) -> 'DataFrameType':
         pass
 
     @staticmethod
