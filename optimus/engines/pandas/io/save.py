@@ -1,5 +1,8 @@
-import pandavro as pdx
 import os
+
+import pandavro as pdx
+
+from optimus.engines.base.io.save import BaseSave
 from optimus.helpers.logger import logger
 
 from optimus.helpers.types import *
@@ -11,13 +14,7 @@ class Save(BaseSave):
         self.root = root
 
     def json(self, path, orient="records", *args, **kwargs):
-        """
-        Save data frame in a json file
-        :param path: path where the spark will be saved.
-        :param orient:
 
-        :return:
-        """
         df = self.root.data
 
         try:
@@ -27,21 +24,10 @@ class Save(BaseSave):
             logger.print(e)
             raise
 
-    def csv(self, path, mode="w",show_path=False, **kwargs):
-        """
-        Save data frame to a CSV file.
-        :param path: path where the spark will be saved.
-        :param mode: 'rb', 'wt', etc
-        it uses the default value.
-        :return: Dataframe in a CSV format in the specified path.
-        """
+    def csv(self, path, mode="w", show_path=False, encoding="utf-8-sig", **kwargs):
 
         try:
             df = self.root.data
-            # columns = parse_columns(self, "*",
-            #                         filter_by_column_types=["date", "array", "vector", "binary", "null"])
-            # df = df.cols.cast(columns, "str").repartition(num_partitions)
-
             # Dask reference
             # https://docs.dask.org/en/latest/dataframe-api.html#dask.dataframe.to_csv
             # df.to_csv(filename=path)
@@ -49,20 +35,13 @@ class Save(BaseSave):
             if show_path is True:
                 print(os.path.abspath(path))
 
-            df.to_csv(path, index=False, mode=mode)
+            df.to_csv(path, index=False, mode=mode, encoding=encoding, **kwargs)
 
         except IOError as error:
             logger.print(error)
             raise
 
-    def excel(self, path, **kwargs):
-        """
-        Save data frame to a CSV file.
-        :param path: path where the spark will be saved.
-        :param mode: 'rb', 'wt', etc
-        it uses the default value.
-        :return: Dataframe in a CSV format in the specified path.
-        """
+    def excel(self, path, mode="w", *args, **kwargs):
 
         try:
             df = self.root.data
@@ -96,10 +75,10 @@ class Save(BaseSave):
         df = self.root.cols.rename(func)
 
         try:
-            df.data.to_parquet(path)
+            df.data.to_parquet(path, mode=mode)
         except IOError as e:
             logger.print(e)
             raise
 
-    def avro(self, path):
+    def avro(self, path, *args, **kwargs):
         pdx.to_avro(path, self.root.data)

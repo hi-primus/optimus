@@ -1,5 +1,6 @@
 from packaging import version
 
+from optimus.engines.base.io.save import BaseSave, DEFAULT_MODE
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import path_is_local, prepare_path_local
@@ -15,17 +16,7 @@ class Save(BaseSave):
         self.root = root
 
     def json(self, path, mode="overwrite", encoding="UTF-8", num_partitions=1):
-        """
-        Save data frame in a json file
-        :param path: path where the spark will be saved.
-        :param mode: Specifies the behavior of the save operation when data already exists.
-                "append": Append contents of this DataFrame to existing data.
-                "overwrite" (default case): Overwrite existing data.
-                "ignore": Silently ignore this operation if data already exists.
-                "error": Throw an exception if data already exists.
-        :param num_partitions: the number of partitions of the DataFrame
-        :return:
-        """
+
         df = self.root.data
         try:
             # na.fill enforce null value keys to the json output
@@ -42,20 +33,7 @@ class Save(BaseSave):
 
     def csv(self, path, header="true", mode="overwrite", single_file=True, storage_options=None, conn=None, sep=",",
             num_partitions=1):
-        """
-        Save data frame to a CSV file.
-        :param path: path where the spark will be saved.
-        :param header: True or False to include header
-        :param mode: Specifies the behavior of the save operation when data already exists.
-                    "append": Append contents of this DataFrame to existing data.
-                    "overwrite" (default case): Overwrite existing data.
-                    "ignore": Silently ignore this operation if data already exists.
-                    "error": Throw an exception if data already exists.
-        :param sep: sets the single character as a separator for each field and value. If None is set,
-        it uses the default value.
-        :param num_partitions: the number of partitions of the DataFrame
-        :return: Dataframe in a CSV format in the specified path.
-        """
+
         try:
             df = self.root
 
@@ -73,7 +51,6 @@ class Save(BaseSave):
             columns = parse_columns(df, "*",
                                     filter_by_column_types=["date", "array", "vector", "binary", "null"])
             df = df.cols.cast(columns, "str").repartition(num_partitions)
-
 
             # Save to csv
             if single_file is True:
@@ -133,17 +110,7 @@ class Save(BaseSave):
             raise
 
     def avro(self, path, mode="overwrite", num_partitions=1):
-        """
-        Save data frame to an avro file
-        :param path: path where the spark will be saved.
-        :param mode: Specifies the behavior of the save operation when data already exists.
-                    "append": Append contents of this DataFrame to existing data.
-                    "overwrite" (default case): Overwrite existing data.
-                    "ignore": Silently ignore this operation if data already exists.
-                    "error": Throw an exception if data already exists.
-        :param num_partitions: the number of partitions of the DataFrame
-        :return:
-        """
+
         df = self.root
         try:
             if version.parse(Spark.instance.spark.version) < version.parse("2.4"):

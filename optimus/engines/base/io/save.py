@@ -2,6 +2,10 @@ import warnings
 from optimus.helpers.types import *
 
 
+DEFAULT_MODE = "w"
+DEFAULT_NUM_PARTITIONS = 1
+
+
 class BaseSave:
     def __init__(self, root: 'DataFrameType'):
         self.root = root
@@ -54,15 +58,39 @@ class BaseSave:
             f.write(res)
     
     def json(self, path, *args, **kwargs):
+        """
+        Save data frame in a json file
+        :param path: File path or object
+
+        :return:
+        """
         raise NotImplementedError("Not implemented yet")
 
-    def excel(self, path, *args, **kwargs):
+    def excel(self, path, mode=DEFAULT_MODE, *args, **kwargs):
+        """
+         Save data frame to a CSV file.
+         :param path: File path or object
+         :param mode: Python write mode, default ‘w’.
+         it uses the default value.
+         :return: Dataframe in a CSV format in the specified path.
+         """
         raise NotImplementedError("Not implemented yet")
 
     def avro(self, path, *args, **kwargs):
         raise NotImplementedError("Not implemented yet")
-    
-    def parquet(self, path, *args, **kwargs):
+
+    def parquet(self, path, mode=DEFAULT_MODE, num_partitions=DEFAULT_NUM_PARTITIONS, *args, **kwargs):
+        """
+        Save data frame to a parquet file
+        :param path: File path or object
+        :param mode: Specifies the behavior of the save operation when data already exists.
+                    "append": Append contents of this DataFrame to existing data.
+                    "overwrite" (default case): Overwrite existing data.
+                    "ignore": Silently ignore this operation if data already exists.
+                    "error": Throw an exception if data already exists.
+        :param num_partitions: the number of partitions of the DataFrame
+        :return:
+        """
         raise NotImplementedError("Not implemented yet")
 
     def orc(self, path, *args, **kwargs):
