@@ -406,7 +406,9 @@ class BaseDataFrame(ABC):
         """
         df = self
 
-        return {"columns": [{"title": col_name} for col_name in df.cols.select(cols).cols.names()],
+        cols = parse_columns(df, cols)        
+
+        return {"columns": [{"title": col_name} for col_name in cols],
                 "value": df.rows.to_list(cols)}
 
     @abstractmethod
