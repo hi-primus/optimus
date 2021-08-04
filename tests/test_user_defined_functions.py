@@ -2,7 +2,7 @@ from optimus.tests.base import TestBase
 
 
 class TestUDFPandas(TestBase):
-    load = {"path": "tests/data/DCIGNP2AYL.txt", "n_rows": 20}
+    load = {"path": "examples/data/DCIGNP2AYL.txt", "n_rows": 20}
 
     def test_udf(self):
         from optimus.functions import F
