@@ -13,50 +13,44 @@ BYTES_SIZE = 327680
 
 class BaseLoad:
 
-    @staticmethod
-    @abstractmethod
-    def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
+    def __init__(self, op):
+        self.op = op
+
+    def csv(self, filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
-            storage_options=None, conn=None,
-            *args, **kwargs) -> 'DataFrameType':
+            storage_options=None, conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
         """
-              Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
-              params
+        Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
+        params
 
 
-              :param encoding:
-              :param storage_options:
-              :param quoting:
-              :param filepath_or_buffer: path or location of the file.
-              :param sep: usually delimiter mark are ',' or ';'.
-              :param header: tell the function whether dataset has a header row. True default.
-              :param infer_schema: infers the input schema automatically from data.
-              :param n_rows:
-              :param null_value:
-              :param cache:
-              :param na_filter:
-              :param lineterminator:
-              :param error_bad_lines:
-              :param conn:
-              It requires one extra pass over the data. True default.
+        :param encoding:
+        :param storage_options:
+        :param quoting:
+        :param filepath_or_buffer: path or location of the file.
+        :param sep: usually delimiter mark are ',' or ';'.
+        :param header: tell the function whether dataset has a header row. True default.
+        :param infer_schema: infers the input schema automatically from data.
+        :param n_rows:
+        :param null_value:
+        :param cache:
+        :param na_filter:
+        :param lineterminator:
+        :param error_bad_lines:
+        :param conn:
+        It requires one extra pass over the data. True default.
 
-              :return dataFrame
-              """
-        pass
+        :return dataFrame
+        """
+        raise NotImplementedError('Not implemented yet')
 
-    @staticmethod
-    @abstractmethod
-    def xml(path, *args, **kwargs) -> 'DataFrameType':
-        pass
+    def xml(self, path, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+        raise NotImplementedError('Not implemented yet')
 
-    @staticmethod
-    @abstractmethod
-    def json(path, *args, **kwargs) -> 'DataFrameType':
-        pass
+    def json(self, path, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+        raise NotImplementedError('Not implemented yet')
 
-    @staticmethod
-    @abstractmethod
-    def excel(path, *args, **kwargs) -> 'DataFrameType':
+    def excel(self, path, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -64,11 +58,9 @@ class BaseLoad:
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
         """
-        pass
+        raise NotImplementedError('Not implemented yet')
 
-    @staticmethod
-    @abstractmethod
-    def avro(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
+    def avro(self, path, sheet_name=0, storage_options=None, conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
@@ -78,11 +70,9 @@ class BaseLoad:
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
-        pass
+        raise NotImplementedError('Not implemented yet')
 
-    @staticmethod
-    @abstractmethod
-    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
+    def parquet(self, path, columns=None, storage_options=None, conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -92,11 +82,9 @@ class BaseLoad:
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         """
-        pass
+        raise NotImplementedError('Not implemented yet')
 
-    @staticmethod
-    @abstractmethod
-    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
+    def orc(self, path, columns, storage_options=None, conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a OCR file.
         :param path: path or location of the file. Must be string dataType
@@ -106,19 +94,14 @@ class BaseLoad:
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
+        raise NotImplementedError('Not implemented yet')
 
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def zip(path, filename, dest=None, columns=None, storage_options=None, conn=None, *args,
+    def zip(self, path, filename, dest=None, columns=None, storage_options=None, conn=None, n_partitions=None, *args,
             **kwargs) -> 'DataFrameType':
         pass
 
-    @staticmethod
-    @abstractmethod
-    def hdf5(path, columns=None, *args, **kwargs) -> 'DataFrameType':
-        pass
+    def hdf5(self, path, columns=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+        raise NotImplementedError('Not implemented yet')
 
     def file(self, path, *args, **kwargs) -> 'DataFrameType':
         """
