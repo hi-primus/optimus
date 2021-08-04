@@ -5,6 +5,7 @@ import pandas as pd
 from dask import dataframe as dd
 
 import optimus.helpers.functions_spark
+from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.dask.dataframe import DaskDataFrame
@@ -15,22 +16,19 @@ from optimus.helpers.logger import logger
 
 class Load(BaseLoad):
 
+    @staticmethod
+    def xml(path, *args, **kwargs):
+        pass
+
+    @staticmethod
+    def hdf5(path, columns=None, *args, **kwargs):
+        pass
+
     def __init__(self, op):
         self.op = op
 
-    class test:
-        def __init__(self):
-            pass
-
     @staticmethod
     def json(path, multiline=False, lines=True, conn=None, storage_options=None, *args, **kwargs):
-        """
-        Return a dask dataframe from a json file.
-        :param path: path or location of the file.
-        :param multiline:
-
-        :return:
-        """
 
         path = unquote_path(path)
 
@@ -51,16 +49,6 @@ class Load(BaseLoad):
 
     @staticmethod
     def tsv(path, header=True, infer_schema=True, *args, **kwargs):
-        """
-        Return a dataframe from a tsv file.
-        :param path: path or location of the file.
-        :param header: tell the function whether dataset has a header row. True default.
-        :param infer_schema: infers the input schema automatically from data.
-        It requires one extra pass over the data. True default.
-
-        :return:
-        """
-
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
@@ -105,7 +93,7 @@ class Load(BaseLoad):
             kwargs.pop(remove_param)
 
         try:
-            # From the panda docs using na_flailter
+            # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
 
@@ -156,15 +144,6 @@ class Load(BaseLoad):
 
     @staticmethod
     def parquet(path, columns=None, engine="pyarrow", storage_options=None, conn=None, *args, **kwargs):
-        """
-        Return a dataframe from a parquet file.
-        :param path: path or location of the file. Must be string dataType
-        :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
-        :param engine:
-        :param args: custom argument to be passed to the spark parquet function
-        :param kwargs: custom keyword arguments to be passed to the spark parquet function
-        :return: Spark Dataframe
-        """
 
         path = unquote_path(path)
 
@@ -226,14 +205,6 @@ class Load(BaseLoad):
     @staticmethod
     def orc(path, columns=None, cache=None, storage_options=None, conn=None, *args, **kwargs):
 
-        """
-        Optimized Row Columnar
-        Return a dataframe from a .orc file.
-        params
-
-
-        """
-
         path = unquote_path(path)
 
         if cache is False:
@@ -259,15 +230,6 @@ class Load(BaseLoad):
 
     @staticmethod
     def avro(path, storage_options=None, conn=None, *args, **kwargs):
-        """
-        Return a dataframe from a avro file.
-        :param path: path or location of the file. Must be string dataType
-        :param storage_options:
-        :param args: custom argument to be passed to the avro function
-        :param kwargs: custom keyword arguments to be passed to the avro function
-        :return: Spark Dataframe
-        """
-
         path = unquote_path(path)
 
         if conn is not None:
@@ -289,15 +251,6 @@ class Load(BaseLoad):
     @staticmethod
     def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=-1, n_partitions=1, storage_options=None,
               conn=None, *args, **kwargs):
-        """
-        Return a dataframe from a excel file.
-        :param path: Path or location of the file. Must be string dataType
-        :param sheet_name: excel sheet name
-        :param merge_sheets:
-        :param args: custom argument to be passed to the excel function
-        :param kwargs: custom keyword arguments to be passed to the excel function
-
-        """
 
         path = unquote_path(path)
 

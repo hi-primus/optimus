@@ -1,15 +1,14 @@
 from abc import abstractmethod
 from functools import reduce
-from optimus.engines.base.basedataframe import BaseDataFrame
-from optimus.infer import is_dict
-from optimus.helpers.raiseit import RaiseIt
-from optimus.helpers.core import val_to_list
 
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import Actions
+from optimus.helpers.core import val_to_list
+from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_dict
 
 
-class DataFrameBaseColumns():
+class DataFrameBaseColumns:
 
     def _names(self):
         return list(self.root.data.columns)
@@ -28,7 +27,7 @@ class DataFrameBaseColumns():
         dfs = val_to_list(dfs)
 
         df = self.root
-        
+
         dfd = df.data.reset_index(drop=True)
 
         dfds = []

@@ -315,7 +315,6 @@ class BaseColumns(ABC):
         df = self.root.new(dfd, meta=meta)
 
         if kw_columns:
-
             df = df.cols.assign(kw_columns)
         # Dataframe to Optimus dataframe
         df = df.cols.select(output_ordered_columns)
@@ -1580,7 +1579,7 @@ class BaseColumns(ABC):
 
     def upper(self, cols="*", output_cols=None) -> 'DataFrameType':
         return self.apply(cols, self.F.upper, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.UPPER.value, mode="vectorized", func_type="column_expr")
+                          meta_action=Actions.UPPER.value, mode="vectorized", func_type="vectorized")
 
     def title(self, cols="*", output_cols=None) -> 'DataFrameType':
         return self.apply(cols, self.F.title, func_return_type=str,
@@ -1589,7 +1588,7 @@ class BaseColumns(ABC):
 
     def capitalize(self, cols="*", output_cols=None) -> 'DataFrameType':
         return self.apply(cols, self.F.capitalize, func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
+                          output_cols=output_cols, meta_action=Actions.TITLE.value, mode="vectorized",
                           func_type="column_expr")
 
     def proper(self, cols="*", output_cols=None) -> 'DataFrameType':
@@ -1723,7 +1722,8 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols)
         output_cols = get_output_cols(cols, output_cols)
 
-        return df.cols.lower(cols, output_cols).cols.replace(output_cols, stop, "", "words").cols.normalize_spaces(output_cols)
+        return df.cols.lower(cols, output_cols).cols.replace(output_cols, stop, "", "words").cols.normalize_spaces(
+            output_cols)
 
     def remove_urls(self, cols="*", output_cols=None) -> 'DataFrameType':
         return self.apply(cols, self.F.remove_urls, func_return_type=str,
@@ -1827,7 +1827,7 @@ class BaseColumns(ABC):
             value = [df.data[v] if v in col_names else v for v in value]
 
         def _years_between(series, args):
-            return self.F.days_between(series, *args)/365.25
+            return self.F.days_between(series, *args) / 365.25
 
         return df.cols.apply(cols, func, args=[value, date_format], func_return_type=str,
                              output_cols=output_cols,
@@ -1836,14 +1836,14 @@ class BaseColumns(ABC):
     def years_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
 
         def _years_between(series, args):
-            return self.F.days_between(series, *args)/365.25
+            return self.F.days_between(series, *args) / 365.25
 
         return self._td_between(cols, _years_between, value, date_format, round, output_cols)
 
     def months_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
 
         def _months_between(series, args):
-            return self.F.days_between(series, *args)/30.4375
+            return self.F.days_between(series, *args) / 30.4375
 
         return self._td_between(cols, _months_between, value, date_format, round, output_cols)
 
@@ -2478,6 +2478,17 @@ class BaseColumns(ABC):
     
     def frequency(self, cols="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True, tidy=False) -> dict:
+        """
+
+        :param cols:
+        :param n:
+        :param percentage:
+        :param total_rows:
+        :param count_uniques:
+        :param compute:
+        :param tidy:
+        :return:
+        """
         df = self.root
         cols = parse_columns(df, cols)
 
@@ -2537,7 +2548,7 @@ class BaseColumns(ABC):
 
     def boxplot(self, cols) -> dict:
         """
-        Output the boxplot in python dict format
+        Output the boxplot data in python dict format.
         :param cols: Columns to be processed
         :return:
         """
@@ -2605,7 +2616,7 @@ class BaseColumns(ABC):
 
     def domain(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        From https://www.hi-bumblebee.com it returns hi-bumblebee.com
+        Return the domain from a url string. From https://www.hi-bumblebee.com it returns hi-bumblebee.com
         :param cols:
         :param output_cols:
         :return:
@@ -2616,7 +2627,7 @@ class BaseColumns(ABC):
 
     def top_domain(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        From https://www.hi-bumblebee.com it returns hi-bumblebee.com
+        Return the top domain from a url string. From https://www.hi-bumblebee.com it returns hi-bumblebee.com
         :param cols:
         :param output_cols:
         :return:
@@ -3306,6 +3317,7 @@ class BaseColumns(ABC):
     def bag_of_words(self, features, analyzer="word", ngram_range=2) -> 'DataFrameType':
         """
 
+        :param analyzer:
         :param features:
         :param ngram_range:
         :return:

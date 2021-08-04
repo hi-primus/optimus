@@ -9,6 +9,7 @@ import pandas as pd
 import pandavro as pdx
 import psutil
 
+from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.dataframe import PandasDataFrame
@@ -19,6 +20,14 @@ from optimus.infer import is_str, is_list, is_url
 
 
 class Load(BaseLoad):
+
+    @staticmethod
+    def xml(path, *args, **kwargs) -> DataFrameType:
+        pass
+
+    @staticmethod
+    def hdf5(path, columns=None, *args, **kwargs) -> DataFrameType:
+        pass
 
     def __init__(self, op):
         self.op = op
@@ -58,49 +67,16 @@ class Load(BaseLoad):
 
         return df
 
-
     @staticmethod
-    def tsv(path, header=True, infer_schema=True, *args, n_partitions=1, **kwargs):
-        """
-        Loads a dataframe from a tsv file.
-        :param path: path or location of the file.
-        :param header: tell the function whether dataset has a header row. True default.
-        :param infer_schema: infers the input schema automatically from data.
-        It requires one extra pass over the data. True default.
-
-        :return:
-        """
-
-        return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
-
+    def tsv(filepath_or_buffer, header=True, infer_schema=True, *args, **kwargs):
+        return Load.csv(filepath_or_buffer, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
-            null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=True,
-            storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
-        """
-        Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
-        params
+            null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
+            storage_options=None, conn=None,
+            *args, **kwargs):
 
-
-        :param encoding:
-        :param storage_options:
-        :param quoting:
-        :param filepath_or_buffer: path or location of the file.
-        :param sep: usually delimiter mark are ',' or ';'.
-        :param header: tell the function whether dataset has a header row. True default.
-        :param infer_schema: infers the input schema automatically from data.
-        :param n_rows:
-        :param null_value:
-        :param cache:
-        :param na_filter:
-        :param lineterminator:
-        :param error_bad_lines:
-        :param conn:
-        It requires one extra pass over the data. True default.
-
-        :return dataFrame
-        """
         if not is_url(filepath_or_buffer):
             filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
             meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer[0])}
@@ -154,16 +130,8 @@ class Load(BaseLoad):
 
         return df
 
-
     @staticmethod
-    def parquet(path, columns=None, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
-        """
-        Loads a dataframe from a parquet file.
-        :param path: path or location of the file. Must be string dataType
-        :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
-        :param args: custom argument to be passed to the spark parquet function
-        :param kwargs: custom keyword arguments to be passed to the spark parquet function
-        """
+    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -184,16 +152,8 @@ class Load(BaseLoad):
 
         return df
 
-
     @staticmethod
-    def avro(path, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
-        """
-        Loads a dataframe from a avro file.
-        :param storage_options:
-        :param path: path or location of the file. Must be string dataType
-        :param args: custom argument to be passed to the spark avro function
-        :param kwargs: custom keyword arguments to be passed to the spark avro function
-        """
+    def avro(path, storage_options=None, conn=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -214,16 +174,8 @@ class Load(BaseLoad):
 
         return df
 
-
     @staticmethod
-    def excel(path, sheet_name=0, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
-        """
-        Loads a dataframe from a excel file.
-        :param path: Path or location of the file. Must be string dataType
-        :param sheet_name: excel sheet name
-        :param args: custom argument to be passed to the excel function
-        :param kwargs: custom keyword arguments to be passed to the excel function
-        """
+    def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -256,15 +208,8 @@ class Load(BaseLoad):
 
         return df
 
-
     @staticmethod
-    def orc(path, columns, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
-        """
-        Loads a dataframe from a avro file.
-        :param path: path or location of the file. Must be string dataType
-        :param args: custom argument to be passed to the spark avro function
-        :param kwargs: custom keyword arguments to be passed to the spark avro function
-        """
+    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -284,7 +229,6 @@ class Load(BaseLoad):
             raise
 
         return df
-
 
     @staticmethod
     def zip(zip_path, filename, dest=None, merge=False, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):

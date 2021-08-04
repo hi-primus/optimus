@@ -4,6 +4,7 @@ import dask.bag as db
 import pandas as pd
 from dask import dataframe as dd
 
+from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.dask_cudf.dataframe import DaskCUDFDataFrame
@@ -12,6 +13,22 @@ from optimus.helpers.logger import logger
 
 
 class Load(BaseLoad):
+
+    @staticmethod
+    def xml(path, *args, **kwargs) -> DataFrameType:
+        pass
+
+    @staticmethod
+    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> DataFrameType:
+        pass
+
+    @staticmethod
+    def zip(path, filename, dest=None, columns=None, storage_options=None, conn=None, *args, **kwargs) -> DataFrameType:
+        pass
+
+    @staticmethod
+    def hdf5(path, columns=None, *args, **kwargs) -> DataFrameType:
+        pass
 
     def __init__(self, op):
         self.op = op
@@ -47,15 +64,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def tsv(path, header=True, infer_schema=True, *args, **kwargs):
-        """
-        Loads a dataframe from a tsv file.
-        :param path: path or location of the file.
-        :param header: tell the function whether dataset has a header row. 'true' default.
-        :param infer_schema: infers the input schema automatically from data.
-        It requires one extra pass over the data. 'true' default.
 
-        :return:
-        """
 
         return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
@@ -63,28 +72,7 @@ class Load(BaseLoad):
     def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=True, na_filter=True,
             storage_options=None, conn=None, *args, **kwargs):
-        """
-        Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
-        params
 
-        :param n_rows:
-        :param conn:
-        :param storage_options:
-        :param path: path or location of the file.
-        :param sep: usually delimiter mark are ',' or ';'.
-        :param keep_default_na:
-        :param error_bad_lines:
-        :param lineterminator:
-        :param header: tell the function whether dataset has a header row. 'true' default.
-        :param infer_schema: infers the input schema automatically from data.
-        :param quoting:
-        :param null_value:
-        :param na_filter:
-        :param encoding:
-        It requires one extra pass over the data. 'true' default.
-
-        :return dataFrame
-        """
 
         path = unquote_path(path)
 
@@ -127,14 +115,6 @@ class Load(BaseLoad):
 
     @staticmethod
     def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
-        """
-        Loads a dataframe from a parquet file.
-        :param path: path or location of the file. Must be string dataType
-        :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
-        :param args: custom argument to be passed to the internal parquet function
-        :param kwargs: custom keyword arguments to be passed to the internal parquet function
-        :return: Spark Dataframe
-        """
 
         path = unquote_path(path)
 
@@ -158,13 +138,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def avro(path, storage_options=None, conn=None, *args, **kwargs):
-        """
-        Loads a dataframe from a avro file.
-        :param path: path or location of the file. Must be string dataType
-        :param args: custom argument to be passed to the internal avro function
-        :param kwargs: custom keyword arguments to be passed to the internal avro function
-        :return: Spark Dataframe
-        """
+
 
         path = unquote_path(path)
 
@@ -186,14 +160,6 @@ class Load(BaseLoad):
 
     @staticmethod
     def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
-        """
-        Loads a dataframe from a excel file.
-        :param path: Path or location of the file. Must be string dataType
-        :param sheet_name: excel sheet name
-        :param args: custom argument to be passed to the excel function
-        :param kwargs: custom keyword arguments to be passed to the excel function
-        :return: Spark Dataframe
-        """
 
         path = unquote_path(path)
 

@@ -170,7 +170,7 @@ class Mask(ABC):
         
         df = self.root
         cols = parse_columns(df, cols)
-        
+
         return df[cols].cols.pattern() == pattern
 
     def starts_with(self, cols="*", value=None) -> 'MaskDataFrameType':
@@ -186,7 +186,6 @@ class Mask(ABC):
                 mask = self._to_frame(series)
             else:
                 mask[col] = series
-
 
         return df.new(self._to_frame(mask))
 
@@ -219,11 +218,11 @@ class Mask(ABC):
                 mask = self._to_frame(series)
             else:
                 mask[col] = series
-        
+
         if is_list(value):
             value = "|".join(value)
             regex = True
-        
+
         return df.new(self._to_frame(mask))
 
     def expression(self, where=None, cols="*") -> 'MaskDataFrameType':
@@ -252,7 +251,6 @@ class Mask(ABC):
         df = self.root
         cols = val_to_list(parse_columns(df, cols))
 
-        
         if is_str(value):
 
             mask = None
@@ -262,7 +260,7 @@ class Mask(ABC):
                     mask = self._to_frame(series)
                 else:
                     mask[col] = series
-                    
+
             return self.root.new(self._to_frame(mask))
 
         else:
@@ -283,7 +281,7 @@ class Mask(ABC):
         subset_df = dfd[cols]
 
         if how == "all":
-            col_name = cols[0] if len(cols)==1 else "__null__"
+            col_name = cols[0] if len(cols) == 1 else "__null__"
             mask = subset_df.isnull().all(axis=1).rename(col_name)
         else:
             mask = subset_df.isnull()
@@ -327,7 +325,7 @@ class Mask(ABC):
         else:
             subset_df = dfd
 
-        col_name = cols[0] if len(cols)==1 else "__duplicated__"
+        col_name = cols[0] if len(cols) == 1 else "__duplicated__"
 
         mask = subset_df.duplicated(keep=keep, subset=cols).rename(col_name)
 
