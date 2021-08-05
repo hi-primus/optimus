@@ -20,7 +20,9 @@ class DataFrameBaseDataFrame():
         :param random: if true get a semi random sample
         :return:
         """
-        df = self.root
+        if not is_int(n):
+            RaiseIt.type_error(n, ["int"])
+
         if random is True:
             seed = int(random_int())
         elif random is False:
@@ -28,15 +30,16 @@ class DataFrameBaseDataFrame():
         elif is_int(random):
             seed = random
         else:
-            RaiseIt.value_error(random, ["True", "False"])
+            RaiseIt.type_error(random, ["bool", "int"])
 
+        df = self.root
         rows_count = df.rows.count()
-        if n < rows_count:
-            # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1
-            fraction = (n / rows_count) * 1.1
-        else:
-            fraction = 1.0
-        return self.root.new(df.data.sample(frac=fraction, random_state=seed))
+
+        if n > rows_count:
+            n = rows_count
+        dfd = df.data.sample(n=n, random_state=seed).reset_index(drop=True)
+
+        return self.root.new(dfd)
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
