@@ -19,10 +19,6 @@ class Rows(BaseRows):
     def __init__(self, df):
         super(Rows, self).__init__(df)
 
-    @staticmethod
-    def create_id(column="id") -> DataFrame:
-        pass
-
     def count(self, compute=True) -> int:
         """
         Count dataframe rows
@@ -35,26 +31,5 @@ class Rows(BaseRows):
             result = dfd.count()
         return result
 
-    def append(self, rows):
-        """
-
-        :param rows:
-        :return:
-        """
-        df = self.df
-
-        if is_list_value(rows):
-            rows = pd.DataFrame(rows)
-        # Can not concatenate dataframe with not string columns names
-
-        rows.columns = df.cols.names()
-        df = pd.concat([df.reset_index(drop=True), rows.reset_index(drop=True)], axis=0)
-        return df
-
     def _sort(self, dfd, col_name, ascending):
         return dfd.sort_values(col_name, ascending=ascending)
-
-    @staticmethod
-    def unnest(input_cols) -> DataFrame:
-        df = self
-        return df

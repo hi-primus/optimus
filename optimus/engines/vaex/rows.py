@@ -9,13 +9,6 @@ class Rows(BaseRows):
         pass
 
     @staticmethod
-    def create_id(column="id"):
-        pass
-
-    def append(self, dfs, cols_map):
-        pass
-
-    @staticmethod
     def unnest(input_cols):
         pass
 

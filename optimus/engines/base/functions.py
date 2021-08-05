@@ -57,6 +57,13 @@ class Functions(ABC):
         Gets the set of functions available in the engine
         """
         return self._partition_engine
+
+    @staticmethod
+    def append(dfd, dfd2):
+        """
+        Append two dataframes
+        """
+        return dfd.append(dfd2)
     
     def _new_series(self, *args, **kwargs):
         """
