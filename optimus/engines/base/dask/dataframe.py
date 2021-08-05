@@ -14,7 +14,7 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.types import *
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_one_element
+from optimus.infer import is_int, is_one_element
 
 
 class DaskBaseDataFrame(BaseDataFrame):
@@ -120,21 +120,29 @@ class DaskBaseDataFrame(BaseDataFrame):
         :param random: if true get a semi random sample
         :return:
         """
-        df = self.root
+        if not is_int(n):
+            RaiseIt.type_error(n, ["int"])
+
         if random is True:
-            seed = random_int()
+            seed = int(random_int())
         elif random is False:
             seed = 0
+        elif is_int(random):
+            seed = random
         else:
-            RaiseIt.value_error(random, ["True", "False"])
+            RaiseIt.type_error(random, ["bool", "int"])
 
+        df = self.root
         rows_count = df.rows.count()
         if n < rows_count:
-            # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1
-            fraction = (n / rows_count) * 1.1
+            # n/rows_count can return a number that represent less the total number we expect. multiply by 1.001
+            fraction = (n / rows_count) * 1.001
         else:
             fraction = 1.0
-        return self.root.new(df.data.sample(frac=fraction, random_state=seed))
+
+        dfd = df.data.sample(frac=fraction, random_state=seed).reset_index(drop=True)
+
+        return self.root.new(dfd)
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
@@ -246,16 +254,6 @@ class DaskBaseDataFrame(BaseDataFrame):
 
         :return:
         """
-        raise NotImplementedError
-
-    @staticmethod
-    def create_id(column="id"):
-        """
-        Create a unique id for every row.
-        :param column: Columns to be processed
-        :return:
-        """
-
         raise NotImplementedError
 
     def to_dict(self, cols="*", n=10, orient="list"):

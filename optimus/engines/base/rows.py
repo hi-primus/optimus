@@ -10,7 +10,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import one_list_to_val, val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_str, is_list_of_str_or_int
+from optimus.infer import is_list_value, is_str, is_list_of_str_or_int
 
 
 class BaseRows(ABC):
@@ -46,14 +46,39 @@ class BaseRows(ABC):
     def _reverse(self, dfd) -> 'InternalDataFrameType':
         return dfd[::-1]
 
-    @staticmethod
-    @abstractmethod
-    def create_id(column="id"):
-        pass
+    def append(self, dfs: 'DataFrameTypeList', names_map=None) -> 'DataFrameType':
+        """
+        Appends 2 or more dataframes
+        :param dfs:
+        :param names_map:
+        """
+        if not is_list_value(dfs):
+            dfs = [dfs]
 
-    @abstractmethod
-    def append(self, dfs: 'DataFrameTypeList', cols_map) -> 'DataFrameType':
-        pass
+        every_df = [self.root, *dfs]
+
+        if names_map is not None:
+            rename = [[] for _ in every_df]
+            for key in names_map:
+                assert len(names_map[key]) == len(every_df)
+                for i in range(len(names_map[key])):
+                    col_name = names_map[key][i]
+                    if col_name:
+                        rename[i] = [*rename[i], (col_name, "__output_column__" + key)]
+            for i in range(len(rename)):
+                every_df[i] = every_df[i].cols.rename(rename[i])
+
+        dfd = every_df[0].data
+        for i in range(len(every_df)):
+            if i != 0:
+                dfd = self.root.functions.append(dfd, every_df[i].data)
+        df = self.root.new(dfd)
+
+        if names_map is not None:
+            df = df.cols.rename([("__output_column__" + key, key) for key in names_map])
+            df = df.cols.select([*names_map.keys()])
+
+        return df.new(df.data.reset_index(drop=True))
 
     def apply(self, func, args=None, output_cols=None) -> 'DataFrameType':
         """
@@ -95,7 +120,7 @@ class BaseRows(ABC):
             else:
                 expr = eval(expr)
                 
-        dfd = dfd[expr.get_series()]
+        dfd = dfd[expr.get_series()].reset_index(drop=True)
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 
         df = self.root.new(dfd, meta=meta)
@@ -207,7 +232,7 @@ class BaseRows(ABC):
                 where = df[where]
             else:
                 where = eval(where)
-        dfd = dfd[where.get_series()==0]
+        dfd = dfd[where.get_series()==0].reset_index(drop=True)
         meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 
@@ -232,9 +257,8 @@ class BaseRows(ABC):
         return self.root.new(self.root.data[:count])
 
     @staticmethod
-    @abstractmethod
-    def unnest(input_cols) -> 'DataFrameType':
-        pass
+    def unnest(cols) -> 'DataFrameType':
+        raise NotImplementedError('Not implemented yet')
 
     def approx_count(self) -> 'DataFrameType':
         """

@@ -4,24 +4,13 @@ import operator
 import dask.array as da
 import dask.dataframe as dd
 from dask.delayed import delayed
-from multipledispatch import dispatch
 
 from optimus.engines.base.meta import Meta
-from optimus.engines.base.rows import BaseRows
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
-from optimus.helpers.core import val_to_list, one_list_to_val
-from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_str_or_int, is_list_value
 
 
-class DaskBaseRows(BaseRows):
-    """Base class for all Rows implementations"""
-
-    def __init__(self, parent):
-        # self.parent = parent
-        super().__init__(parent)
-        # super(DaskBaseRows, self).__init__(parent)
+class DaskBaseRows():
 
     def _reverse(self, dfd):
         @delayed
@@ -37,66 +26,6 @@ class DaskBaseRows(BaseRows):
         if not ascending:
             dfd = self._reverse(dfd)
         return dfd.reset_index()[self.root.cols.names()]
-
-    def create_id(self, column="id"):
-        # Reference https://github.com/dask/dask/issues/1426
-        dfd = self.root.data
-        # print(dfd)
-        a = da.arange(dfd.divisions[-1] + 1, chunks=dfd.divisions[1:])
-        dfd[column] = dd.from_dask_array(a)
-        return dfd
-
-    def append(self, dfs, names_map=None):
-        """
-        Appends 2 or more dataframes
-        :param dfs:
-        :param names_map:
-        """
-        if not is_list_value(dfs):
-            dfs = [dfs]
-
-        every_df = [self.root, *dfs]
-
-        if names_map is not None:
-            rename = [[] for _ in every_df]
-            for key in names_map:
-                assert len(names_map[key]) == len(every_df)
-                for i in range(len(names_map[key])):
-                    col_name = names_map[key][i]
-                    if col_name:
-                        rename[i] = [*rename[i], (col_name, "__output_column__" + key)]
-            for i in range(len(rename)):
-                every_df[i] = every_df[i].cols.rename(rename[i])
-
-        dfd = every_df[0].data
-        for i in range(len(every_df)):
-            if i != 0:
-                dfd = dfd.append(every_df[i].data)
-        df = self.root.new(dfd)
-
-        if names_map is not None:
-            df = df.cols.rename([("__output_column__" + key, key) for key in names_map])
-            df = df.cols.select([*names_map.keys()])
-
-        return df.new(df.data.reset_index(drop=True))
-
-    # def append(self, rows):
-    #     """
-    #
-    #     :param rows:
-    #     :return:
-    #     """
-    #     dfd = self.root.data
-    #
-    #     if is_list(rows):
-    #         rows = dd.from_pandas(pd.DataFrame(rows), npartitions=1)
-    #
-    #     # Can not concatenate dataframe with not string columns names
-    #     rows.columns = dfd.columns
-    #
-    #     dfd = dd.concat([dfd, rows], axis=0, interleave_partitions=True)
-    #
-    #     return dfd
 
     def limit(self, count):
         """
@@ -167,10 +96,6 @@ class DaskBaseRows(BaseRows):
             df = df.rows.select(_between(col_name))
         meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(df.data, meta=meta)
-
-    def unnest(self, input_cols):
-        df = self.root
-        return df
 
     def approx_count(self):
         """

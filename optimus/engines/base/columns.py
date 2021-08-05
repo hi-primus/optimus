@@ -352,10 +352,11 @@ class BaseColumns(ABC):
         df = self.root
         dfd = df.data
 
-        cols = parse_columns(df, cols)
+        cols = parse_columns(df, cols) if cols == "*" else cols
 
-        values = val_to_list(value)
-        eval_values = val_to_list(eval_value)
+        cols = val_to_list(cols)
+        values = val_to_list(value, allow_none=True)
+        eval_values = val_to_list(eval_value, allow_none=True)
 
         if len(cols) > len(values):
             values = [value] * len(cols)
@@ -2154,6 +2155,25 @@ class BaseColumns(ABC):
                 iqr_result[col_name] = result
 
         return format_dict(iqr_result)
+
+    def create_key(self, col) -> 'DataFrameType':
+        """
+        Create a unique id for every row.
+        :param col: Column to be created
+        :return:
+        """
+        df = self.root
+        dfd = df.data
+
+        names = df.cols.names()
+        dfd = dfd.reset_index()
+
+        new_df = self.root.new(dfd)
+        new_names = new_df.cols.names()
+
+        col_name = list(set(new_names) - set(names))[0]
+
+        return new_df.cols.rename(col_name, col)
 
     @staticmethod
     @abstractmethod

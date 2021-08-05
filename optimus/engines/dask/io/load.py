@@ -17,18 +17,7 @@ from optimus.helpers.logger import logger
 class Load(BaseLoad):
 
     @staticmethod
-    def xml(path, *args, **kwargs):
-        pass
-
-    @staticmethod
-    def hdf5(path, columns=None, *args, **kwargs):
-        pass
-
-    def __init__(self, op):
-        self.op = op
-
-    @staticmethod
-    def json(path, multiline=False, lines=True, conn=None, storage_options=None, *args, **kwargs):
+    def json(path, multiline=False, lines=True, conn=None, storage_options=None, n_partitions=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -143,7 +132,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def parquet(path, columns=None, engine="pyarrow", storage_options=None, conn=None, *args, **kwargs):
+    def parquet(path, columns=None, engine="pyarrow", storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -165,7 +154,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def zip(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1,
-            storage_options=None, conn=None, *args, **kwargs):
+            storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -203,7 +192,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def orc(path, columns=None, cache=None, storage_options=None, conn=None, *args, **kwargs):
+    def orc(path, columns=None, cache=None, storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -229,7 +218,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, storage_options=None, conn=None, *args, **kwargs):
+    def avro(path, storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
         path = unquote_path(path)
 
         if conn is not None:
@@ -249,8 +238,8 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=-1, n_partitions=1, storage_options=None,
-              conn=None, *args, **kwargs):
+    def excel(path, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=-1, storage_options=None,
+              conn=None, n_partitions=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -270,7 +259,7 @@ class Load(BaseLoad):
             n_rows = None
 
         pdfs = pd.read_excel(file, sheet_name=sheet_name, header=header, skiprows=skiprows, nrows=n_rows,
-                             storage_options=storage_options, *args, **kwargs)
+                             storage_options=storage_options, n_partitions=None, *args, **kwargs)
         sheet_names = list(pd.read_excel(file, None, storage_options=storage_options).keys())
 
         pdf = pd.concat(val_to_list(pdfs), axis=0).reset_index(drop=True)

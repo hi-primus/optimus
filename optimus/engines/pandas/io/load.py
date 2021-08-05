@@ -22,18 +22,7 @@ from optimus.infer import is_str, is_list, is_url
 class Load(BaseLoad):
 
     @staticmethod
-    def xml(path, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    @staticmethod
-    def hdf5(path, columns=None, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    def __init__(self, op):
-        self.op = op
-
-    @staticmethod
-    def json(path, multiline=False, n_rows=False, *args, n_partitions=1, **kwargs):
+    def json(path, multiline=False, n_rows=False, n_partitions=1, *args, **kwargs):
         """
         Loads a dataframe from a json file.
         :param path: path or location of the file.
@@ -68,14 +57,13 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def tsv(filepath_or_buffer, header=True, infer_schema=True, *args, **kwargs):
+    def tsv(filepath_or_buffer, header=True, infer_schema=True, n_partitions=1, *args, **kwargs):
         return Load.csv(filepath_or_buffer, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     @staticmethod
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
-            storage_options=None, conn=None,
-            *args, **kwargs):
+            storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         if not is_url(filepath_or_buffer):
             filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
@@ -131,7 +119,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
+    def parquet(path, columns=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -153,7 +141,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def avro(path, storage_options=None, conn=None, *args, **kwargs):
+    def avro(path, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -164,7 +152,7 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "avro")[0]
 
         try:
-            df = pdx.read_avro(file_name, storage_options=storage_options, *args, **kwargs)
+            df = pdx.read_avro(file_name, storage_options=storage_options, n_partitions=1, *args, **kwargs)
             df = PandasDataFrame(df)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
@@ -175,7 +163,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def excel(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs):
+    def excel(path, sheet_name=0, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -209,7 +197,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs):
+    def orc(path, columns, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -231,7 +219,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def zip(zip_path, filename, dest=None, merge=False, storage_options=None, conn=None, *args, n_partitions=1, **kwargs):
+    def zip(zip_path, filename, dest=None, merge=False, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
         if dest is None:
             dest = str(uuid.uuid4()) + "/"
 

@@ -23,17 +23,17 @@ from optimus.helpers.output import print_html
 from optimus.infer import is_str, is_tuple, is_list
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
-from optimus.engines.base.contants import BaseConstants
-from optimus.engines.base.functions import Functions
-from optimus.engines.base.columns import BaseColumns
-from optimus.engines.base.rows import BaseRows
+from optimus.engines.base.columns import *
+from optimus.engines.base.rows import *
 from optimus.engines.base.mask import Mask
 from optimus.engines.base.set import BaseSet
 from optimus.engines.base.profile import BaseProfile
 from optimus.engines.base.meta import Meta
 from optimus.engines.base.ml.models import BaseML
 from optimus.engines.base.ml.encoding import BaseEncoding
-from optimus.engines.base.io.save import BaseSave
+from optimus.engines.base.io.save import *
+from optimus.engines.base.contants import BaseConstants
+from optimus.engines.base.functions import Functions
 from optimus.outliers.outliers import Outliers
 from optimus.plots.functions import plot_hist, plot_frequency
 from optimus.plots.plots import Plot
@@ -316,45 +316,45 @@ class BaseDataFrame(ABC):
 
     @property
     @abstractmethod
-    def save(self) -> BaseSave:
+    def save(self) -> 'BaseSave':
         pass
 
     @property
-    def functions(self) -> Functions:
+    def functions(self) -> 'Functions':
         return Functions(self)
 
     @property
-    def mask(self) -> Mask:
+    def mask(self) -> 'Mask':
         return Mask(self)
 
     @property
-    def ml(self) -> BaseML:
+    def ml(self) -> 'BaseML':
         return BaseML(self)
 
     @property
     @abstractmethod
-    def rows(self) -> BaseRows:
+    def rows(self) -> 'BaseRows':
         pass
 
     @property
     @abstractmethod
-    def cols(self) -> BaseColumns:
+    def cols(self) -> 'BaseColumns':
         pass
 
     @property
-    def constants(self) -> BaseConstants:
+    def constants(self) -> 'BaseConstants':
         return BaseConstants()
 
     @property
-    def plot(self) -> Plot:
+    def plot(self) -> 'Plot':
         return Plot(self)
 
     @property
-    def outliers(self) -> Outliers:
+    def outliers(self) -> 'Outliers':
         return Outliers(self)
 
     @property
-    def encoding(self) -> BaseEncoding:
+    def encoding(self) -> 'BaseEncoding':
         return BaseEncoding(self)
 
     def visualize(self):
@@ -406,7 +406,9 @@ class BaseDataFrame(ABC):
         """
         df = self
 
-        return {"columns": [{"title": col_name} for col_name in df.cols.select(cols).cols.names()],
+        cols = parse_columns(df, cols)        
+
+        return {"columns": [{"title": col_name} for col_name in cols],
                 "value": df.rows.to_list(cols)}
 
     @abstractmethod
