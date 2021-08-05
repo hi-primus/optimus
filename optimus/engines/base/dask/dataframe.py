@@ -256,16 +256,6 @@ class DaskBaseDataFrame(BaseDataFrame):
         """
         raise NotImplementedError
 
-    @staticmethod
-    def create_id(column="id"):
-        """
-        Create a unique id for every row.
-        :param column: Columns to be processed
-        :return:
-        """
-
-        raise NotImplementedError
-
     def to_dict(self, cols="*", n=10, orient="list"):
         """
         Create a dict

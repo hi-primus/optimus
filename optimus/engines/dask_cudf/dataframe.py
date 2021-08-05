@@ -63,10 +63,6 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
     def debug():
         pass
 
-    @staticmethod
-    def create_id(column="id"):
-        pass
-
     def to_pandas(self):
         return self.data.compute().to_pandas()
 

@@ -2147,6 +2147,25 @@ class BaseColumns(ABC):
 
         return format_dict(iqr_result)
 
+    def create_index(self, col) -> 'DataFrameType':
+        """
+        Create a unique id for every row.
+        :param col: Column to be created
+        :return:
+        """
+        df = self.root
+        dfd = df.data
+
+        names = df.cols.names()
+        dfd = dfd.reset_index()
+
+        new_df = self.root.new(dfd)
+        new_names = new_df.cols.names()
+
+        col_name = list(set(new_names) - set(names))[0]
+
+        return new_df.cols.rename(col_name, col)
+
     @staticmethod
     @abstractmethod
     def nest(cols, separator="", output_col=None, drop=False, shape="string") -> 'DataFrameType':

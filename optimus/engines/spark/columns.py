@@ -17,6 +17,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 
+from optimus.helpers.types import *
 import optimus.helpers.functions_spark
 from optimus import ROOT_DIR
 # Helpers
@@ -1282,6 +1283,10 @@ class Cols(BaseColumns):
             iqr_result[col_name] = result
 
         return format_dict(iqr_result)
+
+    def create_index(self, col="id") -> 'DataFrameType':
+        dfd = self.data.withColumn(col, F.monotonically_increasing_id())
+        return self.root.new(dfd)
 
     @staticmethod
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string

@@ -181,16 +181,6 @@ class DataFrameBaseDataFrame():
         """
         raise NotImplementedError
 
-    @staticmethod
-    def create_id(column="id"):
-        """
-        Create a unique id for every row.
-        :param column: Columns to be processed
-        :return:
-        """
-
-        raise NotImplementedError
-
     def to_pandas(self):
         return self.data
 

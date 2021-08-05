@@ -46,16 +46,6 @@ class BaseRows(ABC):
     def _reverse(self, dfd) -> 'InternalDataFrameType':
         return dfd[::-1]
 
-    @staticmethod
-    def create_id(col="id"):
-        """
-        Create a unique id for every row.
-        :param col: Columns to be processed
-        :return:
-        """
-
-        raise NotImplementedError('Not implemented yet')
-
     def append(self, dfs: 'DataFrameTypeList', names_map=None) -> 'DataFrameType':
         """
         Appends 2 or more dataframes

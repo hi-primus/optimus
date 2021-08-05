@@ -27,16 +27,6 @@ class Rows(DaskBaseRows):
         super(DaskBaseRows, self).__init__(df)
 
     @staticmethod
-    def create_id(column="id") -> DataFrame:
-        """
-        Create a unique id for every row.
-        :param column: Columns to be processed
-        :return:
-        """
-
-        return self.withColumn(column, F.monotonically_increasing_id())
-
-    @staticmethod
     def append(rows) -> DataFrame:
         """
         Append a row at the end of a dataframe

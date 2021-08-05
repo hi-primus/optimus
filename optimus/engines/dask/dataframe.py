@@ -37,10 +37,6 @@ class DaskDataFrame(DaskBaseDataFrame):
     def debug():
         pass
 
-    @staticmethod
-    def create_id(column="id"):
-        pass
-
     @property
     def rows(self):
         from optimus.engines.dask.rows import Rows

@@ -43,10 +43,6 @@ class VaexDataFrame(BaseDataFrame):
     def debug():
         pass
 
-    @staticmethod
-    def create_id(column="id"):
-        pass
-
     @property
     def rows(self):
         from optimus.engines.vaex.rows import Rows

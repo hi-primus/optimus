@@ -27,13 +27,6 @@ class DaskBaseRows():
             dfd = self._reverse(dfd)
         return dfd.reset_index()[self.root.cols.names()]
 
-    def create_id(self, col="id"):
-        # Reference https://github.com/dask/dask/issues/1426
-        dfd = self.root.data
-        a = da.arange(dfd.divisions[-1] + 1, chunks=dfd.divisions[1:])
-        dfd[col] = dd.from_dask_array(a)
-        return dfd
-
     def limit(self, count):
         """
         Limit the number of rows
