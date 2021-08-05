@@ -1284,7 +1284,7 @@ class Cols(BaseColumns):
 
         return format_dict(iqr_result)
 
-    def create_index(self, col="id") -> 'DataFrameType':
+    def create_key(self, col="id") -> 'DataFrameType':
         dfd = self.data.withColumn(col, F.monotonically_increasing_id())
         return self.root.new(dfd)
 

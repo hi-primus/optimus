@@ -2147,7 +2147,7 @@ class BaseColumns(ABC):
 
         return format_dict(iqr_result)
 
-    def create_index(self, col) -> 'DataFrameType':
+    def create_key(self, col) -> 'DataFrameType':
         """
         Create a unique id for every row.
         :param col: Column to be created
