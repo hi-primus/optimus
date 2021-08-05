@@ -1,10 +1,10 @@
 import re
 import string
 import time
+import warnings
 from abc import abstractmethod, ABC
 from functools import reduce
 from typing import Union
-import warnings
 
 import jellyfish as jellyfish
 import nltk
@@ -27,16 +27,16 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 # from optimus.engines.dask.functions import DaskFunctions as F
 from optimus.engines.base.meta import Meta
-from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions, PROFILER_CATEGORICAL_DTYPES, \
-    CONTRACTIONS
 from optimus.helpers.check import is_dask_dataframe
-from optimus.helpers.functions import transform_date_format
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
-from optimus.helpers.types import *
+from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions, PROFILER_CATEGORICAL_DTYPES, \
+    CONTRACTIONS
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.functions import transform_date_format
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.types import *
 from optimus.infer import is_dict, is_int_like, is_numeric_like, is_str, is_list_value, is_one_element, \
     is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int
 from optimus.profiler.constants import MAX_BUCKETS
@@ -77,35 +77,34 @@ class BaseColumns(ABC):
         for action in actions:
             action_cols = action.get("columns", None)
             action_stats = action.get("updated_stats", [])
-            
+
             if not action_cols:
                 continue
-            
+
             if is_tuple(action_cols):
                 action_cols = action_cols[1]
 
             if len(updated) and all(stat in action_stats for stat in updated):
                 continue
-            
+
             action_cols = val_to_list(action_cols)
             transformed_columns += action_cols
 
         return list(set(transformed_columns))
 
-
     def _set_transformed_stat(self, cols="*", stats=None):
 
         cols = parse_columns(self.root, cols)
-        actions = Meta.get(self.root.meta, "transformations.actions")  or []
+        actions = Meta.get(self.root.meta, "transformations.actions") or []
         stats = val_to_list(stats)
 
         for i, action in enumerate(actions):
             action_cols = action.get("columns", None)
             action_stats = action.get("updated_stats", [])
-            
+
             if not action_cols:
                 continue
-            
+
             if is_tuple(action_cols):
                 action_cols = action_cols[1]
 
@@ -115,7 +114,7 @@ class BaseColumns(ABC):
                 action.update({"updated_stats": list(set([*action_stats, *stats]))})
 
             actions[i] = action
-        
+
         self.root.meta = Meta.set(self.root.meta, "transformations.actions", actions)
 
     @abstractmethod
@@ -134,7 +133,8 @@ class BaseColumns(ABC):
         """
 
         df = self.root
-        cols = parse_columns(df, cols if regex is None else regex, is_regex=regex is not None, filter_by_column_types=data_type, invert=invert,
+        cols = parse_columns(df, cols if regex is None else regex, is_regex=regex is not None,
+                             filter_by_column_types=data_type, invert=invert,
                              accepts_missing_cols=accepts_missing_cols)
         meta = Meta.select_columns(df.meta, cols)
         dfd = df.data
@@ -261,7 +261,8 @@ class BaseColumns(ABC):
 
     def apply(self, cols="*", func=None, func_return_type=None, args=None, func_type=None, where=None,
               filter_col_by_data_types=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, mode="vectorized", set_index=False, default=None, **kwargs) -> 'DataFrameType':
+              meta_action=Actions.APPLY_COLS.value, mode="vectorized", set_index=False, default=None,
+              **kwargs) -> 'DataFrameType':
 
         columns = prepare_columns(self.root, cols, output_cols, filter_by_column_types=filter_col_by_data_types,
                                   accepts_missing_cols=True, default=default)
@@ -357,10 +358,10 @@ class BaseColumns(ABC):
         eval_values = val_to_list(eval_value)
 
         if len(cols) > len(values):
-            values = [value]*len(cols)
-        
+            values = [value] * len(cols)
+
         if len(cols) > len(eval_values):
-            eval_values = [eval_value]*len(cols)
+            eval_values = [eval_value] * len(cols)
 
         assign_dict = {}
 
@@ -482,7 +483,7 @@ class BaseColumns(ABC):
 
     @dispatch(list, str)
     def rename(self, cols, name) -> 'DataFrameType':
-        return self.rename([(col, col+"_"+name) for col in cols], None)
+        return self.rename([(col, col + "_" + name) for col in cols], None)
 
     @dispatch(object)
     def rename(self, func=None) -> 'DataFrameType':
@@ -495,7 +496,6 @@ class BaseColumns(ABC):
     @dispatch(str, str, object)
     def rename(self, col, name, func=None) -> 'DataFrameType':
         return self.rename([(col, name)], func)
-
 
     def parse_inferred_types(self, col_data_type):
         """
@@ -693,18 +693,18 @@ class BaseColumns(ABC):
         if mode == 0:
             search_by = alpha_lower + alpha_upper + digits
             replace_by = ["l"] * len(alpha_lower) + ["U"] * \
-                len(alpha_upper) + ["#"] * len(digits)
+                         len(alpha_upper) + ["#"] * len(digits)
         elif mode == 1:
             search_by = alpha_lower + alpha_upper + digits
             replace_by = ["c"] * len(alpha_lower) + ["c"] * \
-                len(alpha_upper) + ["#"] * len(digits)
+                         len(alpha_upper) + ["#"] * len(digits)
         elif mode == 2:
             search_by = alpha_lower + alpha_upper + digits
             replace_by = ["*"] * len(alpha_lower + alpha_upper + digits)
         elif mode == 3:
             search_by = alpha_lower + alpha_upper + digits + punctuation
             replace_by = ["*"] * \
-                len(alpha_lower + alpha_upper + digits + punctuation)
+                         len(alpha_lower + alpha_upper + digits + punctuation)
         else:
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
@@ -958,7 +958,7 @@ class BaseColumns(ABC):
         for col_name in column:
             new_columns.append(all_columns.pop(
                 all_columns.index(col_name)))  # delete
-        
+
         # Move the column to the new place
         if new_index <= len(all_columns):
             new_columns = new_columns[::-1]
@@ -1048,7 +1048,7 @@ class BaseColumns(ABC):
                     raise NotImplementedError(f"\"{func}\" is not available using {type(df).__name__}")
                 else:
                     func = _func
-            
+
             funcs[i] = func
 
         if parallel:
@@ -1159,7 +1159,7 @@ class BaseColumns(ABC):
 
         if is_str(tidy):
             kwargs.update({"current_format": tidy})
-        
+
         if is_str(compute):
             kwargs.update({"output_format": tidy})
 
@@ -1167,7 +1167,8 @@ class BaseColumns(ABC):
             kwargs.update({"output_cols": args[0]})
 
         if any([v in kwargs for v in ["current_format", "output_format", "output_cols"]]):
-            warnings.warn("'date_format' is no longer used for changing the format of a column, use 'format_date' instead.")
+            warnings.warn(
+                "'date_format' is no longer used for changing the format of a column, use 'format_date' instead.")
             return self.format_date(cols, **kwargs)
 
         # date_format  
@@ -1575,7 +1576,7 @@ class BaseColumns(ABC):
 
     def date_formats(self, cols="*", output_cols=None) -> 'DataFrameType':
         return self.apply(cols, "date_formats", func_return_type=str, output_cols=output_cols,
-                        meta_action=Actions.INFER.value, mode="partitioned", func_type="column_expr")    
+                          meta_action=Actions.INFER.value, mode="partitioned", func_type="column_expr")
 
     def upper(self, cols="*", output_cols=None) -> 'DataFrameType':
         return self.apply(cols, self.F.upper, func_return_type=str, output_cols=output_cols,
@@ -1633,8 +1634,8 @@ class BaseColumns(ABC):
 
         for col, col_format in zip(cols, formats):
             df = df.cols.apply(col, "format_date", args=(col_format, output_format), func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.FORMAT_DATE.value, mode="partitioned",
-                          set_index=False)
+                               output_cols=output_cols, meta_action=Actions.FORMAT_DATE.value, mode="partitioned",
+                               set_index=False)
 
         return df
 
@@ -1811,7 +1812,8 @@ class BaseColumns(ABC):
     def weekday(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
         return self._date_format(cols, format, output_cols, "weekday", meta_action=Actions.WEEKDAY.value)
 
-    def _td_between(self, cols="*", func=None, value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
+    def _td_between(self, cols="*", func=None, value=None, date_format=None, round=None,
+                    output_cols=None) -> 'DataFrameType':
 
         df = self.root
         cols = parse_columns(df, cols)
@@ -1831,7 +1833,8 @@ class BaseColumns(ABC):
 
         return df.cols.apply(cols, func, args=[value, date_format], func_return_type=str,
                              output_cols=output_cols,
-                             meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True).cols._round(output_cols, round)
+                             meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True).cols._round(
+            output_cols, round)
 
     def years_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
 
@@ -2010,7 +2013,8 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
 
-    def _math(self, cols="*", value=None, operator=None, output_cols=None, output_col=None, name="", cast=False) -> 'DataFrameType':
+    def _math(self, cols="*", value=None, operator=None, output_cols=None, output_col=None, name="",
+              cast=False) -> 'DataFrameType':
         """
         Helper to process arithmetic operation between columns. If a
         :param cols: Columns to be used to make the calculation
@@ -2025,7 +2029,7 @@ class BaseColumns(ABC):
 
         if value is None:
             if not output_col:
-                output_col = name+"_"+"_".join(cols)
+                output_col = name + "_" + "_".join(cols)
             if cast:
                 expr = reduce(operator, [df[col_name].cols.to_float() for col_name in parsed_cols])
             else:
@@ -2040,7 +2044,7 @@ class BaseColumns(ABC):
                     cols.update({output_col: operator(df[input_col].cols.to_float(), value)})
                 else:
                     cols.update({output_col: operator(df[input_col], value)})
-                    
+
             return df.cols.assign(cols)
 
     def add(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
@@ -2051,7 +2055,8 @@ class BaseColumns(ABC):
         :param output_col: Single output column in case no value is passed
         :return:
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: x + y, output_cols=output_cols, output_col=output_col, name="add", cast=True)
+        return self._math(cols=cols, value=value, operator=lambda x, y: x + y, output_cols=output_cols,
+                          output_col=output_col, name="add", cast=True)
 
     def sub(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
         """
@@ -2061,7 +2066,8 @@ class BaseColumns(ABC):
         :param output_col: Single output column in case no value is passed
         :return:
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: x - y, output_cols=output_cols, output_col=output_col, name="sub")
+        return self._math(cols=cols, value=value, operator=lambda x, y: x - y, output_cols=output_cols,
+                          output_col=output_col, name="sub")
 
     def mul(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
         """
@@ -2071,7 +2077,8 @@ class BaseColumns(ABC):
         :param output_col: Single output column in case no value is passed
         :return:
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: x * y, output_cols=output_cols, output_col=output_col, name="mul")
+        return self._math(cols=cols, value=value, operator=lambda x, y: x * y, output_cols=output_cols,
+                          output_col=output_col, name="mul")
 
     def div(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
         """
@@ -2081,7 +2088,8 @@ class BaseColumns(ABC):
         :param output_col: Single output column in case no value is passed
         :return:
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: x / y, output_cols=output_cols, output_col=output_col, name="div")
+        return self._math(cols=cols, value=value, operator=lambda x, y: x / y, output_cols=output_cols,
+                          output_col=output_col, name="div")
 
     def rdiv(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
         """
@@ -2091,27 +2099,28 @@ class BaseColumns(ABC):
         :param output_col: Single output column in case no value is passed
         :return:
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: y / x, output_cols=output_cols, output_col=output_col, name="rdiv")
+        return self._math(cols=cols, value=value, operator=lambda x, y: y / x, output_cols=output_cols,
+                          output_col=output_col, name="rdiv")
 
     def z_score(self, cols="*", output_cols=None) -> 'DataFrameType':
         return self.root.cols.apply(cols, "z_score", func_return_type=float, output_cols=output_cols,
-                             meta_action=Actions.Z_SCORE.value, mode="vectorized")
+                                    meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
     def modified_z_score(self, cols="*", output_cols=None) -> 'DataFrameType':
         return self.root.cols.apply(cols, "modified_z_score", func_return_type=float, output_cols=output_cols,
-                             meta_action=Actions.Z_SCORE.value, mode="vectorized")
+                                    meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
     def standard_scaler(self, cols="*", output_cols=None):
         return self.root.cols.apply(cols, func="standard_scaler", output_cols=output_cols,
-                             meta_action=Actions.STANDARD_SCALER.value)
+                                    meta_action=Actions.STANDARD_SCALER.value)
 
     def max_abs_scaler(self, cols="*", output_cols=None):
         return self.root.cols.apply(cols, func="max_abs_scaler", output_cols=output_cols,
-                             meta_action=Actions.MAX_ABS_SCALER.value)
+                                    meta_action=Actions.MAX_ABS_SCALER.value)
 
     def min_max_scaler(self, cols="*", output_cols=None):
         return self.root.cols.apply(cols, func="min_max_scaler", output_cols=output_cols,
-                             meta_action=Actions.MIN_MAX_SCALER.value)
+                                    meta_action=Actions.MIN_MAX_SCALER.value)
 
     def iqr(self, cols="*", more=None, relative_error=RELATIVE_ERROR):
         """
@@ -2177,7 +2186,8 @@ class BaseColumns(ABC):
 
         return dfd_new
 
-    def unnest(self, cols="*", separator=None, splits=2, index=None, output_cols=None, drop=False, mode="string") -> 'DataFrameType':
+    def unnest(self, cols="*", separator=None, splits=2, index=None, output_cols=None, drop=False,
+               mode="string") -> 'DataFrameType':
         """
         Split an array or string in different columns
         :param cols: Columns to be un-nested
@@ -2446,7 +2456,8 @@ class BaseColumns(ABC):
                     {"format": pydateinfer.infer(filtered_dates)})
 
         for col in cols_and_inferred_dtype:
-            self.root.meta = Meta.set(self.root.meta, f"columns.{col}.stats.inferred_type", cols_and_inferred_dtype[col])
+            self.root.meta = Meta.set(self.root.meta, f"columns.{col}.stats.inferred_type",
+                                      cols_and_inferred_dtype[col])
 
         return cols_and_inferred_dtype
 
@@ -2475,7 +2486,7 @@ class BaseColumns(ABC):
             result.update({col_name: date_format})
 
         return format_dict(result, tidy)
-    
+
     def frequency(self, cols="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
                   compute=True, tidy=False) -> dict:
         """
@@ -2623,7 +2634,7 @@ class BaseColumns(ABC):
         """
 
         return self.apply(cols, "domain", output_cols=output_cols, meta_action=Actions.DOMAIN.value,
-                             mode="vectorized")
+                          mode="vectorized")
 
     def top_domain(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
@@ -2634,72 +2645,73 @@ class BaseColumns(ABC):
         """
 
         return self.apply(cols, "top_domain", output_cols=output_cols, meta_action=Actions.TOP_DOMAIN.value,
-                             mode="vectorized")
+                          mode="vectorized")
 
     def sub_domain(self, cols="*", output_cols=None) -> 'DataFrameType':
         # From https://www.hi-bumblebee.com:8080 it returns www
 
         return self.apply(cols, "sub_domain", output_cols=output_cols, meta_action=Actions.SUB_DOMAIN.value,
-                             mode="vectorized")
+                          mode="vectorized")
 
     def url_scheme(self, cols="*", output_cols=None) -> 'DataFrameType':
         # From https://www.hi-bumblebee.com it returns https
         return self.apply(cols, "url_scheme", output_cols=output_cols,
-                             meta_action=Actions.URL_SCHEME.value,
-                             mode="vectorized")
+                          meta_action=Actions.URL_SCHEME.value,
+                          mode="vectorized")
 
     def url_path(self, cols="*", output_cols=None) -> 'DataFrameType':
 
         return self.apply(cols, "url_path", output_cols=output_cols,
-                             meta_action=Actions.URL_PATH.value,
-                             mode="vectorized")
+                          meta_action=Actions.URL_PATH.value,
+                          mode="vectorized")
 
     def url_file(self, cols="*", output_cols=None) -> 'DataFrameType':
 
         return self.apply(cols, "url_file", output_cols=output_cols,
-                             meta_action=Actions.URL_FILE.value,
-                             mode="vectorized")
+                          meta_action=Actions.URL_FILE.value,
+                          mode="vectorized")
 
     def url_query(self, cols="*", output_cols=None) -> 'DataFrameType':
 
         return self.apply(cols, "url_query", output_cols=output_cols, meta_action=Actions.URL_QUERY.value,
-                             mode="vectorized")
+                          mode="vectorized")
 
     def url_fragment(self, cols="*", output_cols=None) -> 'DataFrameType':
 
         return self.apply(cols, "url_fragment", output_cols=output_cols, meta_action=Actions.URL_FRAGMENT.value,
-                             mode="vectorized")
+                          mode="vectorized")
 
     def host(self, cols="*", output_cols=None) -> 'DataFrameType':
 
         return self.apply(cols, "host", output_cols=output_cols, meta_action=Actions.HOST.value,
-                             mode="vectorized")
+                          mode="vectorized")
 
     def port(self, cols="*", output_cols=None) -> 'DataFrameType':
 
         return self.apply(cols, "port", output_cols=output_cols, meta_action=Actions.PORT.value,
-                             mode="vectorized")
+                          mode="vectorized")
 
     # Email functions
     def email_username(self, cols="*", output_cols=None) -> 'DataFrameType':
-        
+
         return self.apply(cols, "email_username", output_cols=output_cols,
-                             meta_action=Actions.EMAIL_USER.value,
-                             mode="vectorized")
+                          meta_action=Actions.EMAIL_USER.value,
+                          mode="vectorized")
 
     def email_domain(self, cols="*", output_cols=None) -> 'DataFrameType':
-        
+
         return self.apply(cols, "email_domain", output_cols=output_cols,
-                             meta_action=Actions.EMAIL_DOMAIN.value,
-                             mode="vectorized")
+                          meta_action=Actions.EMAIL_DOMAIN.value,
+                          mode="vectorized")
 
     # Mask functions
 
-    def _mask(self, cols="*", method: str = None, output_cols=None, rename_func=True, *args, **kwargs) -> 'DataFrameType':
+    def _mask(self, cols="*", method: str = None, output_cols=None, rename_func=True, *args,
+              **kwargs) -> 'DataFrameType':
 
         append_df: 'DataFrameType' = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
-        if cols=="*":
+        if cols == "*":
             cols = one_list_to_val(parse_columns(append_df, cols))
 
         if output_cols:
@@ -2725,11 +2737,12 @@ class BaseColumns(ABC):
                       for col in mask.cols.names()}
 
         if compute:
-            return self.F.compute(format_dict(values, tidy)) 
+            return self.F.compute(format_dict(values, tidy))
         else:
             return format_dict(values, tidy)
 
-    def _count_mask(self, cols="*", method: str = None, inverse=False, tidy=True, compute=True, *args, **kwargs) -> bool:
+    def _count_mask(self, cols="*", method: str = None, inverse=False, tidy=True, compute=True, *args,
+                    **kwargs) -> bool:
 
         mask = getattr(self.root.mask, method)(cols=cols, *args, **kwargs)
 
@@ -2742,7 +2755,7 @@ class BaseColumns(ABC):
             values = {col: mask.data[col].sum() for col in mask.cols.names()}
 
         if compute:
-            return self.F.compute(format_dict(values, tidy)) 
+            return self.F.compute(format_dict(values, tidy))
         else:
             return format_dict(values, tidy)
 
@@ -2760,8 +2773,10 @@ class BaseColumns(ABC):
     def any_less_than_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         return self._any_mask(cols, "less_than_equal", value=value, inverse=inverse, tidy=tidy, compute=compute)
 
-    def any_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds, inverse=inverse, tidy=tidy, compute=compute)
+    def any_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, inverse=False,
+                    tidy=True, compute=True):
+        return self._any_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal,
+                              bounds=bounds, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         return self._any_mask(cols, "equal", value=value, inverse=inverse, tidy=tidy, compute=compute)
@@ -2794,7 +2809,8 @@ class BaseColumns(ABC):
     #     return self._any_mask(cols, "unique", keep=keep, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_match(self, cols="*", regex=None, data_type=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, "match", regex=regex, data_type=data_type, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, "match", regex=regex, data_type=data_type, inverse=inverse, tidy=tidy,
+                              compute=compute)
 
     def any_match_data_type(self, cols="*", data_type=None, inverse=False, tidy=True, compute=True):
         return self._any_mask(cols, "match_data_type", data_type=data_type, inverse=inverse, tidy=tidy, compute=compute)
@@ -2887,8 +2903,10 @@ class BaseColumns(ABC):
     def count_less_than_equal(self, cols="*", value=None, tidy=True, compute=True):
         return self._count_mask(cols, "less_than_equal", value=value, tidy=tidy, compute=compute)
 
-    def count_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, tidy=True, compute=True):
-        return self._count_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds, tidy=tidy, compute=compute)
+    def count_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, tidy=True,
+                      compute=True):
+        return self._count_mask(cols, "between", lower_bound=lower_bound, upper_bound=upper_bound, equal=equal,
+                                bounds=bounds, tidy=tidy, compute=compute)
 
     def count_equal(self, cols="*", value=None, tidy=True, compute=True):
         return self._count_mask(cols, "equal", value=value, tidy=tidy, compute=compute)
@@ -3018,10 +3036,12 @@ class BaseColumns(ABC):
         rename_func = False if drop else lambda n: f"{n}_less_than_equal_{value}"
         return self._mask(cols, "less_than_equal", output_cols, rename_func, value=value)
 
-    def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, output_cols=None, drop=True) -> 'DataFrameType':
+    def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, output_cols=None,
+                drop=True) -> 'DataFrameType':
         value = str(bounds) if bounds else str((lower_bound, upper_bound))
         rename_func = False if drop else lambda n: f"{n}_between_{value}"
-        return self._mask(cols, "between", output_cols, rename_func, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
+        return self._mask(cols, "between", output_cols, rename_func, lower_bound=lower_bound, upper_bound=upper_bound,
+                          equal=equal, bounds=bounds)
 
     def equal(self, cols="*", value=None, output_cols=None, drop=True) -> 'DataFrameType':
         rename_func = False if drop else lambda n: f"{n}_equal_{value}"

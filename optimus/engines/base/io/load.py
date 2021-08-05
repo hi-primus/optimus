@@ -18,7 +18,7 @@ class BaseLoad:
     def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
             storage_options=None, conn=None,
-            *args, **kwargs) -> DataFrameType:
+            *args, **kwargs) -> 'DataFrameType':
         """
               Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
               params
@@ -46,17 +46,17 @@ class BaseLoad:
 
     @staticmethod
     @abstractmethod
-    def xml(path, *args, **kwargs) -> DataFrameType:
+    def xml(path, *args, **kwargs) -> 'DataFrameType':
         pass
 
     @staticmethod
     @abstractmethod
-    def json(path, *args, **kwargs) -> DataFrameType:
+    def json(path, *args, **kwargs) -> 'DataFrameType':
         pass
 
     @staticmethod
     @abstractmethod
-    def excel(path, *args, **kwargs) -> DataFrameType:
+    def excel(path, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -68,7 +68,7 @@ class BaseLoad:
 
     @staticmethod
     @abstractmethod
-    def avro(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs) -> DataFrameType:
+    def avro(path, sheet_name=0, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
@@ -82,7 +82,7 @@ class BaseLoad:
 
     @staticmethod
     @abstractmethod
-    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs) -> DataFrameType:
+    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -96,7 +96,7 @@ class BaseLoad:
 
     @staticmethod
     @abstractmethod
-    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> DataFrameType:
+    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a OCR file.
         :param path: path or location of the file. Must be string dataType
@@ -112,15 +112,15 @@ class BaseLoad:
     @staticmethod
     @abstractmethod
     def zip(path, filename, dest=None, columns=None, storage_options=None, conn=None, *args,
-            **kwargs) -> DataFrameType:
+            **kwargs) -> 'DataFrameType':
         pass
 
     @staticmethod
     @abstractmethod
-    def hdf5(path, columns=None, *args, **kwargs) -> DataFrameType:
+    def hdf5(path, columns=None, *args, **kwargs) -> 'DataFrameType':
         pass
 
-    def file(self, path, *args, **kwargs) -> DataFrameType:
+    def file(self, path, *args, **kwargs) -> 'DataFrameType':
         """
         Try to  infer the file data format and encoding
         :param path: Path to the file you want to load.

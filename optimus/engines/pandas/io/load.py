@@ -22,11 +22,11 @@ from optimus.infer import is_str, is_list, is_url
 class Load(BaseLoad):
 
     @staticmethod
-    def xml(path, *args, **kwargs) -> DataFrameType:
+    def xml(path, *args, **kwargs) -> 'DataFrameType':
         pass
 
     @staticmethod
-    def hdf5(path, columns=None, *args, **kwargs) -> DataFrameType:
+    def hdf5(path, columns=None, *args, **kwargs) -> 'DataFrameType':
         pass
 
     def __init__(self, op):

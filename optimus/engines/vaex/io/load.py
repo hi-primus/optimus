@@ -13,15 +13,15 @@ from optimus.helpers.logger import logger
 class Load(BaseLoad):
 
     @staticmethod
-    def xml(path, *args, **kwargs) -> DataFrameType:
+    def xml(path, *args, **kwargs) -> 'DataFrameType':
         pass
 
     @staticmethod
-    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> DataFrameType:
+    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         pass
 
     @staticmethod
-    def zip(path, filename, dest=None, columns=None, storage_options=None, conn=None, *args, **kwargs) -> DataFrameType:
+    def zip(path, filename, dest=None, columns=None, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         pass
 
     def __init__(self, op):

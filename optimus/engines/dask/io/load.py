@@ -48,8 +48,8 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def tsv(path, header=True, infer_schema=True, *args, **kwargs):
-        return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
+    def tsv(path, header1=True, infer_schema=True, *args):
+        return Load.csv(path, sep='\t', header=header1, infer_schema=infer_schema, *args)
 
     @staticmethod
     def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
