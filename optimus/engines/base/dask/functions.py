@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import re
 import dask
 import dask.dataframe as dd
@@ -24,6 +25,14 @@ class DaskBaseFunctions():
     def compute(self, *args, **kwargs):
         result = dask.compute(*(*(a for a in args), *(kwargs[k] for k in kwargs)))
         return one_tuple_to_val(result)
+
+    @abstractmethod
+    def from_dataframe(self, dfd):
+        pass
+
+    @staticmethod
+    def to_dataframe(dfd):
+        return dfd.compute()
 
     def all(self, series):
         return series.all()

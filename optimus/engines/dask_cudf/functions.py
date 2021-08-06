@@ -1,4 +1,5 @@
 import cudf
+import dask_cudf
 from optimus.engines.base.functions import Functions
 from optimus.engines.base.dask.functions import DaskBaseFunctions
 from optimus.engines.base.cudf.functions import CUDFBaseFunctions
@@ -8,6 +9,10 @@ class DaskCUDFFunctions(DaskBaseFunctions, CUDFBaseFunctions, Functions):
     @property
     def _partition_engine(self):
         return cudf
+
+    @staticmethod
+    def from_dataframe(dfd):
+        dask_cudf.from_cudf(dfd)
 
     def kurtosis(self, series):
         return series.map_partitions(lambda _series: _series.kurtosis())
