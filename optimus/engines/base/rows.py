@@ -120,7 +120,7 @@ class BaseRows(ABC):
             else:
                 expr = eval(expr)
                 
-        dfd = dfd[expr.get_series()].reset_index(drop=True)
+        dfd = dfd.reset_index(drop=True)[expr.get_series().reset_index(drop=True)]
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 
         df = self.root.new(dfd, meta=meta)
@@ -232,7 +232,7 @@ class BaseRows(ABC):
                 where = df[where]
             else:
                 where = eval(where)
-        dfd = dfd[where.get_series()==0].reset_index(drop=True)
+        dfd = dfd.reset_index(drop=True)[where.get_series().reset_index(drop=True)==0]
         meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 

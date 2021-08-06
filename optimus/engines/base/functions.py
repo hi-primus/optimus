@@ -622,4 +622,4 @@ class Functions(ABC):
         return series.map(lambda v: pydateinfer.infer([v]))
 
     def levenshtein(self, col_A, col_B):
-        return jellyfish.levenshtein_distance(col_A,col_B)
+        return jellyfish.levenshtein_distance(col_A, col_B)

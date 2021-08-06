@@ -3179,7 +3179,7 @@ class BaseColumns(ABC):
         # https://github.com/OpenRefine/OpenRefine/blob/master/main/src/com/google/refine/clustering/binning/FingerprintKeyer.java#L56
         def _split_sort_remove_join(value):
             """
-            Helper function to split, remove duplicates, sort and join back together
+            Helper function to split, remove duplicate, sort and join back together
             """
             # Split into whitespace-separated token
             # print("value", type(value), value)
@@ -3298,7 +3298,7 @@ class BaseColumns(ABC):
     def levenshtein(self, col_A, col_B, output_cols=None):
         return self.apply(None, self.F.levenshtein, args=(col_A, col_B,), func_return_type=str,
                           output_cols=output_cols,
-                          meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
+                          meta_action=Actions.LEVENSHTEIN.value, mode="map", func_type="column_expr")
 
     def nysiis(self, cols="*", output_cols=None) -> 'DataFrameType':
         """

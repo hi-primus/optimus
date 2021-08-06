@@ -113,22 +113,21 @@ def string_clustering(df, cols="*", algorithm=None, *args, **kwargs) -> 'Cluster
             total_rows = df.rows.count()
             topn = 2
             result = {}
-            cols_dict = {}
-            cols_dict = {}
+            suggestions = []
 
             for s in _df.data[input_col]:
-                cols_dict[s] = {}
                 b = a[((a[:, 0] == s) | (a[:, 1] == s))]
 
                 c = b[b[:, 2].argsort()][:topn][:, [0, 1]]
                 c = [s] + c[np.where(c != s)].tolist()
-                cols_dict[s] = {
+                suggestions.append({
+                    "cluster": s,
                     "suggestion": c[0], 
                     "suggestions": c, 
                     "suggestions_size": len(c), 
                     "total_count": total_rows
-                }
-            result[input_col] = cols_dict
+                })
+            result[input_col] = suggestions
         else:
 
             cluster_col = name_col(input_col, CLUSTER_COL)
