@@ -37,7 +37,7 @@ class CUDFDataFrame(DataFrameBaseDataFrame, BaseDataFrame):
     @property
     def functions(self):
         from optimus.engines.cudf.functions import CUDFFunctions
-        return CUDFFunctions()
+        return CUDFFunctions(self)
 
     @property
     def constants(self):

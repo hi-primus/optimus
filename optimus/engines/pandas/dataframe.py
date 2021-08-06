@@ -33,7 +33,7 @@ class PandasDataFrame(DataFrameBaseDataFrame, BaseDataFrame):
     @property
     def functions(self):
         from optimus.engines.pandas.functions import PandasFunctions
-        return PandasFunctions()
+        return PandasFunctions(self)
 
     @property
     def mask(self):

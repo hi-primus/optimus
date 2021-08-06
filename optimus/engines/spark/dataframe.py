@@ -37,7 +37,7 @@ class SparkDataFrame(BaseDataFrame):
     @property
     def functions(self):
         from optimus.engines.spark.functions import SparkFunctions
-        return SparkFunctions()
+        return SparkFunctions(self)
 
     def _buffer_window():
         pass

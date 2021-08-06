@@ -60,7 +60,7 @@ class VaexDataFrame(BaseDataFrame):
     @property
     def functions(self):
         from optimus.engines.vaex.functions import VaexFunctions
-        return VaexFunctions()
+        return VaexFunctions(self)
 
     @property
     def mask(self):
