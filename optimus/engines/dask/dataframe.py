@@ -54,7 +54,7 @@ class DaskDataFrame(DaskBaseDataFrame):
     @property
     def functions(self):
         from optimus.engines.dask.functions import DaskFunctions
-        return DaskFunctions()
+        return DaskFunctions(self)
 
     @property
     def mask(self):
