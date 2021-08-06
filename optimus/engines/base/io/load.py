@@ -176,7 +176,7 @@ class BaseLoad:
                     dialect = csv.Sniffer().sniff(str(buffer))
                     mime_info["file_type"] = "csv"
 
-                    r = {"properties": {"delimiter": dialect.delimiter,
+                    r = {"properties": {"sep": dialect.delimiter,
                                         "doublequote": dialect.doublequote,
                                         "escapechar": dialect.escapechar,
                                         "lineterminator": dialect.lineterminator,
