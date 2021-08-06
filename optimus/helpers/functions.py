@@ -26,7 +26,7 @@ from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_url
 
-def _variables(ins, namespace=None):
+def _list_variables(ins, namespace=None):
     
     if not namespace:
         try:
@@ -38,35 +38,35 @@ def _variables(ins, namespace=None):
     return [obj for obj in (namespace or []) if isinstance(namespace[obj], ins) and not obj.startswith("_")]
 
 
-def engines(namespace=None):
+def list_engines(namespace=None):
     from optimus.engines.base.engine import BaseEngine
-    return _variables(BaseEngine, namespace)
+    return _list_variables(BaseEngine, namespace)
 
 
-def dataframes(namespace=None):
+def list_dataframes(namespace=None):
     from optimus.engines.base.basedataframe import BaseDataFrame
-    return _variables(BaseDataFrame, namespace)
+    return _list_variables(BaseDataFrame, namespace)
 
 
-def clusters(namespace=None):
+def list_clusters(namespace=None):
     from optimus.engines.base.stringclustering import Clusters
-    return _variables(Clusters, namespace)
+    return _list_variables(Clusters, namespace)
 
 
-def connections(namespace=None):
+def list_connections(namespace=None):
     from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
     from optimus.engines.base.io.connect import Connection
-    return _variables((Connection, DaskBaseJDBC), namespace)
+    return _list_variables((Connection, DaskBaseJDBC), namespace)
 
 
-def file_connections(namespace=None):
+def list_file_connections(namespace=None):
     from optimus.engines.base.io.connect import Connection
-    return _variables(Connection, namespace)
+    return _list_variables(Connection, namespace)
 
 
-def database_connections(namespace=None):
+def list_database_connections(namespace=None):
     from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
-    return _variables(DaskBaseJDBC, namespace)
+    return _list_variables(DaskBaseJDBC, namespace)
 
 
 def random_int(n=5):
