@@ -103,7 +103,7 @@ def string_clustering(df, cols="*", algorithm=None, *args, **kwargs) -> 'Cluster
     for input_col in cols:
         if algorithm == "levenshtein":
             a = np.empty((0, 3))
-            _df = df[input_col].rows.drop_duplicates()
+            _df = df[input_col].rows.drop_duplicated(how="all")
             _df = df.cols.fingerprint(input_col)
 
             for b, z in zip(combinations_with_replacement(_df.data[input_col], 2),

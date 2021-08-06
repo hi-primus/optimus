@@ -16,7 +16,7 @@ def fingerprint(df, input_cols):
     # https://github.com/OpenRefine/OpenRefine/blob/master/main/src/com/google/refine/clustering/binning/FingerprintKeyer.java#L56
     def _split_sort_remove_join(value):
         """
-        Helper function to split, remove duplicates, sort and join back together
+        Helper function to split, remove duplicate, sort and join back together
         """
         split_key = value.split()
 

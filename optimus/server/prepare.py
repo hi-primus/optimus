@@ -265,7 +265,7 @@ alias_map_list = [
     ["dropRows", "rows.drop"],
     ["between", "rows.between"],
     [["dropNA", "drop_na"], "rows.drop_na"],
-    [["dropDuplicates", "drop_duplicates"], "rows.drop_duplicates"],
+    [["dropDuplicated", "drop_duplicated"], "rows.drop_duplicated"],
     ["limit", "rows.limit"],
     [["isIn", "is_in"], "rows.is_in"]
 ]

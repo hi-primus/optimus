@@ -40,6 +40,9 @@ class DaskBaseFunctions():
     def any(self, series):
         return series.any()
 
+    def duplicated(self, dfd, keep, subset):
+        return self.from_dataframe(self.to_dataframe(dfd).duplicated(keep=keep, subset=subset))
+
     def word_tokenize(self, series):
         pass
 

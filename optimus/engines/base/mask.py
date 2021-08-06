@@ -327,7 +327,7 @@ class Mask(ABC):
 
         col_name = cols[0] if len(cols) == 1 else "__duplicated__"
 
-        mask = subset_df.duplicated(keep=keep, subset=cols).rename(col_name)
+        mask = self.root.functions.duplicated(subset_df, keep, cols).rename(col_name)
 
         return self.root.new(self._to_frame(mask))
 

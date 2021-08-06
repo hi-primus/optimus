@@ -43,6 +43,12 @@ class DaskBaseRows():
 
         return self.root.new(self.root._base_to_dfd(df.cols.select("*").data.head(count), partitions))
 
+    def drop_duplicated(self, cols="*", keep="first", how="any"):
+        # not supported arguments on dask
+        if how == "all" and keep == "first":
+            return self._drop_duplicated_builtin(cols, keep)
+        return self._mask(cols, method="duplicated", drop=True, keep=keep, how=how)
+
     def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
                 bounds=None):
         """
