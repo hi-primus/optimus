@@ -645,9 +645,9 @@ class BaseColumns(ABC):
             columns = prepare_columns(df, cols, output_cols, args=data_type)
 
         func_map = {
-            "float": "to_float",
             "int": "to_integer",
-            "datetime": "to_datetime",
+            "time": "to_datetime",
+            "date": "to_datetime",
             "bool": "to_boolean",
             "str": "to_string"
         }
@@ -662,10 +662,14 @@ class BaseColumns(ABC):
             else:
                 RaiseIt.value_error(columns, ["list of tuples"])
 
-            if arg in func_map.keys():
-                df = getattr(df.cols, func_map[arg])(input_col, output_col)
+            func_name = func_map.get(arg, f"to_{arg}")
+
+            func = getattr(df.cols, func_name, None)
+
+            if func:
+                df = func(input_col, output_col)
             else:
-                RaiseIt.value_error(arg, list(func_map.keys()))
+                RaiseIt.value_error(arg)
 
         return df
 
