@@ -45,10 +45,7 @@ class Plot:
         :param output_path: path where the image is going to be saved
         :return:
         """
-        df = self.df
-        columns = parse_columns(df, columns)
-
-        stats = df.cols.boxplot(columns)
+        stats = self.df.cols.boxplot(columns)
         plot_boxplot(stats, output=output_format, path=output_path)
 
     def frequency(self, columns=None, buckets=10, output_format="plot", output_path=None):
