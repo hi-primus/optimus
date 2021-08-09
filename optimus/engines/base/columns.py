@@ -127,6 +127,28 @@ class BaseColumns(ABC):
         """
         pass
 
+    def concat(self, dfs: 'DataFrameTypeList') -> 'DataFrameType':
+        """
+        Same as append
+        :param dfs: DataFrame, list of dataframes or list of columns to append to the dataframe
+        :return: DataFrame
+        """
+        return self.append(dfs)
+
+    def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None, key_middle=False) -> 'DataFrameType':
+        """
+        Same as df.join
+        :param df_right:
+        :param how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
+        :param on:
+        :param left_on:
+        :param right_on:
+        :param key_middle: Order the columns putting the left df columns before the key column and the right df columns
+
+        :return: DataFrame
+        """
+        return self.root.join(df_right, how, on, left_on, right_on, key_middle)
+
     def select(self, cols="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> 'DataFrameType':
         """
         Select columns using index, column name, regex to data type
