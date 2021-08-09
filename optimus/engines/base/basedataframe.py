@@ -1012,7 +1012,7 @@ class BaseDataFrame(ABC):
         return string_clustering(self, cols, algorithm, *args, **kwargs)
         # return clusters
 
-    def agg(self, aggregations: dict, groupby=None, output="dict"):
+    def agg(self, aggregations: dict, groupby=None, output="dict", tidy=True):
 
         df = self
         dfd = df.data
@@ -1045,7 +1045,7 @@ class BaseDataFrame(ABC):
             if output == "dataframe":
                 result = self.new(result)
 
-        return result
+        return format_dict(result, tidy=tidy)
 
     def report(self, df, cols="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR,
                approx_count=True,
