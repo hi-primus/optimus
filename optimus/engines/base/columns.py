@@ -120,6 +120,11 @@ class BaseColumns(ABC):
 
     @abstractmethod
     def append(self, dfs: 'DataFrameTypeList') -> 'DataFrameType':
+        """
+        Appends one or more columns or dataframes
+        :param dfs: DataFrame, list of dataframes or list of columns to append to the dataframe
+        :return: DataFrame
+        """
         pass
 
     def select(self, cols="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> 'DataFrameType':
