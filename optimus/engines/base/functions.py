@@ -129,10 +129,10 @@ class Functions(ABC):
         return pydateinfer.infer(series.values)
 
     def min(self, series):
-        return self.to_float(series).min()
+        return series.min()
 
     def max(self, series):
-        return self.to_float(series).max()
+        return series.max()
 
     def mean(self, series):
         return self.to_float(series).mean()
