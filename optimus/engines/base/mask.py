@@ -113,7 +113,7 @@ class Mask(ABC):
         cols = one_list_to_val(parse_columns(df, cols))
         data_type = one_list_to_val(data_type)
 
-        mask_match = df[cols].mask.match(cols, data_type)
+        mask_match = df[cols].mask.match_data_type(cols, data_type)
         mask_null = df[cols].mask.null(cols)
         return ~(mask_match | mask_null)
 
