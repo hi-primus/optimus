@@ -117,7 +117,14 @@ class Mask(ABC):
         mask_null = df[cols].mask.null(cols)
         return ~(mask_match | mask_null)
 
-    def match(self, cols="*", regex=None, data_type=None) -> 'MaskDataFrameType':
+    def match(self, cols="*", arg=None, regex=None, data_type=None) -> 'MaskDataFrameType':
+
+        if arg is not None:
+            if arg in ProfilerDataTypes.list():
+                data_type = arg
+            else:
+                regex = arg
+
         if data_type is None:
             return self.match_regex(cols=cols, regex=regex)
         else:
