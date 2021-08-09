@@ -2355,7 +2355,7 @@ class BaseColumns(ABC):
 
             # Gets cached quality
             if col_name not in transformed and not flush:
-                cached_props = Meta.get(self.root.meta, f"columns.{col_name}.stats")
+                cached_props = Meta.get(self.root.meta, f"profile.columns.{col_name}.stats")
                 if cached_props and all(prop in cached_props for prop in quality_props):
                     result[col_name] = {"match": cached_props.get("match"),
                                         "missing": cached_props.get("missing"),
@@ -2388,7 +2388,7 @@ class BaseColumns(ABC):
             result[col_name].update({"inferred_type": cols_types[col_name]})
 
         for col in result:
-            self.root.meta = Meta.set(self.root.meta, f"columns.{col}.stats", result[col])
+            self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats", result[col])
 
         self._set_transformed_stat(list(result.keys()), ["match", "missing", "mismatch"])
 
@@ -2466,7 +2466,7 @@ class BaseColumns(ABC):
                     {"format": pydateinfer.infer(filtered_dates)})
 
         for col in cols_and_inferred_dtype:
-            self.root.meta = Meta.set(self.root.meta, f"columns.{col}.stats.inferred_type", cols_and_inferred_dtype[col])
+            self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type", cols_and_inferred_dtype[col])
 
         return cols_and_inferred_dtype
 
