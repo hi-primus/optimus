@@ -89,9 +89,18 @@ class RaiseIt:
 
         var_names = cls._and(var_names)
         var_values = cls._and(var_values)
-        data_values = cls._or(val_to_list(data_values))
 
-        raise ValueError(f"{var_names} must be {data_values}, received {var_values}. {extra_text}")
+        if data_values:
+            data_values = cls._or(val_to_list(data_values))
+            err = f"{var_names} must be {data_values}, received {var_values}."
+        else:
+            err = f"Invalid {var_names}: {var_values}."
+
+        if extra_text:
+            err += f" {extra_text}."
+
+        raise ValueError(err)
+
 
     @staticmethod
     def type(cls, var):
