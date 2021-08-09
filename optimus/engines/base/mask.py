@@ -153,11 +153,11 @@ class Mask(ABC):
 
         if is_list(data_type):
             mask_match = None
-            for i, j in zip(cols, data_type):
+            for _col, _data_type in zip(cols, data_type):
                 if mask_match is None:
-                    mask_match = getattr(df[i].mask, j)(i)
+                    mask_match = getattr(df[_col].mask, _data_type)(_col)
                 else:
-                    mask_match[i] = getattr(df[i].mask, j)(i)
+                    mask_match[_col] = getattr(df[_col].mask, _data_type)(_col)
         else:
             mask_match = getattr(df[cols].mask, data_type)(cols)
 
