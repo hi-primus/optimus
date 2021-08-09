@@ -17,6 +17,13 @@ from optimus.infer import is_list, is_null, is_bool, \
 # ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
 
 class Functions(ABC):
+
+    def __init__(self, df):
+        if df is not None and getattr(df, "partitions", False):
+            self.n_partitions = df.partitions()
+        else:
+            self.n_partitions = 1
+
     @staticmethod
     def delayed(func):
         def wrapper(*args, **kwargs):
