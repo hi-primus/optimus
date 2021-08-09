@@ -1,12 +1,13 @@
-def val_to_list(val, allow_none=False):
+def val_to_list(val, allow_none=False, convert_tuple=False):
     """
     Convert a single value to a list
     :param val: Value to convert to list
     :param allow_none: Convert the value even if it's None
+    :param convert_tuple: Convert to list if it's a tuple
     :return:
     """
     if val is not None or allow_none:
-        if not isinstance(val, (list, tuple)):
+        if not isinstance(val, (list, tuple) if convert_tuple else (list,)):
             val = [val]
         if isinstance(val, tuple):
             val = list(val)
