@@ -76,7 +76,7 @@ class Plot:
         :return: Heatmap plot of the corr matrix using seaborn.
         """
         df = self.df
-        cols_data = df.cols.correlation(col_name, method, output="array")
+        cols_data = df.cols.correlation(col_name, method)
         plot_correlation(cols_data, output=output_format, path=output_path)
 
     def qqplot(self, columns, n=100, output_format="plot", output_path=None):
