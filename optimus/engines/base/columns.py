@@ -904,19 +904,25 @@ class BaseColumns(ABC):
         This helper function aims to help managing columns name in the aggregation output.
         Also how to handle ordering columns because dask can order columns
         :param by: Column names
-        :param agg:
+        :param agg: List of tuples with the form [("agg", "col")]
         :return:
         """
         df = self.root.data
         compact = {}
-        for col_agg in list(agg.values()):
-            for col_name, _agg in col_agg.items():
-                compact.setdefault(col_name, []).append(_agg)
+        if is_dict(agg):
+            agg = list(agg.values())
+
+        agg = val_to_list(agg, convert_tuple=False)
+
+        for col_agg in agg:
+            if is_dict(col_agg):
+                col_agg = list(col_agg.items())[::-1]
+            _agg, _col = col_agg
+            compact.setdefault(_col, []).append(_agg)
 
         df = df.groupby(by=by).agg(compact).reset_index()
-        df.columns = (val_to_list(by) + val_to_list(list(agg.keys())))
-        df = self.root.new(df)
-        return df
+        df.columns = (val_to_list(by) + val_to_list(list(zip(*agg))[1]))
+        return self.root.new(df)
 
     # def is_match(self, cols="*", data_type, invert=False):
     #     """
