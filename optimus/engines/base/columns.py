@@ -124,7 +124,7 @@ class BaseColumns(ABC):
     def select(self, cols="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> 'DataFrameType':
         """
         Select columns using index, column name, regex to data type
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param regex: Regular expression to filter the columns
         :param data_type: Data type to be filtered for
         :param invert: Invert the selection
@@ -184,7 +184,7 @@ class BaseColumns(ABC):
 
     def duplicate(self, cols="*", output_cols=None, columns=None) -> 'DataFrameType':
         """
-        Same as copy
+        Alias of copy function
         :param cols: Source column to be copied
         :param output_cols: Destination column
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
@@ -195,7 +195,7 @@ class BaseColumns(ABC):
     def drop(self, cols=None, regex=None, data_type=None) -> 'DataFrameType':
         """
         Drop a list of columns
-        :param cols: Columns to be dropped
+        :param cols: column name or list of column names to be processed.
         :param regex: Regex expression to select the columns
         :param data_type:
         :return:
@@ -217,7 +217,7 @@ class BaseColumns(ABC):
     def keep(self, cols=None, regex=None) -> 'DataFrameType':
         """
         Drop a list of columns
-        :param cols: Columns to be dropped
+        :param cols: "*", column name or list of column names to be processed.
         :param regex: Regex expression to select the columns
         :return:
         """
@@ -237,23 +237,6 @@ class BaseColumns(ABC):
 
         return self.root.new(dfd, meta=df.meta)
 
-    def word_count(self, cols="*", output_cols=None) -> 'DataFrameType':
-        """
-        Count words by column element wise
-        :param cols:
-        :param output_cols:
-        :return:
-        """
-        df = self.root
-        dfd = df.data
-
-        cols = parse_columns(df, cols)
-        output_cols = get_output_cols(cols, output_cols)
-
-        for input_col, output_col in zip(cols, output_cols):
-            dfd[output_col] = dfd[input_col].str.split().str.len()
-        return self.root.new(dfd)
-
     @staticmethod
     @abstractmethod
     def to_timestamp(cols, date_format=None, output_cols=None):
@@ -263,7 +246,24 @@ class BaseColumns(ABC):
               filter_col_by_data_types=None, output_cols=None, skip_output_cols_processing=False,
               meta_action=Actions.APPLY_COLS.value, mode="vectorized", set_index=False, default=None,
               **kwargs) -> 'DataFrameType':
+        """
 
+        :param cols:
+        :param func:
+        :param func_return_type:
+        :param args:
+        :param func_type:
+        :param where:
+        :param filter_col_by_data_types:
+        :param output_cols:
+        :param skip_output_cols_processing:
+        :param meta_action:
+        :param mode:
+        :param set_index:
+        :param default:
+        :param kwargs:
+        :return:
+        """
         columns = prepare_columns(self.root, cols, output_cols, filter_by_column_types=filter_col_by_data_types,
                                   accepts_missing_cols=True, default=default)
 
@@ -328,7 +328,7 @@ class BaseColumns(ABC):
         :param cols: Columns in which the function is going to be applied
         :param func: Functions to be applied to a columns
         :param args:
-        :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
+        :param func: pandas_udf or udf. If 'None' try to use pandas udf (Pyarrow needed)
         :param data_type:
         :return:
         """
@@ -339,16 +339,19 @@ class BaseColumns(ABC):
 
         return self.set(cols, func=func, args=args, where=mask)
 
-    def set(self, cols="*", value=None, where=None, args=[], default=None, eval_value=False):
+    def set(self, cols="*", value=None, where=None, args=None, default=None, eval_value=False):
         """
         Set a column value using a number, string or an expression.
         :param cols: columns to set or create
         :param value: expression, function or value
         :param where: mask or expression
-        :param default: value
+        :param args: TODO:?
+        :param default: In case a value
         :param eval_value:
         :return:
         """
+        if args is None:
+            args = []
         df = self.root
         dfd = df.data
 
@@ -519,7 +522,7 @@ class BaseColumns(ABC):
     def inferred_types(self, cols="*"):
         """
         Get the profiler data types from the meta data
-        :param columns:
+        :param cols: "*", column name or list of column names to be processed.
         :return:
         """
         df = self.root
@@ -534,14 +537,32 @@ class BaseColumns(ABC):
 
     @dispatch(str, str)
     def set_data_type(self, column, data_type) -> 'DataFrameType':
+        """
+
+        :param column: TODO cols or column?
+        :param data_type:
+        :return:
+        """
         return self.set_data_type({column: data_type}, False)
 
     @dispatch(str, str, bool)
     def set_data_type(self, column, data_type, categorical) -> 'DataFrameType':
+        """
+
+        :param column: TODO cols or column?
+        :param data_type:
+        :param categorical:
+        :return:
+        """
         return self.set_data_type({column: {"data_type": data_type, "categorical": categorical}}, False)
 
     @dispatch(dict)
     def set_data_type(self, columns: dict) -> 'DataFrameType':
+        """
+
+        :param column: TODO cols or column?
+        :return:
+        """
         return self.set_data_type(columns, False)
 
     @dispatch(dict, bool)
@@ -549,7 +570,7 @@ class BaseColumns(ABC):
         """
         Set profiler data type
         :param columns: A dict with the form {"col_name": profiler datatype}
-        :param inferred: Wherter it was inferred or not
+        :param inferred: Whether it was inferred or not
         :return:
         """
         df = self.root
@@ -645,12 +666,18 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def astype(*args, **kwargs):
+        """
+        Alias from cast function for compatibility with the pandas API.
+        :param args:
+        :param kwargs:
+        :return:
+        """
         pass
 
     def profile(self, cols="*", bins: int = MAX_BUCKETS, flush: bool = False) -> dict:
         """
         Returns the profile of selected columns
-        :param cols: Columns to get the profile from
+        :param cols: "*", column name or list of column names to be processed.
         :param bins: Number of buckets
         :param flush: Flushes the cache of the whole profile to process it again
         """
@@ -670,8 +697,8 @@ class BaseColumns(ABC):
         # = Any numeric
         ! = Any punctuation
 
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param mode:
         0: Identify lower, upper, digits. Except spaces and special chars.
         1: Identify chars, digits. Except spaces and special chars
@@ -718,6 +745,11 @@ class BaseColumns(ABC):
         return df.cols.assign(kw_columns)
 
     def assign(self, kw_columns):
+        """
+        TODO: ?
+        :param kw_columns:
+        :return:
+        """
 
         df = self.root
 
@@ -741,9 +773,9 @@ class BaseColumns(ABC):
         """
         Counts how many equal patterns there are in a column. Uses a cache to trigger the operation only if necessary. 
         Saves the result to meta and returns the same dataframe
-        :param cols:
-        :param n: Top n matches
-        :param mode:
+        :param cols: "*", column name or list of column names to be processed.
+        :param n: Return the Top n matches.
+        :param mode: mode use to calculate the patterns.
         :param flush: Flushes the cache to process again
         :return:
         """
@@ -794,8 +826,8 @@ class BaseColumns(ABC):
 
     def correlation(self, cols="*", method="pearson", tidy=True):
         """
-
-        :param cols:
+        Compute pairwise correlation of columns, excluding NA/null values.
+        :param cols: "*", column name or list of column names to be processed.
         :param method:
         :param tidy:
         :return:
@@ -812,6 +844,13 @@ class BaseColumns(ABC):
         return result
 
     def crosstab(self, col_x, col_y, output="dict") -> dict:
+        """
+
+        :param col_x:
+        :param col_y:
+        :param output:
+        :return:
+        """
         pass
 
     def pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> dict:
@@ -1006,7 +1045,7 @@ class BaseColumns(ABC):
     def schema_data_type(self, cols="*"):
         """
         Return the column(s) data type as Type
-        :param columns: Columns to be processed
+        :param cols: Columns to be processed
         :return:
         """
         df = self.root
@@ -1076,6 +1115,12 @@ class BaseColumns(ABC):
 
     @staticmethod
     def exec_agg(exprs, compute):
+        """
+
+        :param exprs:
+        :param compute:
+        :return:
+        """
         while isinstance(exprs, (list, tuple)):
             exprs = exprs[0]
         if getattr(exprs, "to_dict", None):
@@ -1083,26 +1128,71 @@ class BaseColumns(ABC):
         return exprs
 
     def mad(self, cols="*", relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
+        """
+        :param cols: "*", column name or list of column names to be processed.
+        :param relative_error:
+        :param more:
+        :param tidy:
+        :param compute:
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
 
-    def min(self, cols="*", tidy=True, compute=True):
+    def min(self, cols="*", tidy: bool = True, compute: bool = True):
+        """
+        Return the minimum value over one or one each column.
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.min, compute=compute, tidy=tidy, parallel=False)
 
-    def max(self, cols="*", tidy=True, compute=True):
+    def max(self, cols="*", tidy: bool = True, compute: bool = True):
+        """
+        Return the maximum value over one or one each column.
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.max, compute=compute, tidy=tidy, parallel=False)
 
-    def mode(self, cols="*", tidy=True, compute=True):
+    def mode(self, cols="*", tidy: bool = True, compute: bool = True):
+        """
+        Return the mode value over.
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.mode, compute=compute, tidy=tidy)
 
-    def range(self, cols="*", tidy=True, compute=True):
+    def range(self, cols="*", tidy: bool = True, compute: bool = True):
+        """
+        Return the minimum and maximum of the values over the requested columns.
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return: Number or column name with number
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.range, compute=compute, tidy=tidy)
 
     def percentile(self, cols="*", values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
+        """
+        Return values at the given percentile over requested column.
+        :param cols: "*", column name or list of column names to be processed.
+        :param values: Percentiles values you want to calculate. 0.25,0.5,0.75
+        :param relative_error:
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
 
         if values is None:
@@ -1110,51 +1200,134 @@ class BaseColumns(ABC):
         return df.cols.agg_exprs(cols, self.F.percentile, values, relative_error, tidy=tidy, compute=True)
 
     def median(self, cols="*", relative_error=RELATIVE_ERROR, tidy=True, compute=True):
+        """
+        Return the median of the values over the requested columns.
+        :param cols:
+        :param relative_error:
+        :param tidy:
+        :param compute:
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
 
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
     def kurtosis(self, cols="*", tidy=True, compute=True):
+        """
+        Return the kutosis of the values over the requested columns.
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.kurtosis, tidy=tidy, compute=compute)
 
     def skew(self, cols="*", tidy=True, compute=True):
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.skew, tidy=tidy, compute=compute)
 
     def mean(self, cols="*", tidy=True, compute=True):
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.mean, tidy=tidy, compute=compute)
 
     def sum(self, cols="*", tidy=True, compute=True):
+        """
+        Return the sum of the values over the requested column.
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.sum, tidy=tidy, compute=compute)
 
-    def cumsum(self, cols="*", tidy=True, compute=True):
-        df = self.root
-        return df.cols.agg_exprs(cols, self.F.cumsum, tidy=tidy, compute=compute)
+    def cumsum(self, cols="*", output_cols=None):
+        """
+        Return cumulative sum over a DataFrame or column.
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        return self.apply(cols, self.F.cumsum, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.CUM_SUM.value, mode="vectorized", func_type="vectorized")
 
-    def cumprod(self, cols="*", tidy=True, compute=True):
-        df = self.root
-        return df.cols.agg_exprs(cols, self.F.cumprod, tidy=tidy, compute=compute)
+    def cumprod(self, cols="*", output_cols=None):
+        """
+        Return cumulative product over a DataFrame or column.
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        return self.apply(cols, self.F.cumprod, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.CUM_PROD.value, mode="vectorized", func_type="vectorized")
 
-    def cummax(self, cols="*", tidy=True, compute=True):
-        df = self.root
-        return df.new(df.cols.agg_exprs(cols, self.F.cummax, tidy=tidy, compute=compute))
+    def cummax(self, cols="*", output_cols=None):
+        """
+        Return cumulative maximum over a DataFrame or column.
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        return self.apply(cols, self.F.cummax, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.CUM_MAX.value, mode="vectorized", func_type="vectorized")
 
-    def cummin(self, cols="*", tidy=True, compute=True):
-        df = self.root
-        return df.cols.agg_exprs(cols, self.F.cummin, tidy=tidy, compute=compute)
+    def cummin(self, cols="*", output_cols=None):
+        """
+        Return cumulative minimum over a DataFrame or column.
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        return self.apply(cols, self.F.cummin, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.CUM_MIN.value, mode="vectorized", func_type="vectorized")
 
     def var(self, cols="*", tidy=True, compute=True):
+        """
+        Return unbiased variance over requested columns.
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.var, tidy=tidy, compute=compute)
 
     def std(self, cols="*", tidy=True, compute=True):
+        """
+        Return unbiased variance over requested columns.
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return:
+        """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.std, tidy=tidy, compute=compute)
 
     def date_format(self, cols="*", tidy=True, compute=True, *args, **kwargs):
+        """
+        # TODO: ?
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :param args:
+        :param kwargs:
+        :return:
+        """
 
         # Use format_date if arguments matches
 
@@ -1177,10 +1350,10 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.date_format, compute=compute, tidy=tidy)
 
-    def item(self, cols="*", n=None, output_cols=None, mode="list") -> 'DataFrameType':
+    def item(self, cols="*", n=None, output_cols=None) -> 'DataFrameType':
         """
-        Get items from list
-        :param cols:
+        Return items from a list over requested columns.
+        :param cols: "*", column name or list of column names to be processed.
         :param n:
         :param output_cols:
         :param mode:
@@ -1195,10 +1368,10 @@ class BaseColumns(ABC):
 
     def get(self, cols="*", keys=None, output_cols=None) -> 'DataFrameType':
         """
-        Get items from dicts
-        :param cols:
+        Return items from a dict over requested columns.
+        :param cols: "*", column name or list of column names to be processed.
         :param keys:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param mode:
         :return:
         """
@@ -1213,8 +1386,8 @@ class BaseColumns(ABC):
     def abs(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Return the absolute numeric value of each value in a column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1224,8 +1397,8 @@ class BaseColumns(ABC):
     def exp(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Return Euler's number, e (~2.718) raised to the power of each value in a column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1235,9 +1408,9 @@ class BaseColumns(ABC):
     def mod(self, cols="*", divisor=2, output_cols=None) -> 'DataFrameType':
         """
         Apply mod to column
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param divisor:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1246,10 +1419,10 @@ class BaseColumns(ABC):
 
     def log(self, cols="*", base=10, output_cols=None) -> 'DataFrameType':
         """
-        Apply mod to column
-        :param cols:
+        Return the logarithm base 10 of each value in a column
+        :param cols: "*", column name or list of column names to be processed.
         :param base:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1259,8 +1432,8 @@ class BaseColumns(ABC):
     def ln(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Return the natural logarithm of each value in a column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1269,11 +1442,11 @@ class BaseColumns(ABC):
 
     def pow(self, cols="*", power=2, output_cols=None) -> 'DataFrameType':
         """
-        Apply mod to column
+        Get Exponential power of dataframe or columns, element-wise.
+        :param cols: "*", column name or list of column names to be processed.
         :param power:
-        :param cols:
-        :param output_cols:
-        :return:(
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
         """
 
         df = self.root
@@ -1283,8 +1456,8 @@ class BaseColumns(ABC):
     def sqrt(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Return the square root of each value in a column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1294,14 +1467,15 @@ class BaseColumns(ABC):
     def reciprocal(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Return the reciprocal of of each value in a column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
         return self.apply(cols, self.F.reciprocal, output_cols=output_cols, meta_action=Actions.MATH.value,
                           mode="vectorized")
 
+    # TODO: ?
     def _round(self, cols="*", mode=True, output_cols=None) -> 'DataFrameType':
 
         df = self.root
@@ -1327,10 +1501,10 @@ class BaseColumns(ABC):
 
     def round(self, cols="*", decimals=0, output_cols=None) -> 'DataFrameType':
         """
-
-        :param cols:
+        Round a DataFrame to a variable number of decimal places.
+        :param cols: "*", column name or list of column names to be processed.
         :param decimals:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         df = self.root
@@ -1340,8 +1514,8 @@ class BaseColumns(ABC):
     def floor(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Round each number down to the nearest integer in a column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         df = self.root
@@ -1351,8 +1525,8 @@ class BaseColumns(ABC):
     def ceil(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Round each number up to the nearest integer in a column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1364,8 +1538,8 @@ class BaseColumns(ABC):
     def sin(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply sin to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1565,10 +1739,6 @@ class BaseColumns(ABC):
         else:
             return df
 
-    def lower(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, self.F.lower, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
-
     def infer_data_types(self, cols="*", output_cols=None) -> 'DataFrameType':
         dtypes = self.root[cols].cols.data_types()
         return self.apply(cols, self.F.infer_data_types, args=(dtypes,), func_return_type=str,
@@ -1579,21 +1749,44 @@ class BaseColumns(ABC):
         return self.apply(cols, "date_formats", func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="partitioned", func_type="column_expr")
 
+    def lower(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+        Lowercase the specified columns
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return: BaseDataFrame
+        """
+        return self.apply(cols, self.F.lower, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.LOWER.value, mode="vectorized", func_type="column_expr")
+
     def upper(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+       Uppercase the specified columns
+       :param cols: "*", column name or list of column names to be processed.
+       :param output_cols: Column name or list of column names where the transformed data will be saved.
+       :return: BaseDataFrame
+       """
         return self.apply(cols, self.F.upper, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.UPPER.value, mode="vectorized", func_type="vectorized")
 
     def title(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+        Capitalize the first word in a sentence
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return: BaseDataFrame
+        """
         return self.apply(cols, self.F.title, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
                           func_type="column_expr")
 
-    def capitalize(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, self.F.capitalize, func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.TITLE.value, mode="vectorized",
-                          func_type="column_expr")
-
     def proper(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+        Capitalize every word in a sentence
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return: BaseDataFrame
+        """
         return self.apply(cols, self.F.proper, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
                           func_type="column_expr")
@@ -1614,14 +1807,36 @@ class BaseColumns(ABC):
                           meta_action=Actions.PAD.value, mode="vectorized")
 
     def trim(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+        Remove leading and trailing characters.
+
+        Strip whitespaces (including newlines) or a set of specified characters from each string in the column from left and right sides.
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         return self.apply(cols, self.F.trim, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
     def strip_html(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+        Remove HTML tags.
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         return self.apply(cols, self.F.strip_html, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="map")
 
     def format_date(self, cols="*", current_format=None, output_format=None, output_cols=None) -> 'DataFrameType':
+        """
+        TODO: missing description
+        :param cols: "*", column name or list of column names to be processed.
+        :param current_format:
+        :param output_format:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
 
         df = self.root
 
@@ -1641,12 +1856,23 @@ class BaseColumns(ABC):
         return df
 
     def word_tokenize(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
 
         return self.apply(cols, "word_tokenize", func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.WORD_TOKENIZE.value, mode="vectorized")
 
     def word_count(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
 
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         df = self.root
 
         cols = parse_columns(df, cols)
@@ -1655,20 +1881,47 @@ class BaseColumns(ABC):
         return df.cols.word_tokenize(cols, output_cols).cols.len(output_cols)
 
     def len(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+        Calculate the length of a string.
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         return self.apply(cols, self.F.len, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.LENGTH.value, mode="vectorized")
 
-    def expand_contrated_words(self, cols="*", output_cols=None) -> 'DataFrameType':
+    def expand_contracted_words(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         i, j = zip(*CONTRACTIONS)
-        df = self.replace(cols, i, j, search_by="words")
+        df = self.replace(cols, i, j, search_by="words", output_cols=output_cols)
         return df
 
     @staticmethod
     @abstractmethod
     def reverse(cols="*", output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         pass
 
+    # TODO: It's not the same that replace?
     def remove(self, cols="*", search=None, search_by="chars", output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param search:
+        :param search_by: Search by 'chars',
+        :param output_cols: Column name or list of column names where the transformed data will be saved.:param search:
+        :return:
+        """
         return self.replace(cols=cols, search=search, replace_by="", search_by=search_by,
                             output_cols=output_cols)
 
@@ -1687,8 +1940,8 @@ class BaseColumns(ABC):
     def remove_numbers(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Remove numbers from a dataframe
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1701,8 +1954,8 @@ class BaseColumns(ABC):
     def remove_white_spaces(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Remove all white spaces from a dataframe
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1712,9 +1965,9 @@ class BaseColumns(ABC):
     def remove_stopwords(self, cols="*", language="english", output_cols=None) -> 'DataFrameType':
         """
         Remove extra whitespace between words and trim whitespace from the beginning and the end of each string.
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param language: specify the stopwords language
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1728,14 +1981,20 @@ class BaseColumns(ABC):
             output_cols)
 
     def remove_urls(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+        Remove urls from the one or more columns.
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         return self.apply(cols, self.F.remove_urls, func_return_type=str,
                           output_cols=output_cols, mode="vectorized")
 
     def normalize_spaces(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Remove extra whitespace between words and trim whitespace from the beginning and the end of each string.
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1745,8 +2004,8 @@ class BaseColumns(ABC):
     def remove_special_chars(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Remove special chars from a dataframe
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         df = self.root
@@ -1755,9 +2014,11 @@ class BaseColumns(ABC):
     def to_datetime(self, cols="*", format=None, output_cols=None, transform_format=True) -> 'DataFrameType':
         """
 
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param format:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :param transform_format:
+
         :return:
         """
         format = transform_date_format(format) if transform_format and format else format
@@ -1767,10 +2028,10 @@ class BaseColumns(ABC):
 
     def _date_format(self, cols="*", format=None, output_cols=None, func=None, meta_action=None) -> 'DataFrameType':
         """
-
-        :param cols:
+        # TODO ?
+        :param cols: "*", column name or list of column names to be processed.
         :param format:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param func:
         :param meta_action:
         :return:
@@ -1779,7 +2040,7 @@ class BaseColumns(ABC):
         df = self.root
 
         cols = parse_columns(df, cols)
-
+        # TODO: col is not used, format can be undefined
         if format is None:
             format = df.cols.date_format(cols, tidy=False)["date_format"]
             formats = [format[col] for col in cols]
@@ -1793,28 +2054,87 @@ class BaseColumns(ABC):
         return df
 
     def year(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+        """
+        Get the Year from a
+        :param cols: "*", column name or list of column names to be processed.
+        :param format: String format
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         return self._date_format(cols, format, output_cols, "year", meta_action=Actions.YEAR.value)
 
     def month(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param format: String format
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         return self._date_format(cols, format, output_cols, "year", meta_action=Actions.MONTH.value)
 
     def day(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param format: String format
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         return self._date_format(cols, format, output_cols, "day", meta_action=Actions.DAY.value)
 
     def hour(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param format: String format
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         return self._date_format(cols, format, output_cols, "hour", meta_action=Actions.HOUR.value)
 
     def minute(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param format: String format
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         return self._date_format(cols, format, output_cols, "minute", meta_action=Actions.MINUTE.value)
 
     def second(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param format:
+        :param output_cols:
+        :return:
+        """
         return self._date_format(cols, format, output_cols, "second", meta_action=Actions.SECOND.value)
 
     def weekday(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param format:
+        :param output_cols:
+        :return:
+        """
         return self._date_format(cols, format, output_cols, "weekday", meta_action=Actions.WEEKDAY.value)
 
     def _td_between(self, cols="*", func=None, value=None, date_format=None, round=None,
                     output_cols=None) -> 'DataFrameType':
+        """
+        # TODO ?
+        :param cols:
+        :param func:
+        :param value:
+        :param date_format:
+        :param round:
+        :param output_cols:
+        :return:
+        """
 
         df = self.root
         cols = parse_columns(df, cols)
@@ -1832,12 +2152,20 @@ class BaseColumns(ABC):
         def _years_between(series, args):
             return self.F.days_between(series, *args) / 365.25
 
-        return df.cols.apply(cols, func, args=[value, date_format], func_return_type=str,
-                             output_cols=output_cols,
+        return df.cols.apply(cols, func, args=[value, date_format], func_return_type=str, output_cols=output_cols,
                              meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True).cols._round(
             output_cols, round)
 
     def years_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
+        """
+        Return the number of years between two dates.
+        :param cols:
+        :param value:
+        :param date_format:
+        :param round:
+        :param output_cols:
+        :return:
+        """
 
         def _years_between(series, args):
             return self.F.days_between(series, *args) / 365.25
@@ -1845,6 +2173,15 @@ class BaseColumns(ABC):
         return self._td_between(cols, _years_between, value, date_format, round, output_cols)
 
     def months_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
+        """
+        Return the number of months between two dates.
+        :param cols:
+        :param value:
+        :param date_format:
+        :param round:
+        :param output_cols:
+        :return:
+        """
 
         def _months_between(series, args):
             return self.F.days_between(series, *args) / 30.4375
@@ -1852,6 +2189,15 @@ class BaseColumns(ABC):
         return self._td_between(cols, _months_between, value, date_format, round, output_cols)
 
     def days_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
+        """
+        Return the number of days between two dates.
+        :param cols: "*", column name or list of column names to be processed.
+        :param value:
+        :param date_format:
+        :param round:
+        :param output_cols:
+        :return:
+        """
 
         def _days_between(series, args):
             return self.F.days_between(series, *args)
@@ -1939,9 +2285,24 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def replace_regex(cols, regex=None, value=None, output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param regex:
+        :param value:
+        :param output_cols:
+        :return:
+        """
         pass
 
     def num_to_words(self, cols="*", language="en", output_cols=None) -> 'DataFrameType':
+        """
+        Convert numbers to its string representation.
+        :param cols:
+        :param language:
+        :param output_cols:
+        :return:
+        """
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
 
         def _num_to_words(text):
@@ -1957,10 +2318,25 @@ class BaseColumns(ABC):
         return self.apply(cols, _num_to_words, output_cols=output_cols, mode="map")
 
     def lemmatize_verbs(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param output_cols:
+        :return:
+        """
 
         return self.apply(cols, "lemmatize_text", output_cols=output_cols, mode="vectorized")
 
-    def stem_verbs(self, cols="*", stemmer="porter", language="english", output_cols=None) -> 'DataFrameType':
+    def stem_verbs(self, cols="*", stemmer: str = "porter", language: str = "english",
+                   output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param stemmer: snowball, porter, lancaster
+        :param language:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
 
         if stemmer == "snowball":
@@ -1978,6 +2354,15 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def impute(cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param data_type:
+        :param strategy:
+        :param fill_value:
+        :param output_cols:
+        :return:
+        """
         pass
 
     def fill_na(self, cols="*", value=None, output_cols=None) -> 'DataFrameType':
@@ -2156,25 +2541,6 @@ class BaseColumns(ABC):
 
         return format_dict(iqr_result)
 
-    def create_key(self, col) -> 'DataFrameType':
-        """
-        Create a unique id for every row.
-        :param col: Column to be created
-        :return:
-        """
-        df = self.root
-        dfd = df.data
-
-        names = df.cols.names()
-        dfd = dfd.reset_index()
-
-        new_df = self.root.new(dfd)
-        new_names = new_df.cols.names()
-
-        col_name = list(set(new_names) - set(names))[0]
-
-        return new_df.cols.rename(col_name, col)
-
     @staticmethod
     @abstractmethod
     def nest(cols, separator="", output_col=None, drop=False, shape="string") -> 'DataFrameType':
@@ -2256,7 +2622,7 @@ class BaseColumns(ABC):
                 dfd_new = dfd_new.drop(
                     columns=new_columns[0:len(final_columns)])
                 new_columns = list(dfd_new.columns)
-
+            # TODO: Seem to be a copy of the dataframe here df and df_new ?
             dfd_new.columns = final_columns[:len(new_columns)]
             df_new = df.new(dfd_new)
             if final_index:
@@ -2281,6 +2647,13 @@ class BaseColumns(ABC):
         pass
 
     def hist(self, cols="*", buckets=MAX_BUCKETS, compute=True) -> dict:
+        """
+
+        :param cols:
+        :param buckets:
+        :param compute:
+        :return:
+        """
 
         df = self.root
         cols = parse_columns(df, cols)
@@ -2337,7 +2710,7 @@ class BaseColumns(ABC):
     def quality(self, cols="*", flush=False, compute=True) -> dict:
         """
         :param cols:
-        :param infer:
+        :param flush:
         :param compute:
         Infer the datatype and return the match. mismatch and profiler datatype  for every column.
         In case of date it returns also the format datatype
@@ -3273,7 +3646,7 @@ class BaseColumns(ABC):
     def ngram_fingerprint(self, cols="*", n_size=2, output_cols=None) -> 'DataFrameType':
         """
         Calculate the ngram for a fingerprinted string
-        :param df: Dataframe to be processed
+        :param output_cols:
         :param cols: Columns to be processed
         :param n_size:
         :return:
