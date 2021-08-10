@@ -314,7 +314,7 @@ class Mask(ABC):
         """
         return self.numeric(cols) & self.null(cols)
 
-    def duplicated(self, cols, keep="first") -> 'MaskDataFrameType':
+    def duplicated(self, cols="*", keep="first") -> 'MaskDataFrameType':
         """
         Find the rows that have duplicated values
 

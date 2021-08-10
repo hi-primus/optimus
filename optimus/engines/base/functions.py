@@ -122,6 +122,9 @@ class Functions(ABC):
             return series.str
         return series.astype(str).str
 
+    @staticmethod
+    def duplicated(dfd, keep, subset):
+        return dfd.duplicated(keep=keep, subset=subset)
 
     def impute(series, strategy, fill_value):
         from dask_ml.impute import SimpleImputer
