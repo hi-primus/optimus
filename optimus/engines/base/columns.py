@@ -909,7 +909,11 @@ class BaseColumns(ABC):
         """
         df = self.root.data
         compact = {}
+
+        agg_names = None
+
         if is_dict(agg):
+            agg_names = list(agg.keys())
             agg = list(agg.values())
 
         agg = val_to_list(agg, convert_tuple=False)
@@ -921,7 +925,9 @@ class BaseColumns(ABC):
             compact.setdefault(_col, []).append(_agg)
 
         df = df.groupby(by=by).agg(compact).reset_index()
-        df.columns = (val_to_list(by) + val_to_list(list(zip(*agg))[1]))
+        agg_names = agg_names or [a[0]+"_"+a[1] for a in agg]
+        df.columns = (val_to_list(by) + agg_names)
+        df.columns = [str(c) for c in df.columns]
         return self.root.new(df)
 
     # def is_match(self, cols="*", data_type, invert=False):
