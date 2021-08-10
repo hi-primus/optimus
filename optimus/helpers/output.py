@@ -55,7 +55,7 @@ def print_html(html):
         return False
 
 
-def print_json(value):
+def output_json(value):
     """
     Print a human readable json
     :param value: json to be printed
@@ -66,4 +66,4 @@ def print_json(value):
         value = value.replace("'", "\"")
         value = json.loads(value)
 
-    pp.pprint(value)
+    return pp.pformat(value)

@@ -17,7 +17,7 @@ from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import absolute_path
 from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
-from optimus.helpers.output import print_json
+from optimus.helpers.output import output_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.optimus import Engine
 from optimus.version import __version__
@@ -448,7 +448,7 @@ class SparkEngine:
         """
         if method is "json":
             diff = DeepDiff(df1.to_json(), df2.to_json(), ignore_order=False)
-            print_json(diff)
+            print(output_json(diff))
         elif method is "collect":
             if df1.collect() == df2.collect():
                 print("Dataframes are equal")
