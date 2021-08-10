@@ -6,7 +6,6 @@ from functools import reduce
 from typing import Union
 import warnings
 
-import jellyfish as jellyfish
 import nltk
 import numpy as np
 import pandas as pd
@@ -14,7 +13,7 @@ import pydateinfer
 import wordninja
 from dask import dataframe as dd
 from glom import glom
-from metaphone import doublemetaphone
+
 from multipledispatch import dispatch
 from nltk import LancasterStemmer
 from nltk import ngrams
@@ -34,6 +33,7 @@ from optimus.helpers.functions import transform_date_format
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
 from optimus.helpers.types import *
+from optimus.engines.base.stringclustering import Clusters
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
@@ -1892,7 +1892,7 @@ class BaseColumns(ABC):
 
         return self._td_between(cols, _days_between, value, date_format, round, output_cols)
 
-    def replace(self, cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
+    def replace(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,
                 output_cols=None) -> 'DataFrameType':
         """
         Replace a value, list of values by a specified string
@@ -1907,7 +1907,11 @@ class BaseColumns(ABC):
 
         df = self.root
 
+        if isinstance(cols, Clusters):
+            cols = cols.to_dict()
+
         if is_dict(cols):
+            search_by = search_by or "full"
             for col, replace in cols.items():
                 _search = []
                 _replace_by = []
@@ -1915,9 +1919,10 @@ class BaseColumns(ABC):
                     _replace_by.append(replace_by)
                     _search.append(search)
                 df = df.cols._replace(
-                    col, _search, _replace_by, search_by="chars")
+                    col, _search, _replace_by, search_by=search_by)
 
         else:
+            search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search)
@@ -1949,16 +1954,16 @@ class BaseColumns(ABC):
             search_by = "values"
 
         if search_by == "chars":
-            func = self.F.replace_chars
+            func = "replace_chars"
             func_return_type = str
         elif search_by == "words":
-            func = self.F.replace_words
+            func = "replace_words"
             func_return_type = str
         elif search_by == "full":
-            func = self.F.replace_full
+            func = "replace_full"
             func_return_type = str
         elif search_by == "values":
-            func = self.F.replace_values
+            func = "replace_values"
             func_return_type = None
         else:
             RaiseIt.value_error(
@@ -3344,17 +3349,30 @@ class BaseColumns(ABC):
         return df
 
     def metaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, jellyfish.metaphone, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
+        return self.apply(cols, "metaphone", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.METAPHONE.value, mode="vectorized", func_type="column_expr")
 
-    def double_metaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, doublemetaphone, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.DOUBLE_METAPHONE.value, mode="map", func_type="column_expr")
+    def levenshtein(self, cols="*", other_cols=None, value=None, output_cols=None):
+        df = self.root
+        cols = parse_columns(df, cols)
 
-    def levenshtein(self, col_A, col_B, output_cols=None):
-        return self.apply(None, self.F.levenshtein, args=(col_A, col_B,), func_return_type=str,
-                          output_cols=output_cols,
-                          meta_action=Actions.LEVENSHTEIN.value, mode="map", func_type="column_expr")
+        if value is None:
+            other_cols = parse_columns(df, other_cols) if other_cols else None
+            if other_cols is None and len(cols) <= 2:
+                other_cols = [cols.pop(-1)]
+
+            for col, other_col in zip(cols, other_cols):
+                df = df.cols.apply(col, "levenshtein", args=(df.data[other_col],), func_return_type=str,
+                                output_cols=output_cols,
+                                meta_action=Actions.LEVENSHTEIN.value, mode="vectorized", func_type="column_expr")
+        else:
+            value = val_to_list(value)
+            for col, val in zip(cols, value):
+                df = df.cols.apply(col, "levenshtein", args=(val,), func_return_type=str,
+                                output_cols=output_cols,
+                                meta_action=Actions.LEVENSHTEIN.value, mode="vectorized", func_type="column_expr")
+
+        return df
 
     def nysiis(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
@@ -3363,20 +3381,20 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        return self.apply(cols, jellyfish.nysiis, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.NYSIIS.value, mode="map", func_type="column_expr")
+        return self.apply(cols, "nysiis", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.NYSIIS.value, mode="vectorized", func_type="column_expr")
 
     def match_rating_codex(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, jellyfish.match_rating_codex, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.MATCH_RATING_CODEX.value, mode="map", func_type="column_expr")
+        return self.apply(cols, "match_rating_codex", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.MATCH_RATING_CODEX.value, mode="vectorized", func_type="column_expr")
 
-    def double_methaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, jellyfish.dou, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.DOUBLE_METAPHONE.value, mode="map", func_type="column_expr")
+    def double_metaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
+        return self.apply(cols, "double_metaphone", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.DOUBLE_METAPHONE.value, mode="vectorized", func_type="column_expr")
 
     def soundex(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, jellyfish.soundex, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.SOUNDEX.value, mode="map", func_type="column_expr")
+        return self.apply(cols, "soundex", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.SOUNDEX.value, mode="vectorized", func_type="column_expr")
 
     def tf_idf(self, features) -> 'DataFrameType':
 

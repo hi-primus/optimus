@@ -2,6 +2,7 @@ import re
 from abc import abstractmethod, ABC
 
 import jellyfish
+from metaphone import doublemetaphone
 import numpy as np
 import pandas as pd
 from jsonschema._format import is_email
@@ -9,7 +10,7 @@ from fastnumbers import fast_float, fast_int
 
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
-from optimus.infer import is_list, is_null, is_bool, \
+from optimus.infer import is_list, is_list_of_list, is_null, is_bool, \
     is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
     is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number, is_int_like
 
@@ -433,8 +434,15 @@ class Functions(ABC):
 
     def replace_values(self, series, search, replace_by):
         search = val_to_list(search)
-        # return series.mask(series.isin(search), replace_by)
-        return series.replace(search, replace_by)
+
+        if is_list(replace_by) and is_list_of_list(search):
+            for _s, _r in zip(search, replace_by):
+                series.replace(_s, _r, inplace=True)
+                
+        else:
+            series.replace(search, replace_by, inplace=True)
+
+        return series
 
     def remove_white_spaces(self, series):
         return self.to_string_accessor(series).replace(" ", "")
@@ -632,6 +640,30 @@ class Functions(ABC):
     def date_formats(self, series):
         import pydateinfer
         return series.map(lambda v: pydateinfer.infer([v]))
+    
+    def metaphone(self, series):
+        return self.to_string(series).map(jellyfish.metaphone, na_action='ignore')
+    
+    def double_metaphone(self, series):
+        return self.to_string(series).map(doublemetaphone, na_action='ignore')
 
-    def levenshtein(self, col_A, col_B):
-        return jellyfish.levenshtein_distance(col_A, col_B)
+    def nysiis(self, series):
+        return self.to_string(series).map(jellyfish.nysiis, na_action='ignore')
+    
+    def match_rating_codex(self, series):
+        return self.to_string(series).map(jellyfish.match_rating_codex, na_action='ignore')
+
+    def soundex(self, series):
+        return self.to_string(series).map(jellyfish.soundex, na_action='ignore')
+
+    def levenshtein(self, series, other):
+        if isinstance(other, str):
+            return self.to_string(series).map(lambda v: jellyfish.levenshtein_distance(v, other))
+        else:
+            col_name = series.name
+            other_name = other.name
+            dfd = self.to_string(series).to_frame()
+            dfd[other_name] = self.to_string(other)
+
+            return dfd.apply(lambda d: jellyfish.levenshtein_distance(d[col_name], d[other_name]), axis=1).rename(col_name)
+            
