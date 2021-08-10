@@ -1,9 +1,6 @@
 import re
 
-import fastnumbers
 import numpy as np
-import pandas as pd
-from fastnumbers import isintlike, isfloat, isreal, fast_float, fast_int
 
 # From a top point of view we organize Optimus separating the functions in dataframes and dask engines.
 # Some functions are commons to pandas and dask.
