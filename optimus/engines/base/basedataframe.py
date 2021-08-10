@@ -49,6 +49,7 @@ class BaseDataFrame(ABC):
         self.buffer = None
         self.updated = None
         self.meta = {}
+        self.le = None
 
         # .profile and .set are properties to support docstrings
         self.profile = BaseProfile(self)
@@ -85,6 +86,7 @@ class BaseDataFrame(ABC):
         self.buffer = df.buffer
         self.updated = df.updated
         self.meta = df.meta
+        self.le = df.le
 
     def __len__(self):
         return self.rows.count()
@@ -93,6 +95,7 @@ class BaseDataFrame(ABC):
         df = self.__class__(dfd)
         if meta is not None:
             df.meta = meta
+            df.le = self.le
         return df
 
     @staticmethod

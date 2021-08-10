@@ -217,13 +217,13 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
     def string_to_index(self, cols=None, output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        return string_to_index(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        return string_to_index(df, cols, output_cols, df.le)
 
     def index_to_string(self, cols=None, output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        return index_to_string(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        return index_to_string(df, cols, output_cols, df.le)
 
     def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols):
         if mode == "string":

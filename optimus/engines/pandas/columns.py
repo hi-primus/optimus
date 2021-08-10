@@ -71,14 +71,14 @@ class Cols(DataFrameBaseColumns, BaseColumns):
 
     def string_to_index(self, cols="*", output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        df = string_to_index(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        df = string_to_index(df, cols, output_cols, df.le)
 
         return df
 
     def index_to_string(self, cols="*", output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        df = index_to_string(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        df = index_to_string(df, cols, output_cols, df.le)
 
         return df
