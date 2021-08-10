@@ -64,7 +64,7 @@ class BaseColumns(ABC):
         pass
 
     def _map(self, df, input_col, output_col, func, *args):
-        return df[input_col].apply(func, args=(*args,))
+        return df[input_col].apply(func, args=(*args,)).rename(output_col)
 
     def _names(self):
         pass
