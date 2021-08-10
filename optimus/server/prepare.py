@@ -246,7 +246,7 @@ alias_map_list = [
     ["metaphone", "cols.metaphone"],
     ["nysiis", "cols.nysiis"],
     [["matchRatingCodex", "match_rating_codex"], "cols.match_rating_codex"],
-    [["doubleMethaphone", "double_methaphone"], "cols.double_methaphone"],
+    [["doubleMethaphone", "double_metaphone"], "cols.double_metaphone"],
     ["soundex", "cols.soundex"],
     ["append", "rows.append"],
     [["greaterThan", "greater_than"], "rows.greater_than"],
