@@ -2009,10 +2009,29 @@ class BaseColumns(ABC):
 
         return self.apply(cols, stemmer_text, output_cols=output_cols, mode="map")
 
-    @staticmethod
-    @abstractmethod
-    def impute(cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None) -> 'DataFrameType':
-        pass
+    def impute(self, cols="*", data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
+        """
+        :param cols:
+        :param data_type:
+        :param strategy:
+        # - If "mean", then replace missing values using the mean along
+        #   each column. Can only be used with numeric data.
+        # - If "median", then replace missing values using the median along
+        #   each column. Can only be used with numeric data.
+        # - If "most_frequent", then replace missing using the most frequent
+        #   value along each column. Can be used with strings or numeric data.
+        # - If "constant", then replace missing values with fill_value. Can be
+        #   used with strings or numeric data.
+        :param output_cols:
+        :return:
+        """
+        df = self.root
+        
+        if strategy != "most_frequent":
+            df = df.cols.to_float(cols)
+
+        return df.cols.apply(cols, "impute", output_cols=output_cols, args=(strategy, fill_value), meta_action=Actions.IMPUTE.value,
+                            mode="vectorized")
 
     def fill_na(self, cols="*", value=None, output_cols=None) -> 'DataFrameType':
         """

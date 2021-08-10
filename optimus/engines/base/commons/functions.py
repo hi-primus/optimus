@@ -3,7 +3,6 @@ import re
 import fastnumbers
 import numpy as np
 import pandas as pd
-from dask_ml.impute import SimpleImputer
 from fastnumbers import isintlike, isfloat, isreal, fast_float, fast_int
 
 # From a top point of view we organize Optimus separating the functions in dataframes and dask engines.
@@ -22,38 +21,6 @@ def word_tokenize(series):
 
 def hist(series, bins):
     return np.histogram(series.to_float(), bins=bins)
-
-
-def impute(df, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
-    """
-
-    :param df:
-    :param input_cols:
-    :param data_type:
-    :param strategy:
-    # - If "mean", then replace missing values using the mean along
-    #   each column. Can only be used with numeric data.
-    # - If "median", then replace missing values using the median along
-    #   each column. Can only be used with numeric data.
-    # - If "most_frequent", then replace missing using the most frequent
-    #   value along each column. Can be used with strings or numeric data.
-    # - If "constant", then replace missing values with fill_value. Can be
-    #   used with strings or numeric data.
-    :param output_cols:
-    :return:
-    """
-
-    imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
-
-    def _imputer(value):
-        return imputer.fit_transform(value.values.reshape(-1, 1))
-
-    if strategy != "most_frequent":
-        df = df.cols.to_float(input_cols)
-
-    return df.cols.apply(input_cols, _imputer, output_cols=output_cols, meta_action=Actions.IMPUTE.value,
-                         mode="vectorized")
-
 
 def string_to_index(df, cols, output_cols=None, le=None, **kwargs):
     """_

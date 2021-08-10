@@ -122,6 +122,11 @@ class Functions(ABC):
         return series.astype(str).str
 
 
+    def impute(series, strategy, fill_value):
+        from dask_ml.impute import SimpleImputer
+        imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
+        return imputer.fit_transform(series.values.reshape(-1, 1))
+
     # Aggregation
 
     def date_format(self, series):
