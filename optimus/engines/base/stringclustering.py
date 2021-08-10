@@ -7,7 +7,7 @@ import numpy as np
 
 from optimus.engines.base.ml.contants import CLUSTER_COL
 from optimus.helpers.columns import parse_columns, name_col
-from optimus.helpers.output import print_json
+from optimus.helpers.output import output_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_list, is_str
 
@@ -20,7 +20,7 @@ class Clusters:
         self.clusters = clusters
 
     def __repr__(self):
-        return str(print_json(self.to_dict(verbose=True)))
+        return str(output_json(self.to_dict(verbose=True)))
 
     def set_suggestions(self, suggestions, column=0):
 
@@ -55,14 +55,15 @@ class Clusters:
             if not is_list(clusters):
                 clusters = list(clusters.values())
                 
-            for cluster in clusters[0:limit_clusters]:
+            for i, cluster in enumerate(clusters[0:limit_clusters]):
+                cluster_name = cluster["suggestion"]
                 if verbose:
-                    cluster_name = cluster["suggestion"]
                     _cluster = copy.deepcopy(cluster)
                     del _cluster["suggestion"]
-                    result[column][cluster_name] = _cluster
+                    result[column][(cluster_name, i)] = _cluster
                 else:
-                    result[column][cluster["suggestion"]] = cluster["suggestions"][0:limit_suggestions]
+                    result[column][cluster_name] = result[column].get(cluster_name, [])
+                    result[column][cluster_name] += cluster["suggestions"][0:limit_suggestions]
 
         return result
 
