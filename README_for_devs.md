@@ -222,6 +222,8 @@ This applies to:
 * Load operations at `optimus/engines/**/io/load.py`: used in `op.load.*()` functions.
 * Save operations at `optimus/engines/**/io/save.py`
 
+![Inheritance](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.8/readme/images/inheritance.jpg)
+
 #### Tips
 One common job inside a function is handling what columns are going to be processed and where we are going to put the output data.
 For this, we create `optimus.helpers.columns.prepare_columns` which give tools to developer to get the output colums.
