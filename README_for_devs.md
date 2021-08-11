@@ -181,26 +181,51 @@ pip install -r requirements.txt
 ```
 
 
-### Adding functions
-The main way to work in Optimus is using .cols and .rows
-`.cols` is going to get and process data in a vertical way `.rows` in vertical.
-The new functions need to be added to all the engines. pandas, cudf, dask, dask_cudf to the cols and rows classes.
+### Implementing features
+The main way to work in Optimus is using `.cols` and `.rows`. 
 
-`.remove_stop_words()`
-needs to be added to 
-optimus/engines/pandas/columns.py
-optimus/engines/cudf/columns.py
-optimus/engines/dask/columns.py
-optimus/engines/dask_cudf/columns.py
+`.cols` is going to get and process data in a vertical way `.rows` in vertical.
+
+You can add functions to any engine:
+
+* Pandas
+* Dask
+* cuDF
+* Dask-cuDF
+* Spark
+* Vaex
+* Ibis
+
+For example, if a new function needs to be added to Pandas and Dask you can add them to `optimus/engines/pandas/columns.py` and `optimus/engines/dask/columns.py` in case it has different implementations, but since both uses the same API we could implement it in:
+
+`optimus/engines/base/pandas/columns.py`
 
 In some cases the same code can be used for multiple engines. We organize Optimus to extend from: 
-* Base. Common to all the implementations
-* Dataframe. Common to pandas and cudf
-* Dask. Common to Dask and Dask Cudf.
 
-### Implementing functions
+* Base. Common to all the implementations. Use this in case no internal operations are made.
+* DataFrameBase. Common to Pandas, cuDF, Dask, Dask-cuDF and Spark (that uses Koalas).
+* DistributedBase. Common to all the distributed implementations like Dask, Dask-cuDF and Spark.
+* DaskBase. Common to all the dask-based implementations like Dask and Dask-cuDF.
+* PandasBase. Common to Pandas, Dask and Spark.
+* CUDFBase. Common to cuDF and Dask-cuDF.
+
+This applies to:
+
+* Dataframe operations at `optimus/engines/**/dataframe.py`
+* Column operations at `optimus/engines/**/columns.py`
+* Rows operations at `optimus/engines/**/rows.py`
+* Mask operations at `optimus/engines/**/mask.py`
+* Set operations at `optimus/engines/**/set.py`: "set to mask" operations.
+* Functions at `optimus/engines/**/functions.py`: internal functions applied to the internal dataframe, normally used on `df.cols.apply`
+* Constants at `optimus/engines/**/constants.py`
+* Create operations at `optimus/engines/**/create.py`: used in `op.create.*()` functions.
+* Load operations at `optimus/engines/**/io/load.py`: used in `op.load.*()` functions.
+* Save operations at `optimus/engines/**/io/save.py`
+
+#### Tips
 One common job inside a function is handling what columns are going to be processed and where we are going to put the output data.
-For this, we create `optimus/helpers/columns/ prepare_columns` which give tools to developer to crete the output cols.
+For this, we create `optimus.helpers.columns.prepare_columns` which give tools to developer to get the output colums.
+
 See `prepare_columns` for more info 
 
 Always try to use the same Optimus functions to write the functions so it can be reused for all the engines.
