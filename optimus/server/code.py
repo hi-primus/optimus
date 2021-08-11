@@ -258,8 +258,8 @@ def _generate_code(body=None, variables=[], **kwargs):
     return code, updated
 
 def optimus_variables():
-    from optimus.helpers.functions import engines, dataframes, clusters, connections
-    return [ *engines(), *dataframes(), *clusters(), *connections() ]
+    from optimus.helpers.functions import list_engines, list_dataframes, list_clusters, list_connections
+    return [ *list_engines(), *list_dataframes(), *list_clusters(), *list_connections() ]
 
 def available_variable(name: str, variables: dict):
     return _create_new_variable(name, [*variables, *optimus_variables()])

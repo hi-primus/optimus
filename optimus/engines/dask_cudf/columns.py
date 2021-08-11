@@ -28,13 +28,13 @@ class Cols(CUDFBaseColumns, DaskBaseColumns, BaseColumns):
 
     def string_to_index(self, cols=None, output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        return string_to_index(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        return string_to_index(df, cols, output_cols, df.le)
 
     def index_to_string(self, cols=None, output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        return index_to_string(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        return index_to_string(df, cols, output_cols, df.le)
 
     def count_by_data_types(self, cols, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.root
@@ -55,10 +55,6 @@ class Cols(CUDFBaseColumns, DaskBaseColumns, BaseColumns):
             result = self.parse_inferred_types(result)
 
         return result
-
-    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
-        df = self.root
-        return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
 
     def hist(self, columns="*", buckets=20, compute=True):
 

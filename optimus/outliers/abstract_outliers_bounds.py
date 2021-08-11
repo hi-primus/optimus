@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+import pprint
+
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.filters import dict_filter
@@ -22,6 +24,9 @@ class AbstractOutlierBounds(ABC):
         self.col_name = one_list_to_val(parse_columns(df, col_name))
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
+
+    def __repr__(self):
+        return pprint.pformat(self.info())
 
     @abstractmethod
     def whiskers(self):

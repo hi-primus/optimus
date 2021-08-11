@@ -49,6 +49,7 @@ class BaseDataFrame(ABC):
         self.buffer = None
         self.updated = None
         self.meta = {}
+        self.le = None
 
         # .profile and .set are properties to support docstrings
         self.profile = BaseProfile(self)
@@ -85,6 +86,7 @@ class BaseDataFrame(ABC):
         self.buffer = df.buffer
         self.updated = df.updated
         self.meta = df.meta
+        self.le = df.le
 
     def __len__(self):
         return self.rows.count()
@@ -93,6 +95,7 @@ class BaseDataFrame(ABC):
         df = self.__class__(dfd)
         if meta is not None:
             df.meta = meta
+            df.le = self.le
         return df
 
     @staticmethod
@@ -1012,7 +1015,7 @@ class BaseDataFrame(ABC):
         return string_clustering(self, cols, algorithm, *args, **kwargs)
         # return clusters
 
-    def agg(self, aggregations: dict, groupby=None, output="dict"):
+    def agg(self, aggregations: dict, groupby=None, output="dict", tidy=True):
 
         df = self
         dfd = df.data
@@ -1045,7 +1048,7 @@ class BaseDataFrame(ABC):
             if output == "dataframe":
                 result = self.new(result)
 
-        return result
+        return format_dict(result, tidy=tidy)
 
     def report(self, df, cols="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR,
                approx_count=True,

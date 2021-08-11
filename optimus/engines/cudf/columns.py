@@ -141,23 +141,8 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
         return df
 
-    def impute(self, cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
-        """
-
-        :param cols:
-        :param data_type:
-        :param strategy:
-        # - If "mean", then replace missing values using the mean along
-        #   each column. Can only be used with numeric data.
-        # - If "median", then replace missing values using the median along
-        #   each column. Can only be used with numeric data.
-        # - If "most_frequent", then replace missing using the most frequent
-        #   value along each column. Can be used with strings or numeric data.
-        # - If "constant", then replace missing values with fill_value. Can be
-        #   used with strings or numeric data.
-        :param output_cols:
-        :return:
-        """
+    @staticmethod
+    def impute(cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         raise NotImplementedError("Not implemented yet")
 
     def max_abs_scaler(self, cols="*", output_cols=None):
@@ -217,13 +202,13 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
 
     def string_to_index(self, cols=None, output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        return string_to_index(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        return string_to_index(df, cols, output_cols, df.le)
 
     def index_to_string(self, cols=None, output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        return index_to_string(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        return index_to_string(df, cols, output_cols, df.le)
 
     def _unnest(self, dfd, input_col, final_columns, separator, splits, mode, output_cols):
         if mode == "string":

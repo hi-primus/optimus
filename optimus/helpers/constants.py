@@ -111,6 +111,7 @@ class Actions(Enum):
     FINGERPRINT = "fingerprint"
     NGRAM_FINGERPRINT = "ngram_fingerprint"
     NGRAMS = "ngrams"
+    LEVENSHTEIN = "levenshtein"
 
     # PHONETIC ENCODING
     SOUNDEX = "soundex"

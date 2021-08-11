@@ -150,8 +150,7 @@ class Rows(DaskBaseRows):
         df.meta = Meta.action(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
         return df
 
-    @staticmethod
-    def drop_duplicates(input_cols=None) -> DataFrame:
+    def drop_duplicated(self, input_cols=None) -> DataFrame:
         """
         Drop duplicates values in a dataframe
         :param input_cols: List of columns to make the comparison, this only  will consider this subset of columns,
@@ -163,11 +162,15 @@ class Rows(DaskBaseRows):
         #  last : Drop duplicates except for the last occurrence.
         #  all: Drop all duplicates except for the last occurrence.
 
-        df = self
-        input_cols = parse_columns(self.root, input_cols)
-        df = df.drop_duplicates(subset=input_cols)
-        df.meta = Meta.action(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
-        return df
+        df = self.root
+        dfd = df.data
+
+        input_cols = parse_columns(df, input_cols)
+        
+        dfd = dfd.drop_duplicates(subset=input_cols)
+        meta = Meta.action(df.meta, None, Actions.DROP_ROW.value, df.cols.names())
+        
+        return self.root.new(dfd, meta=meta)
 
     @staticmethod
     def drop_first() -> DataFrame:

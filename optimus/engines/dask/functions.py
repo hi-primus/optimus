@@ -22,6 +22,9 @@ class DaskFunctions(DaskBaseFunctions, PandasBaseFunctions, Functions):
     def _partition_engine(self):
         return pd
 
+    def from_dataframe(self, dfd):
+        return dask.dataframe.from_pandas(dfd, npartitions=self.n_partitions)
+
     def delayed(self, func):
         def wrapper(*args, **kwargs):
             return dask.delayed(func)(*args, **kwargs)

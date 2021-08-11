@@ -4,7 +4,7 @@ import pandas as pd
 from ibis.expr.types import TableExpr
 from sklearn import preprocessing
 
-from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string
+from optimus.engines.base.commons.functions import string_to_index, index_to_string
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, prepare_columns
@@ -73,10 +73,6 @@ class Cols(DataFrameBaseColumns, BaseColumns):
     @staticmethod
     def to_timestamp(input_cols, date_format=None, output_cols=None):
         pass
-
-    def impute(self, input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
-        df = self.root
-        return impute(df, input_cols, data_type="continuous", strategy="mean", output_cols=None)
 
     @staticmethod
     def astype(*args, **kwargs):
@@ -163,14 +159,14 @@ class Cols(DataFrameBaseColumns, BaseColumns):
 
     def string_to_index(self, cols=None, output_cols=None):
         df = self.df
-        le = preprocessing.LabelEncoder()
+        le = df.le or preprocessing.LabelEncoder()
         df = string_to_index(df, cols, output_cols, le)
 
         return df
 
     def index_to_string(self, cols=None, output_cols=None):
         df = self.df
-        le = preprocessing.LabelEncoder()
+        le = df.le or preprocessing.LabelEncoder()
         df = index_to_string(df, cols, output_cols, le)
 
         return df

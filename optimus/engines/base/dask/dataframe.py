@@ -12,6 +12,7 @@ import pandas as pd
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.types import *
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_int, is_one_element
@@ -157,16 +158,26 @@ class DaskBaseDataFrame(BaseDataFrame):
         # df_.index = df_.index.droplevel(0)
         return self.root.new(df)
 
-    @staticmethod
-    def pivot(index, column, values):
+    def pivot(self, col, groupby, agg=None, values=None):
         """
         Return reshaped DataFrame organized by given index / column values.
-        :param index: Column to use to make new frame's index.
-        :param column: Column to use to make new frame's columns.
-        :param values: Column(s) to use for populating new frame's values.
+        :param col: Column to use to make new frame's columns.
+        :param groupby: Column to use to make new frame's index.
+        :param agg: Aggregation to use for populating new frame's values.
+        :param values: Column to use for populating new frame's values.
         :return:
         """
-        raise NotImplementedError
+
+        df = self.root
+
+        if values is not None:
+            agg=("first", values)
+        
+        groupby = val_to_list(groupby)
+        by = groupby + [col]
+        if agg is None:
+            agg = ("count", col)
+        return df.cols.groupby(by=by, agg=agg).unstack(by)
 
     @staticmethod
     def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):

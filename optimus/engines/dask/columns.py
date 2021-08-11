@@ -1,7 +1,7 @@
 import dask.array as da
 from dask_ml import preprocessing
 
-from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string
+from optimus.engines.base.commons.functions import string_to_index, index_to_string
 from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.helpers.columns import parse_columns
@@ -21,12 +21,12 @@ class Cols(DaskBaseColumns, BaseColumns):
         return list(self.root.data.columns)
 
     def string_to_index(self, cols=None, output_cols=None):
-        le = preprocessing.LabelEncoder()
-        return string_to_index(self, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        return string_to_index(self, cols, output_cols, df.le)
 
     def index_to_string(self, cols=None, output_cols=None):
-        le = preprocessing.LabelEncoder()
-        return index_to_string(self, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        return index_to_string(self, cols, output_cols, df.le)
 
     def hist(self, columns="*", buckets=MAX_BUCKETS, compute=True):
         df = self.root
@@ -44,7 +44,3 @@ class Cols(DaskBaseColumns, BaseColumns):
                     for i in range(buckets)]
 
         return {"hist": result}
-
-    def impute(self, cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
-        df = self.root
-        return impute(df, cols, data_type=data_type, strategy=strategy, output_cols=None)

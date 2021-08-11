@@ -22,10 +22,6 @@ class DaskDataFrame(DaskBaseDataFrame):
         return pandas_to_dask_dataframe(pdf, n_partitions)
 
     @staticmethod
-    def pivot(index, column, values):
-        pass
-
-    @staticmethod
     def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
         pass
 
@@ -54,7 +50,7 @@ class DaskDataFrame(DaskBaseDataFrame):
     @property
     def functions(self):
         from optimus.engines.dask.functions import DaskFunctions
-        return DaskFunctions()
+        return DaskFunctions(self)
 
     @property
     def mask(self):

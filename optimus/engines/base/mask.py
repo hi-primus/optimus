@@ -113,11 +113,18 @@ class Mask(ABC):
         cols = one_list_to_val(parse_columns(df, cols))
         data_type = one_list_to_val(data_type)
 
-        mask_match = df[cols].mask.match(cols, data_type)
+        mask_match = df[cols].mask.match_data_type(cols, data_type)
         mask_null = df[cols].mask.null(cols)
         return ~(mask_match | mask_null)
 
-    def match(self, cols="*", regex=None, data_type=None) -> 'MaskDataFrameType':
+    def match(self, cols="*", arg=None, regex=None, data_type=None) -> 'MaskDataFrameType':
+
+        if arg is not None:
+            if arg in ProfilerDataTypes.list():
+                data_type = arg
+            else:
+                regex = arg
+
         if data_type is None:
             return self.match_regex(cols=cols, regex=regex)
         else:
@@ -146,11 +153,11 @@ class Mask(ABC):
 
         if is_list(data_type):
             mask_match = None
-            for i, j in zip(cols, data_type):
+            for _col, _data_type in zip(cols, data_type):
                 if mask_match is None:
-                    mask_match = getattr(df[i].mask, j)(i)
+                    mask_match = getattr(df[_col].mask, _data_type)(_col)
                 else:
-                    mask_match[i] = getattr(df[i].mask, j)(i)
+                    mask_match[_col] = getattr(df[_col].mask, _data_type)(_col)
         else:
             mask_match = getattr(df[cols].mask, data_type)(cols)
 
@@ -307,7 +314,7 @@ class Mask(ABC):
         """
         return self.numeric(cols) & self.null(cols)
 
-    def duplicated(self, cols, keep="first") -> 'MaskDataFrameType':
+    def duplicated(self, cols="*", keep="first") -> 'MaskDataFrameType':
         """
         Find the rows that have duplicated values
 
@@ -327,7 +334,7 @@ class Mask(ABC):
 
         col_name = cols[0] if len(cols) == 1 else "__duplicated__"
 
-        mask = subset_df.duplicated(keep=keep, subset=cols).rename(col_name)
+        mask = self.root.functions.duplicated(subset_df, keep, cols).rename(col_name)
 
         return self.root.new(self._to_frame(mask))
 

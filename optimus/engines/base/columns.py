@@ -6,7 +6,6 @@ from abc import abstractmethod, ABC
 from functools import reduce
 from typing import Union
 
-import jellyfish as jellyfish
 import nltk
 import numpy as np
 import pandas as pd
@@ -14,7 +13,7 @@ import pydateinfer
 import wordninja
 from dask import dataframe as dd
 from glom import glom
-from metaphone import doublemetaphone
+
 from multipledispatch import dispatch
 from nltk import LancasterStemmer
 from nltk import ngrams
@@ -30,8 +29,8 @@ from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
-from optimus.helpers.constants import RELATIVE_ERROR, ProfilerDataTypes, Actions, PROFILER_CATEGORICAL_DTYPES, \
-    CONTRACTIONS
+from optimus.helpers.types import *
+from optimus.engines.base.stringclustering import Clusters
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import transform_date_format
@@ -64,7 +63,7 @@ class BaseColumns(ABC):
         pass
 
     def _map(self, df, input_col, output_col, func, *args):
-        return df[input_col].apply(func, args=(*args,))
+        return df[input_col].apply(func, args=(*args,)).rename(output_col)
 
     def _names(self):
         pass
@@ -119,7 +118,34 @@ class BaseColumns(ABC):
 
     @abstractmethod
     def append(self, dfs: 'DataFrameTypeList') -> 'DataFrameType':
+        """
+        Appends one or more columns or dataframes
+        :param dfs: DataFrame, list of dataframes or list of columns to append to the dataframe
+        :return: DataFrame
+        """
         pass
+
+    def concat(self, dfs: 'DataFrameTypeList') -> 'DataFrameType':
+        """
+        Same as append
+        :param dfs: DataFrame, list of dataframes or list of columns to append to the dataframe
+        :return: DataFrame
+        """
+        return self.append(dfs)
+
+    def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None, key_middle=False) -> 'DataFrameType':
+        """
+        Same as df.join
+        :param df_right:
+        :param how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
+        :param on:
+        :param left_on:
+        :param right_on:
+        :param key_middle: Order the columns putting the left df columns before the key column and the right df columns
+
+        :return: DataFrame
+        """
+        return self.root.join(df_right, how, on, left_on, right_on, key_middle)
 
     def select(self, cols="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> 'DataFrameType':
         """
@@ -639,9 +665,9 @@ class BaseColumns(ABC):
             columns = prepare_columns(df, cols, output_cols, args=data_type)
 
         func_map = {
-            "float": "to_float",
             "int": "to_integer",
-            "datetime": "to_datetime",
+            "time": "to_datetime",
+            "date": "to_datetime",
             "bool": "to_boolean",
             "str": "to_string"
         }
@@ -656,10 +682,14 @@ class BaseColumns(ABC):
             else:
                 RaiseIt.value_error(columns, ["list of tuples"])
 
-            if arg in func_map.keys():
-                df = getattr(df.cols, func_map[arg])(input_col, output_col)
+            func_name = func_map.get(arg, f"to_{arg}")
+
+            func = getattr(df.cols, func_name, None)
+
+            if func:
+                df = func(input_col, output_col)
             else:
-                RaiseIt.value_error(arg, list(func_map.keys()))
+                RaiseIt.value_error(arg)
 
         return df
 
@@ -912,19 +942,31 @@ class BaseColumns(ABC):
         This helper function aims to help managing columns name in the aggregation output.
         Also how to handle ordering columns because dask can order columns
         :param by: Column names
-        :param agg:
+        :param agg: List of tuples with the form [("agg", "col")]
         :return:
         """
         df = self.root.data
         compact = {}
-        for col_agg in list(agg.values()):
-            for col_name, _agg in col_agg.items():
-                compact.setdefault(col_name, []).append(_agg)
+
+        agg_names = None
+
+        if is_dict(agg):
+            agg_names = list(agg.keys())
+            agg = list(agg.values())
+
+        agg = val_to_list(agg, convert_tuple=False)
+
+        for col_agg in agg:
+            if is_dict(col_agg):
+                col_agg = list(col_agg.items())[::-1]
+            _agg, _col = col_agg
+            compact.setdefault(_col, []).append(_agg)
 
         df = df.groupby(by=by).agg(compact).reset_index()
-        df.columns = (val_to_list(by) + val_to_list(list(agg.keys())))
-        df = self.root.new(df)
-        return df
+        agg_names = agg_names or [a[0]+"_"+a[1] for a in agg]
+        df.columns = (val_to_list(by) + agg_names)
+        df.columns = [str(c) for c in df.columns]
+        return self.root.new(df)
 
     # def is_match(self, cols="*", data_type, invert=False):
     #     """
@@ -2204,7 +2246,7 @@ class BaseColumns(ABC):
 
         return self._td_between(cols, _days_between, value, date_format, round, output_cols)
 
-    def replace(self, cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
+    def replace(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,
                 output_cols=None) -> 'DataFrameType':
         """
         Replace a value, list of values by a specified string
@@ -2219,7 +2261,11 @@ class BaseColumns(ABC):
 
         df = self.root
 
+        if isinstance(cols, Clusters):
+            cols = cols.to_dict()
+
         if is_dict(cols):
+            search_by = search_by or "full"
             for col, replace in cols.items():
                 _search = []
                 _replace_by = []
@@ -2227,9 +2273,10 @@ class BaseColumns(ABC):
                     _replace_by.append(replace_by)
                     _search.append(search)
                 df = df.cols._replace(
-                    col, _search, _replace_by, search_by="chars")
+                    col, _search, _replace_by, search_by=search_by)
 
         else:
+            search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search)
@@ -2261,16 +2308,16 @@ class BaseColumns(ABC):
             search_by = "values"
 
         if search_by == "chars":
-            func = self.F.replace_chars
+            func = "replace_chars"
             func_return_type = str
         elif search_by == "words":
-            func = self.F.replace_words
+            func = "replace_words"
             func_return_type = str
         elif search_by == "full":
-            func = self.F.replace_full
+            func = "replace_full"
             func_return_type = str
         elif search_by == "values":
-            func = self.F.replace_values
+            func = "replace_values"
             func_return_type = None
         else:
             RaiseIt.value_error(
@@ -2351,19 +2398,29 @@ class BaseColumns(ABC):
 
         return self.apply(cols, stemmer_text, output_cols=output_cols, mode="map")
 
-    @staticmethod
-    @abstractmethod
-    def impute(cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None) -> 'DataFrameType':
+    def impute(self, cols="*", data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         """
-
         :param cols:
         :param data_type:
         :param strategy:
-        :param fill_value:
+        # - If "mean", then replace missing values using the mean along
+        #   each column. Can only be used with numeric data.
+        # - If "median", then replace missing values using the median along
+        #   each column. Can only be used with numeric data.
+        # - If "most_frequent", then replace missing using the most frequent
+        #   value along each column. Can be used with strings or numeric data.
+        # - If "constant", then replace missing values with fill_value. Can be
+        #   used with strings or numeric data.
         :param output_cols:
         :return:
         """
-        pass
+        df = self.root
+        
+        if strategy != "most_frequent":
+            df = df.cols.to_float(cols)
+
+        return df.cols.apply(cols, "impute", output_cols=output_cols, args=(strategy, fill_value), meta_action=Actions.IMPUTE.value,
+                            mode="vectorized")
 
     def fill_na(self, cols="*", value=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2738,7 +2795,7 @@ class BaseColumns(ABC):
 
             # Gets cached quality
             if col_name not in transformed and not flush:
-                cached_props = Meta.get(self.root.meta, f"columns.{col_name}.stats")
+                cached_props = Meta.get(self.root.meta, f"profile.columns.{col_name}.stats")
                 if cached_props and all(prop in cached_props for prop in quality_props):
                     result[col_name] = {"match": cached_props.get("match"),
                                         "missing": cached_props.get("missing"),
@@ -2771,7 +2828,7 @@ class BaseColumns(ABC):
             result[col_name].update({"inferred_type": cols_types[col_name]})
 
         for col in result:
-            self.root.meta = Meta.set(self.root.meta, f"columns.{col}.stats", result[col])
+            self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats", result[col])
 
         self._set_transformed_stat(list(result.keys()), ["match", "missing", "mismatch"])
 
@@ -2849,8 +2906,7 @@ class BaseColumns(ABC):
                     {"format": pydateinfer.infer(filtered_dates)})
 
         for col in cols_and_inferred_dtype:
-            self.root.meta = Meta.set(self.root.meta, f"columns.{col}.stats.inferred_type",
-                                      cols_and_inferred_dtype[col])
+            self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type", cols_and_inferred_dtype[col])
 
         return cols_and_inferred_dtype
 
@@ -2973,7 +3029,7 @@ class BaseColumns(ABC):
                 col_name).rows.limit(1000).to_dict()
             stats[col_name] = {'mean': _mean, 'median': iqr["q2"], 'q1': iqr["q1"], 'q3': iqr["q3"], 'whisker_low': lb,
                                'whisker_high': ub,
-                               'fliers': [fliers[0][col_name]], 'label': one_list_to_val(col_name)}
+                               'fliers': [fliers[col_name][0]], 'label': one_list_to_val(col_name)}
 
         return stats
 
@@ -3572,7 +3628,7 @@ class BaseColumns(ABC):
         # https://github.com/OpenRefine/OpenRefine/blob/master/main/src/com/google/refine/clustering/binning/FingerprintKeyer.java#L56
         def _split_sort_remove_join(value):
             """
-            Helper function to split, remove duplicates, sort and join back together
+            Helper function to split, remove duplicate, sort and join back together
             """
             # Split into whitespace-separated token
             # print("value", type(value), value)
@@ -3681,17 +3737,30 @@ class BaseColumns(ABC):
         return df
 
     def metaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, jellyfish.metaphone, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
+        return self.apply(cols, "metaphone", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.METAPHONE.value, mode="vectorized", func_type="column_expr")
 
-    def double_metaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, doublemetaphone, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.DOUBLE_METAPHONE.value, mode="map", func_type="column_expr")
+    def levenshtein(self, cols="*", other_cols=None, value=None, output_cols=None):
+        df = self.root
+        cols = parse_columns(df, cols)
 
-    def levenshtein(self, col_A, col_B, output_cols=None):
-        return self.apply(None, self.F.levenshtein, args=(col_A, col_B,), func_return_type=str,
-                          output_cols=output_cols,
-                          meta_action=Actions.METAPHONE.value, mode="map", func_type="column_expr")
+        if value is None:
+            other_cols = parse_columns(df, other_cols) if other_cols else None
+            if other_cols is None and len(cols) <= 2:
+                other_cols = [cols.pop(-1)]
+
+            for col, other_col in zip(cols, other_cols):
+                df = df.cols.apply(col, "levenshtein", args=(df.data[other_col],), func_return_type=str,
+                                output_cols=output_cols,
+                                meta_action=Actions.LEVENSHTEIN.value, mode="vectorized", func_type="column_expr")
+        else:
+            value = val_to_list(value)
+            for col, val in zip(cols, value):
+                df = df.cols.apply(col, "levenshtein", args=(val,), func_return_type=str,
+                                output_cols=output_cols,
+                                meta_action=Actions.LEVENSHTEIN.value, mode="vectorized", func_type="column_expr")
+
+        return df
 
     def nysiis(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
@@ -3700,20 +3769,20 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        return self.apply(cols, jellyfish.nysiis, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.NYSIIS.value, mode="map", func_type="column_expr")
+        return self.apply(cols, "nysiis", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.NYSIIS.value, mode="vectorized", func_type="column_expr")
 
     def match_rating_codex(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, jellyfish.match_rating_codex, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.MATCH_RATING_CODEX.value, mode="map", func_type="column_expr")
+        return self.apply(cols, "match_rating_codex", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.MATCH_RATING_CODEX.value, mode="vectorized", func_type="column_expr")
 
-    def double_methaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, jellyfish.dou, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.DOUBLE_METAPHONE.value, mode="map", func_type="column_expr")
+    def double_metaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
+        return self.apply(cols, "double_metaphone", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.DOUBLE_METAPHONE.value, mode="vectorized", func_type="column_expr")
 
     def soundex(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, jellyfish.soundex, func_return_type=str, output_cols=output_cols,
-                          meta_action=Actions.SOUNDEX.value, mode="map", func_type="column_expr")
+        return self.apply(cols, "soundex", func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.SOUNDEX.value, mode="vectorized", func_type="column_expr")
 
     def tf_idf(self, features) -> 'DataFrameType':
 

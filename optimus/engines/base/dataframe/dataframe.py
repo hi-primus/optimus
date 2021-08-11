@@ -108,17 +108,6 @@ class DataFrameBaseDataFrame():
 
         return self.root.new(dfd)
 
-    @staticmethod
-    def pivot(index, column, values):
-        """
-        Return reshaped DataFrame organized by given index / column values.
-        :param index: Column to use to make new frame's index.
-        :param column: Column to use to make new frame's columns.
-        :param values: Column(s) to use for populating new frame's values.
-        :return:
-        """
-        raise NotImplementedError
-
     def melt(self, id_cols=None, value_cols=None, var_name="variable", value_name="value", data_type=None):
         """
         Convert DataFrame from wide to long format.

@@ -27,7 +27,7 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
     @property
     def functions(self):
         from optimus.engines.dask_cudf.functions import DaskCUDFFunctions
-        return DaskCUDFFunctions()
+        return DaskCUDFFunctions(self)
 
     @property
     def save(self):
@@ -45,11 +45,6 @@ class DaskCUDFDataFrame(DaskBaseDataFrame):
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         return PandasDataFrame(self.get_buffer().data[input_cols][lower_bound: upper_bound].to_pandas())
-
-
-    @staticmethod
-    def pivot(index, column, values):
-        pass
 
     @staticmethod
     def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):

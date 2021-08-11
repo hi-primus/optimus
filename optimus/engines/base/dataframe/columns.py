@@ -69,6 +69,7 @@ class DataFrameBaseColumns:
         if output == "dict":
             result = result.to_dict()
         elif output == "dataframe":
+            result.columns = map(lambda c: str(c), result.columns)
             result = self.root.new(result.reset_index())
         else:
             RaiseIt.value_error(output, ["dict", "dataframe"])

@@ -20,14 +20,10 @@ class IbisDataFrame(BaseDataFrame):
     @property
     def functions(self):
         from optimus.engines.ibis.functions import IbisFunctions
-        return IbisFunctions()
+        return IbisFunctions(self)
 
     @staticmethod
     def sample(n=10, random=False):
-        pass
-
-    @staticmethod
-    def pivot(index, column, values):
         pass
 
     @staticmethod

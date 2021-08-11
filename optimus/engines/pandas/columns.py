@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 
-from optimus.engines.base.commons.functions import impute, string_to_index, index_to_string, find
+from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.base.columns import BaseColumns
 
@@ -33,10 +33,6 @@ class Cols(DataFrameBaseColumns, BaseColumns):
 
     def to_timestamp(self, cols="*", date_format=None, output_cols=None):
         raise NotImplementedError('Not implemented yet')
-
-    def impute(self, cols="*", data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
-        df = self.root
-        return impute(df, cols, data_type=data_type, strategy=strategy, fill_value=fill_value, output_cols=None)
 
     def astype(self, cols="*", output_cols=None, *args, **kwargs):
         raise NotImplementedError('Not implemented yet')
@@ -71,14 +67,14 @@ class Cols(DataFrameBaseColumns, BaseColumns):
 
     def string_to_index(self, cols="*", output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        df = string_to_index(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        df = string_to_index(df, cols, output_cols, df.le)
 
         return df
 
     def index_to_string(self, cols="*", output_cols=None):
         df = self.root
-        le = preprocessing.LabelEncoder()
-        df = index_to_string(df, cols, output_cols, le)
+        df.le = df.le or preprocessing.LabelEncoder()
+        df = index_to_string(df, cols, output_cols, df.le)
 
         return df

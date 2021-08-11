@@ -45,10 +45,7 @@ class Plot:
         :param output_path: path where the image is going to be saved
         :return:
         """
-        df = self.df
-        columns = parse_columns(df, columns)
-
-        stats = df.cols.boxplot(columns)
+        stats = self.df.cols.boxplot(columns)
         plot_boxplot(stats, output=output_format, path=output_path)
 
     def frequency(self, columns=None, buckets=10, output_format="plot", output_path=None):
@@ -79,7 +76,7 @@ class Plot:
         :return: Heatmap plot of the corr matrix using seaborn.
         """
         df = self.df
-        cols_data = df.cols.correlation(col_name, method, output="array")
+        cols_data = df.cols.correlation(col_name, method)
         plot_correlation(cols_data, output=output_format, path=output_path)
 
     def qqplot(self, columns, n=100, output_format="plot", output_path=None):

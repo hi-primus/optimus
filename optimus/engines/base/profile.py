@@ -38,12 +38,8 @@ class BaseProfile(ABC):
         df = self.root
         cols = parse_columns(df, cols) if cols else []
 
-        if is_list(cols):
-            dtype = [Meta.get(
-                df.meta, f"profile.columns.{col}.stats.inferred_type.dtype") for col in cols]
-        else:
-            dtype = Meta.get(
-                df.meta, f"profile.columns.{cols}.stats.inferred_type.dtype")
+        dtype = [Meta.get(
+            df.meta, f"profile.columns.{col}.stats.inferred_type.data_type") for col in cols]
 
         return one_list_to_val(dtype)
 
