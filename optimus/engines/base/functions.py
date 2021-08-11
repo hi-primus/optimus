@@ -126,6 +126,7 @@ class BaseFunctions(ABC):
     def duplicated(dfd, keep, subset):
         return dfd.duplicated(keep=keep, subset=subset)
 
+    @staticmethod
     def impute(series, strategy, fill_value):
         from dask_ml.impute import SimpleImputer
         imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
