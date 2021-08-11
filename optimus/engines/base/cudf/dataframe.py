@@ -1,0 +1,2 @@
+class CUDFBaseDataFrame():
+    pass

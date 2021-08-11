@@ -1,4 +1,4 @@
-from optimus.engines.base.contants import BaseConstants
+from optimus.engines.base.constants import BaseConstants
 
 class Constants(BaseConstants):
     pass

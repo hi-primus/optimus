@@ -4,7 +4,7 @@ import pyspark
 
 from pyspark.sql import functions as F
 
-from optimus.engines.base.functions import Functions
+from optimus.engines.base.functions import BaseFunctions
 from optimus.helpers.check import is_column_a
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import create_buckets
@@ -13,7 +13,7 @@ from optimus.helpers.functions import create_buckets
 from optimus.infer import is_numeric, regex_full_url
 
 
-class SparkFunctions(Functions):
+class SparkFunctions(BaseFunctions):
 
     def word_tokenize(self, series):
         pass

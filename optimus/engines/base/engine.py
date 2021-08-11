@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from optimus.engines.base.contants import BaseConstants
+from optimus.engines.base.constants import BaseConstants
 
 from optimus.engines.base.io.connect import Connect
 from optimus.helpers.logger import logger

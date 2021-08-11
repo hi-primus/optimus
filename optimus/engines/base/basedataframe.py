@@ -32,8 +32,8 @@ from optimus.engines.base.meta import Meta
 from optimus.engines.base.ml.models import BaseML
 from optimus.engines.base.ml.encoding import BaseEncoding
 from optimus.engines.base.io.save import *
-from optimus.engines.base.contants import BaseConstants
-from optimus.engines.base.functions import Functions
+from optimus.engines.base.constants import BaseConstants
+from optimus.engines.base.functions import BaseFunctions
 from optimus.outliers.outliers import Outliers
 from optimus.plots.functions import plot_hist, plot_frequency
 from optimus.plots.plots import Plot
@@ -323,8 +323,8 @@ class BaseDataFrame(ABC):
         pass
 
     @property
-    def functions(self) -> 'Functions':
-        return Functions(self)
+    def functions(self) -> 'BaseFunctions':
+        return BaseFunctions(self)
 
     @property
     def mask(self) -> 'Mask':

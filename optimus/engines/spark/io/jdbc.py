@@ -1,4 +1,4 @@
-from optimus.engines.base.contants import LIMIT_TABLE, NUM_PARTITIONS
+from optimus.engines.base.constants import LIMIT_TABLE, NUM_PARTITIONS
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.spark.io.properties import DriverProperties

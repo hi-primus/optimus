@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from optimus.engines.base.functions import Functions
+from optimus.engines.base.functions import BaseFunctions
 from optimus.helpers.core import val_to_list, one_list_to_val
 
 
-class IbisFunctions(Functions):
+class IbisFunctions(BaseFunctions):
 
     @property
     def _engine(self):

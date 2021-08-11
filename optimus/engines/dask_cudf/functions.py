@@ -1,10 +1,9 @@
 import cudf
 import dask_cudf
-from optimus.engines.base.functions import Functions
-from optimus.engines.base.dask.functions import DaskBaseFunctions
 from optimus.engines.base.cudf.functions import CUDFBaseFunctions
+from optimus.engines.base.dask.functions import DaskBaseFunctions
 
-class DaskCUDFFunctions(DaskBaseFunctions, CUDFBaseFunctions, Functions):
+class DaskCUDFFunctions(CUDFBaseFunctions, DaskBaseFunctions):
     
     @property
     def _partition_engine(self):

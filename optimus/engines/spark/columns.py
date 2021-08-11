@@ -21,7 +21,8 @@ from optimus.helpers.types import *
 import optimus.helpers.functions_spark
 from optimus import ROOT_DIR
 # Helpers
-from optimus.engines.base.columns import BaseColumns
+from optimus.engines.base.pandas.columns import PandasBaseColumns
+from optimus.engines.base.distributed.columns import DistributedBaseColumns
 from optimus.engines.spark.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.spark.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import has_, is_column_a, is_spark_dataframe
@@ -59,7 +60,7 @@ from optimus.engines.spark.audf import abstract_udf as audf, filter_row_by_data_
 ENGINE = "spark"
 
 
-class Cols(BaseColumns):
+class Cols(PandasBaseColumns, DistributedBaseColumns):
 
     def _names(self):
         return list(self.root.data.columns)

@@ -6,8 +6,10 @@ from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_int, is_list_value
 
+from optimus.engines.base.basedataframe import BaseDataFrame
 
-class DataFrameBaseDataFrame():
+
+class DataFrameBaseDataFrame(BaseDataFrame):
 
     def execute(self):
         df = self.data

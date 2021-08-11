@@ -4,7 +4,7 @@ import numpy as np
 
 # From a top point of view we organize Optimus separating the functions in dataframes and dask engines.
 # Some functions are commons to pandas and dask.
-from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
+from optimus.engines.base.ml.constants import STRING_TO_INDEX, INDEX_TO_STRING
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list

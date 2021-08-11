@@ -2,10 +2,10 @@ import vaex
 import numpy as np
 from fastnumbers import fast_float, fast_int
 
-from optimus.engines.base.functions import Functions
+from optimus.engines.base.functions import BaseFunctions
 
 
-class VaexFunctions(Functions):
+class VaexFunctions(BaseFunctions):
 
     @property
     def _engine(self):

@@ -7,7 +7,9 @@ from dask_ml.preprocessing import MinMaxScaler, StandardScaler
 
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 
-class DaskBaseFunctions():
+from optimus.engines.base.distributed.functions import DistributedBaseFunctions
+
+class DaskBaseFunctions(DistributedBaseFunctions):
 
     @property
     def _engine(self):

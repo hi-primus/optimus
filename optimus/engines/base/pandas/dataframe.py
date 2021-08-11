@@ -1,0 +1,2 @@
+class PandasBaseDataFrame():
+    pass

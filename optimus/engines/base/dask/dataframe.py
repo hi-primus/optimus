@@ -10,15 +10,17 @@ import numpy as np
 import pandas as pd
 
 from optimus.engines.base.basedataframe import BaseDataFrame
-from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.types import *
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_int, is_one_element
 
+from optimus.engines.base.distributed.dataframe import DistributedBaseDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
 
-class DaskBaseDataFrame(BaseDataFrame):
+
+class DaskBaseDataFrame(DistributedBaseDataFrame):
 
     def __init__(self, data):
         super().__init__(data)

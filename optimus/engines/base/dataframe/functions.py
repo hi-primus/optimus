@@ -2,7 +2,10 @@
 
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
-class DataFrameBaseFunctions():
+from optimus.engines.base.functions import BaseFunctions
+
+
+class DataFrameBaseFunctions(BaseFunctions):
     def standard_scaler(self, series):
         return StandardScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
 

@@ -3,12 +3,11 @@
 import cudf
 
 from optimus.helpers.core import val_to_list
-from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
 from optimus.engines.base.cudf.functions import CUDFBaseFunctions
-from optimus.engines.base.functions import Functions
+from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
 
 
-class CUDFFunctions(DataFrameBaseFunctions, CUDFBaseFunctions, Functions):
+class CUDFFunctions(CUDFBaseFunctions, DataFrameBaseFunctions):
 
     @property
     def _engine(self):

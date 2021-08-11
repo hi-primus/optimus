@@ -1,4 +1,5 @@
 from optimus.engines.base.dask.dataframe import DaskBaseDataFrame
+from optimus.engines.base.cudf.dataframe import CUDFBaseDataFrame
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.dask_cudf.io.save import Save
 from optimus.engines.pandas.dataframe import PandasDataFrame
@@ -6,7 +7,7 @@ from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import cudf_to_dask_cudf
 
 
-class DaskCUDFDataFrame(DaskBaseDataFrame):
+class DaskCUDFDataFrame(CUDFBaseDataFrame, DaskBaseDataFrame):
 
     def __init__(self, data):
         super().__init__(data)

@@ -5,7 +5,7 @@ from optimus.helpers.types import *
 import jellyfish as jellyfish
 import numpy as np
 
-from optimus.engines.base.ml.contants import CLUSTER_COL
+from optimus.engines.base.ml.constants import CLUSTER_COL
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.output import output_json
 from optimus.helpers.raiseit import RaiseIt

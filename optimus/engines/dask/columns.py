@@ -2,7 +2,7 @@ import dask.array as da
 from dask_ml import preprocessing
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string
-from optimus.engines.base.columns import BaseColumns
+from optimus.engines.base.pandas.columns import PandasBaseColumns
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.helpers.columns import parse_columns
 import dask
@@ -10,7 +10,7 @@ import dask
 from optimus.profiler.constants import MAX_BUCKETS
 
 
-class Cols(DaskBaseColumns, BaseColumns):
+class Cols(PandasBaseColumns, DaskBaseColumns):
     def __init__(self, df):
         super().__init__(df)
 

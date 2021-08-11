@@ -1,10 +1,11 @@
-from optimus.engines.base.dataframe.dataframe import DataFrameBaseDataFrame
-from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.cudf.io.save import Save
 from optimus.engines.pandas.dataframe import PandasDataFrame
 
+from optimus.engines.base.cudf.dataframe import CUDFBaseDataFrame
+from optimus.engines.base.dataframe.dataframe import DataFrameBaseDataFrame
 
-class CUDFDataFrame(DataFrameBaseDataFrame, BaseDataFrame):
+
+class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
 
     def __init__(self, data):
         super().__init__(data)

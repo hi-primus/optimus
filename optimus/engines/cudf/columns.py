@@ -4,24 +4,14 @@ from sklearn.preprocessing import StandardScaler
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
 from optimus.engines.base.cudf.columns import CUDFBaseColumns
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.engines.base.columns import BaseColumns
-from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, get_output_cols
-from optimus.helpers.constants import Actions
-from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_of_tuples
 
 
-class Cols(CUDFBaseColumns, DataFrameBaseColumns, BaseColumns):
+class Cols(CUDFBaseColumns, DataFrameBaseColumns):
 
     def __init__(self, df):
         super().__init__(df)
-
-    @property
-    def _pd(self):
-        import cudf
-        return cudf
 
     def _series_to_pandas(self, series):
         return series.to_pandas()

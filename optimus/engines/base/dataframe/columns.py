@@ -2,20 +2,17 @@ from abc import abstractmethod
 from functools import reduce
 
 from optimus.helpers.columns import parse_columns, name_col
-from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict
 
+from optimus.engines.base.columns import BaseColumns
 
-class DataFrameBaseColumns:
+
+class DataFrameBaseColumns(BaseColumns):
 
     def _names(self):
         return list(self.root.data.columns)
-
-    @abstractmethod
-    def _pd(self):
-        pass
 
     def append(self, dfs):
         """
@@ -36,7 +33,7 @@ class DataFrameBaseColumns:
             if is_dict(_df):
                 _dfd = dfd
                 for col, value in _df.items():
-                    if isinstance(value, (BaseDataFrame,)):
+                    if isinstance(value, (df.__class__,)):
                         value = value.data[value.cols.names()[0]]
                     _dfd[col] = value
                 _df = _dfd[list(_df.keys())]
@@ -45,7 +42,7 @@ class DataFrameBaseColumns:
                 _df = _df.data
             dfds.append(_df)
 
-        _dfd = self._pd.concat([_df.reset_index(drop=True) for _df in dfds], axis=1)
+        _dfd = self.F._engine.concat([_df.reset_index(drop=True) for _df in dfds], axis=1)
 
         for col in _dfd.columns:
             dfd[col] = _dfd[col]
@@ -64,7 +61,7 @@ class DataFrameBaseColumns:
         """
         dfd = self.root.data
 
-        result = self._pd.crosstab(dfd[col_x], dfd[col_y])
+        result = self.F._engine.crosstab(dfd[col_x], dfd[col_y])
 
         if output == "dict":
             result = result.to_dict()

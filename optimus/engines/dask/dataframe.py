@@ -4,11 +4,11 @@ import dask.dataframe as dd
 from optimus.engines.base.dask.dataframe import DaskBaseDataFrame
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.dask.io.save import Save
-from optimus.engines.pandas.dataframe import PandasDataFrame
+from optimus.engines.base.pandas.dataframe import PandasBaseDataFrame
 from optimus.helpers.converter import pandas_to_dask_dataframe
 
 
-class DaskDataFrame(DaskBaseDataFrame):
+class DaskDataFrame(PandasBaseDataFrame, DaskBaseDataFrame):
     def __init__(self, data):
         if isinstance(data, (pd.DataFrame, pd.Series)):
             data = pandas_to_dask_dataframe(data)

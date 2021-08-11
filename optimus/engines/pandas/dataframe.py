@@ -1,10 +1,10 @@
-from optimus.engines.base.basedataframe import BaseDataFrame
+from optimus.engines.base.pandas.dataframe import PandasBaseDataFrame
 from optimus.engines.base.dataframe.dataframe import DataFrameBaseDataFrame
 # from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.pandas.io.save import Save
 
 
-class PandasDataFrame(DataFrameBaseDataFrame, BaseDataFrame):
+class PandasDataFrame(PandasBaseDataFrame, DataFrameBaseDataFrame):
 
     def __init__(self, data):
         super().__init__(data)

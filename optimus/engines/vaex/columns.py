@@ -1,9 +1,8 @@
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.engines.base.columns import BaseColumns
 
 
 # @vaex.register_dataframe_accessor('cols', override=True)
-class Cols(DataFrameBaseColumns, BaseColumns):
+class Cols(DataFrameBaseColumns):
     def __init__(self, df):
         super().__init__(df)
 

@@ -11,12 +11,11 @@ import pandas as pd
 from dask.array import stats
 
 from optimus.engines.base.commons.functions import word_tokenize
-from optimus.engines.base.dask.functions import DaskBaseFunctions
 from optimus.engines.base.pandas.functions import PandasBaseFunctions
-from optimus.engines.base.functions import Functions
+from optimus.engines.base.dask.functions import DaskBaseFunctions
 
 
-class DaskFunctions(DaskBaseFunctions, PandasBaseFunctions, Functions):
+class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
     
     @property
     def _partition_engine(self):

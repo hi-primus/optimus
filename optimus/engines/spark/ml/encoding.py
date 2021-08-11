@@ -6,7 +6,7 @@ from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_, is_str
 from optimus.helpers.check import is_spark_dataframe
-from optimus.engines.base.ml.contants import STRING_TO_INDEX, INDEX_TO_STRING
+from optimus.engines.base.ml.constants import STRING_TO_INDEX, INDEX_TO_STRING
 
 from optimus.engines.base.meta import Meta
 

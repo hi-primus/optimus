@@ -3,7 +3,7 @@ from pyspark.sql import functions as F
 from optimus.helpers.columns import name_col
 from optimus.helpers.json import dump_json
 from optimus.ml import keycollision
-from optimus.ml.contants import FINGERPRINT_COL, LEVENSHTEIN_DISTANCE
+from optimus.ml.constants import FINGERPRINT_COL, LEVENSHTEIN_DISTANCE
 
 
 def levenshtein_cluster(df, input_col, threshold: int = None, output: str = "dict"):

@@ -9,8 +9,10 @@ from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
 from optimus.profiler.functions import fill_missing_var_types
 
+from optimus.engines.base.distributed.columns import DistributedBaseColumns
 
-class DaskBaseColumns:
+
+class DaskBaseColumns(DistributedBaseColumns):
 
     @staticmethod
     def exec_agg(exprs, compute):

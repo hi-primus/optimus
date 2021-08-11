@@ -3,19 +3,15 @@ import pandas as pd
 from sklearn import preprocessing
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
+from optimus.engines.base.pandas.columns import PandasBaseColumns
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-from optimus.engines.base.columns import BaseColumns
 
 DataFrame = pd.DataFrame
 
 
-class Cols(DataFrameBaseColumns, BaseColumns):
+class Cols(PandasBaseColumns, DataFrameBaseColumns):
     def __init__(self, df):
         super().__init__(df)
-
-    @property
-    def _pd(self):
-        return pd
 
     def _series_to_pandas(self, series):
         return series

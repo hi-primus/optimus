@@ -5,47 +5,46 @@ from pprint import pformat
 from typing import List, Union, Optional
 from multipledispatch.dispatcher import MethodDispatcher
 
-
-from optimus.engines.base.basedataframe import BaseDataFrame as dataframe_class
+from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.infer import is_list, is_str
 from optimus.helpers.types import *
 from optimus.helpers.core import val_to_list, one_list_to_val
 
 from .prepare import prepare
 
-from optimus.engines.base.engine import BaseEngine as engine_class
-from optimus.engines.base.stringclustering import Clusters as clusters_class
+from optimus.engines.base.engine import BaseEngine
+from optimus.engines.base.stringclustering import Clusters
 
-from optimus.engines.base.create import BaseCreate as create_class
-from optimus.engines.base.io.load import BaseLoad as load_class
-from optimus.engines.base.io.save import BaseSave as save_class
-from optimus.engines.base.io.connect import Connect as connect_class
+from optimus.engines.base.create import BaseCreate
+from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.io.save import BaseSave
+from optimus.engines.base.io.connect import Connect
 
-from optimus.engines.base.columns import BaseColumns as cols_class
-from optimus.engines.base.rows import BaseRows as rows_class
-from optimus.engines.base.set import BaseSet as set_class
-from optimus.engines.base.mask import Mask as mask_class
-from optimus.engines.base.ml.models import BaseML as ml_class
-from optimus.plots.plots import Plot as plots_class
-from optimus.outliers.outliers import Outliers as outliers_class
-from optimus.engines.base.profile import BaseProfile as profile_class
+from optimus.engines.base.columns import BaseColumns
+from optimus.engines.base.rows import BaseRows
+from optimus.engines.base.set import BaseSet
+from optimus.engines.base.mask import Mask
+from optimus.engines.base.ml.models import BaseML
+from optimus.plots.plots import Plot
+from optimus.outliers.outliers import Outliers
+from optimus.engines.base.profile import BaseProfile
 
 engine_accessors = {
-    "create": create_class,
-    "load": load_class,
-    "save": save_class,
-    "connect": connect_class
+    "create": BaseCreate,
+    "load": BaseLoad,
+    "save": BaseSave,
+    "connect": Connect
 }
 
 dataframe_accessors = {
-    "cols": cols_class,
-    "rows": rows_class,
-    "set": set_class,
-    "mask": mask_class,
-    "ml": ml_class,
-    "plot": plots_class,
-    "outliers": outliers_class,
-    "profile": profile_class
+    "cols": BaseColumns,
+    "rows": BaseRows,
+    "set": BaseSet,
+    "mask": Mask,
+    "ml": BaseML,
+    "plot": Plot,
+    "outliers": Outliers,
+    "profile": BaseProfile
 }
 
 accessors = {**engine_accessors, **dataframe_accessors}
@@ -238,14 +237,14 @@ def _generate_code(body=None, variables=[], **kwargs):
         method = accessors[operation[0]]
         method_root_type = _get_method_root_type(operation[0])
         operation = operation[1:]
-    elif getattr(dataframe_class, operation[0], None):
-        method = dataframe_class
+    elif getattr(BaseDataFrame, operation[0], None):
+        method = BaseDataFrame
         method_root_type = "dataframe"
-    elif getattr(engine_class, operation[0], None):
-        method = engine_class
+    elif getattr(BaseEngine, operation[0], None):
+        method = BaseEngine
         method_root_type = "engine"
-    elif getattr(clusters_class, operation[0], None):
-        method = clusters_class
+    elif getattr(Clusters, operation[0], None):
+        method = Clusters
         method_root_type = "clusters"
 
     for item in operation:

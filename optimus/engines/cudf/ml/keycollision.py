@@ -1,4 +1,4 @@
-from optimus.engines.base.ml.contants import CLUSTER_COL, RECOMMENDED_COL, FINGERPRINT_COL, \
+from optimus.engines.base.ml.constants import CLUSTER_COL, RECOMMENDED_COL, FINGERPRINT_COL, \
     CLUSTER_SUM_COL
 from optimus.helpers.columns import parse_columns, name_col
 

@@ -17,7 +17,7 @@ from optimus.infer import is_list, is_list_of_list, is_null, is_bool, \
 
 # ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
 
-class Functions(ABC):
+class BaseFunctions(ABC):
 
     def __init__(self, df):
         if df is not None and getattr(df, "partitions", False):
@@ -41,7 +41,7 @@ class Functions(ABC):
     
     @property
     def constants(self):
-        from optimus.engines.base.contants import BaseConstants
+        from optimus.engines.base.constants import BaseConstants
         return BaseConstants()
 
     @property
