@@ -29,6 +29,7 @@ from optimus.engines.base.meta import Meta
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
+from optimus.helpers.constants import Actions, RELATIVE_ERROR
 from optimus.helpers.types import *
 from optimus.engines.base.stringclustering import Clusters
 from optimus.helpers.converter import format_dict
@@ -3209,7 +3210,6 @@ class BaseColumns(ABC):
             return format_dict(values, tidy)
 
     # Any mask
-
     def any_greater_than(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         return self._any_mask(cols, "greater_than", value=value, inverse=inverse, tidy=tidy, compute=compute)
 

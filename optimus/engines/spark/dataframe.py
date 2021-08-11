@@ -11,6 +11,15 @@ from optimus.helpers.raiseit import RaiseIt
 
 
 class SparkDataFrame(BaseDataFrame):
+    def _base_to_dfd(self, pdf, n_partitions) -> 'InternalDataFrameType':
+        pass
+
+    def visualize(self):
+        pass
+
+    def graph(self) -> dict:
+        pass
+
     def __init__(self, data):
         super().__init__(data)
 
@@ -273,7 +282,8 @@ class SparkDataFrame(BaseDataFrame):
         :return: Number of partitions
         """
         df = self.data
-        return df.rdd.getNumPartitions()
+
+        return df.to_spark().rdd.getNumPartitions()
 
     @staticmethod
     def partitioner():

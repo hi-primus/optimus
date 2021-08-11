@@ -46,11 +46,11 @@ sys.path.append(os.path.abspath(ROOT_DIR))
 
 # To use this functions as a Spark udf function we need to load it using addPyFile because the file can not be loaded
 # as python module because it generate a pickle error.
-from infer import Infer
+# from infer import Infer
 
 from optimus.infer import is_, is_type, is_function, is_list_value, is_tuple, is_list_of_str, \
     is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int
-from optimus.infer_spark import SPARK_DTYPES_TO_INFERRED, parse_spark_class_dtypes, is_list_of_spark_dataframes
+# from optimus.infer_spark import SPARK_DTYPES_TO_INFERRED, parse_spark_class_dtypes, is_list_of_spark_dataframes
 # NUMERIC_TYPES, NOT_ARRAY_TYPES, STRING_TYPES, ARRAY_TYPES
 from optimus.engines.spark.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
 
@@ -204,47 +204,47 @@ class Cols(BaseColumns):
             df = df.withColumn(output_col, F.to_timestamp(input_col, date_format))
         return df
 
-    def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
-              filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action="apply", default=None, mode=None):
-        """
-        Apply a function using pandas udf or udf if apache arrow is not available
-        :param input_cols: Columns in which the function is going to be applied
-        :param output_cols: Columns in which the transformed data will saved
-        :param func: Functions to be applied to a columns. The declaration must have always 2 params.
-            def func(value, args):
-        :param func_return_type: function return type. This is required by UDF and Pandas UDF.
-        :param args: Arguments to be passed to the function
-        :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
-        :param when: A expression to better control when the function is going to be applied
-        :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
-        :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
-        True or False
-        :param meta_action: Metadata transformation to a dataframe
-        """
-        func_return_type = {str: "string", int: "int", float: "float", bool: "boolean"}.get(func_return_type)
-        df = self.root
-        columns = prepare_columns(df, input_cols, output_cols, filter_by_column_types=filter_col_by_dtypes,
-                                  accepts_missing_cols=True, default=default)
-
-        def expr(_when):
-            main_query = audf(input_col, func, func_return_type, args, func_type)
-            if when is not None:
-                # Use the data type to filter the query
-                main_query = F.when(_when, main_query).otherwise(F.col(input_col))
-
-            return main_query
-
-        dfd = df.data
-        meta = df.meta
-        for input_col, output_col in columns:
-            # print("expr(when)",type(expr(when)),expr(when))
-            dfd = dfd.withColumn(output_col, expr(when))
-            meta = Meta.action(meta, meta_action, output_col)
-            # self.root.meta.preserve(self, meta_action, output_col)
-        # dfd = self.root.new(dfd)
-
-        return self.root.new(dfd)
+    # def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
+    #           filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
+    #           meta_action="apply", default=None, mode=None):
+    #     """
+    #     Apply a function using pandas udf or udf if apache arrow is not available
+    #     :param input_cols: Columns in which the function is going to be applied
+    #     :param output_cols: Columns in which the transformed data will saved
+    #     :param func: Functions to be applied to a columns. The declaration must have always 2 params.
+    #         def func(value, args):
+    #     :param func_return_type: function return type. This is required by UDF and Pandas UDF.
+    #     :param args: Arguments to be passed to the function
+    #     :param func_type: pandas_udf or udf. If none try to use pandas udf (Pyarrow needed)
+    #     :param when: A expression to better control when the function is going to be applied
+    #     :param filter_col_by_dtypes: Only apply the filter to specific type of value ,integer, float, string or bool
+    #     :param skip_output_cols_processing: In some special cases we do not want apply() to construct the output columns.
+    #     True or False
+    #     :param meta_action: Metadata transformation to a dataframe
+    #     """
+    #     func_return_type = {str: "string", int: "int", float: "float", bool: "boolean"}.get(func_return_type)
+    #     df = self.root
+    #     columns = prepare_columns(df, input_cols, output_cols, filter_by_column_types=filter_col_by_dtypes,
+    #                               accepts_missing_cols=True, default=default)
+    #
+    #     def expr(_when):
+    #         main_query = audf(input_col, func, func_return_type, args, func_type)
+    #         if when is not None:
+    #             # Use the data type to filter the query
+    #             main_query = F.when(_when, main_query).otherwise(F.col(input_col))
+    #
+    #         return main_query
+    #
+    #     dfd = df.data
+    #     meta = df.meta
+    #     for input_col, output_col in columns:
+    #         # print("expr(when)",type(expr(when)),expr(when))
+    #         dfd = dfd.withColumn(output_col, expr(when))
+    #         meta = Meta.action(meta, meta_action, output_col)
+    #         # self.root.meta.preserve(self, meta_action, output_col)
+    #     # dfd = self.root.new(dfd)
+    #
+    #     return self.root.new(dfd)
 
     @staticmethod
     def apply_by_data_type(columns, func, func_return_type, args=None, func_type=None, data_type=None):

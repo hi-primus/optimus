@@ -15,6 +15,13 @@ from optimus.infer import is_numeric, regex_full_url
 
 class SparkFunctions(Functions):
 
+    def word_tokenize(self, series):
+        pass
+
+    @staticmethod
+    def days_between(self, date_format=None):
+        pass
+
     @property
     def _engine(self):
         return pyspark
@@ -36,29 +43,15 @@ class SparkFunctions(Functions):
 
         return _df.replace(_search, _replace_by, _output_col)
 
-    def to_string(self, col_name):
-        return F.col(col_name).cast("string")
-
-    def to_string_accessor(self, series):
-        return self.to_string(series)
-
     def to_float(self, col_name):
         return F.col(col_name).cast("float")
 
     def to_integer(self, col_name, default=None):
         return F.col(col_name).cast("int")
 
-    @staticmethod
-    def lower(col_name):
-        return F.lower(F.col(col_name))
-
-    @staticmethod
-    def upper(col_name):
-        return F.upper(F.col(col_name))
-
-    @staticmethod
-    def title(col):
-        pass
+    # @staticmethod
+    # def lower(col_name):
+    #     return F.lower(F.col(col_name))
 
     @staticmethod
     def pad(series, width, side, fillchar=""):
@@ -433,4 +426,3 @@ class SparkFunctions(Functions):
             expr = None
         # print(expr)
         return expr
-

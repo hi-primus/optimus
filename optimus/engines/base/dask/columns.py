@@ -4,20 +4,20 @@ import pandas as pd
 from dask import delayed
 
 from optimus.engines.base.meta import Meta
-from optimus.helpers.core import val_to_list
-from optimus.helpers.columns import parse_columns, get_output_cols, name_col
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import Actions
-from optimus.infer import is_list_value, is_tuple
+from optimus.helpers.core import val_to_list
 from optimus.profiler.functions import fill_missing_var_types
 
 
-class DaskBaseColumns():
+class DaskBaseColumns:
 
     @staticmethod
     def exec_agg(exprs, compute):
         """
         Execute and aggregation
         :param exprs:
+        :param compute:
         :return:
         """
 
@@ -51,7 +51,6 @@ class DaskBaseColumns():
 
         df = self.root.data
         cols = parse_columns(df, cols)
-        # s.fillna(np.nan)
         df[cols] = df[cols].map_partitions(pd.qcut, quantiles)
         return df
 

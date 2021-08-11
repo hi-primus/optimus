@@ -1,17 +1,21 @@
+import glob
 import io
 import ntpath
 import zipfile
 
-import pandas as pd
+import databricks.koalas as ks
+import psutil
 from packaging import version
 
-from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.spark.dataframe import SparkDataFrame
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.columns import replace_columns_special_characters
-from optimus.helpers.functions import prepare_path
+from optimus.helpers.core import val_to_list
+from optimus.helpers.functions import prepare_path, unquote_path
+from optimus.helpers.logger import logger
+from optimus.infer import is_list, is_url
 
 
 class Load(BaseLoad):
@@ -55,40 +59,57 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, encoding="UTF-8", null_value="None", n_rows=-1,
-            error_bad_lines=False, *args, **kwargs):
+    def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
+            null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
+            storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
-        _path, file_name = prepare_path(path, "csv")[0]
-
-        # TODO: Add support to S3 https://bartek-blog.github.io/python/spark/2019/04/22/how-to-access-s3-from-pyspark.html
+        if not is_url(filepath_or_buffer):
+            filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
+            meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer[0])}
+        else:
+            meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
         try:
-            read = (Spark.instance.spark.read
-                    .options(header='true' if header else 'false')
-                    .options(delimiter=sep)
-                    .options(inferSchema='true' if infer_schema else 'false')
-                    .options(nullValue=null_value)
-                    # .options(quote=null_value)
-                    # .options(escape=escapechar)
-                    .option("charset", encoding))
 
-            if error_bad_lines is True:
-                read.options(mode="FAILFAST")
+            # Pandas do not support \r\n terminator.
+            if lineterminator and lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
+                lineterminator = None
+
+            if conn is not None:
+                filepath_or_buffer = conn.path(filepath_or_buffer)
+                storage_options = conn.storage_options
             else:
-                read.options(mode="DROPMALFORMED")
+                storage_options = None
 
-            sdf = read.csv(_path)
+            if kwargs.get("chunk_size") == "auto":
+                ## Chunk size is going to be 75% of the memory available
+                kwargs.pop("chunk_size")
+                kwargs["chunksize"] = psutil.virtual_memory().free * 0.75
 
-            if n_rows > -1:
-                sdf = sdf.limit(n_rows)
-            # print(type(sdf))
-            df = SparkDataFrame(sdf)
-            df.meta = Meta.set(df.meta, "file_name", file_name)
+            na_filter = na_filter if null_value else False
+
+            def _read(_filepath_or_buffer):
+                return ks.read_csv(_filepath_or_buffer)
+
+            print(filepath_or_buffer[0])
+            if len(filepath_or_buffer) > 1:
+                df = ks.DataFrame()
+                for f in filepath_or_buffer:
+                    df = df.append(_read(f))
+            else:
+                df = _read(filepath_or_buffer[0])
+
+            # if isinstance(df, ks.io.parsers.TextFileReader):
+            #     df = df.get_chunk()
+
+            df = SparkDataFrame(df)
+
+            df.meta = Meta.set(df.meta, value=meta)
+
         except IOError as error:
             print(error)
+            logger.print(error)
             raise
-
-        # df = replace_columns_special_characters(df)
 
         return df
 
@@ -130,7 +151,7 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "xls")
 
         try:
-            pdf = pd.read_excel(file, sheet_name=sheet_name, *args, **kwargs)
+            pdf = ks.read_excel(file, sheet_name=sheet_name, *args, **kwargs)
 
             # Parse object column data type to string to ensure that Spark can handle it. With this we try to reduce
             # exception when Spark try to infer the column data type

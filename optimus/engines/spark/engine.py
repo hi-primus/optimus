@@ -4,9 +4,11 @@ import sys
 from shutil import rmtree
 
 from deepdiff import DeepDiff
+from optimus._version import __version__
 from pyspark.sql import DataFrame
 
 import optimus.helpers.functions_spark
+from optimus.engines.base.engine import BaseEngine
 from optimus.engines.spark.create import Create
 from optimus.engines.spark.io.jdbc import JDBC
 from optimus.engines.spark.io.load import Load
@@ -20,13 +22,12 @@ from optimus.helpers.logger import logger
 from optimus.helpers.output import output_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.optimus import Engine
-from optimus.version import __version__
 
 # Singletons
 Spark.instance = None
 
 
-class SparkEngine:
+class SparkEngine(BaseEngine):
     __version__ = __version__
 
     def __init__(self, session=None, master="local[*]", app_name="optimus", checkpoint=False, path=None,
@@ -70,7 +71,6 @@ class SparkEngine:
         self.engine = Engine.SPARK.value
         self.client = session
         self.preserve = False
-
 
         if jars is None:
             jars = []
@@ -148,14 +148,18 @@ class SparkEngine:
         logger.print(SUCCESS)
 
         self.create = Create(self)
-        self.load = Load()
-        self.read = self.spark.read
+        # self.load = Load()
+        # self.read = self.spark.read
+        #
+        # # Create singleton profiler
+        # self.ml = ML()
+        #
+        # # Set global output as html
+        # self.output("html")
 
-        # Create singleton profiler
-        self.ml = ML()
-
-        # Set global output as html
-        self.output("html")
+    @property
+    def load(self):
+        return Load(self)
 
     @staticmethod
     def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
@@ -168,21 +172,6 @@ class SparkEngine:
 
         return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
                     presto_catalog, cassandra_keyspace, cassandra_table)
-
-    def enrich(self, host="localhost", port=27017, username=None, password=None, db_name="jazz",
-               collection_name="data"):
-        """
-        Create a enricher object
-        :param host: url to mongodb
-        :param port: port used my mongodb
-        :param username: database username
-        :param password: database password
-        :param db_name: db user by the enricher
-        :param collection_name: collection used by the enricher
-        :return:
-        """
-        return Enricher(op=self, host=host, port=port, username=username, password=password, db_name=db_name,
-                        collection_name=collection_name)
 
     @staticmethod
     def output(output):
