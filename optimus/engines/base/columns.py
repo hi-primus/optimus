@@ -1823,14 +1823,14 @@ class BaseColumns(ABC):
                           output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
                           func_type="column_expr")
 
-    def proper(self, cols="*", output_cols=None) -> 'DataFrameType':
+    def capitalize(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Capitalize every word in a sentence
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return: BaseDataFrame
         """
-        return self.apply(cols, self.F.proper, func_return_type=str,
+        return self.apply(cols, self.F.capitalize, func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.PROPER.value, mode="vectorized",
                           func_type="column_expr")
 

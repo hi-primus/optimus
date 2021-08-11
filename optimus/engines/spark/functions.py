@@ -66,10 +66,6 @@ class SparkFunctions(BaseFunctions):
         pass
 
     @staticmethod
-    def proper(col):
-        pass
-
-    @staticmethod
     def trim(col):
         pass
 

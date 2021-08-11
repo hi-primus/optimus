@@ -410,9 +410,6 @@ class BaseFunctions(ABC):
     def slice(self, series, start, stop, step):
         return self.to_string_accessor(series).slice(start, stop, step)
 
-    def proper(self, series):
-        return self.to_string_accessor(series).title()
-
     def trim(self, series):
         return self.to_string_accessor(series).strip()
 
