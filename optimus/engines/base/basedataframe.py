@@ -156,6 +156,11 @@ class BaseDataFrame(ABC):
         if isinstance(df2, (np.generic,)):
             df2 = np.asscalar(df2)
 
+        if is_list(df1):
+            df1 = self.op.create.dataframe({"0": df1})
+        if is_list(df2):
+            df2 = self.op.create.dataframe({"0": df2})
+        
         df1_is_df = isinstance(df1, (BaseDataFrame,))
         df2_is_df = isinstance(df2, (BaseDataFrame,))
 
