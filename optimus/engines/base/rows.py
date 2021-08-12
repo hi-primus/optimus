@@ -533,7 +533,7 @@ class BaseRows(ABC):
         :param how:
         :return:
         """
-        dreturn self._mask(cols, method="match_regex", drop=drop, regex=regex, how=how)
+        return self._mask(cols, method="match_regex", drop=drop, regex=regex, how=how)
 
     def match_data_type(self, cols="*", data_type=None, drop=False, how="any") -> 'DataFrameType':
         """
