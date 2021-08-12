@@ -490,40 +490,51 @@ class BaseColumns(ABC):
             new_df = new_df.cols.move(new_col, "after", col)
         return new_df
 
-    @dispatch(object, object)
-    def rename(self, cols=None, func=None) -> 'DataFrameType':
-        """"
-        Changes the name of a column(s) dataFrame.
-        :param cols: List of tuples or list of strings. Each tuple has de following form: (oldColumnName, newColumnName).
-        :param func: can be lower, upper or any string transformation function
+    def rename(self, cols: Union[str, list, dict]="*", names: Union[str, list]=None, func=None) -> 'DataFrameType':
         """
+        Changes the name of a column(s) dataFrame.
+        :param cols: string, dictionary or list of strings or tuples. Each tuple may have following form: (oldColumnName, newColumnName).
+        :param names: string or list of strings with new names of columns. Ignored if a dictionary or list of tuples is passed to cols.
+        :param func: can be lower, upper or any string transformation function.
 
+        :return: dataframe with names changed
+        """
         df = self.root
+
+        if is_dict(cols):
+            cols = list(cols.items())
+
+        all_cols = df.cols.names()
+
+        if is_list_of_tuples(cols):
+            validate_columns_names(df, cols)
+            cols, names = zip(*cols)
+        elif is_list_of_str(cols):
+            cols = parse_columns(df, cols)
+        elif is_str(cols):
+            cols = df.cols.names(cols)
+        else:
+            cols = all_cols
+
+        if names is None:
+            if func is not None:
+                names = cols
+            else:
+                RaiseIt.value_error((names, func))
+
+        if is_list(cols) and not is_list(names):
+            names = [names]*len(cols)
+
         dfd = df.data
         meta = df.meta
 
-        # Apply a transformation function
-        if is_list_of_tuples(cols):
-            validate_columns_names(df, cols)
-        elif is_list_of_str(cols):
-            validate_columns_names(df, cols)
-            cols = [(col, col) for col in cols]
-        else:
-            cols = [(col, col) for col in df.cols.names()]
-
-        for col_name in cols:
-
-            old_col_name = col_name[0]
-            new_col_name = col_name[1]
-
+        for old_col_name, new_col_name in zip(cols, names):
+            
             if is_int(old_col_name):
-                old_col_name = df.cols.names()[old_col_name]
+                old_col_name = all_cols[old_col_name]
+
             if callable(func):
                 new_col_name = func(new_col_name)
-
-            # DaskColumns.set_meta(col_name, "optimus.transformations", "rename", append=True)
-            # TODO: this seems to the only change in this function compare to pandas. Maybe this can
-            #  be moved to a base class
 
             if old_col_name != new_col_name:
                 dfd = dfd.rename(columns={old_col_name: new_col_name})
@@ -532,37 +543,8 @@ class BaseColumns(ABC):
 
         return self.root.new(dfd, meta=meta)
 
-    @dispatch(list)
-    def rename(self, cols=None) -> 'DataFrameType':
-        return self.rename(cols, None)
-
-    @dispatch(str)
-    def rename(self, col, name) -> 'DataFrameType':
-        pass
-
-    @dispatch(list, list)
-    def rename(self, cols, names) -> 'DataFrameType':
-        return self.rename([(col, name) for col, name in zip(cols, names)], None)
-
-    @dispatch(str, str)
-    def rename(self, col, name) -> 'DataFrameType':
-        return self.rename([(col, name)], None)
-
-    @dispatch(list, str)
-    def rename(self, cols, name) -> 'DataFrameType':
-        return self.rename([(col, col + "_" + name) for col in cols], None)
-
-    @dispatch(object)
-    def rename(self, func=None) -> 'DataFrameType':
-        return self.rename(None, func)
-
-    @dispatch(str, object)
-    def rename(self, col, func=None) -> 'DataFrameType':
-        return self.rename([col], func)
-
-    @dispatch(str, str, object)
-    def rename(self, col, name, func=None) -> 'DataFrameType':
-        return self.rename([(col, name)], func)
+        
+    
 
     def parse_inferred_types(self, col_data_type):
         """
