@@ -3036,18 +3036,25 @@ class BaseColumns(ABC):
 
         return stats
 
-    def names(self, cols="*", data_types=None, invert=False, is_regex=False) -> list:
+    def names(self, cols="*", data_types=None, invert=False, is_regex=None) -> list:
         """
 
-        :param cols:
-        :param data_types:
-        :param invert:
-        :param is_regex:
+        :param cols: Regex, "*" or columns to get.
+        :param data_types: returns only columns with matching data types
+        :param invert: invert column selection
+        :param is_regex: if True, forces cols regex as a regex
         :return:
         """
 
-        cols = parse_columns(self.root, cols, filter_by_column_types=data_types, invert=invert, is_regex=is_regex)
-        return cols
+        df = self.root
+        
+        all_cols = parse_columns(df, "*")
+
+        if is_str(cols) and cols != "*" and cols not in all_cols and is_regex is None:
+            is_regex = True
+        
+        return parse_columns(df, cols, filter_by_column_types=data_types, invert=invert,
+                             is_regex=is_regex)
 
     def count_zeros(self, cols="*", tidy=True, compute=True):
         """
