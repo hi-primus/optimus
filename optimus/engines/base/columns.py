@@ -55,21 +55,48 @@ class BaseColumns(ABC):
         self.F = self.root.functions
 
     def _series_to_dict(self, series):
+        """
+
+        :param series:
+        :return:
+        """
         return self._series_to_pandas(series).to_dict()
 
     def _series_to_dict_delayed(self, series):
         return series.to_dict()
 
     def _series_to_pandas(self, series):
+        """
+
+        :param series:
+        :return:
+        """
         pass
 
     def _map(self, df, input_col, output_col, func, *args):
+        """
+
+        :param df:
+        :param input_col:
+        :param output_col:
+        :param func:
+        :param args:
+        :return:
+        """
         return df[input_col].apply(func, args=(*args,)).rename(output_col)
 
+    @abstractmethod
     def _names(self):
         pass
 
-    def _transformed(self, updated=[]):
+    def _transformed(self, updated=None):
+        """
+
+        :param updated:
+        :return:
+        """
+        if updated is None:
+            updated = []
         actions = Meta.get(self.root.meta, "transformations.actions") or []
         transformed_columns = []
         updated = val_to_list(updated)
@@ -93,7 +120,13 @@ class BaseColumns(ABC):
         return list(set(transformed_columns))
 
     def _set_transformed_stat(self, cols="*", stats=None):
+        """
 
+        :param cols:
+        :param stats:
+        :return:
+        """
+        #TODO:?
         cols = parse_columns(self.root, cols)
         actions = Meta.get(self.root.meta, "transformations.actions") or []
         stats = val_to_list(stats)
@@ -173,7 +206,7 @@ class BaseColumns(ABC):
         """
         Copy one or multiple columns
         :param cols: Source column to be copied
-        :param output_cols: Destination column
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
@@ -212,8 +245,8 @@ class BaseColumns(ABC):
     def duplicate(self, cols="*", output_cols=None, columns=None) -> 'DataFrameType':
         """
         Alias of copy function
-        :param cols: Source column to be copied
-        :param output_cols: Destination column
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param columns: tuple of column [('column1','column_copy')('column1','column1_copy')()]
         :return:
         """
@@ -222,7 +255,7 @@ class BaseColumns(ABC):
     def drop(self, cols=None, regex=None, data_type=None) -> 'DataFrameType':
         """
         Drop a list of columns
-        :param cols: column name or list of column names to be processed.
+        :param cols: "*", column name or list of column names to be processed.
         :param regex: Regex expression to select the columns
         :param data_type:
         :return:
@@ -275,14 +308,14 @@ class BaseColumns(ABC):
               **kwargs) -> 'DataFrameType':
         """
 
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param func:
         :param func_return_type:
         :param args:
         :param func_type:
         :param where:
         :param filter_col_by_data_types:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param skip_output_cols_processing:
         :param meta_action:
         :param mode:
@@ -352,7 +385,7 @@ class BaseColumns(ABC):
     def apply_by_data_types(self, cols="*", func=None, args=None, data_type=None):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
-        :param cols: Columns in which the function is going to be applied
+        :param cols: "*", column name or list of column names to be processed.
         :param func: Functions to be applied to a columns
         :param args:
         :param func: pandas_udf or udf. If 'None' try to use pandas udf (Pyarrow needed)
@@ -651,7 +684,7 @@ class BaseColumns(ABC):
         Unlike 'cast' this not change the columns data type
 
         :param cols: Columns names to be casted
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param data_type: final data type
         :param columns: List of tuples of column names and types to be casted. This variable should have the
                 following structure:
@@ -802,7 +835,7 @@ class BaseColumns(ABC):
     # TODO: Consider implement lru_cache for caching
     def calculate_pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> 'DataFrameType':
         """
-        Counts how many equal patterns there are in a column. Uses a cache to trigger the operation only if necessary. 
+        Counts how many equal patterns there are in a column. Uses a cache to trigger the operation only if necessary.
         Saves the result to meta and returns the same dataframe
         :param cols: "*", column name or list of column names to be processed.
         :param n: Return the Top n matches.
@@ -887,7 +920,7 @@ class BaseColumns(ABC):
     def pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> dict:
         """
         Get how many equal patterns there are in a column. Triggers the operation only if necessary
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param n: Top n matches
         :param mode:
         :param flush: Flushes the cache to process again
@@ -1245,7 +1278,7 @@ class BaseColumns(ABC):
     def median(self, cols="*", relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         """
         Return the median of the values over the requested columns.
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param relative_error:
         :param tidy:
         :param compute:
@@ -1388,7 +1421,7 @@ class BaseColumns(ABC):
                 "'date_format' is no longer used for changing the format of a column, use 'format_date' instead.")
             return self.format_date(cols, **kwargs)
 
-        # date_format  
+        # date_format
 
         df = self.root
         return df.cols.agg_exprs(cols, self.F.date_format, compute=compute, tidy=tidy)
@@ -1398,7 +1431,7 @@ class BaseColumns(ABC):
         Return items from a list over requested columns.
         :param cols: "*", column name or list of column names to be processed.
         :param n:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param mode:
         :return:
         """
@@ -1415,7 +1448,6 @@ class BaseColumns(ABC):
         :param cols: "*", column name or list of column names to be processed.
         :param keys:
         :param output_cols: Column name or list of column names where the transformed data will be saved.
-        :param mode:
         :return:
         """
 
@@ -1593,8 +1625,8 @@ class BaseColumns(ABC):
     def cos(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply cos to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1605,8 +1637,8 @@ class BaseColumns(ABC):
     def tan(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply cos to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1617,8 +1649,8 @@ class BaseColumns(ABC):
     def asin(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply cos to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1629,8 +1661,8 @@ class BaseColumns(ABC):
     def acos(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply cos to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1641,8 +1673,8 @@ class BaseColumns(ABC):
     def atan(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply cos to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1653,8 +1685,8 @@ class BaseColumns(ABC):
     def sinh(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply sin to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1665,8 +1697,8 @@ class BaseColumns(ABC):
     def cosh(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply cos to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1677,8 +1709,8 @@ class BaseColumns(ABC):
     def tanh(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply cos to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1689,8 +1721,8 @@ class BaseColumns(ABC):
     def asinh(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply sin to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1701,8 +1733,8 @@ class BaseColumns(ABC):
     def acosh(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply cos to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1713,8 +1745,8 @@ class BaseColumns(ABC):
     def atanh(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Apply cos to column
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:(
         """
 
@@ -1925,7 +1957,7 @@ class BaseColumns(ABC):
 
     def len(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        Calculate the length of a string.
+        Return the length of every string in a column.
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
@@ -1935,7 +1967,7 @@ class BaseColumns(ABC):
 
     def expand_contracted_words(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-
+        Returs
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
@@ -1948,7 +1980,7 @@ class BaseColumns(ABC):
     @abstractmethod
     def reverse(cols="*", output_cols=None) -> 'DataFrameType':
         """
-
+        Remove values given in search
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
@@ -1958,7 +1990,7 @@ class BaseColumns(ABC):
     # TODO: It's not the same that replace?
     def remove(self, cols="*", search=None, search_by="chars", output_cols=None) -> 'DataFrameType':
         """
-
+        Remove values given in search.
         :param cols: "*", column name or list of column names to be processed.
         :param search:
         :param search_by: Search by 'chars',
@@ -1971,8 +2003,8 @@ class BaseColumns(ABC):
     def normalize_chars(self, cols="*", output_cols=None):
         """
         Remove diacritics from a dataframe
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -2149,9 +2181,9 @@ class BaseColumns(ABC):
     def second(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
         """
 
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param format:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         return self._date_format(cols, format, output_cols, "second", meta_action=Actions.SECOND.value)
@@ -2159,9 +2191,9 @@ class BaseColumns(ABC):
     def weekday(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
         """
 
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param format:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         return self._date_format(cols, format, output_cols, "weekday", meta_action=Actions.WEEKDAY.value)
@@ -2170,12 +2202,12 @@ class BaseColumns(ABC):
                     output_cols=None) -> 'DataFrameType':
         """
         # TODO ?
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param func:
         :param value:
         :param date_format:
         :param round:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -2202,11 +2234,11 @@ class BaseColumns(ABC):
     def years_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
         Return the number of years between two dates.
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param value:
         :param date_format:
         :param round:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -2218,11 +2250,11 @@ class BaseColumns(ABC):
     def months_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
         Return the number of months between two dates.
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param value:
         :param date_format:
         :param round:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -2238,7 +2270,7 @@ class BaseColumns(ABC):
         :param value:
         :param date_format:
         :param round:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -2256,7 +2288,7 @@ class BaseColumns(ABC):
         :param replace_by: New value to replace the old one. Supports an array when searching by characters.
         :param search_by: Can be "full","words","chars" or "values".
         :param ignore_case: Ignore case when searching for match
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return: DataFrame
         """
 
@@ -2298,7 +2330,7 @@ class BaseColumns(ABC):
         :param replace_by: New value to replace the old one. Supports an array when searching by characters.
         :param search_by: Can be "full","words","chars" or "values".
         :param ignore_case: Ignore case when searching for match
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return: DataFrame
         """
 
@@ -2335,10 +2367,10 @@ class BaseColumns(ABC):
     def replace_regex(cols, regex=None, value=None, output_cols=None) -> 'DataFrameType':
         """
 
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param regex:
         :param value:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         pass
@@ -2346,9 +2378,9 @@ class BaseColumns(ABC):
     def num_to_words(self, cols="*", language="en", output_cols=None) -> 'DataFrameType':
         """
         Convert numbers to its string representation.
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param language:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
@@ -2368,8 +2400,8 @@ class BaseColumns(ABC):
     def lemmatize_verbs(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
 
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -2401,7 +2433,7 @@ class BaseColumns(ABC):
 
     def impute(self, cols="*", data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         """
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param data_type:
         :param strategy:
         # - If "mean", then replace missing values using the mean along
@@ -2412,11 +2444,11 @@ class BaseColumns(ABC):
         #   value along each column. Can be used with strings or numeric data.
         # - If "constant", then replace missing values with fill_value. Can be
         #   used with strings or numeric data.
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         df = self.root
-        
+
         if strategy != "most_frequent":
             df = df.cols.to_float(cols)
 
@@ -2427,7 +2459,7 @@ class BaseColumns(ABC):
         """
         Replace null data with a specified value
         :param cols: '*', list of columns names or a single column name.
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param value: value to replace the nan/None values
         :return:
         """
@@ -2495,7 +2527,7 @@ class BaseColumns(ABC):
         """
         Add two or more columns
         :param cols: '*', list of columns names or a single column name
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param output_col: Single output column in case no value is passed
         :return:
         """
@@ -2506,7 +2538,7 @@ class BaseColumns(ABC):
         """
         Subs two or more columns
         :param cols: '*', list of columns names or a single column name
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param output_col: Single output column in case no value is passed
         :return:
         """
@@ -2517,7 +2549,7 @@ class BaseColumns(ABC):
         """
         Multiply two or more columns
         :param cols: '*', list of columns names or a single column name
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param output_col: Single output column in case no value is passed
         :return:
         """
@@ -2528,7 +2560,7 @@ class BaseColumns(ABC):
         """
         Divide two or more columns
         :param columns: '*', list of columns names or a single column name
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param output_col: Single output column in case no value is passed
         :return:
         """
@@ -2539,7 +2571,7 @@ class BaseColumns(ABC):
         """
         Divide two or more columns
         :param columns: '*', list of columns names or a single column name
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param output_col: Single output column in case no value is passed
         :return:
         """
@@ -2569,7 +2601,7 @@ class BaseColumns(ABC):
     def iqr(self, cols="*", more=None, relative_error=RELATIVE_ERROR):
         """
         Return the column Inter Quartile Range
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param more: Return info about q1 and q3
         :param relative_error:
         :return:
@@ -2707,7 +2739,7 @@ class BaseColumns(ABC):
     def hist(self, cols="*", buckets=MAX_BUCKETS, compute=True) -> dict:
         """
 
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param buckets:
         :param compute:
         :return:
@@ -2767,7 +2799,7 @@ class BaseColumns(ABC):
 
     def quality(self, cols="*", flush=False, compute=True) -> dict:
         """
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param flush:
         :param compute:
         Infer the datatype and return the match. mismatch and profiler datatype  for every column.
@@ -2846,7 +2878,7 @@ class BaseColumns(ABC):
         After that it takes all ghe values apply som heuristic to try to better identify the datatype.
         This function use Pandas no matter the engine you are using.
 
-        :param cols: Columns in which you want to infer the datatype.
+        :param cols: "*", column name or list of column names to be processed.
         :return:Return a dict with the column and the inferred data type
         """
         df = self.root
@@ -2941,7 +2973,7 @@ class BaseColumns(ABC):
                   compute=True, tidy=False) -> dict:
         """
 
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param n:
         :param percentage:
         :param total_rows:
@@ -3010,7 +3042,7 @@ class BaseColumns(ABC):
     def boxplot(self, cols) -> dict:
         """
         Output the boxplot data in python dict format.
-        :param cols: Columns to be processed
+        :param cols: "*", column name or list of column names to be processed.
         :return:
         """
         df = self.root
@@ -3078,8 +3110,8 @@ class BaseColumns(ABC):
     def domain(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Return the domain from a url string. From https://www.hi-bumblebee.com it returns hi-bumblebee.com
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -3089,8 +3121,8 @@ class BaseColumns(ABC):
     def top_domain(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Return the top domain from a url string. From https://www.hi-bumblebee.com it returns hi-bumblebee.com
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -3618,8 +3650,8 @@ class BaseColumns(ABC):
     def fingerprint(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Create the fingerprint for a column
-        :param df: Dataframe to be processed
-        :param cols: Column to be processed
+
+        :param cols: "*", column name or list of column names to be processed.
         :return:
         """
 
@@ -3677,8 +3709,7 @@ class BaseColumns(ABC):
     def ngrams(self, cols="*", n_size=2, output_cols=None) -> 'DataFrameType':
         """
             Calculate the ngram for a fingerprinted string
-            :param df: Dataframe to be processed
-            :param cols: Columns to be processed
+            :param cols: "*", column name or list of column names to be processed.
             :param n_size:
             :return:
             """
@@ -3702,8 +3733,8 @@ class BaseColumns(ABC):
     def ngram_fingerprint(self, cols="*", n_size=2, output_cols=None) -> 'DataFrameType':
         """
         Calculate the ngram for a fingerprinted string
-        :param output_cols:
-        :param cols: Columns to be processed
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :param cols: "*", column name or list of column names to be processed.
         :param n_size:
         :return:
         """
@@ -3765,8 +3796,8 @@ class BaseColumns(ABC):
     def nysiis(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         NYSIIS (New York State Identification and Intelligence System)
-        :param cols:
-        :param output_cols:
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         return self.apply(cols, "nysiis", func_return_type=str, output_cols=output_cols,

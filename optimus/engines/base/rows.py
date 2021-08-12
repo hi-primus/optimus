@@ -83,8 +83,9 @@ class BaseRows(ABC):
     def apply(self, func, args=None, output_cols=None) -> 'DataFrameType':
         """
         This will aimed to handle vectorized and not vectorized operations
-        :param output_cols:
         :param func:
+        :param args:
+        :param output_cols:
         :return:
         """
         df = self.root
@@ -99,6 +100,7 @@ class BaseRows(ABC):
 
     def select(self, expr=None, contains=None, case=None, flags=0, na=False, regex=False) -> 'DataFrameType':
         """
+        Return selected rows using ans expression
         :param expr: Expression used, For Ex: (df["A"] > 3) & (df["A"] <= 1000) or Column name "A"
         :param contains: List of string
         :param case:
@@ -127,6 +129,11 @@ class BaseRows(ABC):
         return df
 
     def _count(self, compute=True) -> int:
+        """
+
+        :param compute:
+        :return:
+        """
         return len(self.root.data.index)
 
     def count(self, compute=True) -> int:
@@ -191,6 +198,7 @@ class BaseRows(ABC):
     def sort(self, input_col, order="desc") -> 'DataFrameType':
         """
         Sort rows taking into account multiple columns
+        :param order:
         :param input_col: column and sort type combination (col_name, "asc")
         :type input_col: list of tuples
         """
@@ -258,6 +266,11 @@ class BaseRows(ABC):
 
     @staticmethod
     def unnest(cols) -> 'DataFrameType':
+        """
+
+        :param cols:
+        :return:
+        """
         raise NotImplementedError('Not implemented yet')
 
     def approx_count(self) -> 'DataFrameType':
@@ -268,7 +281,16 @@ class BaseRows(ABC):
         return self.root.rows.count()
 
     def _mask(self, cols, method, drop=False, how="any", *args, **kwargs) -> 'DataFrameType':
+        """
 
+        :param cols:
+        :param method:
+        :param drop:
+        :param how:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         df = self.root
         mask = getattr(df.mask, method)(cols=cols, *args, **kwargs)
 
@@ -288,182 +310,612 @@ class BaseRows(ABC):
 
 
     def str(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+        #TODO:?
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="str", drop=drop, how=how)
 
     def int(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="int", drop=drop, how=how)
 
     def float(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="float", drop=drop, how=how)
 
     def numeric(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="numeric", drop=drop, how=how)
 
     def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param lower_bound:
+        :param upper_bound:
+        :param equal:
+        :param bounds:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="between", drop=drop, how=how, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def greater_than_equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="greater_than_equal", drop=drop, value=value, how=how)
 
     def greater_than(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="greater_than", drop=drop, value=value, how=how)
 
     def less_than(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="less_than", drop=drop, value=value, how=how)
 
     def less_than_equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="less_than_equal", drop=drop, value=value, how=how)
 
     def equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="equal", drop=drop, value=value, how=how)
 
     def not_equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="not_equal", drop=drop, value=value, how=how)
 
     def missing(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="missing", drop=drop, how=how)
 
     def null(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="null", drop=drop, how=how)
 
     def none(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="none", drop=drop, how=how)
 
     def nan(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="nan", drop=drop, how=how)
 
     def empty(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="empty", drop=drop, how=how)
 
     def duplicated(self, cols="*", keep="first", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param keep:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="duplicated", drop=drop, keep=keep, how=how)
 
     def unique(self, cols="*", keep="first", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param keep:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="unique", drop=drop, keep=keep, how=how)
 
     def mismatch(self, cols="*", data_type=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param data_type:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="mismatch", drop=drop, data_type=data_type, how=how)
 
     def match(self, cols="*", regex=None, data_type=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param regex:
+        :param data_type:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="match", drop=drop, regex=regex, data_type=data_type, how=how)
 
     def match_regex(self, cols="*", regex=None, drop=False, how="any") -> 'DataFrameType':
-        return self._mask(cols, method="match_regex", drop=drop, regex=regex, how=how)
+        """
+
+        :param cols:
+        :param regex:
+        :param drop:
+        :param how:
+        :return:
+        """
+        dreturn self._mask(cols, method="match_regex", drop=drop, regex=regex, how=how)
 
     def match_data_type(self, cols="*", data_type=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param data_type:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="match_data_type", drop=drop, data_type=data_type, how=how)
 
     def value_in(self, cols="*", values=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param values:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="value_in", drop=drop, values=values, how=how)
 
     def pattern(self, cols="*", pattern=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param pattern:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="pattern", drop=drop, pattern=pattern, how=how)
 
     def starts_with(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="starts_with", drop=drop, value=value, how=how)
 
     def ends_with(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="ends_with", drop=drop, value=value, how=how)
 
     def contains(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="contains", drop=drop, value=value, how=how)
 
     def find(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="find", drop=drop, value=value, how=how)
 
     def email(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="email", drop=drop, how=how)
 
     def ip(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="ip", drop=drop, how=how)
 
     def url(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="url", drop=drop, how=how)
 
     def gender(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="gender", drop=drop, how=how)
 
     def boolean(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="boolean", drop=drop, how=how)
 
     def zip_code(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="zip_code", drop=drop, how=how)
 
     def credit_card_number(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="credit_card_number", drop=drop, how=how)
 
     def datetime(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="datetime", drop=drop, how=how)
 
     def object(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="object", drop=drop, how=how)
 
     def array(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="array", drop=drop, how=how)
 
     def phone_number(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="phone_number", drop=drop, how=how)
 
     def social_security_number(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="social_security_number", drop=drop, how=how)
 
     def http_code(self, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="http_code", drop=drop, how=how)
 
     def expression(self, where=None, cols="*", drop=False, how="any") -> 'DataFrameType':
+        """
+
+        :param where:
+        :param cols:
+        :param drop:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="expression", drop=drop, how=how, where=where)
 
     # drop functions
-
     def drop_str(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="str", drop=True, how=how)
 
     def drop_int(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="int", drop=True, how=how)
 
     def drop_float(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="float", drop=True, how=how)
 
     def drop_numeric(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="numeric", drop=True, how=how)
 
     def drop_greater_than_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="greater_than_equal", drop=True, value=value, how=how)
 
     def drop_greater_than(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="greater_than", drop=True, value=value, how=how)
 
     def drop_less_than_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="less_than_equal", drop=True, value=value, how=how)
 
     def drop_less_than(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="less_than", drop=True, value=value, how=how)
 
     def drop_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param lower_bound:
+        :param upper_bound:
+        :param equal:
+        :param bounds:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="between", drop=True, how=how, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def drop_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="equal", drop=True, value=value, how=how)
 
     def drop_not_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="not_equal", drop=True, value=value, how=how)
 
     def drop_missings(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="missing", drop=True, how=how)
 
     def drop_nulls(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="null", drop=True, how=how)
 
     def drop_none(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="none", drop=True, how=how)
 
     def drop_nan(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="nan", drop=True, how=how)
 
     def drop_empty(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="empty", drop=True, how=how)
 
     def drop_duplicated(self, cols="*", keep="first", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param keep:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="duplicated", drop=True, keep=keep, how=how)
 
     def drop_uniques(self, cols="*", keep="first", how="any") -> 'DataFrameType':
@@ -477,73 +929,229 @@ class BaseRows(ABC):
         return self._mask(cols, method="unique", drop=True, keep=keep, how=how)
 
     def drop_mismatch(self, cols="*", data_type=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param data_type:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="mismatch", drop=True, data_type=data_type, how=how)
 
     def drop_match(self, cols="*", regex=None, data_type=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param regex:
+        :param data_type:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="match", drop=True, regex=regex, data_type=data_type, how=how)
 
     def drop_by_regex(self, cols="*", regex=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param regex:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="match_regex", drop=True, regex=regex, how=how)
 
     def drop_by_data_type(self, cols="*", data_type=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param data_type:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="match_data_type", drop=True, data_type=data_type, how=how)
 
     def drop_value_in(self, cols="*", values=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param values:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="value_in", drop=True, values=values, how=how)
 
     def drop_pattern(self, cols="*", pattern=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param pattern:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="pattern", drop=True, pattern=pattern, how=how)
 
     def drop_starts_with(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="starts_with", drop=True, value=value, how=how)
 
     def drop_ends_with(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="ends_with", drop=True, value=value, how=how)
 
     def drop_contains(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="contains", drop=True, value=value, how=how)
 
     def drop_find(self, cols="*", value=None, how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="find", drop=True, value=value, how=how)
 
     def drop_emails(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="email", drop=True, how=how)
 
     def drop_ips(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="ip", drop=True, how=how)
 
     def drop_urls(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="url", drop=True, how=how)
 
     def drop_genders(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="gender", drop=True, how=how)
 
     def drop_booleans(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="boolean", drop=True, how=how)
 
     def drop_zip_codes(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="zip_code", drop=True, how=how)
 
     def drop_credit_card_numbers(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="credit_card_number", drop=True, how=how)
 
     def drop_datetimes(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="datetime", drop=True, how=how)
 
     def drop_objects(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="object", drop=True, how=how)
 
     def drop_arrays(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="array", drop=True, how=how)
 
     def drop_phone_numbers(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="phone_number", drop=True, how=how)
 
     def drop_social_security_numbers(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="social_security_number", drop=True, how=how)
 
     def drop_http_codes(self, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="http_code", drop=True, how=how)
 
     def drop_by_expression(self, where=None, cols="*", how="any") -> 'DataFrameType':
+        """
+
+        :param where:
+        :param cols:
+        :param how:
+        :return:
+        """
         return self._mask(cols, method="expression", drop=True, how=how, where=where)
