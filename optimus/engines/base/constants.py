@@ -40,8 +40,10 @@ class BaseConstants:
     DTYPES_TO_INFERRED = {"int": ["int64", "int32"], "float": [
         "float64", "float"], "object": ["object"]}
 
-    STRING_TYPES = ["string", "object"]
+    STRING_TYPES = ["string", "object", "large_string"]
     OBJECT_TYPES = ["object"]
+
+    COMPATIBLE_DTYPES = {}
 
 
 LIMIT = 1000

@@ -73,6 +73,11 @@ class VaexDataFrame(BaseDataFrame):
         from optimus.engines.pandas.ml.encoding import Encoding
         return Encoding(self)
 
+    @property
+    def constants(self):
+        from optimus.engines.vaex.constants import Constants
+        return Constants()
+
     def to_optimus_pandas(self):
         return PandasDataFrame(self.root.to_pandas())
 

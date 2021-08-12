@@ -24,3 +24,8 @@ class VaexEngine(BaseEngine):
     @property
     def engine(self):
         return Engine.VAEX.value
+
+    @property
+    def constants(self):
+        from optimus.engines.vaex.constants import Constants
+        return Constants()
