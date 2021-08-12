@@ -12,23 +12,7 @@ from optimus.helpers.logger import logger
 
 class Load(BaseLoad):
 
-    @staticmethod
-    def xml(path, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    @staticmethod
-    def zip(path, filename, dest=None, columns=None, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    @staticmethod
-    def hdf5(path, columns=None, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    def __init__(self, op):
-        self.op = op
-
-    @staticmethod
-    def json(path, multiline=False, n_rows=-1, *args, **kwargs):
+    def json(self, path, multiline=False, n_rows=-1, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -41,7 +25,7 @@ class Load(BaseLoad):
                 df_list.append(df)
 
             df = cudf.concat(df_list, axis=0, ignore_index=True)
-            df = CUDFDataFrame(df)
+            df = CUDFDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, "file_name", local_file_names[0])
 
         except IOError as error:
@@ -49,17 +33,14 @@ class Load(BaseLoad):
             raise
         return df
 
-    @staticmethod
-    def tsv(path, header=True, infer_schema=True, *args, **kwargs):
+    def tsv(self, path, header=True, infer_schema=True, *args, **kwargs):
+        return self.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
-        return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
-
-    @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
+    def csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=True, data_type=None,
             *args, **kwargs):
 
-        path = unquote_path(path)
+        filepath_or_buffer = unquote_path(filepath_or_buffer)
 
         # file, file_name = prepare_path(path, "csv")[0]
 
@@ -73,13 +54,13 @@ class Load(BaseLoad):
             if data_type == str or data_type is None:
                 data_type = ["str"]
 
-            cdf = cudf.read_csv(path, sep=sep, header=header, encoding=encoding,
+            cdf = cudf.read_csv(filepath_or_buffer, sep=sep, header=header, encoding=encoding,
                                 quoting=quoting, error_bad_lines=error_bad_lines,
                                 keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows,
                                 na_filter=na_filter, dtype=data_type, *args, **kwargs)
-            df = CUDFDataFrame(cdf)
+            df = CUDFDataFrame(cdf, op=self.op)
             df.meta = Meta.set(df.meta, None,
-                               {"file_name": path, "max_cell_length": df.cols.len("*").cols.max()})
+                               {"file_name": filepath_or_buffer, "max_cell_length": df.cols.len("*").cols.max()})
 
 
         except IOError as error:
@@ -87,14 +68,13 @@ class Load(BaseLoad):
             raise
         return df
 
-    @staticmethod
-    def parquet(path, columns=None, *args, **kwargs):
+    def parquet(self, path, columns=None, *args, **kwargs):
 
         path = unquote_path(path)
 
         try:
             df = cudf.read_parquet(path, columns=columns, engine='pyarrow', *args, **kwargs)
-            df = CUDFDataFrame(df)
+            df = CUDFDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, "file_name", path)
 
         except IOError as error:
@@ -103,8 +83,7 @@ class Load(BaseLoad):
 
         return df
 
-    @staticmethod
-    def avro(path, storage_options=None, conn=None, *args, **kwargs):
+    def avro(self, path, storage_options=None, conn=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -116,7 +95,7 @@ class Load(BaseLoad):
 
         try:
             df = cudf.read_avro(path, storage_options=storage_options, *args, **kwargs)
-            df = CUDFDataFrame(df)
+            df = CUDFDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
@@ -125,8 +104,7 @@ class Load(BaseLoad):
 
         return df
 
-    @staticmethod
-    def orc(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
+    def orc(self, path, columns=None, storage_options=None, conn=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -138,7 +116,7 @@ class Load(BaseLoad):
 
         try:
             df = cudf.read_orc(path, columns, storage_options=storage_options, *args, **kwargs)
-            df = CUDFDataFrame(df)
+            df = CUDFDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:

@@ -17,4 +17,4 @@ class Create(BaseCreate):
     def _df_from_dfd(self, dfd, n_partitions=1, *args, **kwargs) -> 'DataFrameType':
         if isinstance(dfd, (pd.DataFrame,)):
             dfd = cudf.from_pandas(dfd)
-        return DaskCUDFDataFrame(dfd, n_partitions, *args, **kwargs)
+        return DaskCUDFDataFrame(dfd, n_partitions, *args, **kwargs, op=self.op)

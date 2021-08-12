@@ -21,8 +21,7 @@ from optimus.infer import is_str, is_list, is_url
 
 class Load(BaseLoad):
 
-    @staticmethod
-    def json(path, multiline=False, n_rows=False, n_partitions=1, *args, **kwargs):
+    def json(self, path, multiline=False, n_rows=False, n_partitions=1, *args, **kwargs):
         """
         Loads a dataframe from a json file.
         :param path: path or location of the file.
@@ -44,7 +43,7 @@ class Load(BaseLoad):
                     df = pd.read_json(file_name, lines=multiline, *args, **kwargs)
                     df_list.append(df)
                 df = pd.concat(df_list, axis=0, ignore_index=True)
-                df = PandasDataFrame(df)
+                df = PandasDataFrame(df, op=self.op)
                 df.meta = Meta.set(df.meta, "file_name", local_file_names[0])
             except IOError as error:
                 logger.print(error)
@@ -52,16 +51,14 @@ class Load(BaseLoad):
 
         else:
             df = pd.read_json(path, lines=multiline, *args, **kwargs)
-            df = PandasDataFrame(df)
+            df = PandasDataFrame(df, op=self.op)
 
         return df
 
-    @staticmethod
-    def tsv(filepath_or_buffer, header=True, infer_schema=True, n_partitions=1, *args, **kwargs):
-        return Load.csv(filepath_or_buffer, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
+    def tsv(self, filepath_or_buffer, header=True, infer_schema=True, n_partitions=1, *args, **kwargs):
+        return self.csv(filepath_or_buffer, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
-    @staticmethod
-    def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
+    def csv(self, filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
             storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
@@ -107,7 +104,7 @@ class Load(BaseLoad):
             if isinstance(df, pd.io.parsers.TextFileReader):
                 df = df.get_chunk()
 
-            df = PandasDataFrame(df)
+            df = PandasDataFrame(df, op=self.op)
 
             df.meta = Meta.set(df.meta, value=meta)
 
@@ -118,8 +115,7 @@ class Load(BaseLoad):
 
         return df
 
-    @staticmethod
-    def parquet(path, columns=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
+    def parquet(self, path, columns=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -131,7 +127,7 @@ class Load(BaseLoad):
 
         try:
             df = pd.read_parquet(path, columns=columns, engine='pyarrow', storage_options=storage_options, **kwargs)
-            df = PandasDataFrame(df)
+            df = PandasDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
         except IOError as error:
@@ -140,8 +136,7 @@ class Load(BaseLoad):
 
         return df
 
-    @staticmethod
-    def avro(path, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
+    def avro(self, path, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -153,7 +148,7 @@ class Load(BaseLoad):
 
         try:
             df = pdx.read_avro(file_name, storage_options=storage_options, n_partitions=1, *args, **kwargs)
-            df = PandasDataFrame(df)
+            df = PandasDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
         except IOError as error:
@@ -162,8 +157,7 @@ class Load(BaseLoad):
 
         return df
 
-    @staticmethod
-    def excel(path, sheet_name=0, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
+    def excel(self, path, sheet_name=0, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -188,7 +182,7 @@ class Load(BaseLoad):
             df = df.astype(column_dtype)
 
             # Create spark data frame
-            df = PandasDataFrame(df)
+            df = PandasDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         except IOError as error:
             logger.print(error)
@@ -196,8 +190,7 @@ class Load(BaseLoad):
 
         return df
 
-    @staticmethod
-    def orc(path, columns, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
+    def orc(self, path, columns, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -209,7 +202,7 @@ class Load(BaseLoad):
 
         try:
             df = pdx.read_orc(file_name, columns, storage_options=storage_options)
-            df = PandasDataFrame(df)
+            df = PandasDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:

@@ -82,7 +82,7 @@ class JDBC:
 
         table = self._connect().table(table_name, database=database)
         # return PandasDataFrame(table.execute())
-        return IbisDataFrame(table)
+        return IbisDataFrame(table, op=self.op)
 
     # def execute(self, query: str, limit: str = None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
     #             table_name=None):

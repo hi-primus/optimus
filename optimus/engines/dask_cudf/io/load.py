@@ -14,27 +14,7 @@ from optimus.helpers.logger import logger
 
 class Load(BaseLoad):
 
-    @staticmethod
-    def xml(path, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    @staticmethod
-    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    @staticmethod
-    def zip(path, filename, dest=None, columns=None, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    @staticmethod
-    def hdf5(path, columns=None, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    def __init__(self, op):
-        self.op = op
-
-    @staticmethod
-    def json(path, multiline=False, storage_options=None, conn=None, *args, **kwargs):
+    def json(self, path, multiline=False, storage_options=None, conn=None, *args, **kwargs):
         """
         Return a dask dataframe from a json file.
         :param path: path or location of the file.
@@ -54,7 +34,7 @@ class Load(BaseLoad):
         try:
             import dask_cudf
             df = dask_cudf.read_json(path, lines=multiline, storage_options=storage_options, *args, **kwargs)
-            df = DaskCUDFDataFrame(df)
+            df = DaskCUDFDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:
@@ -62,22 +42,18 @@ class Load(BaseLoad):
             raise
         return df
 
-    @staticmethod
-    def tsv(path, header=True, infer_schema=True, *args, **kwargs):
+    def tsv(self, path, header=True, infer_schema=True, *args, **kwargs):
+        return self.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
-
-        return Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
-
-    @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
+    def csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=True, na_filter=True,
             storage_options=None, conn=None, *args, **kwargs):
 
 
-        path = unquote_path(path)
+        filepath_or_buffer = unquote_path(filepath_or_buffer)
 
         if conn is not None:
-            path = conn.path(path)
+            filepath_or_buffer = conn.path(filepath_or_buffer)
             storage_options = conn.storage_options
 
         remove_param = "chunk_size"
@@ -91,12 +67,12 @@ class Load(BaseLoad):
             if engine == "python":
 
                 # na_filter=na_filter, error_bad_lines and low_memory are not support by pandas engine
-                dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                dcdf = dask_cudf.read_csv(filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
                                           quoting=quoting, keep_default_na=True, na_values=None, engine=engine,
                                           storage_options=storage_options, error_bad_lines=False, *args, **kwargs)
 
             elif engine == "c":
-                dcdf = dask_cudf.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                dcdf = dask_cudf.read_csv(filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
                                           quoting=quoting, error_bad_lines=error_bad_lines,
                                           keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
                                           storage_options=storage_options, low_memory=False, *args, **kwargs)
@@ -104,9 +80,9 @@ class Load(BaseLoad):
             if n_rows > -1:
                 dcdf = dask_cudf.from_cudf(dcdf.head(n=n_rows), npartitions=1).reset_index(drop=True)
 
-            df = DaskCUDFDataFrame(dcdf)
-            df.meta = Meta.set(df.meta, "file_name", path)
-            df.meta = Meta.set(df.meta, "name", ntpath.basename(path))
+            df = DaskCUDFDataFrame(dcdf, op=self.op)
+            df.meta = Meta.set(df.meta, "file_name", filepath_or_buffer)
+            df.meta = Meta.set(df.meta, "name", ntpath.basename(filepath_or_buffer))
         except IOError as error:
             logger.print(error)
             raise

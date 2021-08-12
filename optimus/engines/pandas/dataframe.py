@@ -6,9 +6,6 @@ from optimus.engines.pandas.io.save import Save
 
 class PandasDataFrame(PandasBaseDataFrame, DataFrameBaseDataFrame):
 
-    def __init__(self, data):
-        super().__init__(data)
-
     def _assign(self, kw_columns: dict):
         kw_columns = {str(key): kw_column for key, kw_column in kw_columns.items()}
         return self.root.data.assign(**kw_columns)
@@ -59,7 +56,7 @@ class PandasDataFrame(PandasBaseDataFrame, DataFrameBaseDataFrame):
         pass
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound])
+        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound], op=self.op)
 
     def set_buffer(self, columns="*", n=None):
         return True

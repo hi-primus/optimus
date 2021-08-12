@@ -44,13 +44,14 @@ class BaseDataFrame(ABC):
     Optimus DataFrame
     """
 
-    def __init__(self, data: 'InternalDataFrameType'):
+    def __init__(self, data: 'InternalDataFrameType', op: None):
         data = self._compatible_data(data)
         self.data = data
         self.buffer = None
         self.updated = None
         self.meta = {}
         self.le = None
+        self.op = op
 
         # .profile and .set are properties to support docstrings
         self.profile = BaseProfile(self)
@@ -92,12 +93,13 @@ class BaseDataFrame(ABC):
         self.updated = df.updated
         self.meta = df.meta
         self.le = df.le
+        self.op = df.op
 
     def __len__(self):
         return self.rows.count()
 
     def new(self, dfd, meta=None) -> 'DataFrameType':
-        df = self.__class__(dfd)
+        df = self.__class__(dfd, op=self.op)
         if meta is not None:
             df.meta = meta
             df.le = self.le

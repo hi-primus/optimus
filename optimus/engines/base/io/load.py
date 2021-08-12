@@ -189,12 +189,12 @@ class BaseLoad:
                         "encoding": mime_info.get("encoding", None),
                         **mime_info.get("properties", {})
                     })
-                    df = self.csv(path, **kwargs)
+                    df = self.csv(filepath_or_buffer=path, *args, **kwargs)
                 except Exception as err:
                     raise err
                     pass
             else:
-                df = self.csv(path, **kwargs)
+                df = self.csv(filepath_or_buffer=path, *args, **kwargs)
 
         elif file_type == "json":
             mime_info["file_type"] = "json"

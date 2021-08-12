@@ -2,7 +2,6 @@ import pandas as pd
 import dask.dataframe as dd
 
 from optimus.engines.base.dask.dataframe import DaskBaseDataFrame
-from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.dask.io.save import Save
 from optimus.engines.base.pandas.dataframe import PandasBaseDataFrame
 from optimus.helpers.converter import pandas_to_dask_dataframe
@@ -70,7 +69,9 @@ class DaskDataFrame(PandasBaseDataFrame, DaskBaseDataFrame):
         return Encoding(self)
 
     def to_optimus_pandas(self):
-        return PandasDataFrame(self.root.to_pandas())
+        from optimus.engines.pandas.dataframe import PandasDataFrame
+        return PandasDataFrame(self.root.to_pandas(), op=self.op)
 
     def to_optimus_cudf(self):
-        return CUDFDataFrame(self.root.to_pandas())
+        from optimus.engines.cudf.dataframe import CUDFDataFrame
+        return CUDFDataFrame(self.root.to_pandas(), op=self.op)

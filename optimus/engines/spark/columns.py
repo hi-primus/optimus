@@ -547,7 +547,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         df = self.root
         if len(exprs) > 0:
             dfd = df.data.agg(*exprs)
-            df = SparkDataFrame(dfd)
+            df = SparkDataFrame(dfd, op=self.op)
             result = parse_col_names_funcs_to_keys(df.to_dict())
         else:
             result = None

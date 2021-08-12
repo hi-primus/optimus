@@ -167,59 +167,52 @@ class HDFS(Connection):
 
 
 class Connect:
-    @staticmethod
-    def mysql(host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+
+    def __init__(self, op):
+        self.op = op
+
+    def mysql(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.MYSQL.value["name"],
-                            schema=schema)
+                            schema=schema, op=self.op)
 
-    @staticmethod
-    def postgres(host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    def postgres(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.POSTGRESQL.value["name"],
-                            schema=schema)
+                            schema=schema, op=self.op)
 
-    @staticmethod
-    def mssql(host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    def mssql(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.MSSQL.value["name"],
-                            schema=schema)
+                            schema=schema, op=self.op)
 
-    @staticmethod
-    def redshift(host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    def redshift(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.REDSHIFT.value["name"],
-                            schema=schema)
+                            schema=schema, op=self.op)
 
-    @staticmethod
-    def sqlite(host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    def sqlite(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.SQLITE.value["name"],
-                            schema=schema)
+                            schema=schema, op=self.op)
 
-    @staticmethod
-    def bigquery(host=None, database=None, user=None, password=None, port=None, schema="public", project=None,
+    def bigquery(self, host=None, database=None, user=None, password=None, port=None, schema="public", project=None,
                  dataset=None) -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.BIGQUERY.value["name"],
-                            schema=schema, bigquery_project=project, bigquery_dataset=dataset)
+                            schema=schema, bigquery_project=project, bigquery_dataset=dataset, op=self.op)
 
-    @staticmethod
-    def presto(host=None, database=None, user=None, password=None, port=None, schema="public", catalog=None) -> 'ConnectionType':
+    def presto(self, host=None, database=None, user=None, password=None, port=None, schema="public", catalog=None) -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.PRESTO.value["name"],
-                            schema=schema, presto_catalog=catalog, )
+                            schema=schema, presto_catalog=catalog, op=self.op)
 
-    @staticmethod
-    def cassandra(host=None, database=None, user=None, password=None, port=None, schema="public", keyspace=None,
+    def cassandra(self, host=None, database=None, user=None, password=None, port=None, schema="public", keyspace=None,
                   table=None) -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.CASSANDRA.value["name"],
-                            schema=schema, cassandra_keyspace=keyspace,
-                            cassandra_table=table)
+                            schema=schema, cassandra_keyspace=keyspace, cassandra_table=table, op=self.op)
 
-    @staticmethod
-    def redis(host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    def redis(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.REDIS.value["name"],
-                            schema=schema)
+                            schema=schema, op=self.op)
 
-    @staticmethod
-    def oracle(host=None, database=None, user=None, password=None, port=None, schema="public",
+    def oracle(self, host=None, database=None, user=None, password=None, port=None, schema="public",
                tns=None, service_name=None, sid=None) -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.ORACLE.value["name"],
-                            schema=schema, oracle_tns=tns, oracle_service_name=service_name, oracle_sid=sid)
+                            schema=schema, oracle_tns=tns, oracle_service_name=service_name, oracle_sid=sid, op=self.op)
 
     @staticmethod
     def s3(**kwargs) -> 'ConnectionType':

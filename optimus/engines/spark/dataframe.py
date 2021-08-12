@@ -20,9 +20,6 @@ class SparkDataFrame(BaseDataFrame):
     def graph(self) -> dict:
         pass
 
-    def __init__(self, data):
-        super().__init__(data)
-
     @property
     def rows(self):
         from optimus.engines.spark.rows import Rows
@@ -380,7 +377,7 @@ class SparkDataFrame(BaseDataFrame):
         print(df.rdd.toDebugString().decode("ascii"))
 
     def to_optimus_pandas(self):
-        return PandasDataFrame(self.data.toPandas())
+        return PandasDataFrame(self.data.toPandas(), op=self.op)
 
     def to_pandas(self):
         return self.data.toPandas()

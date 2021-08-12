@@ -17,7 +17,7 @@ class Create(BaseCreate):
         dfd = vaex.from_dict({name: values for (name, dtype, nulls, force_dtype), values in dict.items()})
         for (name, dtype, nulls, force_dtype) in dict.keys():
             if force_dtype:
-                dtype = self.root.constants.COMPATIBLE_DTYPES.get(dtype, dtype)
+                dtype = self.op.constants.COMPATIBLE_DTYPES.get(dtype, dtype)
                 dfd[name] = dfd[name].astype(dtype)
         return dfd
 
@@ -25,4 +25,4 @@ class Create(BaseCreate):
     def _df_from_dfd(self, dfd, n_partitions=1, *args, **kwargs) -> 'DataFrameType':
         if isinstance(dfd, (InternalPandasDataFrame,)):
             dfd = pandas_to_vaex_dataframe(dfd)
-        return VaexDataFrame(dfd, *args, **kwargs)
+        return VaexDataFrame(dfd, *args, **kwargs, op=self.op)

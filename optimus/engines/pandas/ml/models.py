@@ -14,9 +14,6 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from yellowbrick.classifier import ConfusionMatrix
-from yellowbrick.classifier import PrecisionRecallCurve
-from yellowbrick.classifier import ROCAUC
 
 from optimus.helpers.types import *
 from optimus.engines.base.ml.models import BaseML
@@ -56,6 +53,7 @@ class Model:
         return self.model.predict_proba(value).tolist()
 
     def roc_auc(self):
+        from yellowbrick.classifier import ROCAUC
         visualizer = ROCAUC(self.model, classes=["0", "1", "2"])
 
         visualizer.fit(self.X_train, self.y_train)  # Fit the training data to the visualizer
@@ -63,6 +61,7 @@ class Model:
         visualizer.show()  # Finalize and show the figure
 
     def precision_recall(self):
+        from yellowbrick.classifier import PrecisionRecallCurve
         viz = PrecisionRecallCurve(
             self.model,
             per_class=False,
@@ -73,6 +72,7 @@ class Model:
         viz.show()
 
     def confusion_matrix(self):
+        from yellowbrick.classifier import ConfusionMatrix
         cm = ConfusionMatrix(self.model, classes=[0, 1, 2])
         cm.fit(self.X_train, self.y_train)
         cm.score(self.X_test, self.y_test)

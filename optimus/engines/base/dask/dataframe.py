@@ -22,9 +22,6 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 
 class DaskBaseDataFrame(DistributedBaseDataFrame):
 
-    def __init__(self, data):
-        super().__init__(data)
-
     def _assign(self, kw_columns: dict):
 
         dfd = self.root.data
@@ -107,7 +104,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         def func(value):
             return value[lower_bound:upper_bound]
 
-        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute())
+        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute(), op=self.op)
 
     def graph(self) -> dict:
         """

@@ -25,12 +25,15 @@ class DaskBaseJDBC:
 
     def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
                  oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
-                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None):
+                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, op=None):
 
         """
         Create the JDBC connection object
         :return:
         """
+
+        self.op = op
+
         if host is None:
             host = "127.0.0.1"
             # RaiseIt.value_error(host, "host must be specified")
@@ -143,7 +146,7 @@ class DaskBaseJDBC:
         # dfd = dfd.run()
         # dfd = dask_pandas_to_dask_cudf(dfd)
         from optimus.engines.dask.dataframe import DaskDataFrame
-        return DaskDataFrame(self._dask_to_compatible(dfd))
+        return DaskDataFrame(self._dask_to_compatible(dfd), op=self.op)
 
     def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
                 table_name=None):

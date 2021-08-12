@@ -10,7 +10,7 @@ class BaseSave:
     def __init__(self, root: 'DataFrameType'):
         self.root = root
 
-    def file(self, path:str, *args, **kwargs):
+    def file(self, path: str, *args, **kwargs):
         if "." not in path:
             warnings.warn("No file extension found in path, saving to Parquet file.")
             file_ext = "parquet"

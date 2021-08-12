@@ -9,4 +9,4 @@ class Create(BaseCreate):
 
     def _df_from_dfd(self, dfd, *args, **kwargs) -> 'DataFrameType':
         dfd = Spark.instance.spark.createDataFrame(dfd)
-        return SparkDataFrame(dfd, *args, **kwargs)
+        return SparkDataFrame(dfd, *args, **kwargs, op=self.op)

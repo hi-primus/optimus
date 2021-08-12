@@ -9,9 +9,6 @@ from optimus.helpers.converter import cudf_to_dask_cudf
 
 class DaskCUDFDataFrame(CUDFBaseDataFrame, DaskBaseDataFrame):
 
-    def __init__(self, data):
-        super().__init__(data)
-
     def _base_to_dfd(self, pdf, n_partitions):
         return cudf_to_dask_cudf(pdf, n_partitions)
 
@@ -45,7 +42,7 @@ class DaskCUDFDataFrame(CUDFBaseDataFrame, DaskBaseDataFrame):
         return Constants()
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.get_buffer().data[input_cols][lower_bound: upper_bound].to_pandas())
+        return PandasDataFrame(self.get_buffer().data[input_cols][lower_bound: upper_bound].to_pandas(), op=self.op)
 
     @staticmethod
     def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
@@ -63,7 +60,7 @@ class DaskCUDFDataFrame(CUDFBaseDataFrame, DaskBaseDataFrame):
         return self.data.compute().to_pandas()
 
     def to_optimus_pandas(self):
-        return PandasDataFrame(self.root.to_pandas())
+        return PandasDataFrame(self.root.to_pandas(), op=self.op)
 
     def to_optimus_cudf(self):
-        return CUDFDataFrame(self.root.to_pandas())
+        return CUDFDataFrame(self.root.to_pandas(), op=self.op)

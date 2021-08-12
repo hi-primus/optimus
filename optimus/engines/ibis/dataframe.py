@@ -4,9 +4,6 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 
 class IbisDataFrame(BaseDataFrame):
 
-    def __init__(self, data):
-        super().__init__(data)
-
     @property
     def rows(self):
         from optimus.engines.ibis.rows import Rows
@@ -64,4 +61,4 @@ class IbisDataFrame(BaseDataFrame):
         return
 
     def to_optimus_pandas(self):
-        return PandasDataFrame(self.root.data.execute())
+        return PandasDataFrame(self.root.data.execute(), op=self.op)

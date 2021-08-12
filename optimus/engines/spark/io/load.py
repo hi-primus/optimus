@@ -52,14 +52,10 @@ class Load(BaseLoad):
         df.meta = Meta.set(df.meta, value=df.meta.add_action("columns", df.cols.names()).get())
         return df
 
-    @staticmethod
-    def tsv(path, header=True, infer_schema=True, charset="UTF-8", *args, **kwargs):
+    def tsv(self, path, header=True, infer_schema=True, charset="UTF-8", *args, **kwargs):
+        return self.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
 
-        df = Load.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
-        return df
-
-    @staticmethod
-    def csv(filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
+    def csv(self, filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
             storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
@@ -102,7 +98,7 @@ class Load(BaseLoad):
             # if isinstance(df, ks.io.parsers.TextFileReader):
             #     df = df.get_chunk()
 
-            df = SparkDataFrame(df)
+            df = SparkDataFrame(df, op=self.op)
 
             df.meta = Meta.set(df.meta, value=meta)
 

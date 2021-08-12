@@ -7,14 +7,11 @@ from optimus.engines.base.dataframe.dataframe import DataFrameBaseDataFrame
 
 class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
 
-    def __init__(self, data):
-        super().__init__(data)
-
     def _base_to_dfd(self, pdf, n_partitions):
         pass
 
     def to_optimus_pandas(self):
-        return PandasDataFrame(self.root.data.to_pandas())
+        return PandasDataFrame(self.root.data.to_pandas(), op=self.op)
 
     @property
     def rows(self):
@@ -46,7 +43,7 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         return Constants()
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas())
+        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas(), op=self.op)
 
     def get_buffer(self):
         return self

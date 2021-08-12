@@ -7,8 +7,8 @@ import pandas as pd
 
 
 class BaseCreate:
-    def __init__(self, root: 'DataFrameType'):
-        self.root = root
+    def __init__(self, op: 'DataFrameType'):
+        self.op = op
 
     def _dictionary(self, dict, force_dtypes=False):
 
@@ -26,7 +26,7 @@ class BaseCreate:
                 elif len(key) == 2:
                     name, dtype = key
                 if force_dtype:
-                    dtype = self.root.constants.DTYPES_ALIAS.get(dtype, dtype)
+                    dtype = self.op.constants.DTYPES_ALIAS.get(dtype, dtype)
             else:
                 name = key
                 dtype = None
@@ -44,7 +44,7 @@ class BaseCreate:
     def _dfd_from_dict(self, dict) -> 'InternalDataFrameType':
         pd_dict = {}
         for (name, dtype, nulls, force_dtype), values in dict.items():
-            dtype = self.root.constants.COMPATIBLE_DTYPES.get(dtype, dtype) if force_dtype else None
+            dtype = self.op.constants.COMPATIBLE_DTYPES.get(dtype, dtype) if force_dtype else None
             pd_series = self._pd.Series(values, dtype=dtype)
             pd_dict.update({name: pd_series})
         return self._pd.DataFrame(pd_dict)

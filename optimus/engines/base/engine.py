@@ -23,7 +23,7 @@ class BaseEngine:
         Create the JDBC string connection
         :return: JDBC object
         """
-        return Connect()
+        return Connect(self)
 
     @property
     def nan(self):

@@ -16,8 +16,7 @@ from optimus.helpers.logger import logger
 
 class Load(BaseLoad):
 
-    @staticmethod
-    def json(path, multiline=False, lines=True, conn=None, storage_options=None, n_partitions=None, *args, **kwargs):
+    def json(self, path, multiline=False, lines=True, conn=None, storage_options=None, n_partitions=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -28,7 +27,7 @@ class Load(BaseLoad):
         try:
             # TODO: Check a better way to handle this Spark.instance.spark. Very verbose.
             dfd = dd.read_json(path, lines=lines, storage_options=storage_options, *args, **kwargs)
-            df = DaskDataFrame(dfd)
+            df = DaskDataFrame(dfd, op=self.op)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
 
         except IOError as error:
@@ -36,43 +35,20 @@ class Load(BaseLoad):
             raise
         return df
 
-    @staticmethod
-    def tsv(path, header1=True, infer_schema=True, *args):
-        return Load.csv(path, sep='\t', header=header1, infer_schema=infer_schema, *args)
+    def tsv(self, path, header1=True, infer_schema=True, *args):
+        return self.csv(path, sep='\t', header=header1, infer_schema=infer_schema, *args)
 
-    @staticmethod
-    def csv(path, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
+    def csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
             quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=False,
             na_filter=True, null_value=None, storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
 
-        """
-        Return a dataframe from a csv file. It is the same read.csv Spark function with some predefined
-        params
-
-        :param na_filter:
-        :param path: path or location of the file.
-        :param sep: usually delimiter mark are ',' or ';'.
-        :param header: tell the function whether dataset has a header row. True default.
-        :param infer_schema: infers the input schema automatically from data.
-        :param encoding:
-        :param na_values:
-        :param n_rows:
-        :param quoting:
-        :param engine: 'python' or 'c'. 'python' slower but support better error handling
-        :param lineterminator:
-        :param error_bad_lines:
-        :param keep_default_na:
-        :param cache: If calling from a url we cache save the path to the temp file so we do not need to download the file again
-
-        """
-
-        path = unquote_path(path)
+        filepath_or_buffer = unquote_path(filepath_or_buffer)
 
         if cache is False:
             prepare_path.cache_clear()
 
         if conn is not None:
-            path = conn.path(path)
+            filepath_or_buffer = conn.path(filepath_or_buffer)
             storage_options = conn.storage_options
 
         remove_param = "chunk_size"
@@ -90,13 +66,13 @@ class Load(BaseLoad):
 
             if engine == "python":
                 # na_filter=na_filter, error_bad_lines and low_memory are not support by pandas engine
-                dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                dfd = dd.read_csv(filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
                                   quoting=quoting, lineterminator=lineterminator, keep_default_na=True,
                                   na_values=None, engine=engine, storage_options=storage_options,
                                   error_bad_lines=False, *args, **kwargs)
 
             elif engine == "c":
-                dfd = dd.read_csv(path, sep=sep, header=0 if header else None, encoding=encoding,
+                dfd = dd.read_csv(filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
                                   quoting=quoting, lineterminator=lineterminator,
                                   error_bad_lines=error_bad_lines, keep_default_na=True, 
                                   engine=engine, na_filter=na_filter, na_values=val_to_list(null_value),
@@ -116,8 +92,8 @@ class Load(BaseLoad):
 
             dfd = dfd.persist()
 
-            df = DaskDataFrame(dfd)
-            df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
+            df = DaskDataFrame(dfd, op=self.op)
+            df.meta = Meta.set(df.meta, value={"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)})
 
             try:
                 max_cell_length = df.cols.len("*").cols.max()
@@ -131,8 +107,7 @@ class Load(BaseLoad):
 
         return df
 
-    @staticmethod
-    def parquet(path, columns=None, engine="pyarrow", storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
+    def parquet(self, path, columns=None, engine="pyarrow", storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -143,7 +118,7 @@ class Load(BaseLoad):
         try:
             dfd = dd.read_parquet(path, columns=columns, engine=engine, storage_options=storage_options, *args,
                                   **kwargs)
-            df = DaskDataFrame(dfd)
+            df = DaskDataFrame(dfd, op=self.op)
             df.meta = Meta.set(df.meta, "file_name", path)
 
         except IOError as error:
@@ -152,8 +127,7 @@ class Load(BaseLoad):
 
         return df
 
-    @staticmethod
-    def zip(path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1,
+    def zip(self, path, sep=',', header=True, infer_schema=True, charset="UTF-8", null_value="None", n_rows=-1,
             storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
 
         path = unquote_path(path)
@@ -185,14 +159,15 @@ class Load(BaseLoad):
             if n_rows > -1:
                 df = df.rows.limit(n_rows)
 
+            df = DaskDataFrame(df, op=self.op)
+
             df.meta = Meta.set(df.meta, "file_name", file_name)
         except IOError as error:
             logger.print(error)
             raise
         return df
 
-    @staticmethod
-    def orc(path, columns=None, cache=None, storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
+    def orc(self, path, columns=None, cache=None, storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
 
         path = unquote_path(path)
 
@@ -209,7 +184,7 @@ class Load(BaseLoad):
             # passing na_filter=False can improve the performance of reading a large file.
             dfd = dd.read_orc(path, columns, storage_options=storage_options, *args, **kwargs)
 
-            df = DaskDataFrame(dfd)
+            df = DaskDataFrame(dfd, op=self.op)
             df.meta = Meta.set(df.meta, value={"file_name": path, "name": ntpath.basename(path)})
         except IOError as error:
             logger.print(error)
@@ -217,8 +192,7 @@ class Load(BaseLoad):
 
         return df
 
-    @staticmethod
-    def avro(path, storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
+    def avro(self, path, storage_options=None, conn=None, n_partitions=None, *args, **kwargs):
         path = unquote_path(path)
 
         if conn is not None:
@@ -229,6 +203,7 @@ class Load(BaseLoad):
 
         try:
             df = dask_bag.read_avro(path, storage_options=storage_options, *args, **kwargs).to_dataframe()
+            df = DaskDataFrame(df, op=self.op)
             df.meta = Meta.set(df.meta, "file_name", file_name)
 
         except IOError as error:

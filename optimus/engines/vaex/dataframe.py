@@ -8,14 +8,11 @@ from optimus.helpers.converter import pandas_to_vaex_dataframe
 
 class VaexDataFrame(BaseDataFrame):
 
-    def __init__(self, data):
-        super().__init__(data)
-
     def _base_to_dfd(self, pdf, n_partitions):
         return pandas_to_vaex_dataframe(pdf, n_partitions)
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas_df())
+        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas_df(), op=self.op)
 
     def _assign(self, kw_columns):
         dfd = self.root.data
@@ -79,10 +76,10 @@ class VaexDataFrame(BaseDataFrame):
         return Constants()
 
     def to_optimus_pandas(self):
-        return PandasDataFrame(self.root.to_pandas())
+        return PandasDataFrame(self.root.to_pandas(), op=self.op)
 
     def to_optimus_cudf(self):
-        return CUDFDataFrame(self.root.to_pandas())
+        return CUDFDataFrame(self.root.to_pandas(), op=self.op)
 
     @staticmethod
     def sample(n=10, random=False):
