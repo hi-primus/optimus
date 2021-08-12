@@ -24,8 +24,45 @@ class TestExamplePandas(TestBase):
         expected = self.create_dataframe(dict={('name', 'object'): ['OPTIMUS', 'BUMBLEBEE', 'EJECT'], ('age (M)', 'int64'): [5, 5, 5]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
+
 class TestExampleDask(TestExamplePandas):
     config = {'engine': 'dask', 'n_partitions': 1}
 
+
 class TestExamplePartitionDask(TestExamplePandas):
     config = {'engine': 'dask', 'n_partitions': 2}
+
+
+try:
+    import cudf
+except:
+    pass
+else:
+    class TestExampleCUDF(TestExamplePandas):
+        config = {'engine': 'cudf'}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestExampleDC(TestExamplePandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 1}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestExamplePartitionDC(TestExamplePandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 2}
+
+
+class TestExampleSpark(TestExamplePandas):
+    config = {'engine': 'spark'}
+
+
+class TestExampleVaex(TestExamplePandas):
+    config = {'engine': 'vaex'}

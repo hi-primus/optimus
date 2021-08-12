@@ -41,34 +41,39 @@ class TestStringPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): ['Optimus', 'Bumbl#ebéé  ', 'Ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_expand_contrated_words(self):
-        df = self.create_dataframe(dict={('expand_contrated_words_test', 'object'): ["y'all ain't ready for this", "i've been where you haven't", "she'll do it before you", "maybe it isn't so hard after all", "he mustn't cheat in school", "if you hadn't done that, we would've been free"]}, force_data_types=True)
-        result = df.cols.expand_contrated_words(cols=['expand_contrated_words_test'])
-        expected = self.create_dataframe(dict={('expand_contrated_words_test', 'object'): ['you all am not ready for this', "i've been where you have not", 'she will do it before you', 'maybe it is not so hard after all', 'he must not cheat in school', 'if you had not done that, we would have been free']}, force_data_types=True)
+    def test_cols_expand_contracted_words(self):
+        df = self.create_dataframe(dict={('expand_contracted_words_test', 'object'): ["y'all ain't ready for this", "i've been where you haven't", "she'll do it before you", "maybe it isn't so hard after all", "he mustn't cheat in school", "if you hadn't done that, we would've been free"]}, force_data_types=True)
+        result = df.cols.expand_contracted_words(cols=['expand_contracted_words_test'])
+        # The following value does not represent a correct output of the operation
+        expected = self.dict
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_expand_contrated_words_all(self):
+    def test_cols_expand_contracted_words_all(self):
         df = self.df
-        result = df.cols.expand_contrated_words(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'object'): ['None', 'None', 'None', 'None', 'None', 'None'], ('attributes', 'object'): ['[8.5344, 4300.0]', '[5.334, 2000.0]', '[7.9248, 4000.0]', '[3.9624, 1800.0]', '[None, 5700.0]', '[91.44, None]'], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): ["bytearray(b'Leader')", "bytearray(b'Espionage')", "bytearray(b'Security')", "bytearray(b'First Lieutenant')", "bytearray(b'None')", "bytearray(b'Battle Station')"], ('height(ft)', 'object'): ['-28.0', '17.0', '26.0', '13.0', 'nan', '300.0'], ('japanese name', 'object'): ["['Inochi', 'Convoy']", "['Bumble', 'Goldback']", "['Roadbuster']", "['Meister']", "['Megatron']", "['Metroflex']"], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', 'None', 'None'], ('rank', 'object'): ['10', '7', '7', '8', '10', '8'], ('Cybertronian', 'object'): ['True', 'True', 'True', 'True', 'True', 'False'], ('Date Type', 'object'): ['2016-09-10', '2015-08-10', '2014-06-24', '2013-06-24', '2012-05-10', '2011-04-10'], ('age', 'object'): ['5000000', '5000000', '5000000', '5000000', '5000000', '5000000'], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'object'): ['2014-06-24', '2014-06-24', '2014-06-24', '2014-06-24', '2014-06-24', '2014-06-24'], ('weight(t)', 'object'): ['4.3', '2.0', '4.0', '1.8', '5.7', 'nan']}, force_data_types=True)
+        result = df.cols.expand_contracted_words(cols='*')
+        # The following value does not represent a correct output of the operation
+        expected = self.dict
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_expand_contrated_words_multiple(self):
+    def test_cols_expand_contracted_words_multiple(self):
         df = self.df
-        result = df.cols.expand_contrated_words(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        expected = self.create_dataframe(dict={('NullType', 'object'): ['None', 'None', 'None', 'None', 'None', 'None'], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): ["['Inochi', 'Convoy']", "['Bumble', 'Goldback']", "['Roadbuster']", "['Meister']", "['Megatron']", "['Metroflex']"], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'object'): ['4.3', '2.0', '4.0', '1.8', '5.7', 'nan']}, force_data_types=True)
+        result = df.cols.expand_contracted_words(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
+        # The following value does not represent a correct output of the operation
+        expected = self.dict
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_expand_contrated_words_numeric(self):
+    def test_cols_expand_contracted_words_numeric(self):
         df = self.df.cols.select(['height(ft)'])
-        result = df.cols.expand_contrated_words(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'object'): ['-28.0', '17.0', '26.0', '13.0', 'nan', '300.0']}, force_data_types=True)
+        result = df.cols.expand_contracted_words(cols=['height(ft)'])
+        # The following value does not represent a correct output of the operation
+        expected = self.dict
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
-    def test_cols_expand_contrated_words_string(self):
+    def test_cols_expand_contracted_words_string(self):
         df = self.df.cols.select(['function(binary)'])
-        result = df.cols.expand_contrated_words(cols=['function(binary)'],output_cols=['function(binary)_2'])
-        expected = self.create_dataframe(dict={('function(binary)', 'object'): ["bytearray(b'Leader')", "bytearray(b'Espionage')", "bytearray(b'Security')", "bytearray(b'First Lieutenant')", "bytearray(b'None')", "bytearray(b'Battle Station')"]}, force_data_types=True)
+        result = df.cols.expand_contracted_words(cols=['function(binary)'],output_cols=['function(binary)_2'])
+        # The following value does not represent a correct output of the operation
+        expected = self.dict
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_lemmatize_verbs(self):
@@ -311,6 +316,83 @@ class TestStringPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): ['sumitpO', '  éébe#lbmub', '&edihnori', 'zzaJ', 'nortageM', '$^)_xelporteM']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
+    def test_cols_soundex_NoneType(self):
+        df = self.df.cols.select(['NullType'])
+        result = df.cols.soundex(cols=['NullType'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): ['N500', 'N500', 'N500', 'N500', 'N500', 'N500']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_all(self):
+        df = self.df
+        result = df.cols.soundex(cols='*')
+        expected = self.create_dataframe(dict={('NullType', 'object'): ['N500', 'N500', 'N500', 'N500', 'N500', 'N500'], ('attributes', 'object'): ['[000', '[000', '[000', '[000', '[550', '[550'], ('date arrival', 'object'): ['1000', '1000', '1000', '1000', '1000', '1000'], ('function(binary)', 'object'): ['B361', 'B361', 'B361', 'B361', 'B361', 'B361'], ('height(ft)', 'object'): ['-000', '1000', '2000', '1000', 'N500', '3000'], ('japanese name', 'object'): ['[522', '[151', '[631', '[523', '[523', '[536'], ('last date seen', 'object'): ['2000', '2000', '2000', '2000', '2000', '2000'], ('last position seen', 'object'): ['1000', '1000', '3000', '3000', 'N500', 'N500'], ('rank', 'object'): ['1000', '7000', '7000', '8000', '1000', '8000'], ('Cybertronian', 'object'): ['T600', 'T600', 'T600', 'T600', 'T600', 'F420'], ('Date Type', 'object'): ['2000', '2000', '2000', '2000', '2000', '2000'], ('age', 'object'): ['5000', '5000', '5000', '5000', '5000', '5000'], ('function', 'object'): ['L360', 'E215', 'S263', 'F623', 'N500', 'B342'], ('names', 'object'): ['O135', 'B514', 'I653', 'J200', 'M236', 'M361'], ('timestamp', 'object'): ['2000', '2000', '2000', '2000', '2000', '2000'], ('weight(t)', 'object'): ['4000', '2000', '4000', '1000', '5000', 'N500']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_bool(self):
+        df = self.df.cols.select('Cybertronian')
+        result = df.cols.soundex(cols='Cybertronian')
+        expected = self.create_dataframe(dict={('Cybertronian', 'object'): ['T600', 'T600', 'T600', 'T600', 'T600', 'F420']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_bytearray(self):
+        df = self.df.cols.select('function(binary)')
+        result = df.cols.soundex(cols='function(binary)')
+        expected = self.create_dataframe(dict={('function(binary)', 'object'): ['B361', 'B361', 'B361', 'B361', 'B361', 'B361']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_datetime(self):
+        df = self.df.cols.select('last date seen')
+        result = df.cols.soundex(cols='last date seen')
+        expected = self.create_dataframe(dict={('last date seen', 'object'): ['2000', '2000', '2000', '2000', '2000', '2000']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_list(self):
+        df = self.df.cols.select('attributes')
+        result = df.cols.soundex(cols='attributes')
+        expected = self.create_dataframe(dict={('attributes', 'object'): ['[000', '[000', '[000', '[000', '[550', '[550']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_multiple(self):
+        df = self.df
+        result = df.cols.soundex(cols=['NullType', 'weight(t)', 'japanese name', 'timestamp', 'function', 'age',
+ 'Date Type', 'last position seen', 'date arrival'])
+        result = result.to_dict()
+        expected = {'NullType': ['N500', 'N500', 'N500', 'N500', 'N500', 'N500'],
+ 'attributes': [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]],
+ 'date arrival': ['1000', '1000', '1000', '1000', '1000', '1000'],
+ 'function(binary)': [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')],
+ 'height(ft)': [-28.0, 17.0, 26.0, 13.0, nan, 300.0],
+ 'japanese name': ['[522', '[151', '[631', '[523', '[523', '[536'],
+ 'last date seen': ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'],
+ 'last position seen': ['1000', '1000', '3000', '3000', 'N500', 'N500'],
+ 'rank': [10, 7, 7, 8, 10, 8],
+ 'Cybertronian': [True, True, True, True, True, False],
+ 'Date Type': ['2000', '2000', '2000', '2000', '2000', '2000'],
+ 'age': ['5000', '5000', '5000', '5000', '5000', '5000'],
+ 'function': ['L360', 'E215', 'S263', 'F623', 'N500', 'B342'],
+ 'names': ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'],
+ 'timestamp': ['2000', '2000', '2000', '2000', '2000', '2000'],
+ 'weight(t)': ['4000', '2000', '4000', '1000', '5000', 'N500']}
+        self.assertEqual(json_encoding(result), json_encoding(expected))
+    
+    def test_cols_soundex_numeric_float(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.soundex(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'object'): ['-000', '1000', '2000', '1000', 'N500', '3000']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_numeric_int(self):
+        df = self.df.cols.select(['rank'])
+        result = df.cols.soundex(cols=['rank'])
+        expected = self.create_dataframe(dict={('rank', 'object'): ['1000', '7000', '7000', '8000', '1000', '8000']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_string(self):
+        df = self.df.cols.select(['names'])
+        result = df.cols.soundex(cols=['names'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['O135', 'B514', 'I653', 'J200', 'M236', 'M361']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
     def test_cols_title(self):
         df = self.create_dataframe(dict={('title_test', 'object'): ['ThIs iS A TEST', 'ThIs', 'iS', 'a ', ' TEST', 'this is a test']}, force_data_types=True)
         result = df.cols.title(cols=['title_test'])
@@ -404,75 +486,102 @@ class TestStringPandas(TestBase):
     def test_cols_word_count(self):
         df = self.create_dataframe(dict={('word_count_test', 'object'): ['THis iS a TEST', 'for', ' how ', 'many words are in this sentence', '      ', '12']}, force_data_types=True)
         result = df.cols.word_count(cols=['word_count_test'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('word_count_test', 'int64'): [4, 1, 1, 6, 0, 1]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_word_count_all(self):
         df = self.df
         result = df.cols.word_count(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'int64'): [1, 1, 1, 1, 1, 1], ('attributes', 'int64'): [5, 5, 5, 5, 5, 5], ('date arrival', 'int64'): [1, 1, 1, 1, 1, 1], ('function(binary)', 'int64'): [5, 5, 5, 6, 5, 6], ('height(ft)', 'int64'): [1, 1, 1, 1, 1, 1], ('japanese name', 'int64'): [7, 7, 4, 4, 4, 4], ('last date seen', 'int64'): [1, 1, 1, 1, 1, 1], ('last position seen', 'int64'): [3, 3, 3, 3, 1, 1], ('rank', 'int64'): [1, 1, 1, 1, 1, 1], ('Cybertronian', 'int64'): [1, 1, 1, 1, 1, 1], ('Date Type', 'int64'): [1, 1, 1, 1, 1, 1], ('age', 'int64'): [1, 1, 1, 1, 1, 1], ('function', 'int64'): [1, 1, 1, 2, 1, 2], ('names', 'int64'): [1, 3, 2, 1, 1, 4], ('timestamp', 'int64'): [1, 1, 1, 1, 1, 1], ('weight(t)', 'int64'): [1, 1, 1, 1, 1, 1]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_word_count_multiple(self):
         df = self.df
         result = df.cols.word_count(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'int64'): [1, 1, 1, 1, 1, 1], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'int64'): [7, 7, 4, 4, 4, 4], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'int64'): [1, 1, 1, 1, 1, 1]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_word_count_numeric(self):
         df = self.df.cols.select(['height(ft)'])
         result = df.cols.word_count(cols=['height(ft)'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('height(ft)', 'int64'): [1, 1, 1, 1, 1, 1]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_word_count_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.word_count(cols=['names'],output_cols=['names_2'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'int64'): [1, 3, 2, 1, 1, 4]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_word_tokenize(self):
         df = self.create_dataframe(dict={('word_tokenize_test', 'object'): ['THis iS a TEST', 'for', ' how ', 'many words are in this sentence', '      ', '12']}, force_data_types=True)
         result = df.cols.word_tokenize(cols=['word_tokenize_test'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('word_tokenize_test', 'object'): [['THis', 'iS', 'a', 'TEST'], ['for'], ['how'], ['many', 'words', 'are', 'in', 'this', 'sentence'], [], ['12']]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_word_tokenize_all(self):
         df = self.df
         result = df.cols.word_tokenize(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [['None'], ['None'], ['None'], ['None'], ['None'], ['None']], ('attributes', 'object'): [['[', '8.5344', ',', '4300.0', ']'], ['[', '5.334', ',', '2000.0', ']'], ['[', '7.9248', ',', '4000.0', ']'], ['[', '3.9624', ',', '1800.0', ']'], ['[', 'None', ',', '5700.0', ']'], ['[', '91.44', ',', 'None', ']']], ('date arrival', 'object'): [['1980/04/10'], ['1980/04/10'], ['1980/04/10'], ['1980/04/10'], ['1980/04/10'], ['1980/04/10']], ('function(binary)', 'object'): [['bytearray', '(', "b'Leader", "'", ')'], ['bytearray', '(', "b'Espionage", "'", ')'], ['bytearray', '(', "b'Security", "'", ')'], ['bytearray', '(', "b'First", 'Lieutenant', "'", ')'], ['bytearray', '(', "b'None", "'", ')'], ['bytearray', '(', "b'Battle", 'Station', "'", ')']], ('height(ft)', 'object'): [['-28.0'], ['17.0'], ['26.0'], ['13.0'], ['nan'], ['300.0']], ('japanese name', 'object'): [['[', "'Inochi", "'", ',', "'Convoy", "'", ']'], ['[', "'Bumble", "'", ',', "'Goldback", "'", ']'], ['[', "'Roadbuster", "'", ']'], ['[', "'Meister", "'", ']'], ['[', "'Megatron", "'", ']'], ['[', "'Metroflex", "'", ']']], ('last date seen', 'object'): [['2016/09/10'], ['2015/08/10'], ['2014/07/10'], ['2013/06/10'], ['2012/05/10'], ['2011/04/10']], ('last position seen', 'object'): [['19.442735', ',', '-99.201111'], ['10.642707', ',', '-71.612534'], ['37.789563', ',', '-122.400356'], ['33.670666', ',', '-117.841553'], ['None'], ['None']], ('rank', 'object'): [['10'], ['7'], ['7'], ['8'], ['10'], ['8']], ('Cybertronian', 'object'): [['True'], ['True'], ['True'], ['True'], ['True'], ['False']], ('Date Type', 'object'): [['2016-09-10'], ['2015-08-10'], ['2014-06-24'], ['2013-06-24'], ['2012-05-10'], ['2011-04-10']], ('age', 'object'): [['5000000'], ['5000000'], ['5000000'], ['5000000'], ['5000000'], ['5000000']], ('function', 'object'): [['Leader'], ['Espionage'], ['Security'], ['First', 'Lieutenant'], ['None'], ['Battle', 'Station']], ('names', 'object'): [['Optimus'], ['bumbl', '#', 'ebéé'], ['ironhide', '&'], ['Jazz'], ['Megatron'], ['Metroplex_', ')', '^', '$']], ('timestamp', 'object'): [['2014-06-24'], ['2014-06-24'], ['2014-06-24'], ['2014-06-24'], ['2014-06-24'], ['2014-06-24']], ('weight(t)', 'object'): [['4.3'], ['2.0'], ['4.0'], ['1.8'], ['5.7'], ['nan']]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_word_tokenize_multiple(self):
         df = self.df
         result = df.cols.word_tokenize(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): [['None'], ['None'], ['None'], ['None'], ['None'], ['None']], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): [['[', "'Inochi", "'", ',', "'Convoy", "'", ']'], ['[', "'Bumble", "'", ',', "'Goldback", "'", ']'], ['[', "'Roadbuster", "'", ']'], ['[', "'Meister", "'", ']'], ['[', "'Megatron", "'", ']'], ['[', "'Metroflex", "'", ']']], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): [['4.3'], ['2.0'], ['4.0'], ['1.8'], ['5.7'], ['nan']]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_word_tokenize_numeric(self):
         df = self.df.cols.select(['height(ft)'])
         result = df.cols.word_tokenize(cols=['height(ft)'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('height(ft)', 'object'): [['-28.0'], ['17.0'], ['26.0'], ['13.0'], ['nan'], ['300.0']]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_word_tokenize_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.word_tokenize(cols=['names'],output_cols=['names_2'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): [['Optimus'], ['bumbl', '#', 'ebéé'], ['ironhide', '&'], ['Jazz'], ['Megatron'], ['Metroplex_', ')', '^', '$']]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
 
 class TestStringDask(TestStringPandas):
     config = {'engine': 'dask', 'n_partitions': 1}
 
-class TestStringDask2(TestStringPandas):
+
+class TestStringPartitionDask(TestStringPandas):
     config = {'engine': 'dask', 'n_partitions': 2}
+
+
+try:
+    import cudf
+except:
+    pass
+else:
+    class TestStringCUDF(TestStringPandas):
+        config = {'engine': 'cudf'}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestStringDC(TestStringPandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 1}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestStringPartitionDC(TestStringPandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 2}
+
+
+class TestStringSpark(TestStringPandas):
+    config = {'engine': 'spark'}
+
+
+class TestStringVaex(TestStringPandas):
+    config = {'engine': 'vaex'}

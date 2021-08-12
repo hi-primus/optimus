@@ -33,7 +33,43 @@ class TestUDFPandas(TestBase):
 
 
 class TestUDFDask(TestUDFPandas):
-    config = {"engine": "dask", "n_partitions": 1}
+    config = {'engine': 'dask', 'n_partitions': 1}
+
 
 class TestUDFPartitionDask(TestUDFPandas):
-    config = {"engine": "dask", "n_partitions": 2}
+    config = {'engine': 'dask', 'n_partitions': 2}
+
+
+try:
+    import cudf
+except:
+    pass
+else:
+    class TestUDFCUDF(TestUDFPandas):
+        config = {'engine': 'cudf'}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestUDFDC(TestUDFPandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 1}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestUDFPartitionDC(TestUDFPandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 2}
+
+
+class TestUDFSpark(TestUDFPandas):
+    config = {'engine': 'spark'}
+
+
+class TestUDFVaex(TestUDFPandas):
+    config = {'engine': 'vaex'}

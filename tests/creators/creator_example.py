@@ -4,7 +4,7 @@ sys.path.append("../..")
 
 def create():
     from optimus import Optimus
-    from optimus.tests.creator import TestCreator
+    from optimus.tests.creator import TestCreator, default_configs
 
     op = Optimus("pandas")
     df = op.create.dataframe({
@@ -12,13 +12,7 @@ def create():
         ('age (M)', 'int'): [5, 5, 5]
     })
 
-    configs = {
-        "Pandas": {"engine": "pandas"},
-        "Dask": {"engine": "dask", "n_partitions": 1},
-        "PartitionDask": {"engine": "dask", "n_partitions": 2}
-    }
-
-    t = TestCreator(op, df, name="example", configs=configs)
+    t = TestCreator(op, df, name="example", configs=default_configs)
     t.create(method="cols.upper", variant="single", cols=["name"])
     t.create(method="cols.upper", variant="multiple", compare_by="json", cols=["name", "age (M)"])
     t.run()

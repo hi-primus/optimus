@@ -1,7 +1,7 @@
 from optimus.tests.base import TestBase
 
 
-class TestPandas(TestBase):
+class TestLoadPandas(TestBase):
 
     def test_json(self):
         df = self.load_dataframe("examples/data/foo.json", type="json")
@@ -93,8 +93,44 @@ class TestPandas(TestBase):
         self.assertLess(df.rows.count(), 50)
         self.assertEqual(df.cols.names(), ["id","firstName","lastName","billingId","product","price","birth","dummyCol"])        
 
-class TestDask(TestPandas):
-    config = {"engine": "dask", "n_partitions": 1}
+class TestLoadDask(TestLoadPandas):
+    config = {'engine': 'dask', 'n_partitions': 1}
 
-class TestPartitionDask(TestPandas):
-    config = {"engine": "dask", "n_partitions": 2}
+
+class TestLoadPartitionDask(TestLoadPandas):
+    config = {'engine': 'dask', 'n_partitions': 2}
+
+
+try:
+    import cudf
+except:
+    pass
+else:
+    class TestLoadCUDF(TestLoadPandas):
+        config = {'engine': 'cudf'}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestLoadDC(TestLoadPandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 1}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestLoadPartitionDC(TestLoadPandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 2}
+
+
+class TestLoadSpark(TestLoadPandas):
+    config = {'engine': 'spark'}
+
+
+class TestLoadVaex(TestLoadPandas):
+    config = {'engine': 'vaex'}

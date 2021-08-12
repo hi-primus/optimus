@@ -15,33 +15,31 @@ class TestWebPandas(TestBase):
         df = self.create_dataframe(dict={('domain_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
  'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
         result = df.cols.domain(cols=['domain_test'])
-        expected = self.create_dataframe(dict={('domain_test', 'object'): ['github', None, 'hi-example', 'hi-optimus', 'computerhope', 'google']}, force_data_types=True)
+        expected = self.create_dataframe(dict={('domain_test', 'object'): ['github', 'github', 'hi-example', 'hi-optimus', 'computerhope', 'google']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_domain_all(self):
         df = self.df
         result = df.cols.domain(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('attributes', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('date arrival', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('function(binary)', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('height(ft)', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('japanese name', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('last date seen', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('last position seen', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('rank', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('Cybertronian', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('Date Type', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('age', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('function', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('names', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('timestamp', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('weight(t)', 'object'): ['google', 'google', 'google', 'google', 'google', 'google']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_domain_multiple(self):
         df = self.df
         result = df.cols.domain(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): ['google', 'google', 'google', 'google', 'google', 'google'], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): ['google', 'google', 'google', 'google', 'google', 'google']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_domain_numeric(self):
         df = self.df.cols.select(['height(ft)'])
         result = df.cols.domain(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('height(ft)', 'object'): ['google', 'google', 'google', 'google', 'google', 'google']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_domain_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.domain(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): ['google', 'google', 'google', 'google', 'google', 'google']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_email_domain(self):
@@ -118,15 +116,13 @@ class TestWebPandas(TestBase):
     def test_cols_host_all(self):
         df = self.df
         result = df.cols.host(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): ['None', 'None', 'None', 'None', 'None', 'None'], ('attributes', 'object'): ['None', 'None', 'None', 'None', 'None', 'None'], ('date arrival', 'object'): ['1980', '1980', '1980', '1980', '1980', '1980'], ('function(binary)', 'object'): ['bytearray', 'bytearray', 'bytearray', 'bytearray', 'bytearray', 'bytearray'], ('height(ft)', 'object'): ['-28.0', '17.0', '26.0', '13.0', 'nan', '300.0'], ('japanese name', 'object'): ['300.0', '300.0', '300.0', '300.0', '300.0', '300.0'], ('last date seen', 'object'): ['2016', '2015', '2014', '2013', '2012', '2011'], ('last position seen', 'object'): ['19.442735', '10.642707', '37.789563', '33.670666', 'None', 'None'], ('rank', 'object'): ['10', '7', '7', '8', '10', '8'], ('Cybertronian', 'object'): ['True', 'True', 'True', 'True', 'True', 'False'], ('Date Type', 'object'): ['2016-09-10', '2015-08-10', '2014-06-24', '2013-06-24', '2012-05-10', '2011-04-10'], ('age', 'object'): ['5000000', '5000000', '5000000', '5000000', '5000000', '5000000'], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First', 'None', 'Battle'], ('names', 'object'): ['Optimus', 'bumbl', 'ironhide', 'Jazz', 'Megatron', 'Metroplex'], ('timestamp', 'object'): ['2014-06-24', '2014-06-24', '2014-06-24', '2014-06-24', '2014-06-24', '2014-06-24'], ('weight(t)', 'object'): ['4.3', '2.0', '4.0', '1.8', '5.7', 'nan']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_host_multiple(self):
         df = self.df
         result = df.cols.host(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): ['None', 'None', 'None', 'None', 'None', 'None'], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): ['nan', 'nan', 'nan', 'nan', 'nan', 'nan'], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): ['4.3', '2.0', '4.0', '1.8', '5.7', 'nan']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_host_numeric(self):
@@ -151,15 +147,13 @@ class TestWebPandas(TestBase):
     def test_cols_port_all(self):
         df = self.df
         result = df.cols.port(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [None, None, None, None, None, None], ('date arrival', 'object'): [None, None, None, None, None, None], ('function(binary)', 'object'): [None, None, None, None, None, None], ('height(ft)', 'object'): [None, None, None, None, None, None], ('japanese name', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): [None, None, None, None, None, None], ('last position seen', 'object'): [None, None, None, None, None, None], ('rank', 'object'): [None, None, None, None, None, None], ('Cybertronian', 'object'): [None, None, None, None, None, None], ('Date Type', 'object'): [None, None, None, None, None, None], ('age', 'object'): [None, None, None, None, None, None], ('function', 'object'): [None, None, None, None, None, None], ('names', 'object'): [None, None, None, None, None, None], ('timestamp', 'object'): [None, None, None, None, None, None], ('weight(t)', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_port_multiple(self):
         df = self.df
         result = df.cols.port(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_port_numeric(self):
@@ -205,6 +199,83 @@ class TestWebPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
+    def test_cols_soundex_NoneType(self):
+        df = self.df.cols.select(['NullType'])
+        result = df.cols.soundex(cols=['NullType'])
+        expected = self.create_dataframe(dict={('NullType', 'object'): ['N500', 'N500', 'N500', 'N500', 'N500', 'N500']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_all(self):
+        df = self.df
+        result = df.cols.soundex(cols='*')
+        expected = self.create_dataframe(dict={('NullType', 'object'): ['N500', 'N500', 'N500', 'N500', 'N500', 'N500'], ('attributes', 'object'): ['[000', '[000', '[000', '[000', '[550', '[550'], ('date arrival', 'object'): ['1000', '1000', '1000', '1000', '1000', '1000'], ('function(binary)', 'object'): ['B361', 'B361', 'B361', 'B361', 'B361', 'B361'], ('height(ft)', 'object'): ['-000', '1000', '2000', '1000', 'N500', '3000'], ('japanese name', 'object'): ['[522', '[151', '[631', '[523', '[523', '[536'], ('last date seen', 'object'): ['2000', '2000', '2000', '2000', '2000', '2000'], ('last position seen', 'object'): ['1000', '1000', '3000', '3000', 'N500', 'N500'], ('rank', 'object'): ['1000', '7000', '7000', '8000', '1000', '8000'], ('Cybertronian', 'object'): ['T600', 'T600', 'T600', 'T600', 'T600', 'F420'], ('Date Type', 'object'): ['2000', '2000', '2000', '2000', '2000', '2000'], ('age', 'object'): ['5000', '5000', '5000', '5000', '5000', '5000'], ('function', 'object'): ['L360', 'E215', 'S263', 'F623', 'N500', 'B342'], ('names', 'object'): ['O135', 'B514', 'I653', 'J200', 'M236', 'M361'], ('timestamp', 'object'): ['2000', '2000', '2000', '2000', '2000', '2000'], ('weight(t)', 'object'): ['4000', '2000', '4000', '1000', '5000', 'N500']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_bool(self):
+        df = self.df.cols.select('Cybertronian')
+        result = df.cols.soundex(cols='Cybertronian')
+        expected = self.create_dataframe(dict={('Cybertronian', 'object'): ['T600', 'T600', 'T600', 'T600', 'T600', 'F420']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_bytearray(self):
+        df = self.df.cols.select('function(binary)')
+        result = df.cols.soundex(cols='function(binary)')
+        expected = self.create_dataframe(dict={('function(binary)', 'object'): ['B361', 'B361', 'B361', 'B361', 'B361', 'B361']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_datetime(self):
+        df = self.df.cols.select('last date seen')
+        result = df.cols.soundex(cols='last date seen')
+        expected = self.create_dataframe(dict={('last date seen', 'object'): ['2000', '2000', '2000', '2000', '2000', '2000']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_list(self):
+        df = self.df.cols.select('attributes')
+        result = df.cols.soundex(cols='attributes')
+        expected = self.create_dataframe(dict={('attributes', 'object'): ['[000', '[000', '[000', '[000', '[550', '[550']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_multiple(self):
+        df = self.df
+        result = df.cols.soundex(cols=['NullType', 'weight(t)', 'japanese name', 'timestamp', 'function', 'age',
+ 'Date Type', 'last position seen', 'date arrival'])
+        result = result.to_dict()
+        expected = {'NullType': ['N500', 'N500', 'N500', 'N500', 'N500', 'N500'],
+ 'attributes': [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]],
+ 'date arrival': ['1000', '1000', '1000', '1000', '1000', '1000'],
+ 'function(binary)': [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')],
+ 'height(ft)': [-28.0, 17.0, 26.0, 13.0, nan, 300.0],
+ 'japanese name': ['[522', '[151', '[631', '[523', '[523', '[536'],
+ 'last date seen': ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'],
+ 'last position seen': ['1000', '1000', '3000', '3000', 'N500', 'N500'],
+ 'rank': [10, 7, 7, 8, 10, 8],
+ 'Cybertronian': [True, True, True, True, True, False],
+ 'Date Type': ['2000', '2000', '2000', '2000', '2000', '2000'],
+ 'age': ['5000', '5000', '5000', '5000', '5000', '5000'],
+ 'function': ['L360', 'E215', 'S263', 'F623', 'N500', 'B342'],
+ 'names': ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'],
+ 'timestamp': ['2000', '2000', '2000', '2000', '2000', '2000'],
+ 'weight(t)': ['4000', '2000', '4000', '1000', '5000', 'N500']}
+        self.assertEqual(json_encoding(result), json_encoding(expected))
+    
+    def test_cols_soundex_numeric_float(self):
+        df = self.df.cols.select(['height(ft)'])
+        result = df.cols.soundex(cols=['height(ft)'])
+        expected = self.create_dataframe(dict={('height(ft)', 'object'): ['-000', '1000', '2000', '1000', 'N500', '3000']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_numeric_int(self):
+        df = self.df.cols.select(['rank'])
+        result = df.cols.soundex(cols=['rank'])
+        expected = self.create_dataframe(dict={('rank', 'object'): ['1000', '7000', '7000', '8000', '1000', '8000']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
+    def test_cols_soundex_string(self):
+        df = self.df.cols.select(['names'])
+        result = df.cols.soundex(cols=['names'])
+        expected = self.create_dataframe(dict={('names', 'object'): ['O135', 'B514', 'I653', 'J200', 'M236', 'M361']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+    
     def test_cols_strip_html(self):
         df = self.create_dataframe(dict={('strip_html_test', 'object'): ['<this is a test>', '<this> <is> <a> <test>', '<this> is a <test>', '<this is> a <test>', '<>this is a test<>', '>this is a test<']}, force_data_types=True)
         result = df.cols.strip_html(cols=['strip_html_test'])
@@ -248,60 +319,56 @@ class TestWebPandas(TestBase):
     def test_cols_sub_domain_all(self):
         df = self.df
         result = df.cols.sub_domain(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('attributes', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('date arrival', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('function(binary)', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('height(ft)', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('japanese name', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('last date seen', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('last position seen', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('rank', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('Cybertronian', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('Date Type', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('age', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('function', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('names', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('timestamp', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('weight(t)', 'object'): ['www', 'www', 'www', 'www', 'www', 'www']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_sub_domain_multiple(self):
         df = self.df
         result = df.cols.sub_domain(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): ['www', 'www', 'www', 'www', 'www', 'www'], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): ['www', 'www', 'www', 'www', 'www', 'www']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_sub_domain_numeric(self):
         df = self.df.cols.select(['height(ft)'])
         result = df.cols.sub_domain(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('height(ft)', 'object'): ['www', 'www', 'www', 'www', 'www', 'www']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_sub_domain_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.sub_domain(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): ['www', 'www', 'www', 'www', 'www', 'www']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_top_domain(self):
         df = self.create_dataframe(dict={('top_domain_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
  'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
         result = df.cols.top_domain(cols=['top_domain_test'])
-        expected = self.create_dataframe(dict={('top_domain_test', 'object'): ['com', None, 'com', 'com', 'com', 'com']}, force_data_types=True)
+        expected = self.create_dataframe(dict={('top_domain_test', 'object'): ['com', 'com', 'com', 'com', 'com', 'com']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_top_domain_all(self):
         df = self.df
         result = df.cols.top_domain(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('attributes', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('date arrival', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('function(binary)', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('height(ft)', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('japanese name', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('last date seen', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('last position seen', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('rank', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('Cybertronian', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('Date Type', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('age', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('function', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('names', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('timestamp', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('weight(t)', 'object'): ['com', 'com', 'com', 'com', 'com', 'com']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_top_domain_multiple(self):
         df = self.df
         result = df.cols.top_domain(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): ['com', 'com', 'com', 'com', 'com', 'com'], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): ['com', 'com', 'com', 'com', 'com', 'com']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_top_domain_numeric(self):
         df = self.df.cols.select(['height(ft)'])
         result = df.cols.top_domain(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('height(ft)', 'object'): ['com', 'com', 'com', 'com', 'com', 'com']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_top_domain_string(self):
         df = self.df.cols.select(['names'])
         result = df.cols.top_domain(cols=['names'],output_cols=['names_2'])
-        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): ['com', 'com', 'com', 'com', 'com', 'com']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_file(self):
@@ -314,15 +381,13 @@ class TestWebPandas(TestBase):
     def test_cols_url_file_all(self):
         df = self.df
         result = df.cols.url_file(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [None, None, None, None, None, None], ('date arrival', 'object'): ['10', '10', '10', '10', '10', '10'], ('function(binary)', 'object'): ["(b'Leader')", "(b'Espionage')", "(b'Security')", "(b'First Lieutenant')", "(b'None')", "(b'Battle Station')"], ('height(ft)', 'object'): [None, None, None, None, None, None], ('japanese name', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): ['10', '10', '10', '10', '10', '10'], ('last position seen', 'object'): [',-99.201111', ',-71.612534', ',-122.400356', ',-117.841553', None, None], ('rank', 'object'): [None, None, None, None, None, None], ('Cybertronian', 'object'): [None, None, None, None, None, None], ('Date Type', 'object'): [None, None, None, None, None, None], ('age', 'object'): [None, None, None, None, None, None], ('function', 'object'): [None, None, None, ' Lieutenant', None, ' Station'], ('names', 'object'): [None, None, '&', None, None, '_)^$'], ('timestamp', 'object'): [None, None, None, None, None, None], ('weight(t)', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_file_multiple(self):
         df = self.df
         result = df.cols.url_file(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_file_numeric(self):
@@ -347,15 +412,13 @@ class TestWebPandas(TestBase):
     def test_cols_url_fragment_all(self):
         df = self.df
         result = df.cols.url_fragment(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [None, None, None, None, None, None], ('date arrival', 'object'): [None, None, None, None, None, None], ('function(binary)', 'object'): [None, None, None, None, None, None], ('height(ft)', 'object'): [None, None, None, None, None, None], ('japanese name', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): [None, None, None, None, None, None], ('last position seen', 'object'): [None, None, None, None, None, None], ('rank', 'object'): [None, None, None, None, None, None], ('Cybertronian', 'object'): [None, None, None, None, None, None], ('Date Type', 'object'): [None, None, None, None, None, None], ('age', 'object'): [None, None, None, None, None, None], ('function', 'object'): [None, None, None, None, None, None], ('names', 'object'): [None, 'ebéé  ', None, None, None, None], ('timestamp', 'object'): [None, None, None, None, None, None], ('weight(t)', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_fragment_multiple(self):
         df = self.df
         result = df.cols.url_fragment(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_fragment_numeric(self):
@@ -380,15 +443,13 @@ class TestWebPandas(TestBase):
     def test_cols_url_path_all(self):
         df = self.df
         result = df.cols.url_path(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [None, None, None, None, None, None], ('date arrival', 'object'): ['/04/10', '/04/10', '/04/10', '/04/10', '/04/10', '/04/10'], ('function(binary)', 'object'): ["(b'Leader')", "(b'Espionage')", "(b'Security')", "(b'First Lieutenant')", "(b'None')", "(b'Battle Station')"], ('height(ft)', 'object'): [None, None, None, None, None, None], ('japanese name', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): ['/09/10', '/08/10', '/07/10', '/06/10', '/05/10', '/04/10'], ('last position seen', 'object'): [',-99.201111', ',-71.612534', ',-122.400356', ',-117.841553', None, None], ('rank', 'object'): [None, None, None, None, None, None], ('Cybertronian', 'object'): [None, None, None, None, None, None], ('Date Type', 'object'): [None, None, None, None, None, None], ('age', 'object'): [None, None, None, None, None, None], ('function', 'object'): [None, None, None, ' Lieutenant', None, ' Station'], ('names', 'object'): [None, None, '&', None, None, '_)^$'], ('timestamp', 'object'): [None, None, None, None, None, None], ('weight(t)', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_path_multiple(self):
         df = self.df
         result = df.cols.url_path(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_path_numeric(self):
@@ -413,15 +474,13 @@ class TestWebPandas(TestBase):
     def test_cols_url_scheme_all(self):
         df = self.df
         result = df.cols.url_scheme(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [None, None, None, None, None, None], ('date arrival', 'object'): [None, None, None, None, None, None], ('function(binary)', 'object'): [None, None, None, None, None, None], ('height(ft)', 'object'): [None, None, None, None, None, None], ('japanese name', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): [None, None, None, None, None, None], ('last position seen', 'object'): [None, None, None, None, None, None], ('rank', 'object'): [None, None, None, None, None, None], ('Cybertronian', 'object'): [None, None, None, None, None, None], ('Date Type', 'object'): [None, None, None, None, None, None], ('age', 'object'): [None, None, None, None, None, None], ('function', 'object'): [None, None, None, None, None, None], ('names', 'object'): [None, None, None, None, None, None], ('timestamp', 'object'): [None, None, None, None, None, None], ('weight(t)', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_scheme_multiple(self):
         df = self.df
         result = df.cols.url_scheme(cols=['NullType', 'weight(t)', 'japanese name'],output_cols=['nt', 'wt', 'jn'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): [None, None, None, None, None, None], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_scheme_numeric(self):
@@ -436,8 +495,30 @@ class TestWebPandas(TestBase):
         expected = self.create_dataframe(dict={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
+
 class TestWebDask(TestWebPandas):
     config = {'engine': 'dask', 'n_partitions': 1}
 
-class TestWebDask2(TestWebPandas):
+
+class TestWebPartitionDask(TestWebPandas):
     config = {'engine': 'dask', 'n_partitions': 2}
+
+
+class TestWebCUDF(TestWebPandas):
+    config = {'engine': 'cudf'}
+
+
+class TestWebDC(TestWebPandas):
+    config = {'engine': 'dask_cudf', 'n_partitions': 1}
+
+
+class TestWebPartitionDC(TestWebPandas):
+    config = {'engine': 'dask_cudf', 'n_partitions': 2}
+
+
+class TestWebSpark(TestWebPandas):
+    config = {'engine': 'spark'}
+
+
+class TestWebVaex(TestWebPandas):
+    config = {'engine': 'vaex'}

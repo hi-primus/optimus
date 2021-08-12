@@ -1,6 +1,7 @@
 from optimus.tests.base import TestBase
 
-class TestColsPandas(TestBase):
+
+class TestExamplePandas(TestBase):
     dict = {"A": [-1, 2, 3, -10, -1.5, 50]}
     load = {}  # {"type": "csv", "path": "foo.csv"} | {"path": "foo.csv"} | "foo.csv"
 
@@ -20,9 +21,44 @@ class TestColsPandas(TestBase):
         self.assertTrue(self.df.cols.abs().equals(expected_df))
 
 
+class TestExampleDask(TestExamplePandas):
+    config = {'engine': 'dask', 'n_partitions': 1}
 
-class TestColsDask(TestColsPandas):
-    config = {"engine": "dask", "n_partitions": 1}
 
-class TestColsPartitionDask(TestColsPandas):
-    config = {"engine": "dask", "n_partitions": 2}
+class TestExamplePartitionDask(TestExamplePandas):
+    config = {'engine': 'dask', 'n_partitions': 2}
+
+
+try:
+    import cudf
+except:
+    pass
+else:
+    class TestExampleCUDF(TestExamplePandas):
+        config = {'engine': 'cudf'}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestExampleDC(TestExamplePandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 1}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestExamplePartitionDC(TestExamplePandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 2}
+
+
+class TestExampleSpark(TestExamplePandas):
+    config = {'engine': 'spark'}
+
+
+class TestExampleVaex(TestExamplePandas):
+    config = {'engine': 'vaex'}

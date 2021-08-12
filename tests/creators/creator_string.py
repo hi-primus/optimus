@@ -5,7 +5,7 @@ sys.path.append("../..")
 
 def create():
     from optimus import Optimus
-    from optimus.tests.creator import TestCreator
+    from optimus.tests.creator import TestCreator, default_configs
 
     op = Optimus("pandas")
     df = op.create.dataframe({
@@ -27,13 +27,7 @@ def create():
         ('weight(t)', 'float'): [4.3, 2.0, 4.0, 1.8, 5.7, None]
     })
 
-    configs = {
-        "Pandas": {"engine": "pandas"},
-        "Dask": {"engine": "dask", "n_partitions": 1},
-        "Dask2": {"engine": "dask", "n_partitions": 2}
-    }
-
-    t = TestCreator(op, df, name="string", configs=configs)
+    t = TestCreator(op, df, name="string", configs=default_configs)
 
     df2 = df.cols.append(
         {"lower_test": ["ThIs iS A TEST", "ThIs", "iS", "a ", " TEST", "this is a test"]})
@@ -168,15 +162,15 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"expand_contrated_words_test": ["y'all ain't ready for this","i've been where you haven't","she'll do it before you","maybe it isn't so hard after all", "he mustn't cheat in school", "if you hadn't done that, we would've been free"]})
+        {"expand_contracted_words_test": ["y'all ain't ready for this","i've been where you haven't","she'll do it before you","maybe it isn't so hard after all", "he mustn't cheat in school", "if you hadn't done that, we would've been free"]})
 
-    t.create(df=df2, method="cols.expand_contrated_words", cols=["expand_contrated_words_test"], select_cols=True)
-    t.create(method="cols.expand_contrated_words", variant="all", cols="*")
-    t.create(method="cols.expand_contrated_words", variant="numeric",
+    t.create(df=df2, method="cols.expand_contracted_words", cols=["expand_contracted_words_test"], select_cols=True)
+    t.create(method="cols.expand_contracted_words", variant="all", cols="*")
+    t.create(method="cols.expand_contracted_words", variant="numeric",
              cols=["height(ft)"], select_cols=True)
-    t.create(method="cols.expand_contrated_words", variant="string", cols=[
+    t.create(method="cols.expand_contracted_words", variant="string", cols=[
              "function(binary)"], output_cols=["function(binary)_2"], select_cols=True)
-    t.create(method="cols.expand_contrated_words", variant="multiple", cols=[
+    t.create(method="cols.expand_contracted_words", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
@@ -217,7 +211,7 @@ def create():
 
     t.run()
 
-    t = TestCreator(op, df, name="web", configs=configs)
+    t = TestCreator(op, df, name="web", configs=default_configs)
 
     df2 = df.cols.append(
         {"email_username_test": ["an@example.com","thisisatest@gmail.com","somename@hotmail.com","an@outlook.com", "anexample@mail.com", "example@yahoo.com"]})

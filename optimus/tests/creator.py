@@ -109,10 +109,24 @@ class TestCreator:
 
         for name, config in list(classes.items())[1:]:
 
-            cls = f"\nclass Test{name}({base_class}):\n"
-            test_file.write(cls)
+            try_package = config.pop("try_package", None)
 
-            test_file.write("    config = " + pformat(config)+"\n")
+
+            test_file.write("\n\n")
+            extra_tab = ""
+            if try_package:
+                extra_tab = "    "
+                test_file.write("try:\n")
+                try_package = val_to_list(try_package)
+                for package in try_package:
+                    test_file.write(f"    import {package}\n")
+                test_file.write("except:\n")
+                test_file.write("    pass\n")
+                test_file.write("else:\n")
+                
+
+            test_file.write(f"{extra_tab}class Test{name}({base_class}):\n")
+            test_file.write(f"{extra_tab}    config = {pformat(config)}\n")
 
         test_file.close()
 
@@ -356,3 +370,14 @@ class TestCreator:
             os.remove(filename)
         except FileNotFoundError as e:
             warnings.warn(e)
+
+default_configs = {
+    "Pandas": {"engine": "pandas"},
+    "Dask": {"engine": "dask", "n_partitions": 1},
+    "PartitionDask": {"engine": "dask", "n_partitions": 2},
+    "CUDF": {"engine": "cudf", "try_package": "cudf"},
+    "DC": {"engine": "dask_cudf", "n_partitions": 1, "try_package": "dask_cudf"},
+    "PartitionDC": {"engine": "dask_cudf", "n_partitions": 2, "try_package": "dask_cudf"},
+    "Spark": {"engine": "spark"},
+    "Vaex": {"engine": "vaex"},
+}

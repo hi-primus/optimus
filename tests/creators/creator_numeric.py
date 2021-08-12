@@ -5,7 +5,7 @@ sys.path.append("../..")
 
 def create():
     from optimus import Optimus
-    from optimus.tests.creator import TestCreator
+    from optimus.tests.creator import TestCreator, default_configs
 
     op = Optimus("pandas")
     df = op.create.dataframe({
@@ -27,13 +27,7 @@ def create():
         ('weight(t)', 'float'): [4.3, 2.0, 4.0, 1.8, 5.7, None]
     })
 
-    configs = {
-        "Pandas": {"engine": "pandas"},
-        "Dask": {"engine": "dask", "n_partitions": 1},
-        "PartitionDask": {"engine": "dask", "n_partitions": 2}
-    }
-
-    t = TestCreator(op, df, name="numeric", configs=configs)
+    t = TestCreator(op, df, name="numeric", configs=default_configs)
 
     df2 = df.cols.append({"abs_test": [-1, "10", float("-inf"), float("nan"), 0, None]})  
 
@@ -178,7 +172,7 @@ def create():
 
     t.run()
 
-    t = TestCreator(op, df, name="trigonometric", configs=configs)
+    t = TestCreator(op, df, name="trigonometric", configs=default_configs)
 
     df2 = df.cols.append({"sin_test": [3.151592, None, 320, 0, float("-inf"), -10]})
 
@@ -278,7 +272,7 @@ def create():
 
     t.run()
 
-    t = TestCreator(op, df, name="math", configs=configs)
+    t = TestCreator(op, df, name="math", configs=default_configs)
 
     df2_cols = {"add_test1": [None, float("nan"), -9, 10.234, float("-inf"), -42],
                 "add_test2": [None, 1, 9, 703, float("inf"), -321]}

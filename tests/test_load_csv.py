@@ -19,7 +19,43 @@ class TestCSVPandas(TestBase):
         self.assertEqual(df.cols.names(), ["id","firstName","lastName","billingId","product","price","birth","dummyCol"])        
 
 class TestCSVDask(TestCSVPandas):
-    config = {"engine": "dask", "n_partitions": 1}
+    config = {'engine': 'dask', 'n_partitions': 1}
+
 
 class TestCSVPartitionDask(TestCSVPandas):
-    config = {"engine": "dask", "n_partitions": 2}
+    config = {'engine': 'dask', 'n_partitions': 2}
+
+
+try:
+    import cudf
+except:
+    pass
+else:
+    class TestCSVCUDF(TestCSVPandas):
+        config = {'engine': 'cudf'}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestCSVDC(TestCSVPandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 1}
+
+
+try:
+    import dask_cudf
+except:
+    pass
+else:
+    class TestCSVPartitionDC(TestCSVPandas):
+        config = {'engine': 'dask_cudf', 'n_partitions': 2}
+
+
+class TestCSVSpark(TestCSVPandas):
+    config = {'engine': 'spark'}
+
+
+class TestCSVVaex(TestCSVPandas):
+    config = {'engine': 'vaex'}
