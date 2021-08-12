@@ -9,14 +9,16 @@ from optimus.helpers.converter import pandas_to_dask_dataframe
 
 
 class DaskDataFrame(PandasBaseDataFrame, DaskBaseDataFrame):
-    def __init__(self, data):
+
+    @staticmethod
+    def _compatible_data(data):
         if isinstance(data, (pd.DataFrame, pd.Series)):
             data = pandas_to_dask_dataframe(data)
         
         if isinstance(data, dd.Series):
             data = data.to_frame()
-            
-        super().__init__(data)
+
+        return data
 
     def _base_to_dfd(self, pdf, n_partitions):
         return pandas_to_dask_dataframe(pdf, n_partitions)

@@ -45,6 +45,7 @@ class BaseDataFrame(ABC):
     """
 
     def __init__(self, data: 'InternalDataFrameType'):
+        data = self._compatible_data(data)
         self.data = data
         self.buffer = None
         self.updated = None
@@ -54,6 +55,10 @@ class BaseDataFrame(ABC):
         # .profile and .set are properties to support docstrings
         self.profile = BaseProfile(self)
         self.set = BaseSet(self)
+
+    @staticmethod
+    def _compatible_data(data):
+        return data
 
     def __del__(self):
         del self.data
