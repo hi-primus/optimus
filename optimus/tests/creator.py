@@ -109,8 +109,9 @@ class TestCreator:
 
         for name, config in list(classes.items())[1:]:
 
-            try_package = config.pop("try_package", None)
+            class_config = config.copy()
 
+            try_package = class_config.pop("try_package", None)
 
             test_file.write("\n\n")
             extra_tab = ""
@@ -126,7 +127,7 @@ class TestCreator:
                 
 
             test_file.write(f"{extra_tab}class Test{name}({base_class}):\n")
-            test_file.write(f"{extra_tab}    config = {pformat(config)}\n")
+            test_file.write(f"{extra_tab}    config = {pformat(class_config)}\n")
 
         test_file.close()
 
