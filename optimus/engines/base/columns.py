@@ -3842,7 +3842,7 @@ class BaseColumns(ABC):
 
         features = parse_columns(df, features)
 
-        df = df.cols.select(features).rows.drop_na()
+        df = df.cols.select(features).rows.drop_missings()
 
         X = df[features]._to_values().ravel()
         vectorizer = CountVectorizer(

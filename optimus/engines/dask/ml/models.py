@@ -28,7 +28,7 @@ class ML(BaseML):
         features = parse_columns(df, features)
         target = parse_columns(df, target)
 
-        df = df.cols.select(features + target).cols.to_float().rows.drop_na()
+        df = df.cols.select(features + target).cols.to_float().rows.drop_missings()
         X_train = df[features]._to_values()
         y_train = df[target]._to_values()
 
@@ -41,7 +41,7 @@ class ML(BaseML):
         features = parse_columns(df, features)
         target = parse_columns(df, target)
 
-        df = df.cols.select(features + target).cols.to_float().rows.drop_na()
+        df = df.cols.select(features + target).cols.to_float().rows.drop_missings()
         # LogisticRegression requires that the Dask Array passed to it has known chunk sizes
         # https://stackoverflow.com/questions/61756328/dusk-ml-logisticregression-throws-this-error-notimplementederror-can-not-add
         X_train = df[features]._to_values().compute_chunk_sizes()
@@ -53,7 +53,7 @@ class ML(BaseML):
         df = self.root
         k_means = KMeans(n_clusters=n_centers)
         features = parse_columns(df, features)
-        df = df.cols.select(features).cols.to_float().rows.drop_na()
+        df = df.cols.select(features).cols.to_float().rows.drop_missings()
         X_train = df[features]._to_values().compute_chunk_sizes()
         print(X_train)
         k_means.fit(X_train)
@@ -67,7 +67,7 @@ class ML(BaseML):
         df = self.root
         da_rf = RandomForestClassifier(*args, **kwargs)
 
-        df = df.cols.select(features + target).cols.to_float().rows.drop_na()
+        df = df.cols.select(features + target).cols.to_float().rows.drop_missings()
         # LogisticRegression requires that the Dask Array passed to it has known chunk sizes
         # https://stackoverflow.com/questions/61756328/dusk-ml-logisticregression-throws-this-error-notimplementederror-can-not-add
         X = df[features]._to_values().compute_chunk_sizes()
