@@ -37,9 +37,17 @@ class BaseCreate:
 
         return new_dict
 
+    @property
+    def _pd(self):
+        return pd
     
     def _dfd_from_dict(self, dict) -> 'InternalDataFrameType':
-        return pd.DataFrame({name: pd.Series(values, dtype=dtype if force_dtype else None) for (name, dtype, nulls, force_dtype), values in dict.items()})
+        pd_dict = {}
+        for (name, dtype, nulls, force_dtype), values in dict.items():
+            dtype = self.root.constants.COMPATIBLE_DTYPES.get(dtype, dtype) if force_dtype else None
+            pd_series = self._pd.Series(values, dtype=dtype)
+            pd_dict.update({name: pd_series})
+        return self._pd.DataFrame(pd_dict)
 
     @abstractmethod
     def _df_from_dfd(self, dfd, *args, **kwargs) -> 'DataFrameType':

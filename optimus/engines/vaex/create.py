@@ -17,6 +17,7 @@ class Create(BaseCreate):
         dfd = vaex.from_dict({name: values for (name, dtype, nulls, force_dtype), values in dict.items()})
         for (name, dtype, nulls, force_dtype) in dict.keys():
             if force_dtype:
+                dtype = self.root.constants.COMPATIBLE_DTYPES.get(dtype, dtype)
                 dfd[name] = dfd[name].astype(dtype)
         return dfd
 
