@@ -13,25 +13,21 @@ import pydateinfer
 import wordninja
 from dask import dataframe as dd
 from glom import glom
-
 from multipledispatch import dispatch
 from nltk import LancasterStemmer
-from nltk import ngrams
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import SnowballStemmer
 from num2words import num2words
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 # from optimus.engines.dask.functions import DaskFunctions as F
 from optimus.engines.base.meta import Meta
+from optimus.engines.base.stringclustering import Clusters
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     validate_columns_names, name_col
-from optimus.helpers.constants import Actions, CONTRACTIONS, PROFILER_CATEGORICAL_DTYPES, ProfilerDataTypes, RELATIVE_ERROR
-from optimus.helpers.types import *
-from optimus.engines.base.stringclustering import Clusters
+from optimus.helpers.constants import Actions, CONTRACTIONS, PROFILER_CATEGORICAL_DTYPES, ProfilerDataTypes, \
+    RELATIVE_ERROR
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import transform_date_format
@@ -126,7 +122,6 @@ class BaseColumns(ABC):
         :param stats:
         :return:
         """
-        #TODO:?
         cols = parse_columns(self.root, cols)
         actions = Meta.get(self.root.meta, "transformations.actions") or []
         stats = val_to_list(stats)
@@ -167,7 +162,8 @@ class BaseColumns(ABC):
         """
         return self.append(dfs)
 
-    def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None, key_middle=False) -> 'DataFrameType':
+    def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None,
+             key_middle=False) -> 'DataFrameType':
         """
         Same as df.join
         :param df_right:
@@ -300,6 +296,13 @@ class BaseColumns(ABC):
     @staticmethod
     @abstractmethod
     def to_timestamp(cols, date_format=None, output_cols=None):
+        """
+
+        :param cols:
+        :param date_format:
+        :param output_cols:
+        :return:
+        """
         pass
 
     def apply(self, cols="*", func=None, func_return_type=None, args=None, func_type=None, where=None,
@@ -397,13 +400,13 @@ class BaseColumns(ABC):
 
         mask = self.root.mask.match_data_type(cols, data_type)
 
-        return self.set(cols, func=func, args=args, where=mask)
+        return self.set(cols, value_func=func, args=args, where=mask)
 
-    def set(self, cols="*", value=None, where=None, args=None, default=None, eval_value=False):
+    def set(self, cols="*", value_func=None, where=None, args=None, default=None, eval_value=False):
         """
         Set a column value using a number, string or an expression.
         :param cols: columns to set or create
-        :param value: expression, function or value
+        :param value_func: expression, function or value
         :param where: mask or expression
         :param args: TODO:?
         :param default: In case a value
@@ -581,7 +584,7 @@ class BaseColumns(ABC):
 
     def inferred_types(self, cols="*"):
         """
-        Get the profiler data types from the meta data
+        Get the inferred data types from the meta data
         :param cols: "*", column name or list of column names to be processed.
         :return:
         """
@@ -595,51 +598,28 @@ class BaseColumns(ABC):
             result.update({col_name: column_meta})
         return result
 
-    @dispatch(str, str)
-    def set_data_type(self, column, data_type) -> 'DataFrameType':
-        """
-
-        :param column: TODO cols or column?
-        :param data_type:
-        :return:
-        """
-        return self.set_data_type({column: data_type}, False)
-
-    @dispatch(str, str, bool)
-    def set_data_type(self, column, data_type, categorical) -> 'DataFrameType':
-        """
-
-        :param column: TODO cols or column?
-        :param data_type:
-        :param categorical:
-        :return:
-        """
-        return self.set_data_type({column: {"data_type": data_type, "categorical": categorical}}, False)
-
-    @dispatch(dict)
-    def set_data_type(self, columns: dict) -> 'DataFrameType':
-        """
-
-        :param column: TODO cols or column?
-        :return:
-        """
-        return self.set_data_type(columns, False)
-
-    @dispatch(dict, bool)
-    def set_data_type(self, columns: dict, inferred=False) -> 'DataFrameType':
+    def set_data_type(self, cols: Union[str, list, dict] = "*", data_types: Union[str, list] = None,
+                      inferred: bool = False) -> 'DataFrameType':
         """
         Set profiler data type
-        :param columns: A dict with the form {"col_name": profiler datatype}
+        :param cols: A dict with the form {"col_name": profiler datatype}, a list of columns or a single column
+        :param data_types: If a string or a list passed to cols, uses this parameter to set the data types to those columns.
         :param inferred: Whether it was inferred or not
         :return:
         """
         df = self.root
 
-        for col_name, element in columns.items():
+        if is_list(cols) or is_str(cols):
+            cols = parse_columns(df, cols)
+            data_types = val_to_list(data_types)
+
+            cols = {col: data_type for col, data_type in zip(cols, data_types)}
+
+        for col_name, element in cols.items():
             props = element if is_dict(element) else {"data_type": element}
-            dtype = props["data_type"]
-            dtype = df.constants.INFERRED_DTYPES_ALIAS.get(dtype, dtype)
-            if dtype in ProfilerDataTypes.list():
+            data_type = props["data_type"]
+            data_type = df.constants.INFERRED_DTYPES_ALIAS.get(data_type, data_type)
+            if data_type in ProfilerDataTypes.list():
                 if not inferred:
                     df.meta = Meta.set(
                         df.meta, f"columns_data_types.{col_name}", props)
@@ -648,14 +628,14 @@ class BaseColumns(ABC):
                 df.meta = Meta.action(
                     df.meta, Actions.INFERRED_TYPE.value, col_name)
             else:
-                RaiseIt.value_error(dtype, ProfilerDataTypes.list())
+                RaiseIt.value_error(data_type, ProfilerDataTypes.list())
 
         return df
 
     def unset_data_type(self, cols="*"):
         """
-        Unset profiler data type
-        :param columns:
+        Unset user defined data type
+        :param cols:
         :return:
         """
         df = self.root
@@ -674,7 +654,7 @@ class BaseColumns(ABC):
     def cast(self, cols=None, data_type=None, output_cols=None, columns=None) -> 'DataFrameType':
         """
         NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
-        trnasformation like string to number in which should output nan.
+        transformation like string to number in which should output nan.
 
         is pendulum faster than pd.to_datatime
         We could use astype str and boolean
@@ -997,29 +977,10 @@ class BaseColumns(ABC):
             compact.setdefault(_col, []).append(_agg)
 
         df = df.groupby(by=by).agg(compact).reset_index()
-        agg_names = agg_names or [a[0]+"_"+a[1] for a in agg]
+        agg_names = agg_names or [a[0] + "_" + a[1] for a in agg]
         df.columns = (val_to_list(by) + agg_names)
         df.columns = [str(c) for c in df.columns]
         return self.root.new(df)
-
-    # def is_match(self, cols="*", data_type, invert=False):
-    #     """
-    #     Find the rows that match a data type
-    #     :param columns:
-    #     :param data_type: data type to match
-    #     :param invert: Invert the match
-    #     :return:
-    #     """
-    #     df = self.root
-    #     dfd = df.data
-    #     columns = parse_columns(df, columns)
-    #
-    #     f = inferred_type_func(data_type)
-    #     if f is not None:
-    #         for col_name in columns:
-    #             dfd = dfd[col_name].apply(f)
-    #             dfd = ~dfd if invert is True else dfd
-    #     return self.root.new(dfd)
 
     def move(self, column, position, ref_col=None) -> 'DataFrameType':
         """
@@ -1089,7 +1050,7 @@ class BaseColumns(ABC):
         """
         Sort data frames columns in asc or desc order
         :param order: 'asc' or 'desc' accepted
-        :param columns:
+        :param cols:
         :return: DataFrame
         """
         df = self.root
@@ -1815,6 +1776,12 @@ class BaseColumns(ABC):
             return df
 
     def infer_data_types(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+
+        :param cols:
+        :param output_cols:
+        :return:
+        """
         dtypes = self.root[cols].cols.data_types()
         return self.apply(cols, self.F.infer_data_types, args=(dtypes,), func_return_type=str,
                           output_cols=output_cols,
@@ -2452,8 +2419,9 @@ class BaseColumns(ABC):
         if strategy != "most_frequent":
             df = df.cols.to_float(cols)
 
-        return df.cols.apply(cols, "impute", output_cols=output_cols, args=(strategy, fill_value), meta_action=Actions.IMPUTE.value,
-                            mode="vectorized")
+        return df.cols.apply(cols, "impute", output_cols=output_cols, args=(strategy, fill_value),
+                             meta_action=Actions.IMPUTE.value,
+                             mode="vectorized")
 
     def fill_na(self, cols="*", value=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2874,11 +2842,12 @@ class BaseColumns(ABC):
 
     def infer_types(self, cols="*", sample=INFER_PROFILER_ROWS) -> dict:
         """
-        Infer datatypes in a dataframe from a sample. First it identify the data type of every value in every cell.
+        Infer data types in a dataframe from a sample. First it identify the data type of every value in every cell.
         After that it takes all ghe values apply som heuristic to try to better identify the datatype.
         This function use Pandas no matter the engine you are using.
 
         :param cols: "*", column name or list of column names to be processed.
+        :param sample:
         :return:Return a dict with the column and the inferred data type
         """
         df = self.root
@@ -2939,7 +2908,8 @@ class BaseColumns(ABC):
                     {"format": pydateinfer.infer(filtered_dates)})
 
         for col in cols_and_inferred_dtype:
-            self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type", cols_and_inferred_dtype[col])
+            self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type",
+                                      cols_and_inferred_dtype[col])
 
         return cols_and_inferred_dtype
 
@@ -3066,30 +3036,65 @@ class BaseColumns(ABC):
 
         return stats
 
-    def names(self, col_names="*", by_data_types=None, invert=False, is_regex=False) -> list:
+    def names(self, cols="*", data_types=None, invert=False, is_regex=False) -> list:
+        """
 
-        cols = parse_columns(self.root, col_names, filter_by_column_types=by_data_types, invert=invert,
-                             is_regex=is_regex)
+        :param cols:
+        :param data_types:
+        :param invert:
+        :param is_regex:
+        :return:
+        """
+
+        cols = parse_columns(self.root, cols, filter_by_column_types=data_types, invert=invert, is_regex=is_regex)
         return cols
 
     def count_zeros(self, cols="*", tidy=True, compute=True):
+        """
+
+        :param cols:
+        :param tidy:
+        :param compute:
+        :return:
+        """
         return self.count_equal(cols, 0, tidy)
         # df = self.root
         # return df.cols.agg_exprs(cols, self.F.count_zeros, tidy=tidy, compute=compute)
 
     def qcut(self, cols="*", quantiles=None, output_cols=None):
+        """
 
+        :param cols:
+        :param quantiles:
+        :param output_cols:
+        :return:
+        """
         return self.apply(cols, self.F.qcut, args=quantiles, output_cols=output_cols, meta_action=Actions.ABS.value,
                           mode="vectorized")
 
     def cut(self, cols="*", bins=None, labels=None, default=None, output_cols=None) -> 'DataFrameType':
+        """
 
+        :param cols:
+        :param bins:
+        :param labels:
+        :param default:
+        :param output_cols:
+        :return:
+        """
         return self.apply(cols, self.F.cut, output_cols=output_cols, args=(bins, labels, default),
                           meta_action=Actions.CUT.value,
                           mode="vectorized")
 
     def clip(self, cols="*", lower_bound=None, upper_bound=None, output_cols=None) -> 'DataFrameType':
+        """
 
+        :param cols:
+        :param lower_bound:
+        :param upper_bound:
+        :param output_cols:
+        :return:
+        """
         def _clip(value):
             return self.F.clip(value, lower_bound, upper_bound)
 
@@ -3109,7 +3114,7 @@ class BaseColumns(ABC):
 
     def domain(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        Return the domain from a url string. From https://www.hi-bumblebee.com it returns hi-bumblebee.com
+        Return the domainstring. From https://www.hi-bumblebee.com it returns hi-bumblebee.com
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
@@ -3120,7 +3125,7 @@ class BaseColumns(ABC):
 
     def top_domain(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        Return the top domain from a url string. From https://www.hi-bumblebee.com it returns hi-bumblebee.com
+        Return the top domain string. From https://www.hi-bumblebee.com it returns hi-bumblebee.com
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
@@ -3782,14 +3787,14 @@ class BaseColumns(ABC):
 
             for col, other_col in zip(cols, other_cols):
                 df = df.cols.apply(col, "levenshtein", args=(df.data[other_col],), func_return_type=str,
-                                output_cols=output_cols,
-                                meta_action=Actions.LEVENSHTEIN.value, mode="vectorized", func_type="column_expr")
+                                   output_cols=output_cols,
+                                   meta_action=Actions.LEVENSHTEIN.value, mode="vectorized", func_type="column_expr")
         else:
             value = val_to_list(value)
             for col, val in zip(cols, value):
                 df = df.cols.apply(col, "levenshtein", args=(val,), func_return_type=str,
-                                output_cols=output_cols,
-                                meta_action=Actions.LEVENSHTEIN.value, mode="vectorized", func_type="column_expr")
+                                   output_cols=output_cols,
+                                   meta_action=Actions.LEVENSHTEIN.value, mode="vectorized", func_type="column_expr")
 
         return df
 
