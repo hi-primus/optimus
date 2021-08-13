@@ -9,17 +9,6 @@ def save(self: DataFrame):
     class Save(BaseSave):
         @staticmethod
         def json(path, *args, **kwargs):
-            """
-            Save data frame in a json file
-            :param path: path where the spark will be saved.
-            :param mode: Specifies the behavior of the save operation when data already exists.
-                    "append": Append contents of this DataFrame to existing data.
-                    "overwrite" (default case): Overwrite existing data.
-                    "ignore": Silently ignore this operation if data already exists.
-                    "error": Throw an exception if data already exists.
-            :param num_partitions: the number of partitions of the DataFrame
-            :return:
-            """
             df = self
             try:
                 df.to_json(path, *args, **kwargs)
@@ -30,13 +19,6 @@ def save(self: DataFrame):
 
         @staticmethod
         def csv(path, mode="w", **kwargs):
-            """
-            Save data frame to a CSV file.
-            :param path: path where the spark will be saved.
-            :param mode: 'rb', 'wt', etc
-            it uses the default value.
-            :return: Dataframe in a CSV format in the specified path.
-            """
 
             try:
                 df = self
@@ -55,17 +37,6 @@ def save(self: DataFrame):
 
         @staticmethod
         def parquet(path, mode="overwrite", num_partitions=1):
-            """
-            Save data frame to a parquet file
-            :param path: path where the spark will be saved.
-            :param mode: Specifies the behavior of the save operation when data already exists.
-                        "append": Append contents of this DataFrame to existing data.
-                        "overwrite" (default case): Overwrite existing data.
-                        "ignore": Silently ignore this operation if data already exists.
-                        "error": Throw an exception if data already exists.
-            :param num_partitions: the number of partitions of the DataFrame
-            :return:
-            """
 
             # This character are invalid as column names by parquet
             invalid_character = [" ", ",", ";", "{", "}", "(", ")", "\n", "\t", "="]
