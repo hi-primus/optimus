@@ -1,12 +1,13 @@
-from optimus.infer import is_int_like
 import numpy as np
 import pandas as pd
-
 from fastnumbers import isintlike, isfloat, isreal, fast_int, fast_float
 
-class PandasBaseFunctions():
+from optimus.engines.base.functions import BaseFunctions
+from optimus.infer import is_int_like
 
-    
+
+class PandasBaseFunctions(BaseFunctions):
+
     def is_string(self, series):
         def _is_string(value):
             if isinstance(value, str):
@@ -16,17 +17,14 @@ class PandasBaseFunctions():
 
         return pd.Series(np.vectorize(_is_string)(series.values).flatten())
 
-
     def is_integer(self, series):
         return pd.Series(np.vectorize(isintlike)(series).flatten())
-
 
     def is_float(self, series):
         return pd.Series(np.vectorize(isfloat)(series).flatten())
 
-
     def is_numeric(self, series):
-        return pd.Series(np.vectorize(isreal)(series).flatten())\
+        return pd.Series(np.vectorize(isreal)(series).flatten())
 
     def to_integer(self, series, default=0):
         try:
@@ -62,4 +60,3 @@ class PandasBaseFunctions():
             return pd.to_datetime(value, errors="coerce")
         else:
             return pd.to_datetime(value, format=format, errors="coerce")
-   

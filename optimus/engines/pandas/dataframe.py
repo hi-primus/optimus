@@ -1,5 +1,5 @@
-from optimus.engines.base.pandas.dataframe import PandasBaseDataFrame
 from optimus.engines.base.dataframe.dataframe import DataFrameBaseDataFrame
+from optimus.engines.base.pandas.dataframe import PandasBaseDataFrame
 # from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.pandas.io.save import Save
 
@@ -66,12 +66,6 @@ class PandasDataFrame(PandasBaseDataFrame, DataFrameBaseDataFrame):
 
     def to_optimus_pandas(self):
         return self.root
-
-    # def to_optimus_dask(self):
-    #     df = self.root
-    #     dfd = DaskDataFrame(pandas_to_dask_dataframe(self.root.data))
-    #     dfd.meta = df.meta
-    #     return dfd
 
     def to_pandas(self):
         return self.root.data

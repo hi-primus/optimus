@@ -4,16 +4,6 @@ from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 import nltk
 
-# if importlib.util.find_spec("vaex") is not None:
-#     from vaex import DataFrame as VaexDataFrame
-#     # import pandas as pd
-#     from optimus.engines.vaex import rows, columns, extension, constants, functions
-#     from optimus.engines.vaex.io import save
-#
-#     VaexDataFrame.outliers = property(outliers)
-#     VaexDataFrame.meta = property(meta)
-#     VaexDataFrame.schema = [MetadataDask()]
-
 
 class Engine(Enum):
     PANDAS = "pandas"

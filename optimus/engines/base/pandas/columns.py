@@ -1,3 +1,3 @@
 
-class PandasBaseColumns():
+class PandasBaseColumns:
     pass

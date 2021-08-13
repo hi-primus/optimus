@@ -1,2 +1,2 @@
-class PandasBaseDataFrame():
+class PandasBaseDataFrame:
     pass
