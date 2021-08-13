@@ -17,12 +17,12 @@ from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 from pyspark.sql.functions import when
 
-from optimus.helpers.types import *
 import optimus.helpers.functions_spark
 from optimus import ROOT_DIR
+from optimus.engines.base.distributed.columns import DistributedBaseColumns
+from optimus.engines.base.meta import Meta
 # Helpers
 from optimus.engines.base.pandas.columns import PandasBaseColumns
-from optimus.engines.base.distributed.columns import DistributedBaseColumns
 from optimus.engines.spark.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.spark.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import has_, is_column_a, is_spark_dataframe
@@ -35,12 +35,10 @@ from optimus.helpers.functions \
     import filter_list, create_buckets
 from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_python_dtypes, parse_col_names_funcs_to_keys, \
-    compress_list
+from optimus.helpers.parser import parse_python_dtypes, compress_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.engines.spark.dataframe import SparkDataFrame
+from optimus.helpers.types import *
 from optimus.profiler.functions import fill_missing_var_types
-from optimus.engines.base.meta import Meta
 
 # Add the directory containing your module to the Python path (wants absolute paths)
 sys.path.append(os.path.abspath(ROOT_DIR))
@@ -53,7 +51,7 @@ from optimus.infer import is_, is_type, is_function, is_list_value, is_tuple, is
     is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int
 # from optimus.infer_spark import SPARK_DTYPES_TO_INFERRED, parse_spark_class_dtypes, is_list_of_spark_dataframes
 # NUMERIC_TYPES, NOT_ARRAY_TYPES, STRING_TYPES, ARRAY_TYPES
-from optimus.engines.spark.audf import abstract_udf as audf, filter_row_by_data_type as fbdt
+from optimus.engines.spark.audf import filter_row_by_data_type as fbdt
 
 # Functions
 
@@ -295,165 +293,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         df.meta = Meta.action(df.meta, None, Actions.SET.value, columns)
         return df
 
-    # TODO: Check if we must use * to select all the columns
-    @dispatch(object, object)
-    def rename(self, columns_old_new=None, func=None):
-        """"
-        Changes the name of a column(s) dataFrame.
-        :param columns_old_new: List of tuples. Each tuple has de following form: (oldColumnName, newColumnName).
-        :param func: can be lower, upper or any string transformation function
-        """
-
-        df = self.root
-        dfd = df.meta
-        meta = df.meta
-
-        # Apply a transformation function
-        if is_function(func):
-            exprs = [F.col(c).alias(func(c)) for c in df.columns]
-            df = df.select(exprs)
-
-        elif is_list_of_tuples(columns_old_new):
-            # Check that the 1st element in the tuple is a valid set of columns
-
-            validate_columns_names(self, columns_old_new)
-            for col_name in columns_old_new:
-                old_col_name = col_name[0]
-                new_col_name = col_name[1]
-
-                if is_str(old_col_name):
-                    dfd = dfd.withColumnRenamed(old_col_name, new_col_name)
-                elif is_int(old_col_name):
-                    old_col_name = self.schema.names[old_col_name]
-                    dfd = dfd.withColumnRenamed(old_col_name, new_col_name)
-
-                meta = Meta.action(meta, Actions.RENAME.value, (input_col, output_col))
-
-        return self.root.new(dfd, meta=meta)
-
-    # @dispatch(list)
-    # def rename(self, columns_old_new=None):
-    #     return self.rename(columns_old_new, None)
-    #
-    # @dispatch(object)
-    # def rename(func=None):
-    #     return Cols.rename(None, func)
-    #
-    # @dispatch(str, str, object)
-    # def rename(old_column, new_column, func=None):
-    #     return Cols.rename([(old_column, new_column)], func)
-    #
-    # @dispatch(str, str)
-    # def rename(old_column, new_column):
-    #     return Cols.rename([(old_column, new_column)], None)
-
-    # TODO: Maybe should be possible to cast and array of integer for example to array of double
-    def cast(self, input_cols="*", data_type=None, output_cols=None, columns=None):
-        """
-        Cast a column or a list of columns to a specific data type
-        :param input_cols: Columns names to be casted
-        :param output_cols:
-        :param dtype: final data type
-        :param columns: List of tuples of column names and types to be casted. This variable should have the
-                following structure:
-
-                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
-
-                The first parameter in each tuple is the column name, the second is the final datatype of column after
-                the transformation is made.
-        :return: Spark DataFrame
-        """
-        df = self.root
-        dfd = df.data
-        _dtype = []
-        # Parse params
-        if columns is None:
-            input_cols = parse_columns(df, input_cols)
-            if is_list_value(input_cols) or is_one_element(input_cols):
-
-                output_cols = get_output_cols(input_cols, output_cols)
-
-                for _ in builtins.range(0, len(input_cols)):
-                    _dtype.append(data_type)
-        else:
-
-            input_cols = list([c[0] for c in columns])
-            if len(columns[0]) == 2:
-                output_cols = get_output_cols(input_cols, output_cols)
-                _dtype = list([c[1] for c in columns])
-            elif len(columns[0]) == 3:
-                output_cols = list([c[1] for c in columns])
-                _dtype = list([c[2] for c in columns])
-
-            output_cols = get_output_cols(input_cols, output_cols)
-
-        # Helper function to return
-        def cast_factory(cls):
-
-            # Parse to Vector
-            if is_type(cls, Vectors):
-                _func_type = "udf"
-
-                def _cast_to(val, attr):
-                    return Vectors.dense(val)
-
-                _func_return_type = VectorUDT()
-            # Parse standard data types
-            elif parse_spark_class_dtypes(cls):
-
-                _func_type = "column_expr"
-
-                def _cast_to(col_name, attr):
-                    return F.col(col_name).cast(parse_spark_class_dtypes(cls))
-
-                _func_return_type = None
-
-            # Add here any other parse you want
-            else:
-                RaiseIt.value_error(cls)
-
-            return _func_return_type, _cast_to, _func_type
-
-        dfd = self
-
-        for input_col, output_col, data_type in zip(input_cols, output_cols, _dtype):
-            return_type, func, func_type = cast_factory(data_type)
-            dfd = self.apply(input_col, func, func_return_type=return_type, args=data_type, func_type=func_type,
-                             output_cols=output_col, meta_action=Actions.CAST.value)
-
-        return dfd
-
-    @staticmethod
-    def astype(*args, **kwargs):
-        """
-        Like pandas helper
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        return Cols.cast(*args, **kwargs)
-
-    def drop(self, columns=None, regex=None, data_type=None):
-        """
-        Drop a list of columns
-        :param columns: Columns to be dropped
-        :param regex: Regex expression to select the columns
-        :param data_type:
-        :return:
-        """
-        df = self.root
-        if regex:
-            r = re.compile(regex)
-            columns = [c for c in list(df.cols.names()) if re.match(r, c)]
-
-        columns = parse_columns(df, columns, filter_by_column_types=data_type)
-        check_column_numbers(columns, "*")
-
-        dfd = df.data.drop(*columns)
-
-        meta = Meta.action(df.meta, Actions.DROP.value, columns)
-        return self.root.new(dfd, meta=meta)
-
     def create_exprs(self, columns, funcs, *args, df=None):
         """
         Helper function to apply multiple columns expression to multiple columns
@@ -525,37 +364,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return r
 
-    def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True, df=None):
-        """
-        Create and run aggregation
-        :param columns:
-        :param funcs:
-        :param args:
-        :param compute:
-        :param tidy:
-        :return:
-        """
-
-        return format_dict(self.exec_agg(self.create_exprs(columns, funcs, *args, df=df)), tidy=tidy)
-
-    def exec_agg(self, exprs):
-        """
-        Execute an aggregation function
-        :param exprs:
-        :return:
-        """
-        df = self.root
-        if len(exprs) > 0:
-            dfd = df.data.agg(*exprs)
-            df = SparkDataFrame(dfd, op=self.op)
-            result = parse_col_names_funcs_to_keys(df.to_dict())
-        else:
-            result = None
-
-        return result
-
-        # Quantile statistics
-
     @staticmethod
     def range(columns):
         """
@@ -565,29 +373,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         """
 
         return Cols.agg_exprs(columns, self.root.functions.range_agg)
-
-    @staticmethod
-    def median(columns, relative_error=RELATIVE_ERROR):
-        """
-        Return the median of a column dataframe
-        :param columns: '*', list of columns names or a single column name.
-        :param relative_error: If set to zero, the exact median is computed, which could be very expensive. 0 to 1 accepted
-        :return:
-        """
-
-        return format_dict(self.root.functions.percentile(columns, [0.5], relative_error))
-
-    # @staticmethod
-    # def percentile(columns, values=None, relative_error=RELATIVE_ERROR):
-    #     """
-    #     Return the percentile of a dataframe
-    #     :param columns:  '*', list of columns names or a single column name.
-    #     :param values: list of percentiles to be calculated
-    #     :param relative_error:  If set to zero, the exact percentiles are computed, which could be very expensive.
-    #     :return: percentiles per columns
-    #     """
-    #     values = [str(v) for v in values]
-    #     return Cols.agg_exprs(columns, self.root.functions.percentile, self.root, values, relative_error)
 
     # Descriptive Analytics
     @staticmethod
@@ -621,57 +406,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return format_dict(result)
 
-    def std(self, columns="*", tidy=True, compute=True):
-        """
-        Return the standard deviation of a column dataframe
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-        check_column_numbers(columns, "*")
-
-        return format_dict(Cols.agg_exprs(columns, F.stddev))
-
-    @staticmethod
-    def kurtosis(columns):
-        """
-        Return the kurtosis of a column dataframe
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        columns = parse_columns(
-            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        return format_dict(Cols.agg_exprs(columns, F.kurtosis))
-
-    @staticmethod
-    def mean(columns):
-        """
-        Return the mean of a column dataframe
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        columns = parse_columns(
-            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        return format_dict(Cols.agg_exprs(columns, F.mean))
-
-    @staticmethod
-    def skewness(columns):
-        """
-        Return the skewness of a column dataframe
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        columns = parse_columns(
-            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        return format_dict(Cols.agg_exprs(columns, F.skewness))
-
     @staticmethod
     def sum(columns):
         """
@@ -686,37 +420,8 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         return format_dict(Cols.agg_exprs(columns, F.sum))
 
     @staticmethod
-    def variance(columns):
-        """
-        Return the column variance
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        columns = parse_columns(
-            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        return format_dict(Cols.agg_exprs(columns, F.variance))
-
-    @staticmethod
-    def abs(columns):
-        """
-        Apply abs to the values in a column
-        :param columns:
-        :return:
-        """
-        # TODO: make this in one pass.
-        df = self.root
-
-        columns = parse_columns(
-            df, columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-        # Abs not accepts column's string names. Convert to Spark Column
-
-        for col_name in columns:
-            df = df.withColumn(col_name, F.abs(F.col(col_name)))
-        return df
-        # return Cols.agg_exprs(columns, abs_agg)
+    def reverse(columns):
+        pass
 
     @staticmethod
     def mode(columns):
@@ -747,39 +452,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         return format_dict(mode_result)
 
     # String Operations
-
-    @staticmethod
-    def trim(input_cols, output_cols=None):
-        """
-        Trim the string in a column
-        :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :return:
-        """
-
-        def _trim(col_name, args):
-            return F.trim(F.col(col_name))
-
-        return Cols.apply(input_cols, _trim, filter_col_by_dtypes=self.root.constants.NOT_ARRAY_TYPES,
-                          output_cols=output_cols,
-                          meta_action=Actions.TRIM.value)
-
-    @staticmethod
-    def reverse(input_cols, output_cols=None):
-        """
-        Reverse the order of all the string in a column
-        :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :return:
-        """
-
-        def _reverse(col, args):
-            return F.reverse(F.col(col))
-
-        df = Cols.apply_expr(input_cols, _reverse, filter_col_by_dtypes="string", output_cols=output_cols,
-                             meta=Actions.REVERSE.value)
-
-        return df
 
     def remove(self, columns, search=None, search_by="chars", output_cols=None):
         """
@@ -1139,19 +811,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return format_dict(Cols.agg_exprs(columns, self.root.functions.zeros_agg))
 
-    def count_uniques(self, columns, estimate=True, tidy=True, compute=True):
-        """
-        Return how many unique items exist in a columns
-        :param columns: '*', list of columns names or a single column name.
-        :param estimate: If true use HyperLogLog to estimate distinct count. If False use full distinct
-        :type estimate: bool
-        :return:
-        """
-        columns = parse_columns(self.root, columns)
-        df = self.root
-        # result = df.cols.agg_exprs(columns, self.F.hist_agg, buckets, None, df=self.root)
-        result = df.cols.agg_exprs(columns, self.root.functions.count_uniques_agg, estimate)
-        return {"count_uniques": result}
 
     @staticmethod
     def unique(columns):
@@ -1169,15 +828,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             result.update(compress_list(self.select(col_name).distinct().to_dict()))
         return result
 
-    @staticmethod
-    def count_unique(*args, **kwargs):
-        """
-        Just a pandas compatible shortcut for count uniques
-        :param args:
-        :param kwargs:
-        :return:
-        """
-        return self.root.functions.count_uniques(*args, **kwargs)
 
     # Stats
     @staticmethod
@@ -1611,7 +1261,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
             return {"frequency": result}
 
-
     def correlation(self, input_cols, method="pearson", output="json"):
         """
         Calculate the correlation between columns. It will try to cast a column to float where necessary and impute
@@ -1682,29 +1331,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         columns = parse_columns(df, columns)
         return format_dict([df.data.schema[col_name].dataType for col_name in columns])
 
-    # @staticmethod
-    # def data_types(columns="*"):
-    #     """
-    #     Return the column(s) data type as string
-    #     :param columns: Columns to be processed
-    #     :return:
-    #     """
-    #
-    #     columns = parse_columns(self, columns)
-    #     data_types = tuple_to_dict(self.data_types)
-    #     return {col_name: data_types[col_name] for col_name in columns}
 
-    # @staticmethod
-    # def names(col_names="*", by_data_types=None, invert=False):
-    #     """
-    #     Get columns names
-    #     :param col_names: Columns names to be processed '*' for all or a list of column names
-    #     :param by_data_types: Data type used to select the columns
-    #     :param invert: Invert the columns selection
-    #     :return:
-    #     """
-    #     columns = parse_columns(self, col_names, filter_by_column_types=by_data_types, invert=invert)
-    #     return columns
 
     def qcut(self, columns, quantiles, handle_invalid="skip"):
         """
