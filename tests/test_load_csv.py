@@ -27,7 +27,7 @@ class TestCSVPartitionDask(TestCSVPandas):
 
 
 try:
-    import cudf
+    import cudf # pyright: reportMissingImports=false
 except:
     pass
 else:
@@ -36,7 +36,7 @@ else:
 
 
 try:
-    import dask_cudf
+    import dask_cudf # pyright: reportMissingImports=false
 except:
     pass
 else:
@@ -45,7 +45,7 @@ else:
 
 
 try:
-    import dask_cudf
+    import dask_cudf # pyright: reportMissingImports=false
 except:
     pass
 else:

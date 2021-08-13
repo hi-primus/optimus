@@ -120,7 +120,7 @@ class TestCreator:
                 test_file.write("try:\n")
                 try_package = val_to_list(try_package)
                 for package in try_package:
-                    test_file.write(f"    import {package}\n")
+                    test_file.write(f"    import {package} # pyright: reportMissingImports=false\n")
                 test_file.write("except:\n")
                 test_file.write("    pass\n")
                 test_file.write("else:\n")
