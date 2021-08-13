@@ -30,13 +30,13 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     logger.print("ENGINE", engine)
 
     # lemmatizer
-    nltk.download('wordnet', quiet= True)
+    nltk.download('wordnet', quiet=True)
 
     # Stopwords
     nltk.download('stopwords', quiet=True)
 
     # POS
-    nltk.download('averaged_perceptron_tagger')
+    nltk.download('averaged_perceptron_tagger', quiet=True)
 
     # Init engine
     if engine == Engine.PANDAS.value:
