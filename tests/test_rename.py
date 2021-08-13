@@ -40,7 +40,6 @@ class TestRenamePandas(TestBase):
         self.assertEquals(result, expected)
         self.assertEquals(result_2, expected)
         self.assertEquals(result_3, expected)
-        df.cols.rename("zoobat")
 
 
 class TestRenameDask(TestRenamePandas):
