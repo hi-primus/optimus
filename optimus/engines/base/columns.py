@@ -421,11 +421,11 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols) if cols == "*" else cols
 
         cols = val_to_list(cols)
-        values = val_to_list(value, allow_none=True)
+        values = val_to_list(value_func, allow_none=True)
         eval_values = val_to_list(eval_value, allow_none=True)
 
         if len(cols) > len(values):
-            values = [value] * len(cols)
+            values = [value_func] * len(cols)
 
         if len(cols) > len(eval_values):
             eval_values = [eval_value] * len(cols)
