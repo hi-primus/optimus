@@ -10,8 +10,8 @@ from ast import literal_eval
 import fastnumbers
 import pandas as pd
 import pendulum
-from dask import distributed
-from dask.dataframe.core import DataFrame as DaskDataFrame
+
+
 
 # This function return True or False if a string can be converted to any datatype.
 from optimus.helpers.constants import CURRENCIES
@@ -396,6 +396,7 @@ def is_list_of_dask_dataframes(value):
     :param value:
     :return:
     """
+    from dask.dataframe.core import DataFrame as DaskDataFrame
     return isinstance(value, list) and all(isinstance(elem, DaskDataFrame) for elem in value)
 
 
@@ -548,22 +549,24 @@ def is_object_value(value):
     return isinstance(value, object)
 
 
-def is_list_of_futures(value):
+def is_list_of_dask_futures(value):
     """
     Check if an object is a list of strings
     :param value:
     :return:
     """
+    from dask import distributed
     return bool(value) and isinstance(value, list) and all(
         isinstance(elem, distributed.client.Future) for elem in value)
 
 
-def is_future(value):
+def is_dask_future(value):
     """
     Check if an object is a list of strings
     :param value:
     :return:
     """
+    from dask import distributed
     return isinstance(value, distributed.client.Future)
 
 

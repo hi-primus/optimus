@@ -4,7 +4,7 @@ import os
 import pprint
 from io import BytesIO
 
-from IPython.core.display import display, HTML
+
 from matplotlib import pyplot as plt
 
 from optimus.infer import is_str
@@ -45,6 +45,7 @@ def print_html(html):
     :param html: html code to be printed
     :return:
     """
+    from IPython.core.display import display, HTML
     try:
         if "DATABRICKS_RUNTIME_VERSION" in os.environ:
             displayHTML(result)
