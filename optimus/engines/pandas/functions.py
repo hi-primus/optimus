@@ -88,11 +88,7 @@ class PandasFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
 
     def ceil(self, series):
         return np.ceil(self.to_float(series))
-
-    def replace_chars(self, series, search, replace_by):
-        search = list(map(re.escape, search))
-        return self.to_string(series).replace(search, replace_by, regex=True)
-
+        
     def normalize_chars(self, series):
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
 

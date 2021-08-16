@@ -98,10 +98,6 @@ class CUDFFunctions(CUDFBaseFunctions, DataFrameBaseFunctions):
     def cut(self, bins):
         raise NotImplementedError("Not implemented yet https://github.com/rapidsai/cudf/issues/5589")
 
-    def replace_chars(self, series, search, replace_by):
-        replace_by = val_to_list(replace_by)
-        return self.to_string_accessor(series).replace(search, replace_by, regex=False)
-
     def normalize_chars(self, series):
         if not series.isnull().all():
             return self.to_string_accessor(series).normalize_characters()

@@ -121,7 +121,7 @@ class IbisFunctions(BaseFunctions):
         series = self.series
         return series.to_float(series).cut(bins, include_lowest=True, labels=list(range(bins)))
 
-    def replace_chars(self, search, replace_by):
+    def replace_chars(self, search, replace_by, ignore_case):
         series = self.series
         # if ignore_case is True:
         #     # Cudf do not accept re.compile as argument for replace

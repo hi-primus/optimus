@@ -416,25 +416,32 @@ class BaseFunctions(ABC):
     def strip_html(self, value):
         return re.sub('<.*?>', '', value)
 
-    @staticmethod
-    @abstractmethod
-    def replace_chars(series, search, replace_by):
-        pass
-
-    def replace_words(self, series, search, replace_by):
-        search = val_to_list(search)
-        str_regex = [r'\b%s\b' % re.escape(s) for s in search]
-        # str_regex = (r'\b%s\b' % r'\b|\b'.join(map(re.escape, search)))
+    def replace_chars(self, series, search, replace_by, ignore_case):
+        search = val_to_list(search, convert_tuple=True)
+        if ignore_case:
+            str_regex = [r'(?i)%s' % re.escape(s) for s in search]
+        else:
+            str_regex = [r'%s' % re.escape(s) for s in search]
         return self.to_string(series).replace(str_regex, replace_by, regex=True)
 
-    def replace_full(self, series, search, replace_by):
-        search = val_to_list(search)
-        str_regex = [r'^%s$' % re.escape(s) for s in search]
-        # str_regex = (r'^%s$' % r'$|^'.join(map(re.escape, search)))
+    def replace_words(self, series, search, replace_by, ignore_case):
+        search = val_to_list(search, convert_tuple=True)
+        if ignore_case:
+            str_regex = [r'(?i)\b%s\b' % re.escape(s) for s in search]
+        else:
+            str_regex = [r'\b%s\b' % re.escape(s) for s in search]
+        return self.to_string(series).replace(str_regex, replace_by, regex=True)
+
+    def replace_full(self, series, search, replace_by, ignore_case):
+        search = val_to_list(search, convert_tuple=True)
+        if ignore_case:
+            str_regex = [r'(?i)^%s$' % re.escape(s) for s in search]
+        else:
+            str_regex = [r'^%s$' % re.escape(s) for s in search]
         return series.replace(str_regex, replace_by, regex=True)
 
-    def replace_values(self, series, search, replace_by):
-        search = val_to_list(search)
+    def replace_values(self, series, search, replace_by, ignore_case):
+        search = val_to_list(search, convert_tuple=True)
 
         if is_list(replace_by) and is_list_of_list(search):
             for _s, _r in zip(search, replace_by):

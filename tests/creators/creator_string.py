@@ -162,7 +162,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"expand_contracted_words_test": ["y'all ain't ready for this","i've been where you haven't","she'll do it before you","maybe it isn't so hard after all", "he mustn't cheat in school", "if you hadn't done that, we would've been free"]})
+        {"expand_contracted_words_test": ["y'all ain't ready for this","i've been where you haven't","SHE'LL DO IT BEFORE YOU","maybe it isn't so hard after all", "he mustn't cheat in school", "IF YOU HADN'T DONE THAT, WE WOULD'VE BEEN FREE"]})
 
     t.create(df=df2, method="cols.expand_contracted_words", cols=["expand_contracted_words_test"], select_cols=True)
     t.create(method="cols.expand_contracted_words", variant="all", cols="*")

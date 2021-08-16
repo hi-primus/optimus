@@ -80,25 +80,32 @@ class DaskBaseFunctions(DistributedBaseFunctions):
         dfd = MinMaxScaler().fit_transform(self.to_float(series).to_frame())
         return dfd[dfd.columns[0]]
 
-    def replace_chars(self, series, search, replace_by):
-        regex=False
+    def _replace_chars(self, series, search, replace_by, ignore_case, is_regex=False):
+
+        regex = is_regex
         replace_by = val_to_list(replace_by)
+
         if len(search) == 1:
             _search = search[0]
         else:
-            regex=True
-            _search = ('|'.join(map(re.escape, search)))
+            regex = True
+            if is_regex:
+                _search = '|'.join(search)
+            else:
+                _search = '|'.join(map(re.escape, search))
         
         if len(replace_by) <= 1:
             _r = replace_by[0]
         else:
-            regex=True
+            regex = True
             _map = {s: r for s, r in zip(search, replace_by)}
             def _r(value):
                 return _map.get(value[0], "ERROR")
 
-        series = self.to_string_accessor(series).replace(_search, _r, regex=regex)
-        return series
+        return self.to_string_accessor(series).replace(_search, _r, regex=regex, case=not ignore_case)
+
+    def replace_chars(self, series, search, replace_by, ignore_case):
+        return self._replace_chars(series, search, replace_by, ignore_case, is_regex=False)
 
     def domain(self, series):
         import url_parser

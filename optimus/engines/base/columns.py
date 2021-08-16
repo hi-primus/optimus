@@ -1921,8 +1921,8 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        i, j = zip(*CONTRACTIONS)
-        df = self.replace(cols, i, j, search_by="words", output_cols=output_cols)
+        search, replace_by = zip(*CONTRACTIONS)
+        df = self.replace(cols, search, replace_by, search_by="words", ignore_case=True, output_cols=output_cols)
         return df
 
     @staticmethod
@@ -2261,8 +2261,8 @@ class BaseColumns(ABC):
             search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
-            search = val_to_list(search)
-            replace_by = val_to_list(replace_by)
+            search = val_to_list(search, convert_tuple=True)
+            replace_by = val_to_list(replace_by, convert_tuple=True)
             if len(replace_by) == 1:
                 replace_by = replace_by[0]
             df = df.cols._replace(cols, search, replace_by,
@@ -2283,7 +2283,7 @@ class BaseColumns(ABC):
         :return: DataFrame
         """
 
-        search = val_to_list(search)
+        search = val_to_list(search, convert_tuple=True)
         replace_by = one_list_to_val(replace_by)
 
         if search_by == "full" and (not is_list_of_str(search) or not is_list_of_str(replace_by)):
@@ -2305,10 +2305,7 @@ class BaseColumns(ABC):
             RaiseIt.value_error(
                 search_by, ["chars", "words", "full", "values"])
 
-        # Cudf raise and exception if both param are not the same type
-        # For example [] ValueError: Cannot convert value of type list  to cudf scalar
-
-        return self.apply(cols, func, args=(search, replace_by), func_return_type=func_return_type,
+        return self.apply(cols, func, args=(search, replace_by, ignore_case), func_return_type=func_return_type,
                           output_cols=output_cols, meta_action=Actions.REPLACE.value, mode="vectorized")
 
     @staticmethod

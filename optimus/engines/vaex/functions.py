@@ -113,7 +113,7 @@ class VaexFunctions(BaseFunctions):
         pass
 
     @staticmethod
-    def replace_chars(series, search, replace_by):
+    def replace_chars(series, search, replace_by, ignore_case):
         pass
 
     @staticmethod
