@@ -72,9 +72,9 @@ class TestStringPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_lemmatize_verbs(self):
-        df = self.create_dataframe(dict={('lemmatize_verbs_test', 'object'): ['the players are tired', 'feet and teeth sound simliar', 'its us against the world', 'these are tests', 'we are the world', 'discoveries come very often nowadays']}, force_data_types=True)
+        df = self.create_dataframe(dict={('lemmatize_verbs_test', 'object'): ['the players are tired of studying', 'feet and teeth sound simliar', 'it is us connected against the world', 'leave it alone', 'living in the world', 'I am aware that discoveries come very often nowadays']}, force_data_types=True)
         result = df.cols.lemmatize_verbs(cols=['lemmatize_verbs_test'])
-        expected = self.create_dataframe(dict={('lemmatize_verbs_test', 'object'): ['the player are tired', 'foot and teeth sound simliar', 'it u against the world', 'these are test', 'we are the world', 'discovery come very often nowadays']}, force_data_types=True)
+        expected = self.create_dataframe(dict={('lemmatize_verbs_test', 'object'): ['the players be tire of study', 'feet and teeth sound simliar', 'it be us connect against the world', 'leave it alone', 'live in the world', 'I be aware that discoveries come very often nowadays']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_lemmatize_verbs_all(self):

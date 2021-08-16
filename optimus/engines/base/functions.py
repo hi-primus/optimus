@@ -274,15 +274,15 @@ class BaseFunctions(ABC):
     def exp(self, series):
         return self.to_float(series).exp()
 
-    def lemmatize_text(self, series):
+    def lemmatize_verbs(self, series):
         import nltk
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
         lemmatizer = nltk.stem.WordNetLemmatizer()
 
-        def lemmatize_text_map(text):
-            return " ".join([lemmatizer.lemmatize(w) for w in w_tokenizer.tokenize(text)])
+        def lemmatize_verbs_map(text):
+            return " ".join([lemmatizer.lemmatize(w, 'v') for w in w_tokenizer.tokenize(text)])
 
-        return self.to_string(series).map(lemmatize_text_map, na_action=None)
+        return self.to_string(series).map(lemmatize_verbs_map, na_action=None)
 
     @abstractmethod
     def word_tokenize(self, series):

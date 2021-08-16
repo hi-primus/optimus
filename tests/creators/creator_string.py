@@ -174,7 +174,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"lemmatize_verbs_test": ["the players are tired","feet and teeth sound simliar","its us against the world","these are tests", "we are the world", "discoveries come very often nowadays"]})
+        {"lemmatize_verbs_test": ["the players are tired of studying", "feet and teeth sound simliar", "it is us connected against the world", "leave it alone", "living in the world", "I am aware that discoveries come very often nowadays"]})
 
     t.create(df=df2, method="cols.lemmatize_verbs", cols=["lemmatize_verbs_test"], select_cols=True)
     t.create(method="cols.lemmatize_verbs", variant="all", cols="*")
