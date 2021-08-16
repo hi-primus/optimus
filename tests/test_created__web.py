@@ -12,8 +12,7 @@ class TestWebPandas(TestBase):
     maxDiff = None
     
     def test_cols_domain(self):
-        df = self.create_dataframe(dict={('domain_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('domain_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.domain(cols=['domain_test'])
         expected = self.create_dataframe(dict={('domain_test', 'object'): ['github', 'github', 'hi-example', 'hi-optimus', 'computerhope', 'google']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
@@ -107,8 +106,7 @@ class TestWebPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_host(self):
-        df = self.create_dataframe(dict={('host_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('host_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.host(cols=['host_test'])
         expected = self.create_dataframe(dict={('host_test', 'object'): ['github.com', 'localhost', 'www.images.hi-example.com', 'hi-optimus.com', 'www.computerhope.com', 'www.google.com']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
@@ -138,8 +136,7 @@ class TestWebPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_port(self):
-        df = self.create_dataframe(dict={('port_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('port_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.port(cols=['port_test'])
         expected = self.create_dataframe(dict={('port_test', 'object'): [None, '3000', '54', None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
@@ -169,8 +166,7 @@ class TestWebPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_remove_urls(self):
-        df = self.create_dataframe(dict={('remove_urls_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('remove_urls_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.remove_urls(cols=['remove_urls_test'])
         expected = self.create_dataframe(dict={('remove_urls_test', 'object'): ['', 'localhost:3000?help=true', '', 'hi-optimus.com', '', '']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
@@ -233,8 +229,7 @@ class TestWebPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_sub_domain(self):
-        df = self.create_dataframe(dict={('sub_domain_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('sub_domain_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.sub_domain(cols=['sub_domain_test'])
         expected = self.create_dataframe(dict={('sub_domain_test', 'object'): [None, None, 'www.images', None, 'www', 'www']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
@@ -264,8 +259,7 @@ class TestWebPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_top_domain(self):
-        df = self.create_dataframe(dict={('top_domain_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('top_domain_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.top_domain(cols=['top_domain_test'])
         expected = self.create_dataframe(dict={('top_domain_test', 'object'): ['com', 'com', 'com', 'com', 'com', 'com']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
@@ -295,8 +289,7 @@ class TestWebPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_file(self):
-        df = self.create_dataframe(dict={('url_file_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('url_file_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.url_file(cols=['url_file_test'])
         expected = self.create_dataframe(dict={('url_file_test', 'object'): ['optimus', None, 'images.php', None, 'search.cgi', 'search']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
@@ -326,8 +319,7 @@ class TestWebPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_fragment(self):
-        df = self.create_dataframe(dict={('url_fragment_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('url_fragment_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.url_fragment(cols=['url_fragment_test'])
         expected = self.create_dataframe(dict={('url_fragment_test', 'object'): [None, None, 'id', None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
@@ -357,8 +349,7 @@ class TestWebPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_path(self):
-        df = self.create_dataframe(dict={('url_path_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('url_path_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.url_path(cols=['url_path_test'])
         expected = self.create_dataframe(dict={('url_path_test', 'object'): ['/hi-primus/optimus', None, '/images.php', None, '/cgi-bin/search.cgi', '/search']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
@@ -388,8 +379,7 @@ class TestWebPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
     
     def test_cols_url_scheme(self):
-        df = self.create_dataframe(dict={('url_scheme_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test',
- 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5']}, force_data_types=True)
+        df = self.create_dataframe(dict={('url_scheme_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
         result = df.cols.url_scheme(cols=['url_scheme_test'])
         expected = self.create_dataframe(dict={('url_scheme_test', 'object'): ['https', None, 'http', None, 'https', 'https']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))

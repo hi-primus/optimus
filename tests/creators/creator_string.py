@@ -250,7 +250,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"remove_urls_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"remove_urls_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.remove_urls", cols=["remove_urls_test"], select_cols=True)
     t.create(method="cols.remove_urls", variant="all", cols="*")
@@ -262,7 +262,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"domain_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"domain_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.domain", cols=["domain_test"], select_cols=True)
     t.create(method="cols.domain", variant="all", cols="*")
@@ -274,7 +274,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"top_domain_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"top_domain_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.top_domain", cols=["top_domain_test"], select_cols=True)
     t.create(method="cols.top_domain", variant="all", cols="*")
@@ -286,7 +286,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"sub_domain_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"sub_domain_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.sub_domain", cols=["sub_domain_test"], select_cols=True)
     t.create(method="cols.sub_domain", variant="all", cols="*")
@@ -298,7 +298,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"url_scheme_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"url_scheme_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.url_scheme", cols=["url_scheme_test"], select_cols=True)
     t.create(method="cols.url_scheme", variant="all", cols="*")
@@ -310,7 +310,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"url_path_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"url_path_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.url_path", cols=["url_path_test"], select_cols=True)
     t.create(method="cols.url_path", variant="all", cols="*")
@@ -322,7 +322,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"url_file_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"url_file_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.url_file", cols=["url_file_test"], select_cols=True)
     t.create(method="cols.url_file", variant="all", cols="*")
@@ -334,7 +334,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])             
 
     df2 = df.cols.append(
-        {"url_fragment_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"url_fragment_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.url_fragment", cols=["url_fragment_test"], select_cols=True)
     t.create(method="cols.url_fragment", variant="all", cols="*")
@@ -346,7 +346,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"host_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"host_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.host", cols=["host_test"], select_cols=True)
     t.create(method="cols.host", variant="all", cols="*")
@@ -358,7 +358,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"port_test": ["https://github.com/hi-primus/optimus","localhost:3000?help=true","http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALeKk013x5lVsRCimJbjWReSgm-p0ztCRg%3A1628028212552&source=hp&ei=NL0JYZeJH9LR9AP-y4WACA&iflsig=AINFCbYAAAAAYQnLRFUJH1DzRYGPNRugXzIzOrF_uZes&oq=this+is+a+test&gs_lcp=Cgdnd3Mtd2l6EAMyBAgjECcyCggAEIAEEIcCEBQyBQguEIAEMgoIABCABBCHAhAUMgUIABCABDIFCAAQgAQyBQgAEIAEMgUIABCABDIFCC4QgAQyBQgAEIAEOgUIABCRAjoLCC4QgAQQxwEQ0QM6CwguEIAEEMcBEKMCOgQILhBDOgQIABBDOggIABCABBDJAzoFCAAQkgM6BQguEMsBOgUIABDLAVDgFVimKmC4LWgAcAB4AIABoQGIAcYMkgEEMy4xMZgBAKABAQ&sclient=gws-wiz&ved=0ahUKEwiX86na7ZXyAhXSKH0KHf5lAYAQ4dUDCAo&uact=5"]})
+        {"port_test": ["https://github.com/hi-primus/optimus", "localhost:3000?help=true", "http://www.images.hi-example.com:54/images.php#id?help=1&freq=2", "hi-optimus.com", "https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test", "https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5"]})
 
     t.create(df=df2, method="cols.port", cols=["port_test"], select_cols=True)
     t.create(method="cols.port", variant="all", cols="*")
