@@ -92,13 +92,15 @@ class DataFrameBaseColumns(BaseColumns):
                              filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
 
     def reverse(self, cols="*", output_cols=None):
-        def _reverse(value):
-            return str(value)[::-1]
-
+        """
+        Reverse values as strings
+        :param cols: '*', list of columns names or a single column name.
+        :return:
+        """
         df = self.root
-        return df.cols.apply(cols, _reverse, func_return_type=str,
+        return df.cols.apply(cols, "reverse", func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="map", set_index=True)
+                             output_cols=output_cols, mode="vectorized", set_index=True)
 
     @staticmethod
     def astype(*args, **kwargs):

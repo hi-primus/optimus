@@ -79,12 +79,6 @@ class DaskBaseColumns(DistributedBaseColumns):
         return self.apply(cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
                           filter_col_by_dtypes=self.root.constants.STRING_TYPES + self.root.constants.NUMERIC_TYPES)
 
-    def reverse(self, cols="*", output_cols=None):
-        def _reverse(value):
-            return value.astype(str).str[::-1]
-
-        return self.apply(cols, _reverse, output_cols=output_cols, mode="pandas", set_index=True)
-
     def astype(self, cols="*", output_cols=None, *args, **kwargs):
         raise NotImplementedError('Not implemented yet')
 
