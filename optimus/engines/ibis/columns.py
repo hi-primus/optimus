@@ -79,7 +79,7 @@ class Cols(DataFrameBaseColumns):
 
     def apply(self, input_cols, func=None, func_return_type=None, args=None, func_type=None, when=None,
               filter_col_by_dtypes=None, output_cols=None, skip_output_cols_processing=False,
-              meta_action=Actions.APPLY_COLS.value, mode="pandas", set_index=False, default=None, **kwargs):
+              meta_action=Actions.APPLY_COLS.value, mode="partitioned", set_index=False, default=None, **kwargs):
         columns = prepare_columns(self.root, input_cols, output_cols, filter_by_column_types=filter_col_by_dtypes,
                                   accepts_missing_cols=True, default=default)
         kw_columns = {}
