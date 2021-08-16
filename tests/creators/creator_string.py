@@ -90,7 +90,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"word_tokenize_test": ["THis iS a TEST","for"," how ","many words are in this sentence", "      ", "12"]})
+        {"word_tokenize_test": ["THis iS a TEST", "for", " how ", "many words are in this sentence", "      ", "12"]})
 
     t.create(df=df2, method="cols.word_tokenize", cols=["word_tokenize_test"], select_cols=True)
     t.create(method="cols.word_tokenize", variant="all", cols="*")
@@ -102,7 +102,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"word_count_test": ["THis iS a TEST","for"," how ","many words are in this sentence", "      ", "12"]})
+        {"word_count_test": ["THis iS a TEST", "for", " how ", "many words are in this sentence", "      ", "12"]})
 
     t.create(df=df2, method="cols.word_count", cols=["word_count_test"], select_cols=True)
     t.create(method="cols.word_count", variant="all", cols="*")
@@ -114,7 +114,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"len_test": ["      ","12",""," how many characters are in this sentence?", "!@#$%^&*()_>?:}", " 1     2      3   "]})
+        {"len_test": ["      ", "12", "", " how many characters are in this sentence?", "!@#$%^&*()_>?:}", " 1     2      3   "]})
 
     t.create(df=df2, method="cols.len", cols=["len_test"], select_cols=True)
     t.create(method="cols.len", variant="all", cols="*")
@@ -126,7 +126,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"reverse_test": ["gnitseretni","this Is a TesT"," ","this is another test ", "tset a si siht", "reverse esrever"]})
+        {"reverse_test": ["gnitseretni", "this Is a TesT", " ", "this is another test ", "tset a si siht", "reverse esrever"]})
 
     t.create(df=df2, method="cols.reverse", cols=["reverse_test"], select_cols=True)
     t.create(method="cols.reverse", variant="all", cols="*")
@@ -138,7 +138,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"remove_white_spaces_test": ["i   n te  rest i ng ","This I s A Test","     ","ThisOneHasNoWhiteSpaces", "Th is One  Sho   uld Be    AllTogether   ", "L et  ' s G oo o o  o    o"]})
+        {"remove_white_spaces_test": ["i   n te  rest i ng ", "This I s A Test", "     ", "ThisOneHasNoWhiteSpaces", "Th is One  Sho   uld Be    AllTogether   ", "L et  ' s G oo o o  o    o"]})
 
     t.create(df=df2, method="cols.remove_white_spaces", cols=["remove_white_spaces_test"], select_cols=True)
     t.create(method="cols.remove_white_spaces", variant="all", cols="*")
@@ -150,7 +150,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"normalize_spaces_test": ["more       close","      for  ","h   o    w","many  words  are in this   sentence", "      ", "WhatIfThereAreNoSpaces"]})
+        {"normalize_spaces_test": ["more       close", "      for  ", "h   o    w", "many  words  are in this   sentence", "      ", "WhatIfThereAreNoSpaces"]})
 
     t.create(df=df2, method="cols.normalize_spaces", cols=["normalize_spaces_test"], select_cols=True)
     t.create(method="cols.normalize_spaces", variant="all", cols="*")
@@ -162,7 +162,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"expand_contracted_words_test": ["y'all ain't ready for this","i've been where you haven't","SHE'LL DO IT BEFORE YOU","maybe it isn't so hard after all", "he mustn't cheat in school", "IF YOU HADN'T DONE THAT, WE WOULD'VE BEEN FREE"]})
+        {"expand_contracted_words_test": ["y'all ain't ready for this", "i've been where you haven't", "SHE'LL DO IT BEFORE YOU", "maybe it isn't so hard after all", "he mustn't cheat in school", "IF YOU HADN'T DONE THAT, WE WOULD'VE BEEN FREE"]})
 
     t.create(df=df2, method="cols.expand_contracted_words", cols=["expand_contracted_words_test"], select_cols=True)
     t.create(method="cols.expand_contracted_words", variant="all", cols="*")
@@ -186,7 +186,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"remove_numbers_test": ["2 plus 2 equals 4","bumbl#ebéé   is about 5000000 years old","these aren't special characters: `~!@#$%^&*()?/\|","why is pi=3.141592... an irrational number?", "3^3=27", "don't @ me"]})
+        {"remove_numbers_test": ["2 plus 2 equals 4", "bumbl#ebéé   is about 5000000 years old", "these aren't special characters: `~!@#$%^&*()?/\|", "why is pi=3.141592... an irrational number?", "3^3=27", "don't @ me"]})
 
     t.create(df=df2, method="cols.remove_numbers", cols=["remove_numbers_test"], select_cols=True)
     t.create(method="cols.remove_numbers", variant="all", cols="*")
@@ -198,7 +198,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"remove_special_chars_test": ["2 plus 2 equals 4","bumbl#ebéé   is about 5000000 years old","these aren't special characters: `~!@#$%^&*()?/\|","why is pi=3.141592... an irrational number?", "3^3=27", "don't @ me"]})
+        {"remove_special_chars_test": ["2 plus 2 equals 4", "bumbl#ebéé   is about 5000000 years old", "these aren't special characters: `~!@#$%^&*()?/\|", "why is pi=3.141592... an irrational number?", "3^3=27", "don't @ me"]})
 
     t.create(df=df2, method="cols.remove_special_chars", cols=["remove_special_chars_test"], select_cols=True)
     t.create(method="cols.remove_special_chars", variant="all", cols="*")
@@ -214,7 +214,7 @@ def create():
     t = TestCreator(op, df, name="web", configs=default_configs)
 
     df2 = df.cols.append(
-        {"email_username_test": ["an@example.com","thisisatest@gmail.com","somename@hotmail.com","an@outlook.com", "anexample@mail.com", "example@yahoo.com"]})
+        {"email_username_test": ["an@example.com", "thisisatest@gmail.com", "somename@hotmail.com", "an@outlook.com", "anexample@mail.com", "example@yahoo.com"]})
 
     t.create(df=df2, method="cols.email_username", cols=["email_username_test"], select_cols=True)
     t.create(method="cols.email_username", variant="all", cols="*")
@@ -226,7 +226,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"email_domain_test": ["an@example.com","thisisatest@gmail.com","somename@hotmail.com","an@outlook.com", "anexample@mail.com", "example@yahoo.com"]})
+        {"email_domain_test": ["an@example.com", "thisisatest@gmail.com", "somename@hotmail.com", "an@outlook.com", "anexample@mail.com", "example@yahoo.com"]})
 
     t.create(df=df2, method="cols.email_domain", cols=["email_domain_test"], select_cols=True)
     t.create(method="cols.email_domain", variant="all", cols="*")
@@ -238,7 +238,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"strip_html_test": ["<this is a test>","<this> <is> <a> <test>","<this> is a <test>","<this is> a <test>", "<>this is a test<>", ">this is a test<"]})
+        {"strip_html_test": ["<this is a test>", "<this> <is> <a> <test>", "<this> is a <test>", "<this is> a <test>", "<>this is a test<>", ">this is a test<"]})
 
     t.create(df=df2, method="cols.strip_html", cols=["strip_html_test"], select_cols=True)
     t.create(method="cols.strip_html", variant="all", cols="*")
