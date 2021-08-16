@@ -2414,7 +2414,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.apply(cols, "lemmatize_verbs", output_cols=output_cols, mode="vectorized")
+        return self.apply(cols, "lemmatize_verbs", output_cols=output_cols, mode="partitioned")
 
     def stem_verbs(self, cols="*", stemmer: str = "porter", language: str = "english",
                    output_cols=None) -> 'DataFrameType':
