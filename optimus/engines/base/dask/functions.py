@@ -106,6 +106,9 @@ class DaskBaseFunctions(DistributedBaseFunctions):
 
     def replace_chars(self, series, search, replace_by, ignore_case):
         return self._replace_chars(series, search, replace_by, ignore_case, is_regex=False)
+    
+    def replace_regex_chars(self, series, search, replace_by, ignore_case):
+        return self._replace_chars(series, search, replace_by, ignore_case, is_regex=True)
 
     def domain(self, series):
         import url_parser

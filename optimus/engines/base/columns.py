@@ -2308,18 +2308,82 @@ class BaseColumns(ABC):
         return self.apply(cols, func, args=(search, replace_by, ignore_case), func_return_type=func_return_type,
                           output_cols=output_cols, meta_action=Actions.REPLACE.value, mode="vectorized")
 
-    @staticmethod
-    @abstractmethod
-    def replace_regex(cols, regex=None, value=None, output_cols=None) -> 'DataFrameType':
+    def replace_regex(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,
+                output_cols=None) -> 'DataFrameType':
+        """
+        Replace a value, list of values by a specified string
+        :param cols: '*', list of columns names or a single column name.
+        :param search: Values to look at to be replaced
+        :param replace_by: New value to replace the old one. Supports an array when searching by characters.
+        :param search_by: Can be "full","words","chars" or "values".
+        :param ignore_case: Ignore case when searching for match
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return: DataFrame
         """
 
-        :param cols: "*", column name or list of column names to be processed.
-        :param regex:
-        :param value:
-        :param output_cols: Column name or list of column names where the transformed data will be saved.
-        :return:
+        df = self.root
+
+        if isinstance(cols, Clusters):
+            cols = cols.to_dict()
+
+        if is_dict(cols):
+            search_by = search_by or "full"
+            for col, replace in cols.items():
+                _search = []
+                _replace_by = []
+                for replace_by, search in replace.items():
+                    _replace_by.append(replace_by)
+                    _search.append(search)
+                df = df.cols._replace(
+                    col, _search, _replace_by, search_by=search_by)
+
+        else:
+            search_by = search_by or "chars"
+            if is_list_of_tuples(search) and replace_by is None:
+                search, replace_by = zip(*search)
+            search = val_to_list(search, convert_tuple=True)
+            replace_by = val_to_list(replace_by, convert_tuple=True)
+            if len(replace_by) == 1:
+                replace_by = replace_by[0]
+            df = df.cols._replace_regex(cols, search, replace_by,
+                                  search_by, ignore_case, output_cols)
+
+        return df
+
+    def _replace_regex(self, cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
+                 output_cols=None) -> 'DataFrameType':
         """
-        pass
+        Replace a value, list of values by a specified regex
+        :param cols: '*', list of columns names or a single column name.
+        :param search: Regex values to look at to be replaced
+        :param replace_by: New value to replace the old one. Supports an array when searching by characters.
+        :param search_by: Can be "full","words","chars" or "values".
+        :param ignore_case: Ignore case when searching for match
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return: DataFrame
+        """
+
+        search = val_to_list(search, convert_tuple=True)
+        replace_by = one_list_to_val(replace_by)
+
+        if search_by == "full":
+            search_by = "values"
+
+        if search_by == "chars":
+            func = "replace_regex_chars"
+            func_return_type = str
+        elif search_by == "words":
+            func = "replace_regex_words"
+            func_return_type = str
+        elif search_by == "values":
+            func = "replace_regex_values"
+            func_return_type = None
+        else:
+            RaiseIt.value_error(
+                search_by, ["chars", "words", "full", "values"])
+
+        return self.apply(cols, func, args=(search, replace_by, ignore_case), func_return_type=func_return_type,
+                          output_cols=output_cols, meta_action=Actions.REPLACE.value, mode="vectorized")
 
     def num_to_words(self, cols="*", language="en", output_cols=None) -> 'DataFrameType':
         """

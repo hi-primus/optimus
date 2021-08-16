@@ -452,6 +452,20 @@ class BaseFunctions(ABC):
 
         return series
 
+    def replace_regex_chars(self, series, search, replace_by, ignore_case):
+        search = val_to_list(search, convert_tuple=True)
+        return self.to_string_accessor(series).replace(search, replace_by, regex=True, case=not ignore_case)
+
+    def replace_regex_words(self, series, search, replace_by, ignore_case):
+        search = val_to_list(search, convert_tuple=True)
+        str_regex = [r'\b%s\b' % s for s in search]
+        return self.to_string_accessor(series).replace(str_regex, replace_by, regex=True, case=not ignore_case)
+
+    def replace_regex_full(self, series, search, replace_by, ignore_case):
+        search = val_to_list(search, convert_tuple=True)
+        str_regex = [r'^%s$' % s for s in search]
+        return self.to_string_accessor(series).replace(str_regex, replace_by, regex=True, case=not ignore_case)
+
     def remove_white_spaces(self, series):
         return self.to_string_accessor(series).replace(" ", "")
 
