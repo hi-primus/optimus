@@ -93,6 +93,8 @@ class DaskBaseFunctions(DistributedBaseFunctions):
                 _search = '|'.join(search)
             else:
                 _search = '|'.join(map(re.escape, search))
+            if ignore_case:
+                _search = f"(?i){_search}"
         
         if len(replace_by) <= 1:
             _r = replace_by[0]
@@ -102,7 +104,7 @@ class DaskBaseFunctions(DistributedBaseFunctions):
             def _r(value):
                 return _map.get(value[0], "ERROR")
 
-        return self.to_string_accessor(series).replace(_search, _r, regex=regex, case=not ignore_case)
+        return self.to_string(series).replace(_search, _r, regex=regex)
 
     def replace_chars(self, series, search, replace_by, ignore_case):
         return self._replace_chars(series, search, replace_by, ignore_case, is_regex=False)
