@@ -443,12 +443,18 @@ class BaseFunctions(ABC):
     def replace_values(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
 
+        if ignore_case:
+            regex = True
+            search = [(r'(?i)%s' % re.escape(s)) for s in search]
+        else:
+            regex = False
+
         if is_list(replace_by) and is_list_of_list(search):
             for _s, _r in zip(search, replace_by):
-                series.replace(_s, _r, inplace=True)
+                series.replace(_s, _r, inplace=True, regex=regex)
                 
         else:
-            series.replace(search, replace_by, inplace=True)
+            series.replace(search, replace_by, inplace=True, regex=regex)
 
         return series
 
