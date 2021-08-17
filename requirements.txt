@@ -10,7 +10,8 @@ requests>=2.24.0
 tqdm>=4.51.0
 fastnumbers>=3.1.0
 multipledispatch>=0.6.0
-numpy>=1.20.3
+numpy>=1.21.2
+yellowbrick
 deprecated>=1.2.12
 setuptools>=50.3.1
 Jinja2>=3.0.1
@@ -28,21 +29,21 @@ python-magic>=0.4.15; sys_platform != 'win32'
 python-magic-bin==0.4.14; sys_platform == 'win32'
 nltk>=3.6.2
 pendulum>=2.1.2
-rply==0.7.7
-pybigquery==0.4.15
+rply>=0.7.8
+pybigquery>=0.10.1
 pandavro>=1.6.0
 openpyxl>=3.0.7
 tabulate>=0.8.9
 matplotlib>=3.4.2
 seaborn>=0.11.1
 wordninja==2.0.0
-jellyfish==0.8.2
+jellyfish>=0.8.7
 Metaphone==0.6
 num2words==0.5.10
 xlrd>=2.0.1
-s3fs>=2021.6.0
-boto3==1.17.111
-python-Levenshtein==0.12.2
+s3fs>=2021.7.0
+aiobotocore[boto3]>=1.3.3
+python-Levenshtein>=0.12.2
 string-grouper==0.5.0
 py-dateinfer @ git+https://github.com/hi-primus/dateinfer@main#egg=py-dateinfer
 url_parser @ git+https://github.com/hi-primus/url_parser@main#egg=url_parser
