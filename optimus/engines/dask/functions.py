@@ -2,7 +2,6 @@
 # Must return None if the data type can not be handle
 
 
-from datetime import datetime
 from optimus.infer import is_list_or_tuple
 
 import dask
@@ -10,7 +9,6 @@ import dask.dataframe as dd
 import dask.array as da
 import pandas as pd
 
-from optimus.engines.base.commons.functions import word_tokenize
 from optimus.engines.base.pandas.functions import PandasBaseFunctions
 from optimus.engines.base.dask.functions import DaskBaseFunctions
 
@@ -29,9 +27,6 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
             return dask.delayed(func)(*args, **kwargs)
 
         return wrapper
-
-    def word_tokenize(self, series):
-        return self.to_string(series).map(word_tokenize, na_action=None)
 
     def kurtosis(self, series):
         return self.to_float(series).kurtosis()
