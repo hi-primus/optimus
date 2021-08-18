@@ -1905,7 +1905,7 @@ class BaseColumns(ABC):
 
         for col, col_format in zip(cols, formats):
             df = df.cols.apply(col, "format_date", args=(col_format, output_format), func_return_type=str,
-                               output_cols=output_cols, meta_action=Actions.FORMAT_DATE.value, mode="partitioned",
+                               output_cols=output_cols, meta_action=Actions.FORMAT_DATE.value, mode="vectorized",
                                set_index=False)
 
         return df

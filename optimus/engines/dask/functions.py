@@ -112,8 +112,8 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8').astype(str)
 
     def format_date(self, series, current_format=None, output_format=None):
-        return dd.from_pandas(pd.to_datetime(series, format=current_format,
-                              errors="coerce").dt.strftime(output_format), series.npartitions, None)
+        return dd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
+
 
     def days_between(self, series, date_format=None):
         return dd.from_pandas(pd.to_datetime(series, format=date_format,
