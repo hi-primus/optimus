@@ -564,6 +564,26 @@ class BaseColumns(ABC):
             columns[k] = result_default
         return columns
 
+    def types(self, cols="*"):
+        """
+        Get the inferred data types from the meta data, if no type is found, uses a translated internal data type
+        :param cols: "*", column name or list of column names to be processed.
+        :return:
+        """
+        df = self.root
+        cols = parse_columns(df, cols)
+        result = {}
+
+        data_types = df.cols.data_types(cols)
+
+        for col_name in cols:
+            data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
+            if data_type is None:
+                data_type = data_types[col_name]
+                data_type = df.constants.INFERRED_DTYPES_ALIAS.get(data_type, data_type)
+            result.update({col_name: data_type})
+        return result
+
     def inferred_types(self, cols="*"):
         """
         Get the inferred data types from the meta data
