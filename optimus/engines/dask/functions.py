@@ -114,7 +114,23 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
     def format_date(self, series, current_format=None, output_format=None):
         return dd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
+    def days_between(self, series, value=None, date_format=None):
 
-    def days_between(self, series, date_format=None):
-        return dd.from_pandas(pd.to_datetime(series, format=date_format,
-                              errors="coerce").dt.date - datetime.now().date(), series.npartitions, None)
+        value_date_format = date_format
+
+        if is_list_or_tuple(date_format) and len(date_format) == 2:
+            date_format, value_date_format = date_format
+
+        if is_list_or_tuple(value) and len(value) == 2:
+            value, value_date_format = value
+
+        series = dd.to_datetime(series, format=date_format, errors="coerce", unit='ns').astype('int64')
+        dfd = series.to_frame()
+        dfd.columns = ['A']
+        if value is None:
+            dfd['B'] = pd.Timestamp.now()
+        else:
+            value = dd.to_datetime(value, format=value_date_format, errors="coerce", unit='ns')
+            dfd['B'] = value
+
+        return dd.to_timedelta(dfd['B'].astype('int64') - dfd['A']).dt.days
