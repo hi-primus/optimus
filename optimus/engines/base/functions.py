@@ -82,6 +82,19 @@ class BaseFunctions(ABC):
     def compute(self, *args, **kwargs):
         return one_tuple_to_val((*(a for a in args), *(kwargs[k] for k in kwargs)))
 
+    def to_dict(self, series) -> dict:
+        """
+        Convert series to a Python dictionary
+        """
+        return series.to_dict()
+
+    def to_items(self, series) -> dict:
+        """
+        Convert series to a list of tuples [(index, value), ...]
+        """
+        df = series.reset_index()
+        return df.to_dict(orient='split')['data']
+
     def to_boolean(self, series):
         """
         Converts series to bool

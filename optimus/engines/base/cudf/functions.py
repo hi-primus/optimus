@@ -3,6 +3,10 @@ import cudf
 
 class CUDFBaseFunctions():
 
+    def to_dict(self, series) -> dict:
+        series.name = str(series.name)
+        return series.to_pandas().to_dict()
+
     def is_integer(self, series):
         return series.str.isinteger()
 
