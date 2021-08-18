@@ -19,7 +19,7 @@ class Functions(type):
                 # Convert the frame to a dataframe and to a optimus Dataframe
                 series = getattr(df_or_value.functions, func)(_df, *args)
                 series.name = df_or_value.cols.names(0)[0]
-                r = df_or_value.__class__(series.to_frame())
+                r = df_or_value.__class__(series.to_frame(), df_or_value.op)
             else:
                 r = getattr(np, func)(df_or_value, *args)
 

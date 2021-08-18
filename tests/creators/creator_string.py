@@ -238,7 +238,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"strip_html_test": ["<this is a test>", "<this> <is> <a> <test>", "<this> is a <test>", "<this is> a <test>", "<>this is a test<>", ">this is a test<"]})
+        {"strip_html_test": ['<this is a test>', '<this>2 < 3, 2 <= 2, 3 > 2</this> </is> <a/> <test>', '<this> is a </test>', '<this is> a <test>', '<>this is a test<>', '>this is a test<']})
 
     t.create(df=df2, method="cols.strip_html", cols=["strip_html_test"], select_cols=True)
     t.create(method="cols.strip_html", variant="all", cols="*")

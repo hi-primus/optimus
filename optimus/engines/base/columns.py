@@ -1,3 +1,4 @@
+import math
 import re
 import string
 import time
@@ -9,7 +10,6 @@ from typing import Union
 import nltk
 import numpy as np
 import pandas as pd
-import pydateinfer
 import wordninja
 from dask import dataframe as dd
 from glom import glom
@@ -57,9 +57,6 @@ class BaseColumns(ABC):
         :return:
         """
         return self._series_to_pandas(series).to_dict()
-
-    def _series_to_dict_delayed(self, series):
-        return series.to_dict()
 
     def _series_to_pandas(self, series):
         """
@@ -563,6 +560,26 @@ class BaseColumns(ABC):
                         result_default[k2] = result_default[k2] + v1
             columns[k] = result_default
         return columns
+
+    def types(self, cols="*"):
+        """
+        Get the inferred data types from the meta data, if no type is found, uses a translated internal data type
+        :param cols: "*", column name or list of column names to be processed.
+        :return:
+        """
+        df = self.root
+        cols = parse_columns(df, cols)
+        result = {}
+
+        data_types = df.cols.data_types(cols)
+
+        for col_name in cols:
+            data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
+            if data_type is None:
+                data_type = data_types[col_name]
+                data_type = df.constants.INFERRED_DTYPES_ALIAS.get(data_type, data_type)
+            result.update({col_name: data_type})
+        return result
 
     def inferred_types(self, cols="*"):
         """
@@ -1158,27 +1175,41 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
 
-    def min(self, cols="*", tidy: bool = True, compute: bool = True):
+    def min(self, cols="*", numeric=None, tidy: bool = True, compute: bool = True):
         """
         Return the minimum value over one or one each column.
         :param cols: "*", column name or list of column names to be processed.
+        :param numeric: if True, cast to numeric before processing.
         :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return:
         """
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.min, compute=compute, tidy=tidy, parallel=False)
 
-    def max(self, cols="*", tidy: bool = True, compute: bool = True):
+        if numeric is None:
+            cols = parse_columns(df, cols)
+            types = df.cols.types(cols)
+            numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
+
+        return df.cols.agg_exprs(cols, self.F.min, numeric, compute=compute, tidy=tidy, parallel=False)
+
+    def max(self, cols="*", numeric=None, tidy: bool = True, compute: bool = True):
         """
         Return the maximum value over one or one each column.
         :param cols: "*", column name or list of column names to be processed.
+        :param numeric: if True, cast to numeric before processing.
         :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return:
         """
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.max, compute=compute, tidy=tidy, parallel=False)
+
+        if numeric is None:
+            cols = parse_columns(df, cols)
+            types = df.cols.types(cols)
+            numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
+
+        return df.cols.agg_exprs(cols, self.F.max, numeric, compute=compute, tidy=tidy, parallel=False)
 
     def mode(self, cols="*", tidy: bool = True, compute: bool = True):
         """
@@ -1339,7 +1370,7 @@ class BaseColumns(ABC):
 
     def date_format(self, cols="*", tidy=True, compute=True, *args, **kwargs):
         """
-        # TODO: ?
+        Get the date format from a column, compatible with 'format_date'
         :param cols: "*", column name or list of column names to be processed.
         :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
         :param compute: Compute the final result. False imply to return a delayed object.
@@ -1850,7 +1881,7 @@ class BaseColumns(ABC):
         :return:
         """
         return self.apply(cols, self.F.strip_html, func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.TRIM.value, mode="map")
+                          output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
     def format_date(self, cols="*", current_format=None, output_format=None, output_cols=None) -> 'DataFrameType':
         """
@@ -1874,7 +1905,7 @@ class BaseColumns(ABC):
 
         for col, col_format in zip(cols, formats):
             df = df.cols.apply(col, "format_date", args=(col_format, output_format), func_return_type=str,
-                               output_cols=output_cols, meta_action=Actions.FORMAT_DATE.value, mode="partitioned",
+                               output_cols=output_cols, meta_action=Actions.FORMAT_DATE.value, mode="vectorized",
                                set_index=False)
 
         return df
@@ -1897,12 +1928,8 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        df = self.root
-
-        cols = parse_columns(df, cols)
-        output_cols = get_output_cols(cols, output_cols)
-
-        return df.cols.word_tokenize(cols, output_cols).cols.len(output_cols)
+        return self.apply(cols, self.F.word_count, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.LENGTH.value, mode="vectorized")
 
     def len(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
@@ -2166,19 +2193,28 @@ class BaseColumns(ABC):
         col_names = df.cols.names()
 
         if is_list(cols) and len(cols) == 2 and value is None:
-            value = df.data[cols[1]]
-            cols = cols[0]
+            value = [df.data[cols[1]]]
+            cols = [cols[0]]
         elif is_str(value) and value in col_names:
-            value = df.data[value]
+            value = [df.data[value]]
         elif is_list_of_str(value):
             value = [df.data[v] if v in col_names else v for v in value]
+        else:
+            value = [value]
 
-        def _years_between(series, args):
-            return self.F.days_between(series, *args) / 365.25
+        if len(cols) > len(value):
+            value *= math.floor(len(cols)/len(value))
 
-        return df.cols.apply(cols, func, args=[value, date_format], func_return_type=str, output_cols=output_cols,
-                             meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True).cols._round(
-            output_cols, round)
+        value = value[0:len(cols)]
+
+        for col, v, output_col in zip(cols, value, output_cols):
+            df = df.cols.apply(col, func, args=[v, date_format], func_return_type=str, output_cols=output_col,
+                               meta_action=Actions.YEARS_BETWEEN.value, mode="vectorized", set_index=True)\
+        
+        if round:
+            df = df.cols._round(output_cols, round)
+
+        return df
 
     def years_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2764,8 +2800,8 @@ class BaseColumns(ABC):
                     for
                     col_name in _cols}
 
-        _min = df.cols.min(cols, compute=True, tidy=False)
-        _max = df.cols.max(cols, compute=True, tidy=False)
+        _min = df.cols.min(cols, numeric=True, compute=True, tidy=False)
+        _max = df.cols.max(cols, numeric=True, compute=True, tidy=False)
         _bins = _bins_col(cols, _min, _max)
 
         @self.F.delayed
@@ -2945,9 +2981,9 @@ class BaseColumns(ABC):
                 "data_type": _dtype, "categorical": is_categorical}
             if dtype == ProfilerDataTypes.DATETIME.value:
                 # pydatainfer do not accepts None value so we must filter them
-                filtered_dates = [i for i in sample_df[col_name].to_list() if i]
-                cols_and_inferred_dtype[col_name].update(
-                    {"format": pydateinfer.infer(filtered_dates)})
+                __df = sample_df[col_name].rows.drop_missings()
+                _format = __df.cols.date_format()
+                cols_and_inferred_dtype[col_name].update({"format": _format})
 
         for col in cols_and_inferred_dtype:
             self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type",
@@ -3000,7 +3036,7 @@ class BaseColumns(ABC):
         @self.F.delayed
         def series_to_dict(_series, _total_freq_count=None):
             _result = [{"value": i, "count": j}
-                       for i, j in self._series_to_dict_delayed(_series).items()]
+                       for i, j in self.F.to_items(_series)]
 
             if _total_freq_count is None:
                 _result = {_series.name: {"values": _result}}

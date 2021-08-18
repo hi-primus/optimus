@@ -82,19 +82,38 @@ class BaseFunctions(ABC):
     def compute(self, *args, **kwargs):
         return one_tuple_to_val((*(a for a in args), *(kwargs[k] for k in kwargs)))
 
-    def to_boolean(self, series):
+    def to_dict(self, series) -> dict:
+        """
+        Convert series to a Python dictionary
+        """
+        return series.to_dict()
+
+    def to_items(self, series) -> dict:
+        """
+        Convert series to a list of tuples [(index, value), ...]
+        """
+        df = series.reset_index()
+        return df.to_dict(orient='split')['data']
+
+    def _to_boolean(self, series):
         """
         Converts series to bool
         """
         return series.map(lambda v: bool(v), na_action=None).astype('bool')
+
+    def to_boolean(self, series):
+        return self._to_boolean(series)
     
-    def to_boolean_none(self, series):
+    def _to_boolean_none(self, series):
         """
         Converts series to boolean
         """
         return series.map(lambda v: bool(v), na_action='ignore').astype('object')
 
-    def to_float(self, series):
+    def to_boolean_none(self, series):
+        return self._to_boolean_none(series)
+
+    def _to_float(self, series):
         """
         Converts a series values to floats
         """
@@ -103,7 +122,10 @@ class BaseFunctions(ABC):
         except:
             return self._new_series(self._functions.to_numeric(series, errors='coerce')).astype('float')
 
-    def to_integer(self, series, default=0):
+    def to_float(self, series):
+        return self._to_float(series)
+
+    def _to_integer(self, series, default=0):
         """
         Converts a series values to integers
         """
@@ -112,15 +134,21 @@ class BaseFunctions(ABC):
         except:
             return self._new_series(self._functions.to_numeric(series, errors='coerce').fillna(default)).astype('int')
 
+    def to_integer(self, series, default=0):
+        return self._to_integer(series, default)
+
+    def _to_datetime(self, series, format):
+        return series
+    
+    def to_datetime(self, series, format):
+        return self._to_datetime(series, format)
+
     def to_string(self, series):
-        if str(series.dtype) in self.constants.STRING_TYPES:
-            return series
         return series.astype(str)
 
     def to_string_accessor(self, series):
-        if str(series.dtype) in self.constants.STRING_TYPES:
-            return series.str
         return series.astype(str).str
+
 
     @staticmethod
     def duplicated(dfd, keep, subset):
@@ -135,14 +163,33 @@ class BaseFunctions(ABC):
     # Aggregation
 
     def date_format(self, series):
-        import pydateinfer
-        return pydateinfer.infer(series.values)
+        dtype = str(series.dtype)
+        if dtype in self.constants.STRING_TYPES:
+            import pydateinfer
+            return pydateinfer.infer(self.compute(series).values)
+        elif dtype in self.constants.DATETIME_TYPES:
+            return True
 
-    def min(self, series):
-        return series.min()
+        return False
+        
+    def min(self, series, numeric=False, string=False):
+        if numeric:
+            series = self.to_float(series)
+        
+        if string or str(series.dtype) in self.constants.STRING_TYPES:
+            return self.to_string(series.dropna()).min()
+        else:
+            return series.min()
 
-    def max(self, series):
-        return series.max()
+    def max(self, series, numeric=False, string=False):
+        
+        if numeric:
+            series = self.to_float(series)
+
+        if string or str(series.dtype) in self.constants.STRING_TYPES:
+            return self.to_string(series.dropna()).max()
+        else:
+            return series.max()
 
     def mean(self, series):
         return self.to_float(series).mean()
@@ -213,11 +260,8 @@ class BaseFunctions(ABC):
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
     # cudf seems to be calculate faster in on pass using df.min()
     def range(self, series):
-
+        
         return {"min": self.to_float(series).min(), "max": self.to_float(series).max()}
-
-    def var(self, series):
-        return self.to_float(series).var()
 
     def percentile(self, series, values, error):
 
@@ -287,6 +331,9 @@ class BaseFunctions(ABC):
     @abstractmethod
     def word_tokenize(self, series):
         pass
+
+    def word_count(self, series):
+        return self.word_tokenize(series).str.len()
 
     def len(self, series):
         return self.to_string_accessor(series).len()
@@ -413,8 +460,8 @@ class BaseFunctions(ABC):
     def trim(self, series):
         return self.to_string_accessor(series).strip()
 
-    def strip_html(self, value):
-        return re.sub('<.*?>', '', value)
+    def strip_html(self, series):
+        return self.to_string(series).replace('<.*?>', '', regex=True)
 
     def replace_chars(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
@@ -487,9 +534,6 @@ class BaseFunctions(ABC):
     # @staticmethod
     # def len(series):
     #     return series.str.len()
-
-    def to_datetime(self, series, format):
-        pass
 
     def normalize_chars(self, series):
         pass

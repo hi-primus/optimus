@@ -68,8 +68,8 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
                                           num=buckets) for
                     col_name in _columns}
 
-        _min = df.cols.min(columns, compute=False, tidy=False)
-        _max = df.cols.max(columns, compute=False, tidy=False)
+        _min = df.cols.min(columns, numeric=True, compute=False, tidy=False)
+        _max = df.cols.max(columns, numeric=True, compute=False, tidy=False)
 
         _bins = _bins_col(columns, _min, _max)
 

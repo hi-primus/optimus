@@ -25,10 +25,10 @@ class SparkBaseFunctions(BaseFunctions):
     def is_numeric(self, series):
         return pd.Series(np.vectorize(isreal)(series).flatten())
 
-    def to_integer(self, series, default=0):
+    def _to_integer(self, series, default=0):
         return series.astype(int)
 
-    def to_float(self, series):
+    def _to_float(self, series):
         return series.astype(float)
 
     def to_string(self, value):
@@ -37,7 +37,7 @@ class SparkBaseFunctions(BaseFunctions):
         except TypeError:
             return np.nan
 
-    def to_datetime(self, value, format=None):
+    def _to_datetime(self, value, format=None):
         if format is None:
             return pd.to_datetime(value, errors="coerce")
         else:

@@ -2,8 +2,6 @@ from optimus.infer import is_list_or_tuple
 
 import numpy as np
 import pandas as pd
-import re
-from optimus.engines.base.commons.functions import word_tokenize
 from optimus.engines.base.pandas.functions import PandasBaseFunctions
 from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
 
@@ -13,9 +11,6 @@ class PandasFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
     @property
     def _engine(self):
         return pd
-
-    def word_tokenize(self, series):
-        return self.to_string(series).map(word_tokenize, na_action=None)
 
     def count_zeros(self, series, *args):
         return int((self.to_float(series).values == 0).sum())
