@@ -177,11 +177,7 @@ class BaseFunctions(ABC):
             series = self.to_float(series)
         
         if string or str(series.dtype) in self.constants.STRING_TYPES:
-            series.dropna(inplace=True)
-            try:
-                return series.min()
-            except:
-                return self.to_string(series).min()
+            return self.to_string(series.dropna()).min()
         else:
             return series.min()
 
@@ -191,11 +187,7 @@ class BaseFunctions(ABC):
             series = self.to_float(series)
 
         if string or str(series.dtype) in self.constants.STRING_TYPES:
-            series.dropna(inplace=True)
-            try:
-                return series.max()
-            except:
-                return self.to_string(series).max()
+            return self.to_string(series.dropna()).max()
         else:
             return series.max()
 
@@ -268,7 +260,7 @@ class BaseFunctions(ABC):
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
     # cudf seems to be calculate faster in on pass using df.min()
     def range(self, series):
-
+        
         return {"min": self.to_float(series).min(), "max": self.to_float(series).max()}
 
     def var(self, series):
