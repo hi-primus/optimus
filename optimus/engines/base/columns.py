@@ -1,3 +1,4 @@
+import math
 import re
 import string
 import time
@@ -2196,19 +2197,28 @@ class BaseColumns(ABC):
         col_names = df.cols.names()
 
         if is_list(cols) and len(cols) == 2 and value is None:
-            value = df.data[cols[1]]
-            cols = cols[0]
+            value = [df.data[cols[1]]]
+            cols = [cols[0]]
         elif is_str(value) and value in col_names:
-            value = df.data[value]
+            value = [df.data[value]]
         elif is_list_of_str(value):
             value = [df.data[v] if v in col_names else v for v in value]
+        else:
+            value = [value]
 
-        def _years_between(series, args):
-            return self.F.days_between(series, *args) / 365.25
+        if len(cols) > len(value):
+            value *= math.floor(len(cols)/len(value))
 
-        return df.cols.apply(cols, func, args=[value, date_format], func_return_type=str, output_cols=output_cols,
-                             meta_action=Actions.YEARS_BETWEEN.value, mode="partitioned", set_index=True).cols._round(
-            output_cols, round)
+        value = value[0:len(cols)]
+
+        for col, v, output_col in zip(cols, value, output_cols):
+            df = df.cols.apply(col, func, args=[v, date_format], func_return_type=str, output_cols=output_col,
+                               meta_action=Actions.YEARS_BETWEEN.value, mode="vectorized", set_index=True)\
+        
+        if round:
+            df = df.cols._round(output_cols, round)
+
+        return df
 
     def years_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
