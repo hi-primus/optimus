@@ -332,6 +332,9 @@ class BaseFunctions(ABC):
     def word_tokenize(self, series):
         pass
 
+    def word_count(self, series):
+        return self.word_tokenize(series).str.len()
+
     def len(self, series):
         return self.to_string_accessor(series).len()
 

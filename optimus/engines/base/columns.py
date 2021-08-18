@@ -1928,12 +1928,8 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        df = self.root
-
-        cols = parse_columns(df, cols)
-        output_cols = get_output_cols(cols, output_cols)
-
-        return df.cols.word_tokenize(cols, output_cols).cols.len(output_cols)
+        return self.apply(cols, self.F.word_count, func_return_type=str, output_cols=output_cols,
+                          meta_action=Actions.LENGTH.value, mode="vectorized")
 
     def len(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
