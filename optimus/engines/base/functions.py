@@ -126,13 +126,9 @@ class BaseFunctions(ABC):
             return self._new_series(self._functions.to_numeric(series, errors='coerce').fillna(default)).astype('int')
 
     def to_string(self, series):
-        if str(series.dtype) in self.constants.STRING_TYPES:
-            return series
         return series.astype(str)
 
     def to_string_accessor(self, series):
-        if str(series.dtype) in self.constants.STRING_TYPES:
-            return series.str
         return series.astype(str).str
 
     @staticmethod
