@@ -8,7 +8,7 @@ class BaseSet():
         self.root = root
 
     def __call__(self, cols=None, value=None, default=None, args=[], where=None):
-        return self.root.cols.set(cols=cols, value=value, args=args, where=where, default=default)
+        return self.root.cols.set(cols=cols, value_func=value, args=args, where=where, default=default)
 
 
     def all(self, cols, value=None) -> 'DataFrameType':
