@@ -822,13 +822,11 @@ class BaseDataFrame(ABC):
             # Get with columns are numerical and does not have mismatch so we can calculate the histogram
             cols_properties = cols_data_types.items()
             for col_name, properties in cols_properties:
-                if properties.get("categorical") is True \
-                        or properties.get("data_type") == ProfilerDataTypes.EMAIL.value \
-                        or properties.get("data_type") == ProfilerDataTypes.URL.value \
-                        or properties.get("data_type") == ProfilerDataTypes.OBJECT.value:
-                    freq_cols.append(col_name)
-                else:
+                if properties.get("data_type") in df.constants.NUMERIC_TYPES \
+                and not properties.get("categorical", False):
                     hist_cols.append(col_name)
+                else:
+                    freq_cols.append(col_name)
 
             hist = None
             freq = {}
