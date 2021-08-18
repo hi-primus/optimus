@@ -2969,9 +2969,9 @@ class BaseColumns(ABC):
                 "data_type": _dtype, "categorical": is_categorical}
             if dtype == ProfilerDataTypes.DATETIME.value:
                 # pydatainfer do not accepts None value so we must filter them
-                filtered_dates = [i for i in sample_df[col_name].to_list() if i]
-                cols_and_inferred_dtype[col_name].update(
-                    {"format": pydateinfer.infer(filtered_dates)})
+                __df = sample_df[col_name].rows.drop_missings()
+                _format = __df.cols.date_format()
+                cols_and_inferred_dtype[col_name].update({"format": _format})
 
         for col in cols_and_inferred_dtype:
             self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type",
