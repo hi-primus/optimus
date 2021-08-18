@@ -1186,6 +1186,11 @@ class BaseColumns(ABC):
         """
         df = self.root
 
+        if numeric is None:
+            cols = parse_columns(df, cols)
+            types = df.cols.types(cols)
+            numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
+
         return df.cols.agg_exprs(cols, self.F.min, numeric, compute=compute, tidy=tidy, parallel=False)
 
     def max(self, cols="*", numeric=None, tidy: bool = True, compute: bool = True):
@@ -1198,6 +1203,11 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.root
+
+        if numeric is None:
+            cols = parse_columns(df, cols)
+            types = df.cols.types(cols)
+            numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
 
         return df.cols.agg_exprs(cols, self.F.max, numeric, compute=compute, tidy=tidy, parallel=False)
 
