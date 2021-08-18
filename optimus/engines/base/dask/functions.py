@@ -60,12 +60,6 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     def to_delayed(self, value):
         return value.to_delayed()
 
-    def min(self, series):
-        return series.min()
-
-    def max(self, series):
-        return series.max()
-
     def count_zeros(self, series):
         return int((self.to_float(series).values == 0).sum())
 
