@@ -151,11 +151,32 @@ class BaseFunctions(ABC):
         import pydateinfer
         return pydateinfer.infer(series.values)
 
-    def min(self, series):
-        return series.min()
+    def min(self, series, numeric=False, string=False):
+        if numeric:
+            series = self.to_float(series)
+        
+        if string or str(series.dtype) in self.constants.STRING_TYPES:
+            series.dropna(inplace=True)
+            try:
+                return series.min()
+            except:
+                return self.to_string(series).min()
+        else:
+            return series.min()
 
-    def max(self, series):
-        return series.max()
+    def max(self, series, numeric=False, string=False):
+        
+        if numeric:
+            series = self.to_float(series)
+
+        if string or str(series.dtype) in self.constants.STRING_TYPES:
+            series.dropna(inplace=True)
+            try:
+                return series.max()
+            except:
+                return self.to_string(series).max()
+        else:
+            return series.max()
 
     def mean(self, series):
         return self.to_float(series).mean()

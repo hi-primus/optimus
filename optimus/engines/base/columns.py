@@ -1158,27 +1158,31 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
 
-    def min(self, cols="*", tidy: bool = True, compute: bool = True):
+    def min(self, cols="*", numeric=None, tidy: bool = True, compute: bool = True):
         """
         Return the minimum value over one or one each column.
         :param cols: "*", column name or list of column names to be processed.
+        :param numeric: if True, cast to numeric before processing.
         :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return:
         """
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.min, compute=compute, tidy=tidy, parallel=False)
 
-    def max(self, cols="*", tidy: bool = True, compute: bool = True):
+        return df.cols.agg_exprs(cols, self.F.min, numeric, compute=compute, tidy=tidy, parallel=False)
+
+    def max(self, cols="*", numeric=None, tidy: bool = True, compute: bool = True):
         """
         Return the maximum value over one or one each column.
         :param cols: "*", column name or list of column names to be processed.
+        :param numeric: if True, cast to numeric before processing.
         :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return:
         """
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.max, compute=compute, tidy=tidy, parallel=False)
+
+        return df.cols.agg_exprs(cols, self.F.max, numeric, compute=compute, tidy=tidy, parallel=False)
 
     def mode(self, cols="*", tidy: bool = True, compute: bool = True):
         """
@@ -2764,8 +2768,8 @@ class BaseColumns(ABC):
                     for
                     col_name in _cols}
 
-        _min = df.cols.min(cols, compute=True, tidy=False)
-        _max = df.cols.max(cols, compute=True, tidy=False)
+        _min = df.cols.min(cols, numeric=True, compute=True, tidy=False)
+        _max = df.cols.max(cols, numeric=True, compute=True, tidy=False)
         _bins = _bins_col(cols, _min, _max)
 
         @self.F.delayed
