@@ -1360,7 +1360,7 @@ class BaseColumns(ABC):
 
     def date_format(self, cols="*", tidy=True, compute=True, *args, **kwargs):
         """
-        # TODO: ?
+        Get the date format from a column, compatible with 'format_date'
         :param cols: "*", column name or list of column names to be processed.
         :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
         :param compute: Compute the final result. False imply to return a delayed object.

@@ -144,9 +144,15 @@ class BaseFunctions(ABC):
     # Aggregation
 
     def date_format(self, series):
-        import pydateinfer
-        return pydateinfer.infer(series.values)
+        dtype = str(series.dtype)
+        if dtype in self.constants.STRING_TYPES:
+            import pydateinfer
+            return pydateinfer.infer(series.values)
+        elif dtype in self.constants.DATETIME_TYPES:
+            return True
 
+        return False
+        
     def min(self, series, numeric=False, string=False):
         if numeric:
             series = self.to_float(series)
