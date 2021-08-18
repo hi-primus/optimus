@@ -58,9 +58,6 @@ class BaseColumns(ABC):
         """
         return self._series_to_pandas(series).to_dict()
 
-    def _series_to_dict_delayed(self, series):
-        return series.to_dict()
-
     def _series_to_pandas(self, series):
         """
 
@@ -3024,7 +3021,7 @@ class BaseColumns(ABC):
         @self.F.delayed
         def series_to_dict(_series, _total_freq_count=None):
             _result = [{"value": i, "count": j}
-                       for i, j in self._series_to_dict_delayed(_series).items()]
+                       for i, j in self.F.to_items(_series)]
 
             if _total_freq_count is None:
                 _result = {_series.name: {"values": _result}}
