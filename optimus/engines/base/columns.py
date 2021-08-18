@@ -1880,7 +1880,7 @@ class BaseColumns(ABC):
         :return:
         """
         return self.apply(cols, self.F.strip_html, func_return_type=str,
-                          output_cols=output_cols, meta_action=Actions.TRIM.value, mode="map")
+                          output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
     def format_date(self, cols="*", current_format=None, output_format=None, output_cols=None) -> 'DataFrameType':
         """

@@ -449,8 +449,8 @@ class BaseFunctions(ABC):
     def trim(self, series):
         return self.to_string_accessor(series).strip()
 
-    def strip_html(self, value):
-        return re.sub('<.*?>', '', value)
+    def strip_html(self, series):
+        return self.to_string(series).replace('<.*?>', '', regex=True)
 
     def replace_chars(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
