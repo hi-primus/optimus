@@ -95,19 +95,25 @@ class BaseFunctions(ABC):
         df = series.reset_index()
         return df.to_dict(orient='split')['data']
 
-    def to_boolean(self, series):
+    def _to_boolean(self, series):
         """
         Converts series to bool
         """
         return series.map(lambda v: bool(v), na_action=None).astype('bool')
+
+    def to_boolean(self, series):
+        return self._to_boolean(series)
     
-    def to_boolean_none(self, series):
+    def _to_boolean_none(self, series):
         """
         Converts series to boolean
         """
         return series.map(lambda v: bool(v), na_action='ignore').astype('object')
 
-    def to_float(self, series):
+    def to_boolean_none(self, series):
+        return self._to_boolean_none(series)
+
+    def _to_float(self, series):
         """
         Converts a series values to floats
         """
@@ -116,7 +122,10 @@ class BaseFunctions(ABC):
         except:
             return self._new_series(self._functions.to_numeric(series, errors='coerce')).astype('float')
 
-    def to_integer(self, series, default=0):
+    def to_float(self, series):
+        return self._to_float(series)
+
+    def _to_integer(self, series, default=0):
         """
         Converts a series values to integers
         """
@@ -125,11 +134,21 @@ class BaseFunctions(ABC):
         except:
             return self._new_series(self._functions.to_numeric(series, errors='coerce').fillna(default)).astype('int')
 
+    def to_integer(self, series, default=0):
+        return self._to_integer(series, default)
+
+    def _to_datetime(self, series, format):
+        return series
+    
+    def to_datetime(self, series, format):
+        return self._to_datetime(series, format)
+
     def to_string(self, series):
         return series.astype(str)
 
     def to_string_accessor(self, series):
         return series.astype(str).str
+
 
     @staticmethod
     def duplicated(dfd, keep, subset):
@@ -523,9 +542,6 @@ class BaseFunctions(ABC):
     # @staticmethod
     # def len(series):
     #     return series.str.len()
-
-    def to_datetime(self, series, format):
-        pass
 
     def normalize_chars(self, series):
         pass

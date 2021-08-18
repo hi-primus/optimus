@@ -2,12 +2,14 @@ from abc import abstractmethod
 import re
 import dask
 import dask.dataframe as dd
+from dask.dataframe.core import map_partitions
 from sklearn.preprocessing import MaxAbsScaler
 from dask_ml.preprocessing import MinMaxScaler, StandardScaler
 
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 
 from optimus.engines.base.distributed.functions import DistributedBaseFunctions
+
 
 class DaskBaseFunctions(DistributedBaseFunctions):
 
@@ -36,9 +38,27 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     def to_dataframe(dfd):
         return dfd.compute()
 
+    def to_float(self, series):
+        if getattr(series, "map_partitions", False):
+            return series.map_partitions(self._to_float)
+        else:
+            return self._to_float(series)
+
+    def to_integer(self, series):
+        if getattr(series, "map_partitions", False):
+            return series.map_partitions(self._to_float)
+        else:
+            return self._to_float(series)
+
+    def to_datetime(self, series):
+        if getattr(series, "map_partitions", False):
+            return series.map_partitions(self._to_datetime)
+        else:
+            return self._to_float(series)
+
     def all(self, series):
         return series.all()
-    
+
     def any(self, series):
         return series.any()
 
@@ -89,7 +109,7 @@ class DaskBaseFunctions(DistributedBaseFunctions):
                 _search = '|'.join(map(re.escape, search))
             if ignore_case:
                 _search = f"(?i){_search}"
-        
+
         if len(replace_by) <= 1:
             _r = replace_by[0]
         else:

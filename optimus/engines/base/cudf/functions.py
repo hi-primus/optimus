@@ -1,7 +1,10 @@
 import cudf
 
+from optimus.engines.base.functions import BaseFunctions
+from abc import ABC
 
-class CUDFBaseFunctions():
+
+class CUDFBaseFunctions(BaseFunctions, ABC):
 
     def to_dict(self, series) -> dict:
         series.name = str(series.name)
@@ -19,16 +22,14 @@ class CUDFBaseFunctions():
     def is_string(self, series):
         return series.str.isalpha()
 
-    def to_integer(self, series):
+    def _to_integer(self, series):
         return cudf.to_numeric(series, errors="ignore", downcast="integer")
 
-    def to_float(self, series):
+    def _to_float(self, series):
         return cudf.to_numeric(series, errors="ignore", downcast="float")
 
     def to_string(self, series):
         return series.astype(str)
 
-    def to_datetime(self, value, format):
+    def _to_datetime(self, value, format):
         return cudf.to_datetime(value, format=format, errors="coerce")
-
-   
