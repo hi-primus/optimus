@@ -166,7 +166,7 @@ class BaseFunctions(ABC):
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
             import pydateinfer
-            return pydateinfer.infer(series.values)
+            return pydateinfer.infer(self.compute(series).values)
         elif dtype in self.constants.DATETIME_TYPES:
             return True
 
@@ -262,9 +262,6 @@ class BaseFunctions(ABC):
     def range(self, series):
         
         return {"min": self.to_float(series).min(), "max": self.to_float(series).max()}
-
-    def var(self, series):
-        return self.to_float(series).var()
 
     def percentile(self, series, values, error):
 
