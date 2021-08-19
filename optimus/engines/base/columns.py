@@ -3649,7 +3649,14 @@ class BaseColumns(ABC):
     def unique(self, cols="*", keep="first", output_cols=None, drop=True) -> 'DataFrameType':
         return self._mask(cols, "unique", output_cols, rename_func=not drop, keep=keep)
 
-    def match(self, cols="*", regex=None, data_type=None, output_cols=None, drop=True) -> 'DataFrameType':
+    def match(self, cols="*", arg=None, regex=None, data_type=None, output_cols=None, drop=True) -> 'DataFrameType':
+
+        if arg is not None:
+            if arg in ProfilerDataTypes.list():
+                data_type = arg
+            else:
+                regex = arg
+
         if data_type is None:
             return self.match_regex(cols=cols, regex=regex, output_cols=output_cols, drop=drop)
         else:
