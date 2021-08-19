@@ -15,7 +15,7 @@ from optimus.helpers.types import *
 from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE, Actions, ProfilerDataTypes, RELATIVE_ERROR
+from optimus.helpers.constants import BUFFER_SIZE, Actions, RELATIVE_ERROR
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
@@ -657,7 +657,7 @@ class BaseDataFrame(ABC):
         template = template_env.get_template("table.html")
 
         # Filter only the columns and data type info need it
-        data_types = [(k, v) for k, v in df.cols.data_types().items()]
+        data_types = [(k, v) for k, v in df.cols.data_types(tidy=False).items()]
 
         # Remove not selected columns
         final_columns = []
@@ -712,7 +712,7 @@ class BaseDataFrame(ABC):
         limit = min(limit, df.rows.approx_count())
         return tabulate(df.rows.limit(limit + 1).cols.select(cols).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i,
-                                 j in df.cols.data_types().items()],
+                                 j in df.cols.data_types(tidy=False).items()],
                         tablefmt="simple",
                         showindex="never")+"\n"
 
@@ -728,9 +728,9 @@ class BaseDataFrame(ABC):
                               width=800, compact=True)
         else:
             if data_types == "internal":
-                df_dtypes = self.cols.data_types()
+                df_dtypes = self.cols.data_types(tidy=False)
             else:
-                df_dtypes = self.cols.infer_types()
+                df_dtypes = self.cols.infer_types(tidy=False)
                 df_dtypes = { col: df_dtypes[col]["data_type"] for col in df_dtypes }
             df_data = []
             for col_name in df_dict.keys():
@@ -809,8 +809,7 @@ class BaseDataFrame(ABC):
                     cols_to_infer.remove(col_name)
 
             if cols_to_infer:
-                cols_data_types = {**cols_data_types, **
-                               df.cols.infer_types(cols_to_infer)}
+                cols_data_types = {**cols_data_types, **df.cols.infer_types(cols_to_infer, tidy=False)}
                 cols_data_types = {col: cols_data_types[col]
                                for col in cols_to_profile}
 
@@ -897,7 +896,7 @@ class BaseDataFrame(ABC):
             # Nulls
             total_count_na = 0
 
-            data_types = df.cols.data_types("*")
+            data_types = df.cols.data_types("*", tidy=False)
 
             hist, freq, sliced_freq, mismatch = self.functions.compute(
                 hist, freq, sliced_freq, mismatch)
@@ -924,7 +923,7 @@ class BaseDataFrame(ABC):
                 data_set_info.update({'size': df.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
-            data_types_list = list(set(df.cols.data_types("*").values()))
+            data_types_list = list(set(df.cols.data_types("*", tidy=False).values()))
             assign(profiler_data, "summary.data_types_list", data_types_list, dict)
             assign(profiler_data, "summary.total_count_data_types",
                    len(set([i for i in data_types.values()])), dict)

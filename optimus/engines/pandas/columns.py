@@ -48,11 +48,6 @@ class Cols(PandasBaseColumns, DataFrameBaseColumns):
         result = {}
         df_len = len(df.data)
         for col_name, na_count in df.cols.count_na(cols, tidy=False)["count_na"].items():
-            # for i, j in df.constants.DTYPES_DICT.items():
-            #     if j == df[col_name].data_type.type:
-            #         _data_type = df.constants.SHORT_DTYPES[i]
-
-            # _data_type = df.cols.data_types(col_name)[col_name]
 
             mismatches_count = df.cols.match_data_type(
                 col_name, data_type).data.value_counts().to_dict().get(False)

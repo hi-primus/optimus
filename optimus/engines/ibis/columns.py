@@ -137,11 +137,6 @@ class Cols(DataFrameBaseColumns):
         result = {}
         df_len = len(df)
         for col_name, na_count in df.cols.count_na(cols, tidy=False)["count_na"].items():
-            # for i, j in df.constants.DTYPES_DICT.items():
-            #     if j == df[col_name].dtype.type:
-            #         _dtype = df.constants.SHORT_DTYPES[i]
-
-            # _dtype = df.cols.data_types(col_name)[col_name]
 
             mismatches_count = df.cols.is_match(col_name, data_type).value_counts().to_dict().get(False)
             mismatches_count = 0 if mismatches_count is None else mismatches_count

@@ -87,7 +87,7 @@ class DaskBaseColumns(DistributedBaseColumns):
     def count_by_data_types(self, cols="*", infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.root.data
         cols = parse_columns(df, cols)
-        columns_data_types = df.cols.data_types()
+        columns_data_types = df.cols.data_types(tidy=False)
 
         def value_counts(series):
             return series.value_counts()

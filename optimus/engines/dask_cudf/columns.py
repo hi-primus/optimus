@@ -38,7 +38,7 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
     def count_by_data_types(self, cols, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
         df = self.root
         cols = parse_columns(df, cols)
-        dtypes = df.cols.data_types()
+        dtypes = df.cols.data_types(tidy=False)
 
         result = {}
         for col_name in cols:

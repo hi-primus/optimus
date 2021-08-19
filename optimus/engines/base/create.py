@@ -26,7 +26,7 @@ class BaseCreate:
                 elif len(key) == 2:
                     name, dtype = key
                 if force_dtype:
-                    dtype = self.op.constants.DTYPES_ALIAS.get(dtype, dtype)
+                    dtype = self.op.constants.OPTIMUS_TO_INTERNAL.get(dtype, dtype)
             else:
                 name = key
                 dtype = None

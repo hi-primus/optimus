@@ -5,79 +5,74 @@ import numpy as np
 class BaseConstants:
 
     # inferred/input to internal
-    DTYPES_ALIAS = {ProfilerDataTypes.INT.value: "int",
-                    ProfilerDataTypes.DECIMAL.value: "float",
-                    ProfilerDataTypes.STRING.value: "str",
-                    ProfilerDataTypes.BOOL.value: "bool",
-                    ProfilerDataTypes.BOOLEAN.value: "bool",
-                    ProfilerDataTypes.DATETIME.value: "datetime64[ns]",
-                    ProfilerDataTypes.ARRAY.value: "object",
-                    ProfilerDataTypes.OBJECT.value: "object",
-                    ProfilerDataTypes.GENDER.value: "gender",
-                    ProfilerDataTypes.IP.value: "str",
-                    ProfilerDataTypes.URL.value: "str",
-                    ProfilerDataTypes.EMAIL.value: "str",
-                    ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "str",
-                    ProfilerDataTypes.ZIP_CODE.value: "object",
-                    ProfilerDataTypes.MISSING.value: "object",
-                    ProfilerDataTypes.PHONE_NUMBER.value: "str",
-                    ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: "str",
-                    ProfilerDataTypes.HTTP_CODE.value: "str",
-                    ProfilerDataTypes.US_STATE.value: "category",
-                    ProfilerDataTypes.CATEGORICAL.value: "category",
-                    ProfilerDataTypes.NULL.value: "object",
-                    "vector": "object",
-                    "list": "object",
-                    "dict": "object",
-                    "date": "datetime64[ns]",
-                    "time": "datetime64[ns]",
-                    "timestamp": "datetime64[ns]"}
+    OPTIMUS_TO_INTERNAL = {ProfilerDataTypes.INT.value: "int",
+                           ProfilerDataTypes.DECIMAL.value: "float",
+                           ProfilerDataTypes.STRING.value: "str",
+                           ProfilerDataTypes.BOOL.value: "bool",
+                           ProfilerDataTypes.BOOLEAN.value: "bool",
+                           ProfilerDataTypes.DATETIME.value: "datetime64[ns]",
+                           ProfilerDataTypes.ARRAY.value: "object",
+                           ProfilerDataTypes.OBJECT.value: "object",
+                           ProfilerDataTypes.GENDER.value: "gender",
+                           ProfilerDataTypes.IP.value: "str",
+                           ProfilerDataTypes.URL.value: "str",
+                           ProfilerDataTypes.EMAIL.value: "str",
+                           ProfilerDataTypes.CREDIT_CARD_NUMBER.value: "str",
+                           ProfilerDataTypes.ZIP_CODE.value: "object",
+                           ProfilerDataTypes.MISSING.value: "object",
+                           ProfilerDataTypes.PHONE_NUMBER.value: "str",
+                           ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value: "str",
+                           ProfilerDataTypes.HTTP_CODE.value: "str",
+                           ProfilerDataTypes.US_STATE.value: "category",
+                           ProfilerDataTypes.CATEGORICAL.value: "category",
+                           ProfilerDataTypes.NULL.value: "object",
+                           "vector": "object",
+                           "list": "object",
+                           "dict": "object",
+                           "date": "datetime64[ns]",
+                           "time": "datetime64[ns]",
+                           "timestamp": "datetime64[ns]"}
 
     # internal to inferred
-    INFERRED_DTYPES_ALIAS = {"string_": ProfilerDataTypes.STRING.value,
-                            "large_string": ProfilerDataTypes.STRING.value,
-                            "unicode_": ProfilerDataTypes.STRING.value,
-                            "string": ProfilerDataTypes.STRING.value,
-                            "int_": ProfilerDataTypes.INT.value,
-                            "bigint": ProfilerDataTypes.INT.value,
-                            "int8": ProfilerDataTypes.INT.value,
-                            "int16": ProfilerDataTypes.INT.value,
-                            "int32": ProfilerDataTypes.INT.value,
-                            "int64": ProfilerDataTypes.INT.value,
-                            "uint": ProfilerDataTypes.INT.value,
-                            "uint8": ProfilerDataTypes.INT.value,
-                            "uint16": ProfilerDataTypes.INT.value,
-                            "uint32": ProfilerDataTypes.INT.value,
-                            "uint64": ProfilerDataTypes.INT.value,
-                            "binary": ProfilerDataTypes.INT.value,
-                            "large_binary": ProfilerDataTypes.INT.value,
-                            "numeric": ProfilerDataTypes.DECIMAL.value,
-                            "float": ProfilerDataTypes.DECIMAL.value,
-                            "float16": ProfilerDataTypes.DECIMAL.value,
-                            "float32": ProfilerDataTypes.DECIMAL.value,
-                            "float64": ProfilerDataTypes.DECIMAL.value,
-                            "float_": ProfilerDataTypes.DECIMAL.value,
-                            "bool_": ProfilerDataTypes.BOOL.value,
-                            "date": ProfilerDataTypes.DATETIME.value,
-                            "date32": ProfilerDataTypes.DATETIME.value,
-                            "date64": ProfilerDataTypes.DATETIME.value,
-                            "time": ProfilerDataTypes.DATETIME.value,
-                            "time32": ProfilerDataTypes.DATETIME.value,
-                            "time64": ProfilerDataTypes.DATETIME.value,
-                            "timestamp": ProfilerDataTypes.DATETIME.value,
-                            "datetime64": ProfilerDataTypes.DATETIME.value,
-                            "datetime64[ns]": ProfilerDataTypes.DATETIME.value,
-                            "datetime[64]": ProfilerDataTypes.DATETIME.value,
-                            "timedelta[ns]": ProfilerDataTypes.DATETIME.value,
-                            "category": ProfilerDataTypes.CATEGORICAL.value,
-                            "list": ProfilerDataTypes.ARRAY.value,
-                            "vector": ProfilerDataTypes.OBJECT.value,
-                            "dict": ProfilerDataTypes.OBJECT.value}
-
-    DTYPES_DICT = {"string": np.str, "uint8": np.uint8, "uint16": np.uint16, "uint32": np.uint32,
-                   "uint64": np.uint64, "int8": np.int8, "int16": np.int16, "int32": np.int32, "int64": np.int64,
-                   "float": np.float, "float64": np.float64, "boolean": np.bool, "array": np.array,
-                   "bigint": np.int64, "object": np.object_}
+    INTERNAL_TO_OPTIMUS = {"string_": ProfilerDataTypes.STRING.value,
+                           "large_string": ProfilerDataTypes.STRING.value,
+                           "unicode_": ProfilerDataTypes.STRING.value,
+                           "string": ProfilerDataTypes.STRING.value,
+                           "int_": ProfilerDataTypes.INT.value,
+                           "bigint": ProfilerDataTypes.INT.value,
+                           "int8": ProfilerDataTypes.INT.value,
+                           "int16": ProfilerDataTypes.INT.value,
+                           "int32": ProfilerDataTypes.INT.value,
+                           "int64": ProfilerDataTypes.INT.value,
+                           "uint": ProfilerDataTypes.INT.value,
+                           "uint8": ProfilerDataTypes.INT.value,
+                           "uint16": ProfilerDataTypes.INT.value,
+                           "uint32": ProfilerDataTypes.INT.value,
+                           "uint64": ProfilerDataTypes.INT.value,
+                           "binary": ProfilerDataTypes.INT.value,
+                           "large_binary": ProfilerDataTypes.INT.value,
+                           "numeric": ProfilerDataTypes.DECIMAL.value,
+                           "float": ProfilerDataTypes.DECIMAL.value,
+                           "float16": ProfilerDataTypes.DECIMAL.value,
+                           "float32": ProfilerDataTypes.DECIMAL.value,
+                           "float64": ProfilerDataTypes.DECIMAL.value,
+                           "float_": ProfilerDataTypes.DECIMAL.value,
+                           "bool_": ProfilerDataTypes.BOOL.value,
+                           "date": ProfilerDataTypes.DATETIME.value,
+                           "date32": ProfilerDataTypes.DATETIME.value,
+                           "date64": ProfilerDataTypes.DATETIME.value,
+                           "time": ProfilerDataTypes.DATETIME.value,
+                           "time32": ProfilerDataTypes.DATETIME.value,
+                           "time64": ProfilerDataTypes.DATETIME.value,
+                           "timestamp": ProfilerDataTypes.DATETIME.value,
+                           "datetime64": ProfilerDataTypes.DATETIME.value,
+                           "datetime64[ns]": ProfilerDataTypes.DATETIME.value,
+                           "datetime[64]": ProfilerDataTypes.DATETIME.value,
+                           "timedelta[ns]": ProfilerDataTypes.DATETIME.value,
+                           "category": ProfilerDataTypes.CATEGORICAL.value,
+                           "list": ProfilerDataTypes.ARRAY.value,
+                           "vector": ProfilerDataTypes.OBJECT.value,
+                           "dict": ProfilerDataTypes.OBJECT.value}
 
     # short to internal 
     SHORT_DTYPES = {"str": "string",
@@ -88,8 +83,17 @@ class BaseConstants:
                     "timestamp": "datetime"
                     }
                      
-    DTYPES_TO_INFERRED = {"int": ["int64", "int32"], "float": [
-        "float64", "float"], "object": ["object"]}
+    @property
+    def OPTIMUS_TO_INTERNALS(self):
+        values = set(list(self.INTERNAL_TO_OPTIMUS.values()) + ProfilerDataTypes.list())
+        
+        _dict = {}
+        for v in values:
+            _list = [self.OPTIMUS_TO_INTERNAL[v]]
+            _list += [t[0] for t in self.INTERNAL_TO_OPTIMUS.items() if t[1] == v]
+            _dict.update({v: list(set(_list))})
+            
+        return _dict
 
     ANY_TYPES = ["object"]
 
@@ -97,17 +101,17 @@ class BaseConstants:
     def NUMERIC_TYPES(self):
         types = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
         return self.ANY_TYPES + types +\
-               [item[0] for item in self.INFERRED_DTYPES_ALIAS.items() if item[1] in types]
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] in types]
 
     @property
     def STRING_TYPES(self):
         return self.ANY_TYPES + [ProfilerDataTypes.STRING.value] +\
-               [item[0] for item in self.INFERRED_DTYPES_ALIAS.items() if item[1]==ProfilerDataTypes.STRING.value]
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1]==ProfilerDataTypes.STRING.value]
     
     @property
     def DATETIME_TYPES(self):
         return self.ANY_TYPES + [ProfilerDataTypes.DATETIME.value] +\
-               [item[0] for item in self.INFERRED_DTYPES_ALIAS.items() if item[1]==ProfilerDataTypes.DATETIME.value]
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1]==ProfilerDataTypes.DATETIME.value]
     
     OBJECT_TYPES = ["object"]
 

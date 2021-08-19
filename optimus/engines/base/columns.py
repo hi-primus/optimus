@@ -553,10 +553,10 @@ class BaseColumns(ABC):
         for k, v in col_data_type.items():
             # Initialize values to 0
             result_default = {
-                data_type: 0 for data_type in df.constants.DTYPES_TO_INFERRED.keys()}
+                data_type: 0 for data_type in df.constants.OPTIMUS_TO_INTERNAL.keys()}
             for k1, v1 in v.items():
-                for k2, v2 in df.constants.DTYPES_TO_INFERRED.items():
-                    if k1 in df.constants.DTYPES_TO_INFERRED[k2]:
+                for k2, v2 in df.constants.OPTIMUS_TO_INTERNAL.items():
+                    if k1 in df.constants.OPTIMUS_TO_INTERNAL[k2]:
                         result_default[k2] = result_default[k2] + v1
             columns[k] = result_default
         return columns
@@ -571,13 +571,13 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols)
         result = {}
 
-        data_types = df.cols.data_types(cols)
+        data_types = df.cols.data_types(cols, tidy=False)
 
         for col_name in cols:
             data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
             if data_type is None:
                 data_type = data_types[col_name]
-                data_type = df.constants.INFERRED_DTYPES_ALIAS.get(data_type, data_type)
+                data_type = df.constants.INTERNAL_TO_OPTIMUS.get(data_type, data_type)
             result.update({col_name: data_type})
         return result
 
@@ -617,7 +617,7 @@ class BaseColumns(ABC):
         for col_name, element in cols.items():
             props = element if is_dict(element) else {"data_type": element}
             data_type = props["data_type"]
-            data_type = df.constants.INFERRED_DTYPES_ALIAS.get(data_type, data_type)
+            data_type = df.constants.INTERNAL_TO_OPTIMUS.get(data_type, data_type)
             if data_type in ProfilerDataTypes.list():
                 if not inferred:
                     df.meta = Meta.set(
@@ -1067,7 +1067,7 @@ class BaseColumns(ABC):
 
         return df.cols.select(cols)
 
-    def data_types(self, cols="*") -> dict:
+    def data_types(self, cols="*", tidy=True) -> dict:
         """
         Return the column(s) data type as string
         :param columns: Columns to be processed
@@ -1076,9 +1076,9 @@ class BaseColumns(ABC):
         df = self.root
         cols = parse_columns(df, cols)
         data_types = ({k: str(v) for k, v in dict(df.data.dtypes).items()})
-        return {col_name: data_types[col_name] for col_name in cols}
+        return format_dict({col_name: data_types[col_name] for col_name in cols}, tidy=tidy)
 
-    def schema_data_type(self, cols="*"):
+    def schema_data_type(self, cols="*", tidy=True):
         """
         Return the column(s) data type as Type
         :param cols: Columns to be processed
@@ -1093,7 +1093,7 @@ class BaseColumns(ABC):
                 result[col_name] = "category"
             else:
                 result[col_name] = dfd[col_name].dtype.name
-        return format_dict(result)
+        return format_dict(result, tidy=tidy)
 
     def agg_exprs(self, cols="*", funcs=None, *args, compute=True, tidy=True, parallel=False):
         """
@@ -1782,7 +1782,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        dtypes = self.root[cols].cols.data_types()
+        dtypes = self.root[cols].cols.data_types(tidy=False)
         return self.apply(cols, self.F.infer_data_types, args=(dtypes,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
@@ -2846,7 +2846,7 @@ class BaseColumns(ABC):
         if is_dict(cols):
             cols_types = cols
         else:
-            cols_types = self.root.cols.infer_types(cols)
+            cols_types = self.root.cols.infer_types(cols, tidy=False)
 
         result = {}
         profiler_to_mask_func = {
@@ -2905,7 +2905,7 @@ class BaseColumns(ABC):
     def count_by_data_types(cols, infer=False, str_funcs=None, int_funcs=None) -> dict:
         pass
 
-    def infer_types(self, cols="*", sample=INFER_PROFILER_ROWS) -> dict:
+    def infer_types(self, cols="*", sample=INFER_PROFILER_ROWS, tidy=True) -> dict:
         """
         Infer data types in a dataframe from a sample. First it identify the data type of every value in every cell.
         After that it takes all ghe values apply som heuristic to try to better identify the datatype.
@@ -2976,7 +2976,7 @@ class BaseColumns(ABC):
             self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type",
                                       cols_and_inferred_dtype[col])
 
-        return cols_and_inferred_dtype
+        return format_dict(cols_and_inferred_dtype, tidy=tidy)
 
     def infer_date_formats(self, cols="*", sample=INFER_PROFILER_ROWS, tidy=True) -> dict:
         """

@@ -72,7 +72,7 @@ def parse_col_names_funcs_to_keys(data):
 
 def parse_data_types(df, value):
     """
-    Get the data type from a string data type representation. for example 'StringType' from 'string'
+    Get the data type from a string data type representation. for example 'int' from 'uint64'
     :param value:
     :param df:
     :return:
@@ -83,7 +83,7 @@ def parse_data_types(df, value):
     data_type = []
 
     for v in value:
-        v = df.constants.SHORT_DTYPES.get(v, v)
+        v = df.constants.INTERNAL_TO_OPTIMUS.get(v, v)
         data_type.append(v)
 
     return one_list_to_val(data_type)

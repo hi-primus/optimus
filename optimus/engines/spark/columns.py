@@ -776,7 +776,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
                     new_value = F.array(*[F.lit(v) for v in value])
                 func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
             else:
-                if df.cols.data_types(input_col)[input_col] == parse_python_dtypes(type(value).__name__):
+                if df.cols.data_types(input_col) == parse_python_dtypes(type(value).__name__):
 
                     new_value = value
                     func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
@@ -1189,7 +1189,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         df = self.root
 
         cols = parse_columns(df, cols)
-        columns_data_types = df.cols.data_types()
+        columns_data_types = df.cols.data_types(tidy=False)
 
         df_count = (df.select(cols).rdd
                     .flatMap(lambda x: x.asDict().items())
