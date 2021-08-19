@@ -195,7 +195,7 @@ class BaseFunctions(ABC):
         return self.to_float(series).mean()
 
     def mode(self, series):
-        return self.to_float(series).mode().to_dict()
+        return self.to_float(series).mode().tolist()
 
     def std(self, series):
         return self.to_float(series).std()
