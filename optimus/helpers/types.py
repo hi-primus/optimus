@@ -7,7 +7,7 @@ EngineType = TypeVar("EngineType", bound='engine_module.BaseEngine')
 InternalEngineType = TypeVar("InternalEngineType")
 
 DataFrameType = TypeVar("DataFrameType", bound='dataframe_module.BaseDataFrame')
-InternalDataFrameType = TypeVar("InternalDataFrameType")
+InternalDataFrameType = TypeVar("InternalDataFrameType", bound=dict)
 MaskDataFrameType = TypeVar("MaskDataFrameType", bound='dataframe_module.BaseDataFrame')
 ConnectionType = TypeVar("ConnectionType")
 ClustersType = TypeVar("ClustersType")
@@ -27,11 +27,14 @@ _list_types = [str(DataFrameTypeList), str(InternalDataFrameTypeList), str(MaskD
 
 _types = [str(DataFrameType), str(InternalDataFrameType), str(MaskDataFrameType), str(ConnectionType), str(ClustersType), str(ModelType)]
 
+
 def is_list_of_optimus_type(value):
     return str(value) in _list_types
 
+
 def is_optimus_type(value):
     return str(value) in _types
+
 
 def is_any_optimus_type(value):
     return str(value) in [*_types, *_list_types]
