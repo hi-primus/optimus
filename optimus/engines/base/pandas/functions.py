@@ -19,18 +19,18 @@ class PandasBaseFunctions(BaseFunctions, ABC):
             else:
                 return False
 
-        return pd.Series(np.vectorize(_is_string)(series.values).flatten())
+        return np.vectorize(_is_string)(series.values).flatten()
 
     @staticmethod
     def is_integer(series):
-        return pd.Series(np.vectorize(isintlike)(series).flatten())
+        return np.vectorize(isintlike)(series).flatten()
 
     def is_float(self, series):
-        return pd.Series(np.vectorize(isfloat)(series).flatten())
+        return np.vectorize(isfloat)(series).flatten()
 
     @staticmethod
     def is_numeric(series):
-        return pd.Series(np.vectorize(isreal)(series).flatten())
+        return np.vectorize(isreal)(series).flatten()
 
     def _to_integer(self, series, default=0):
         try:
