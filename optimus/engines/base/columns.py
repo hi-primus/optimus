@@ -3033,6 +3033,9 @@ class BaseColumns(ABC):
         df = self.root
         cols = parse_columns(df, cols)
 
+        # avoid passing "self" to a Dask worker
+        to_items = self.F.to_items
+
         @self.F.delayed
         def series_to_dict(_series, _total_freq_count=None):
             _result = [{"value": i, "count": j}

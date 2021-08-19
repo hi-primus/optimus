@@ -18,6 +18,10 @@ from optimus.infer import is_list, is_list_of_list, is_null, is_bool, \
 # ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
 
 class BaseFunctions(ABC):
+    """
+    Functions for internal use or to be called using 'F': `from optimus.functions import F`
+    Note: some methods needs to be static so they can be passed to a Dask worker.
+    """
 
     def __init__(self, df):
         if df is not None and getattr(df, "partitions", False):
@@ -82,13 +86,15 @@ class BaseFunctions(ABC):
     def compute(self, *args, **kwargs):
         return one_tuple_to_val((*(a for a in args), *(kwargs[k] for k in kwargs)))
 
-    def to_dict(self, series) -> dict:
+    @staticmethod
+    def to_dict(series) -> dict:
         """
         Convert series to a Python dictionary
         """
         return series.to_dict()
 
-    def to_items(self, series) -> dict:
+    @staticmethod
+    def to_items(series) -> dict:
         """
         Convert series to a list of tuples [(index, value), ...]
         """
