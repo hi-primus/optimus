@@ -29,10 +29,10 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
         return wrapper
 
     def kurtosis(self, series):
-        return self.to_float(series).kurtosis()
+        return self.to_float(series.dropna()).kurtosis()
 
     def skew(self, series):
-        return self.to_float(series).skew()
+        return self.to_float(series.dropna()).skew()
 
     def exp(self, series):
         return da.exp(self.to_float(series))

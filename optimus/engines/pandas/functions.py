@@ -16,10 +16,14 @@ class PandasFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
         return int((self.to_float(series).values == 0).sum())
 
     def kurtosis(self, series):
-        return self.to_float(series).kurtosis()
+        # use scipy to match function from dask.array.stats
+        from scipy.stats import kurtosis
+        return kurtosis(self.to_float(series.dropna()))
 
     def skew(self, series):
-        return self.to_float(series).skew()
+        # use scipy to match function from dask.array.stats
+        from scipy.stats import skew
+        return skew(self.to_float(series.dropna()))
 
     def exp(self, series):
         return np.exp(self.to_float(series))
