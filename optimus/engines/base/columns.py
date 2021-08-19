@@ -1157,7 +1157,7 @@ class BaseColumns(ABC):
         :param compute:
         :return:
         """
-        while isinstance(exprs, (list, tuple)):
+        while isinstance(exprs, (list, tuple)) and len(exprs) == 1:
             exprs = exprs[0]
         if getattr(exprs, "to_dict", None):
             exprs = exprs.to_dict()

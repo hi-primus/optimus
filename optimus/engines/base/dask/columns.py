@@ -25,7 +25,7 @@ class DaskBaseColumns(DistributedBaseColumns):
 
         if compute:
             result = dask.compute(exprs)
-            while isinstance(result, (list, tuple)):
+            while isinstance(result, (list, tuple)) and len(result) == 1:
                 result = result[0]
             if getattr(result, "to_dict", None):
                 result = result.to_dict()
