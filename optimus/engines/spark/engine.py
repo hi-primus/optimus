@@ -107,15 +107,15 @@ class SparkEngine(BaseEngine):
             elif load_avro == "2.3":
                 self._add_spark_packages(["com.databricks:spark-avro_2.11:4.0.0"])
 
-            jdbc_jars = ["/jars/spark-redis-2.4.1-SNAPSHOT-jar-with-dependencies.jar",
-                         "/jars/RedshiftJDBC42-1.2.16.1027.jar",
-                         "/jars/mysql-connector-java-8.0.16.jar",
-                         "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar", "/jars/presto-jdbc-0.224.jar",
-                         "/jars/spark-cassandra-connector_2.11-2.4.1.jar", "/jars/sqlite-jdbc-3.27.2.1.jar",
-                         "/jars/mssql-jdbc-7.4.1.jre8.jar"]
-
-            self._add_jars(absolute_path(jdbc_jars, "uri"))
-            self._add_driver_class_path(absolute_path(jdbc_jars, "posix"))
+            # jdbc_jars = ["/jars/spark-redis-2.4.1-SNAPSHOT-jar-with-dependencies.jar",
+            #              "/jars/RedshiftJDBC42-1.2.16.1027.jar",
+            #              "/jars/mysql-connector-java-8.0.16.jar",
+            #              "/jars/ojdbc8.jar", "/jars/postgresql-42.2.5.jar", "/jars/presto-jdbc-0.224.jar",
+            #              "/jars/spark-cassandra-connector_2.11-2.4.1.jar", "/jars/sqlite-jdbc-3.27.2.1.jar",
+            #              "/jars/mssql-jdbc-7.4.1.jre8.jar"]
+            #
+            # self._add_jars(absolute_path(jdbc_jars, "uri"))
+            # self._add_driver_class_path(absolute_path(jdbc_jars, "posix"))
 
             self._create_session()
 
