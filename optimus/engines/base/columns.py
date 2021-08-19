@@ -3295,7 +3295,7 @@ class BaseColumns(ABC):
                 def rename_func(n): return f"{n}_{method}"
             append_df = append_df.cols.rename(rename_func)
 
-        return self.append(append_df)
+        return self.assign(append_df)
 
     def _any_mask(self, cols="*", method: str = None, inverse=False, tidy=True, compute=True, *args, **kwargs) -> bool:
 
