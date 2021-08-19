@@ -3039,7 +3039,7 @@ class BaseColumns(ABC):
         @self.F.delayed
         def series_to_dict(_series, _total_freq_count=None):
             _result = [{"value": i, "count": j}
-                       for i, j in self.F.to_items(_series)]
+                       for i, j in to_items(_series)]
 
             if _total_freq_count is None:
                 _result = {_series.name: {"values": _result}}
@@ -3054,19 +3054,18 @@ class BaseColumns(ABC):
             return {"frequency": {key: value for ele in top_n for key, value in ele.items()}}
 
         @self.F.delayed
-        def freq_percentage(_value_counts, _total_rows):
+        def freq_percentage(_value_counts: dict, _total_rows):
 
-            for i, j in _value_counts.items():
-                for x in list(j.values())[0]:
-                    x["percentage"] = round(
-                        (x["count"] * 100 / _total_rows), 2)
+            for col in _value_counts["frequency"]:
+                for x in _value_counts["frequency"][col]["values"]:
+                    x['percentage'] = round(x['count'] * 100 / _total_rows, 2)
 
             return _value_counts
 
         value_counts = [df.data[col_name].value_counts() for col_name in cols]
         n_largest = [_value_counts.nlargest(n)
                      for _value_counts in value_counts]
-
+        
         if count_uniques is True:
             count_uniques = [_value_counts.count()
                              for _value_counts in value_counts]
@@ -3078,10 +3077,10 @@ class BaseColumns(ABC):
         c = flat_dict(b)
 
         if percentage:
-            c = freq_percentage(c, df.delayed(len)(df))
+            c = freq_percentage(c, self.F.delayed(len)(df.data))
 
         if compute is True:
-            result = dd.compute(c)[0]
+            result = self.F.compute(c)
         else:
             result = c
 
