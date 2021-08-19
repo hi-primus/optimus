@@ -1759,15 +1759,15 @@ class BaseColumns(ABC):
         return df
 
     def to_float(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, "to_float", func_return_type=float,
+        return self.apply(cols, self.F.to_float, func_return_type=float,
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
 
     def to_integer(self, cols="*", default=0, output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, "to_integer", args=(default,), func_return_type=int,
+        return self.apply(cols, self.F.to_integer, args=(default,), func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_INTEGER.value, mode="vectorized")
 
     def to_boolean(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, "to_boolean", func_return_type=int,
+        return self.apply(cols, self.F.to_boolean, func_return_type=int,
                           output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="vectorized")
 
     def to_string(self, cols="*", output_cols=None) -> 'DataFrameType':
@@ -1782,7 +1782,7 @@ class BaseColumns(ABC):
                 filtered_columns.append(col_name)
 
         if len(filtered_columns) > 0:
-            return self.apply(cols, "to_string", func_return_type=str,
+            return self.apply(cols, self.F.to_string, func_return_type=str,
                               output_cols=output_cols, meta_action=Actions.TO_STRING.value, mode="vectorized",
                               func_type="column_expr")
         else:
@@ -1801,7 +1801,7 @@ class BaseColumns(ABC):
                           meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
 
     def date_formats(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, "date_formats", func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, self.F.date_formats, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="partitioned", func_type="column_expr")
 
     def lower(self, cols="*", output_cols=None) -> 'DataFrameType':
@@ -1918,7 +1918,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(cols, "word_tokenize", func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, self.F.word_tokenize, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.WORD_TOKENIZE.value, mode="vectorized")
 
     def word_count(self, cols="*", output_cols=None) -> 'DataFrameType':
@@ -2074,7 +2074,7 @@ class BaseColumns(ABC):
         """
         format = transform_date_format(format) if transform_format and format else format
 
-        return self.apply(cols, "to_datetime", func_return_type=str,
+        return self.apply(cols, self.F.to_datetime, func_return_type=str,
                           output_cols=output_cols, args=format, mode="partitioned")
 
     def _date_format(self, cols="*", format=None, output_cols=None, func=None, meta_action=None) -> 'DataFrameType':
@@ -2450,7 +2450,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.apply(cols, "lemmatize_verbs", output_cols=output_cols, mode="partitioned")
+        return self.apply(cols, self.F.lemmatize_verbs, output_cols=output_cols, mode="partitioned")
 
     def stem_verbs(self, cols="*", stemmer: str = "porter", language: str = "english",
                    output_cols=None) -> 'DataFrameType':
@@ -3207,7 +3207,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(cols, "domain", output_cols=output_cols, meta_action=Actions.DOMAIN.value,
+        return self.apply(cols, self.F.domain, output_cols=output_cols, meta_action=Actions.DOMAIN.value,
                           mode="vectorized")
 
     def top_domain(self, cols="*", output_cols=None) -> 'DataFrameType':
@@ -3218,63 +3218,63 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(cols, "top_domain", output_cols=output_cols, meta_action=Actions.TOP_DOMAIN.value,
+        return self.apply(cols, self.F.top_domain, output_cols=output_cols, meta_action=Actions.TOP_DOMAIN.value,
                           mode="vectorized")
 
     def sub_domain(self, cols="*", output_cols=None) -> 'DataFrameType':
         # From https://www.hi-bumblebee.com:8080 it returns www
 
-        return self.apply(cols, "sub_domain", output_cols=output_cols, meta_action=Actions.SUB_DOMAIN.value,
+        return self.apply(cols, self.F.sub_domain, output_cols=output_cols, meta_action=Actions.SUB_DOMAIN.value,
                           mode="vectorized")
 
     def url_scheme(self, cols="*", output_cols=None) -> 'DataFrameType':
         # From https://www.hi-bumblebee.com it returns https
-        return self.apply(cols, "url_scheme", output_cols=output_cols,
+        return self.apply(cols, self.F.url_scheme, output_cols=output_cols,
                           meta_action=Actions.URL_SCHEME.value,
                           mode="vectorized")
 
     def url_path(self, cols="*", output_cols=None) -> 'DataFrameType':
 
-        return self.apply(cols, "url_path", output_cols=output_cols,
+        return self.apply(cols, self.F.url_path, output_cols=output_cols,
                           meta_action=Actions.URL_PATH.value,
                           mode="vectorized")
 
     def url_file(self, cols="*", output_cols=None) -> 'DataFrameType':
 
-        return self.apply(cols, "url_file", output_cols=output_cols,
+        return self.apply(cols, self.F.url_file, output_cols=output_cols,
                           meta_action=Actions.URL_FILE.value,
                           mode="vectorized")
 
     def url_query(self, cols="*", output_cols=None) -> 'DataFrameType':
 
-        return self.apply(cols, "url_query", output_cols=output_cols, meta_action=Actions.URL_QUERY.value,
+        return self.apply(cols, self.F.url_query, output_cols=output_cols, meta_action=Actions.URL_QUERY.value,
                           mode="vectorized")
 
     def url_fragment(self, cols="*", output_cols=None) -> 'DataFrameType':
 
-        return self.apply(cols, "url_fragment", output_cols=output_cols, meta_action=Actions.URL_FRAGMENT.value,
+        return self.apply(cols, self.F.url_fragment, output_cols=output_cols, meta_action=Actions.URL_FRAGMENT.value,
                           mode="vectorized")
 
     def host(self, cols="*", output_cols=None) -> 'DataFrameType':
 
-        return self.apply(cols, "host", output_cols=output_cols, meta_action=Actions.HOST.value,
+        return self.apply(cols, self.F.host, output_cols=output_cols, meta_action=Actions.HOST.value,
                           mode="vectorized")
 
     def port(self, cols="*", output_cols=None) -> 'DataFrameType':
 
-        return self.apply(cols, "port", output_cols=output_cols, meta_action=Actions.PORT.value,
+        return self.apply(cols, self.F.port, output_cols=output_cols, meta_action=Actions.PORT.value,
                           mode="vectorized")
 
     # Email functions
     def email_username(self, cols="*", output_cols=None) -> 'DataFrameType':
 
-        return self.apply(cols, "email_username", output_cols=output_cols,
+        return self.apply(cols, self.F.email_username, output_cols=output_cols,
                           meta_action=Actions.EMAIL_USER.value,
                           mode="vectorized")
 
     def email_domain(self, cols="*", output_cols=None) -> 'DataFrameType':
 
-        return self.apply(cols, "email_domain", output_cols=output_cols,
+        return self.apply(cols, self.F.email_domain, output_cols=output_cols,
                           meta_action=Actions.EMAIL_DOMAIN.value,
                           mode="vectorized")
 
@@ -3860,7 +3860,7 @@ class BaseColumns(ABC):
         return df
 
     def metaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, "metaphone", func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, self.F.metaphone, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.METAPHONE.value, mode="vectorized", func_type="column_expr")
 
     def levenshtein(self, cols="*", other_cols=None, value=None, output_cols=None):
@@ -3892,19 +3892,19 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.apply(cols, "nysiis", func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, self.F.nysiis, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.NYSIIS.value, mode="vectorized", func_type="column_expr")
 
     def match_rating_codex(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, "match_rating_codex", func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, self.F.match_rating_codex, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.MATCH_RATING_CODEX.value, mode="vectorized", func_type="column_expr")
 
     def double_metaphone(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, "double_metaphone", func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, self.F.double_metaphone, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.DOUBLE_METAPHONE.value, mode="vectorized", func_type="column_expr")
 
     def soundex(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.apply(cols, "soundex", func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, self.F.soundex, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.SOUNDEX.value, mode="vectorized", func_type="column_expr")
 
     def tf_idf(self, features) -> 'DataFrameType':

@@ -25,9 +25,19 @@ class BaseFunctions(ABC):
 
     def __init__(self, df):
         if df is not None and getattr(df, "partitions", False):
-            self.n_partitions = df.partitions()
+            self.root = df
         else:
-            self.n_partitions = 1
+            self.root = None
+
+    def __getattr__(self, name):
+        type_msg = "" if self.root is None else f" using {type(self.root).__name__}"
+        raise NotImplementedError(f"\"{name}\" is not available"+type_msg)
+
+    @property
+    def n_partitions(self):
+        if self.root is None:
+            return 1
+        return self.root.partitions()
 
     @staticmethod
     def delayed(func):

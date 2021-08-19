@@ -13,6 +13,7 @@ from optimus.infer import is_dict, is_str, regex_http_code, regex_social_securit
 class Mask(ABC):
     def __init__(self, root: 'DataFrameType'):
         self.root = root
+        self.F = root.functions
 
     def _to_frame(self, series):
         if callable(getattr(series, "to_frame", False)):
@@ -20,16 +21,16 @@ class Mask(ABC):
         return series
 
     def numeric(self, cols="*"):
-        return self.root[cols].cols.apply(cols, "is_numeric")
+        return self.root[cols].cols.apply(cols, self.F.is_numeric)
 
     def int(self, cols="*"):
-        return self.root[cols].cols.apply(cols, "is_integer")
+        return self.root[cols].cols.apply(cols, self.F.is_integer)
 
     def float(self, cols="*"):
-        return self.root[cols].cols.apply(cols, "is_float")
+        return self.root[cols].cols.apply(cols, self.F.is_float)
 
     def str(self, cols="*"):
-        return self.root[cols].cols.apply(cols, "is_string")
+        return self.root[cols].cols.apply(cols, self.F.is_string)
 
     def greater_than(self, cols="*", value=None) -> 'MaskDataFrameType':
         df = self.root
@@ -334,7 +335,7 @@ class Mask(ABC):
 
         col_name = cols[0] if len(cols) == 1 else "__duplicated__"
 
-        mask = self.root.functions.duplicated(subset_df, keep, cols).rename(col_name)
+        mask = self.F.duplicated(subset_df, keep, cols).rename(col_name)
 
         return self.root.new(self._to_frame(mask))
 
