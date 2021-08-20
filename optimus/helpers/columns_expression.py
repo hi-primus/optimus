@@ -42,7 +42,7 @@ def zeros_agg(col_name):
     return F.count(F.when(F.col(col_name) == 0, col_name))
 
 
-def count_uniques_agg(col_name, estimate=True):
+def count_uniques_agg(col_name, estimate=False):
     if estimate is True:
         result = F.approx_count_distinct(col_name)
     else:

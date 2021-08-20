@@ -1,4 +1,5 @@
 import math
+from optimus.helpers.logger import logger
 import re
 import string
 import time
@@ -21,6 +22,8 @@ from nltk.stem import SnowballStemmer
 from num2words import num2words
 
 # from optimus.engines.dask.functions import DaskFunctions as F
+
+from optimus.optimus import Engine, EnginePretty
 from optimus.engines.base.meta import Meta
 from optimus.engines.base.stringclustering import Clusters
 from optimus.helpers.check import is_dask_dataframe
@@ -2502,14 +2505,17 @@ class BaseColumns(ABC):
         df = self.root
         return len(df.cols.names())
 
-    def unique_values(self, cols="*", values=None, estimate=True, tidy=True, compute=True) -> list:
-
+    def unique_values(self, cols="*", estimate=False, tidy=True, compute=True) -> list:
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.unique_values, values, estimate, tidy=tidy, compute=compute)
+        if df.op.engine != Engine.SPARK.value and estimate is not False:
+            logger.warn(f"'estimate' argument is only supported on {EnginePretty.SPARK.value}")
+        return df.cols.agg_exprs(cols, self.F.unique_values, estimate, tidy=tidy, compute=compute)
 
-    def count_uniques(self, cols="*", values=None, estimate=True, tidy=True, compute=True) -> int:
+    def count_uniques(self, cols="*", estimate=False, tidy=True, compute=True) -> int:
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.count_uniques, values, estimate, tidy=tidy, compute=compute)
+        if df.op.engine != Engine.SPARK.value and estimate is not False:
+            logger.warn(f"'estimate' argument is only supported on {EnginePretty.SPARK.value}")
+        return df.cols.agg_exprs(cols, self.F.count_uniques, estimate, tidy=tidy, compute=compute)
 
     def _math(self, cols="*", value=None, operator=None, output_cols=None, output_col=None, name="",
               cast=False) -> 'DataFrameType':

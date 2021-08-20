@@ -98,9 +98,6 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     def to_delayed(self, value):
         return value.to_delayed()
 
-    def mode(self, series):
-        return self.to_float(series).mode().compute().tolist()
-
     def count_zeros(self, series):
         return int((self.to_float(series).values == 0).sum())
 

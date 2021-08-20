@@ -18,6 +18,19 @@ class Engine(Enum):
     def list(cls):
         return list(map(lambda c: c.value, cls))
 
+class EnginePretty(Enum):
+    PANDAS = "Pandas"
+    CUDF = "cuDF"
+    DASK = "Dask"
+    DASK_CUDF = "Dask-cuDF"
+    SPARK = "Spark"
+    VAEX = "Vaex"
+    IBIS = "Ibis"
+
+    @classmethod
+    def list(cls):
+        return list(map(lambda c: c.value, cls))
+
 
 def optimus(engine=Engine.DASK.value, *args, **kwargs):
     """

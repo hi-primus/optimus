@@ -224,8 +224,9 @@ class BaseFunctions(ABC):
     def mean(self, series):
         return self.to_float(series).mean()
 
+    @staticmethod
     def mode(self, series):
-        return self.to_float(series).mode().tolist()
+        return series.mode()
 
     def std(self, series):
         return self.to_float(series).std()
@@ -248,12 +249,12 @@ class BaseFunctions(ABC):
     def var(self, series):
         return self.to_float(series).var()
 
-    def count_uniques(self, series, values=None, estimate: bool = True):
+    def count_uniques(self, series, estimate=False):
         return self.to_string(series).nunique()
 
-    def unique_values(self, series, *args):
+    def unique_values(self, series, estimate=False):
         # Cudf can not handle null so we fill it with non zero values.
-        return list(self.to_string(series).unique())
+        return self.to_string(series).unique()
 
     @staticmethod
     def count_na(series):
