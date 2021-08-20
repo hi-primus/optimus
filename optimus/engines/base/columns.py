@@ -24,7 +24,7 @@ from num2words import num2words
 from optimus.engines.base.meta import Meta
 from optimus.engines.base.stringclustering import Clusters
 from optimus.helpers.check import is_dask_dataframe
-from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
+from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, prepare_columns_arguments, \
     validate_columns_names, name_col
 from optimus.helpers.constants import Actions, CONTRACTIONS, PROFILER_CATEGORICAL_DTYPES, ProfilerDataTypes, \
     RELATIVE_ERROR
@@ -2189,10 +2189,7 @@ class BaseColumns(ABC):
         else:
             value = [value]
 
-        if len(cols) > len(value):
-            value *= math.floor(len(cols)/len(value))
-
-        value = value[0:len(cols)]
+        value = prepare_columns_arguments(cols, value)
 
         for col, v, output_col in zip(cols, value, output_cols):
             df = df.cols.apply(col, func, args=[v, date_format], func_return_type=str, output_cols=output_col,
