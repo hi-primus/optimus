@@ -24,13 +24,13 @@ RUN sudo chown -R root ~/anaconda3/bin && \
     conda install -c conda-forge jupyter_kernel_gateway && \
     conda clean -afy
 
-RUN echo "Version 21.8.0-beta4"
+RUN echo "Version 21.9.0-beta"
 
 RUN pip install cytoolz --no-cache-dir && \
     pip install git+https://github.com/hi-primus/dateinfer.git --no-cache-dir && \
     pip install git+https://github.com/hi-primus/url_parser.git --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.8#egg=pyoptimus[pandas] --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.8#egg=pyoptimus[dask] --no-cache-dir
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[pandas] --no-cache-dir && \
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[dask] --no-cache-dir
 
 CMD jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
 

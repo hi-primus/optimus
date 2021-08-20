@@ -101,7 +101,7 @@ twine upload dist/*
 ### Installing from github
 
 ```
-pip install --upgrade --no-deps --force-reinstall git+https://github.com/hi-primus/optimus.git@develop-21.8
+pip install --upgrade --no-deps --force-reinstall git+https://github.com/hi-primus/optimus.git@develop-21.9
 ```
 Install infer date format library
 ```
@@ -132,7 +132,7 @@ Here the workflow.
 ```
 https://github.com/hi-primus/optimus.git
 cd Optimus
-git checkout develop-21.8
+git checkout develop-21.9
 ```
 From PyCharm create a Deployment using a private key and point it to you Optimus folder in the server
 Be sure to create a mapping so you can sync the local files with the remote server
@@ -155,7 +155,7 @@ On Digital Ocean
 sudo apt-get update
 sudo apt-get install -y python3-pip
 sudo apt install libz-dev libssl-dev libcurl4-gnutls-dev libexpat1-dev gettext cmake gcc
-pip install --upgrade --force-reinstall git+https://github.com/hi-primus/optimus.git@develop-21.8
+pip install --upgrade --force-reinstall git+https://github.com/hi-primus/optimus.git@develop-21.9
 
 pip install dask[complete]
 
@@ -222,7 +222,7 @@ This applies to:
 * Load operations at `optimus/engines/**/io/load.py`: used in `op.load.*()` functions.
 * Save operations at `optimus/engines/**/io/save.py`
 
-![Inheritance](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.8/readme/images/inheritance.jpg)
+![Inheritance](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.9/readme/images/inheritance.jpg)
 
 #### Tips
 One common job inside a function is handling what columns are going to be processed and where we are going to put the output data.
@@ -285,14 +285,14 @@ conda-build optimus -c rapidsai -c nvidia -c conda-forge -c defaults -c h2oai
 
 Search for the message 
 ```
-anaconda upload C:\Users\argenisleon\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-21.8.0-py_0.tar.bz2
+anaconda upload C:\Users\argenisleon\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-21.9.0-py_0.tar.bz2
 ```
 
 then upload the package to Anaconda
 ```
 conda install anaconda-client
 anaconda login
-anaconda upload -u optimus xxxxxx\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-21.8.0-py_0.tar.bz2
+anaconda upload -u optimus xxxxxx\Anaconda3\envs\optimusbuild\conda-bld\noarch\optimus-21.9.0-py_0.tar.bz2
 ```
 use your anaconda credentials for https://anaconda.org/
 
