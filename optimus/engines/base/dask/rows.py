@@ -1,31 +1,13 @@
 import functools
 import operator
-
-import dask.array as da
-import dask.dataframe as dd
-from dask.delayed import delayed
+from optimus.engines.base.distributed.rows import DistributedBaseRows
 
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 
 
-class DaskBaseRows():
-
-    def _reverse(self, dfd):
-        @delayed
-        def reverse_pdf(pdf):
-            return pdf[::-1]
-
-        ds = dfd.to_delayed()
-        ds = [reverse_pdf(d) for d in ds][::-1]
-        return dd.from_delayed(ds)
-
-    def _sort(self, dfd, col_name, ascending):
-        dfd = dfd.set_index(col_name)
-        if not ascending:
-            dfd = self._reverse(dfd)
-        return dfd.reset_index()[self.root.cols.names()]
+class DaskBaseRows(DistributedBaseRows):
 
     def limit(self, count):
         """

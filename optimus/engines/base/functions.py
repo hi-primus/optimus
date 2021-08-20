@@ -81,6 +81,20 @@ class BaseFunctions(ABC):
         return self._partition_engine
 
     @staticmethod
+    def sort_df(dfd, cols, ascending):
+        """
+        Sort rows taking into account one column
+        """
+        return dfd.sort_values(cols, ascending=ascending)
+
+    @staticmethod
+    def reverse_df(dfd):
+        """
+        Reverse rows
+        """
+        return dfd[::-1]
+
+    @staticmethod
     def append(dfd, dfd2):
         """
         Append two dataframes

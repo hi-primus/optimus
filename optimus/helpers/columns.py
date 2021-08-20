@@ -1,3 +1,4 @@
+import math
 import re
 from typing import Union
 
@@ -394,3 +395,21 @@ def name_col(col_names: str, append: str = None) -> str:
     else:
         append = ""
     return output_col + append
+
+
+def prepare_columns_arguments(cols, *args):
+    """
+    Prepare arguments for multiple columns.
+    """
+
+    cols = val_to_list(cols)
+    args = list(args)
+    
+    for i, arg in enumerate(args):
+        arg = val_to_list(arg, convert_tuple=True)
+        if len(cols) > len(arg):
+            arg *= math.floor(len(cols) / len(arg))
+
+        args[i] = arg[0:len(cols)]
+
+    return one_list_to_val(args)

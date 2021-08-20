@@ -1,7 +1,9 @@
+import functools
 from abc import abstractmethod
 import re
 import dask
 import dask.dataframe as dd
+from dask.delayed import delayed
 from dask.dataframe.core import map_partitions
 from sklearn.preprocessing import MaxAbsScaler
 from dask_ml.preprocessing import MinMaxScaler, StandardScaler
@@ -37,6 +39,22 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     @staticmethod
     def to_dataframe(dfd):
         return dfd.compute()
+
+    def sort_df(self, dfd, cols, ascending):
+        for c, a in list(zip(cols, ascending))[::-1]:
+            dfd = dfd.sort_values(c)
+            if not a:
+                dfd = self.reverse_df(dfd)
+        return dfd.reset_index(drop=True)
+
+    def reverse_df(self, dfd):
+        @delayed
+        def reverse_pdf(pdf):
+            return pdf[::-1]
+
+        ds = dfd.to_delayed()
+        ds = [reverse_pdf(d) for d in ds][::-1]
+        return dd.from_delayed(ds)
 
     def to_float(self, series):
         if getattr(series, "map_partitions", False):

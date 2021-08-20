@@ -6,11 +6,11 @@ from multipledispatch import dispatch
 
 from optimus.engines.base.meta import Meta
 # This implementation works for Spark, Dask, dask_cudf
-from optimus.helpers.columns import parse_columns
+from optimus.helpers.columns import parse_columns, prepare_columns_arguments
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import one_list_to_val, val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_value, is_str, is_list_of_str_or_int
+from optimus.infer import is_bool, is_dict, is_list_of_tuples, is_list_value, is_str, is_list_of_str_or_int
 
 
 class BaseRows(ABC):
@@ -18,33 +18,6 @@ class BaseRows(ABC):
 
     def __init__(self, root: 'DataFrameType'):
         self.root = root
-
-    @staticmethod
-    @abstractmethod
-    def _sort(df, col_name, ascending) -> 'DataFrameType':
-        pass
-
-    def _sort_multiple(self, dfd, meta, col_sort) -> Tuple['InternalDataFrameType', dict]:
-        """
-        Sort rows taking into account multiple columns
-        :param col_sort: column and sort type combination (col_name, "asc")
-        :type col_sort: list of tuples
-        """
-
-        for cs in col_sort:
-            col_name = one_list_to_val(cs[0])
-            order = cs[1]
-
-            if order != "asc" and order != "desc":
-                RaiseIt.value_error(order, ["asc", "desc"])
-
-            dfd = self._sort(dfd, col_name, True if order == "asc" else False)
-            meta = Meta.action(meta, Actions.SORT_ROW.value, col_name)
-
-        return dfd, meta
-
-    def _reverse(self, dfd) -> 'InternalDataFrameType':
-        return dfd[::-1]
 
     def append(self, dfs: 'DataFrameTypeList', names_map=None) -> 'DataFrameType':
         """
@@ -161,60 +134,31 @@ class BaseRows(ABC):
 
         return value
 
-    @dispatch(str)
-    def sort(self, input_col) -> 'DataFrameType':
-        df = self.root
-        input_col = parse_columns(df, input_col)
-        return df.rows.sort([(input_col, "desc",)])
-
-    @dispatch(str, bool)
-    def sort(self, input_col, asc=False) -> 'DataFrameType':
-        df = self.root
-        input_col = parse_columns(df, input_col)
-        return df.rows.sort([(input_col, "asc" if asc else "desc",)])
-
-    @dispatch(str, str)
-    def sort(self, input_col, order="desc") -> 'DataFrameType':
-        df = self.root
-        input_col = parse_columns(df, input_col)
-        return df.rows.sort([(input_col, order,)])
-
-    @dispatch(dict)
-    def sort(self, col_sort) -> 'DataFrameType':
-        df = self.root
-        return df.rows.sort([(k, v) for k, v in col_sort.items()])
-
-    @dispatch(list, bool)
-    def sort(self, input_col, asc=False) -> 'DataFrameType':
-        df = self.root
-        return df.rows.sort(input_col, "asc" if asc else "desc")
-
-    @dispatch(list)
-    def sort(self, input_col) -> 'DataFrameType':
-        df = self.root
-        return df.rows.sort(input_col)
-
-    @dispatch(list, str)
-    def sort(self, input_col, order="desc") -> 'DataFrameType':
+    def sort(self, cols="*", order="desc") -> 'DataFrameType':
         """
         Sort rows taking into account multiple columns
+        :param cols:
         :param order:
-        :param input_col: column and sort type combination (col_name, "asc")
-        :type input_col: list of tuples
         """
-        # If a list of columns names are given order this by desc. If you need to specify the order of every
-        # column use a list of tuples (col_name, "asc")
         df = self.root
-        dfd = df.data
-        meta = df.meta
 
-        if is_list_of_str_or_int(input_col):
-            t = []
-            for col_name in input_col:
-                t.append(tuple([col_name, order]))
-            input_col = t
+        if is_dict(cols):
+            cols = list(cols.items())
+            
+        if is_list_of_tuples(cols):
+            cols, order = zip(*cols)
 
-        dfd, meta = self._sort_multiple(dfd, meta, input_col)
+        cols = parse_columns(df, cols)
+        order = prepare_columns_arguments(cols, order)
+
+        for _order in order:
+            if is_str(_order):
+                if _order != "asc" and _order != "desc":
+                    RaiseIt.value_error(_order, ["asc", "desc"])
+                _order = True if _order == "asc" else False
+
+        dfd = self.root.functions.sort_df(self.root.data, cols, order)
+        meta = Meta.action(self.root.meta, Actions.SORT_ROW.value, cols)
 
         return self.root.new(dfd, meta=meta)
 
@@ -223,7 +167,7 @@ class BaseRows(ABC):
 
         :return:
         """
-        dfd = self._reverse(self.root.data)
+        dfd = self.root.functions.reverse_df(self.root.data)
         return self.root.new(dfd)
 
     def drop(self, where) -> 'DataFrameType':
