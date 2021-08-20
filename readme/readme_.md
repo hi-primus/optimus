@@ -36,7 +36,7 @@ jupyter:
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-21.8)
-[![Colab](https://img.shields.io/badge/launch-colab-yellow.svg?logo=googlecolab&color=e6a210)](https://colab.research.google.com/github/hi-primus/optimus/blob/develop-21.8/examples/10_min_from_spark_to_pandas_with_optimus.ipynb)
+[![Colab](https://img.shields.io/badge/launch-colab-yellow.svg?logo=googlecolab&color=e6a210)](https://colab.research.google.com/github/hi-primus/optimus/blob/master/examples/10_min_to_optimus.ipynb)
 
 ## Installation (pip): 
  
@@ -47,8 +47,7 @@ In your terminal just type  ```pip install pyoptimus```
 
 ## Examples
 
-You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/optimus/blob/develop-21.8/examples/10_min_from_pandas_to_spark_with_optimus.ipynb) where you can find the basic to start working.
-
+You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/optimus/blob/develop-21.8/examples/10_min_to_optimus.ipynb) where you can find the basic to start working.
 
 Also you can go to [Examples](https://github.com/hi-primus/optimus/tree/develop-21.8/examples/examples.md) and found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
