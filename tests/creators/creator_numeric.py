@@ -386,4 +386,140 @@ def create():
 
     t.run()
 
+    t = TestCreator(op, df, name="statistics", configs=default_configs)
+
+    t.create(method="cols.mad", variant="all", cols="*")
+    t.create(method="cols.mad", variant="numeric", cols="weight(t)", relative_error=0.45)
+    t.create(method="cols.mad", variant="multiple", cols=["height(ft)", "age", "rank"], more=True)
+
+    t.create(method="cols.min", variant="all", cols="*")
+    t.create(method="cols.min", variant="numeric", cols="weight(t)")
+    t.create(method="cols.min", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.max", variant="all", cols="*")
+    t.create(method="cols.max", variant="numeric", cols="weight(t)")
+    t.create(method="cols.max", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.mode", variant="all", cols="*")
+    t.create(method="cols.mode", variant="numeric", cols="weight(t)")
+    t.create(method="cols.mode", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.percentile", variant="all", cols="*")
+    t.create(method="cols.percentile", variant="numeric_single", cols="weight(t)", values=0.30)
+    t.create(method="cols.percentile", variant="numeric_multiple", cols="weight(t)", values=[0.25, 0.50, 0.75])
+    t.create(method="cols.percentile", variant="multiple", cols=["height(ft)", "age", "rank"], values=0.95, relative_error=0.012)
+
+    t.create(method="cols.range", variant="all", cols="*")
+    t.create(method="cols.range", variant="numeric", cols="weight(t)")
+    t.create(method="cols.range", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.median", variant="all", cols="*")
+    t.create(method="cols.median", variant="numeric", cols="weight(t)", relative_error=0.33)
+    t.create(method="cols.median", variant="multiple", cols=["height(ft)", "age", "rank"], relative_error=0.012)
+
+    t.create(method="cols.kurtosis", variant="all", cols="*")
+    t.create(method="cols.kurtosis", variant="numeric", cols="weight(t)")
+    t.create(method="cols.kurtosis", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.skew", variant="all", cols="*")
+    t.create(method="cols.skew", variant="numeric", cols="weight(t)")
+    t.create(method="cols.skew", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.mean", variant="all", cols="*")
+    t.create(method="cols.mean", variant="numeric", cols="weight(t)")
+    t.create(method="cols.mean", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.sum", variant="all", cols="*")
+    t.create(method="cols.sum", variant="numeric", cols="weight(t)")
+    t.create(method="cols.sum", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.cumsum", variant="all", cols="*")
+    t.create(method="cols.cumsum", variant="numeric", cols="weight(t)")
+    t.create(method="cols.cumsum", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.cumprod", variant="all", cols="*")
+    t.create(method="cols.cumprod", variant="numeric", cols="weight(t)")
+    t.create(method="cols.cumprod", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.cummax", variant="all", cols="*")
+    t.create(method="cols.cummax", variant="numeric", cols="weight(t)")
+    t.create(method="cols.cummax", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.cummin", variant="all", cols="*")
+    t.create(method="cols.cummin", variant="numeric", cols="weight(t)")
+    t.create(method="cols.cummin", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.var", variant="all", cols="*")
+    t.create(method="cols.var", variant="numeric", cols="weight(t)")
+    t.create(method="cols.var", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.create(method="cols.std", variant="all", cols="*")
+    t.create(method="cols.std", variant="numeric", cols="weight(t)")
+    t.create(method="cols.std", variant="multiple", cols=["height(ft)", "age", "rank"])
+
+    t.run()
+
+    df = op.load.csv("../../examples/data/store.csv", n_rows=10)
+
+    t = TestCreator(op, df, name="more_statistics", configs=default_configs)
+
+    t.create(method="cols.profile", variant="all", cols="*")
+    t.create(method="cols.profile", variant="numeric", cols="price", bins=0, flush=True)
+    t.create(method="cols.profile", variant="multiple", cols=["id", "code", "discount"], bins=4, flush=False)
+
+    t.create(method="cols.quality", variant="all", cols="*")
+    t.create(method="cols.quality", variant="numeric", cols="price", flush=True)
+    t.create(method="cols.quality", variant="multiple", cols=["id", "code", "discount"], flush=False)
+
+    t.create(method="cols.frequency", variant="all", cols="*", n=10, count_uniques=True)
+    t.create(method="cols.frequency", variant="numeric", cols="price", n=4, percentage=True, total_rows=3)
+    t.create(method="cols.frequency", variant="string", cols="name", n=5, percentage=False)
+    t.create(method="cols.frequency", variant="multiple", cols=["id", "code", "discount"], n=6, percentage=True)
+
+    t.create(method="cols.hist", variant="all", cols="*", buckets=2)
+    t.create(method="cols.hist", variant="numeric", cols="price", buckets=10)
+    t.create(method="cols.hist", variant="multiple", cols=["id", "code", "discount"], buckets=4)
+
+    t.create(method="cols.crosstab", variant="numeric_numeric", col_x="discount", col_y="price", output="dict")
+    t.create(method="cols.crosstab", variant="numeric_string", col_x="price", col_y="code", output="dataframe")
+    t.create(method="cols.crosstab", variant="string_numeric", col_x="name", col_y="id", output="dataframe")
+    t.create(method="cols.crosstab", variant="string_string", col_x="code", col_y="name", output="dict")
+
+    t.create(method="cols.boxplot", variant="all", cols="*")
+    t.create(method="cols.boxplot", variant="numeric", cols="price")
+    t.create(method="cols.boxplot", variant="multiple", cols=["id", "code", "discount"])
+
+    t.create(method="cols.heatmap", variant="numeric_numeric", col_x="discount", col_y="price", bins_x=5, bins_y=10)
+    t.create(method="cols.heatmap", variant="numeric_string", col_x="price", col_y="code", bins_x=3, bins_y=1)
+    t.create(method="cols.heatmap", variant="string_numeric", col_x="name", col_y="id", bins_x=7, bins_y=0)
+    t.create(method="cols.heatmap", variant="string_string", col_x="code", col_y="name", bins_x=4, bins_y=4)
+
+    t.create(method="cols.correlation", variant="all_pearson", args=["*", "pearson"])
+    t.create(method="cols.correlation", variant="all_spearman", args=["*", "spearman"])
+    t.create(method="cols.correlation", variant="all_kendall", args=["*", "kendall"])
+    t.create(method="cols.correlation", variant="numeric_pearson", args=["price","pearson"])
+    t.create(method="cols.correlation", variant="numeric_spearman", args=["price","spearman"])
+    t.create(method="cols.correlation", variant="numeric_kendall", args=["price","kendall"])
+    t.create(method="cols.correlation", variant="multiple_pearson", args=[["id", "price"], "pearson"])
+    t.create(method="cols.correlation", variant="multiple_spearman", args=[["id", "price"], "spearman"])
+    t.create(method="cols.correlation", variant="multiple_kendall", args=[["id", "price"], "kendall"])
+
+    t.create(method="cols.infer_types", variant="all", cols="*")
+    t.create(method="cols.infer_types", variant="numeric", cols="price", output_cols="price_types")
+    t.create(method="cols.infer_types", variant="multiple", cols=["id", "code", "discount"], output_cols=["id_types", "code_types", "just a col"])
+
+    t.create(method="cols.unique_values", variant="all", cols="*")
+    t.create(method="cols.unique_values", variant="numeric", cols="price", estimate=True)
+    t.create(method="cols.unique_values", variant="multiple", cols=["id", "code", "discount"], estimate=False)
+
+    t.create(method="cols.count_uniques", variant="all", cols="*")
+    t.create(method="cols.count_uniques", variant="numeric", cols="price", estimate=True)
+    t.create(method="cols.count_uniques", variant="multiple", cols=["id", "code", "discount"], estimate=False)
+
+    t.create(method="cols.count_zeros", variant="all", cols="*")
+    t.create(method="cols.count_zeros", variant="numeric", cols="price")
+    t.create(method="cols.count_zeros", variant="multiple", cols=["id", "code", "discount"])
+
+    t.run()
+
 create()
