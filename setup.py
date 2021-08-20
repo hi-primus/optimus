@@ -2,13 +2,14 @@ import os
 import re
 import sys
 from functools import reduce
+from typing import Dict, List
 
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop
 
-# Get version without importing, which avoids dependency issues
 
 def get_version():
+    # Get version without importing, which avoids dependency issues
     with open('optimus/_version.py') as version_file:
         return re.search(r"""__version__\s+=\s+(['"])(?P<version>.+?)\1""",
                          version_file.read()).group('version')
@@ -33,9 +34,9 @@ except ImportError:
 requirements_file = 'requirements.txt'
 
 if "DATABRICKS_RUNTIME_VERSION" in os.environ:
-    requirements_file = 'requirements/databricks.txt'
+    requirements_file = 'requirements/databricks-requirements.txt'
 elif IN_COLAB:
-    requirements_file = 'requirements/google-colab.txt'
+    requirements_file = 'requirements/google-colab-requirements.txt'
 
 with open(requirements_file) as f:
     required = f.read().splitlines()
@@ -45,19 +46,20 @@ with open(requirements_file) as f:
 
 extras_requirements_keys = ['spark', 'pandas',
                             'dask', 'vaex', 'cudf', 'ai', 'db', 'api']
-extras_requirements = {}
+extras_requirements: Dict[str, List[str]] = {}
 
 for extra in extras_requirements_keys:
-    with open('requirements/'+extra+'.txt') as f:
+    with open(f"requirements/{extra}-requirements.txt") as f:
         extras_requirements[extra] = f.read().splitlines()
 
 lint_requirements = ['pep8', 'pyflakes']
 test_requirements = ['pytest', 'mock', 'nose']
-dependency_links = []
+dependency_links: List[str] = []
 setup_requirements = ['pytest-runner']
 if 'nosetests' in sys.argv[1:]:
     setup_requirements.append('nose')
 
+empty_list: List[str] = []
 
 setup(
     name='pyoptimus',
@@ -76,7 +78,7 @@ setup(
     setup_requires=setup_requirements,
     extras_require={
         'test': test_requirements,
-        'all': reduce(lambda x, key: x + extras_requirements[key], extras_requirements, []),
+        'all': reduce(lambda x, key: x + extras_requirements[key], extras_requirements, empty_list),
         'docs': ['sphinx'] + test_requirements,
         'lint': lint_requirements,
         **extras_requirements
