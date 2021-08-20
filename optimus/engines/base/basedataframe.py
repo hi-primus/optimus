@@ -44,7 +44,7 @@ class BaseDataFrame(ABC):
     Optimus DataFrame
     """
 
-    def __init__(self, data: 'InternalDataFrameType', op: None):
+    def __init__(self, data: 'InternalDataFrameType', op: 'EngineType'):
         data = self._compatible_data(data)
         self.data = data
         self.buffer = None
