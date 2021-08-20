@@ -63,10 +63,14 @@ class Cols(DataFrameBaseColumns):
         :param exprs: Aggreagtion function to process
         :return:
         """
-        if is_dict(exprs):
-            result = exprs
-        else:
+        if getattr(exprs, "execute", None) and compute:
             result = exprs.execute()
+        else:
+            result = exprs
+            
+        while isinstance(result, (list, tuple)) and len(result) == 1:
+            result = result[0]
+
         return result
 
     @staticmethod

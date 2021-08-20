@@ -6,7 +6,7 @@ from dask import delayed
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import Actions
-from optimus.helpers.core import val_to_list
+from optimus.helpers.core import one_list_to_val, val_to_list
 from optimus.profiler.functions import fill_missing_var_types
 
 from optimus.engines.base.distributed.columns import DistributedBaseColumns
@@ -27,6 +27,8 @@ class DaskBaseColumns(DistributedBaseColumns):
             result = dask.compute(exprs)
             while isinstance(result, (list, tuple)) and len(result) == 1:
                 result = result[0]
+            if getattr(result, "tolist", None):
+                result = one_list_to_val(result.tolist())
             if getattr(result, "to_dict", None):
                 result = result.to_dict()
         else:

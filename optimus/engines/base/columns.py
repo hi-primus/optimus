@@ -1136,16 +1136,6 @@ class BaseColumns(ABC):
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute) for
                                           col_name in cols} for func in funcs}
-            # agg_result = [{func.__name__: {self.exec_agg({col_name: func(df.data[col_name], *args)}, compute)}} for
-            #               col_name in cols for func in funcs]
-
-            result = {}
-
-        # # Reformat aggregation
-        # for agg in agg_result:
-        #     print("agg",agg)
-        #     for x, y in agg.items():
-        #         result.setdefault(x, {}).update(y)
 
         return format_dict(agg_result, tidy)
 
@@ -1159,6 +1149,8 @@ class BaseColumns(ABC):
         """
         while isinstance(exprs, (list, tuple)) and len(exprs) == 1:
             exprs = exprs[0]
+        if getattr(exprs, "tolist", None):
+            exprs = one_list_to_val(exprs.tolist())
         if getattr(exprs, "to_dict", None):
             exprs = exprs.to_dict()
         return exprs
