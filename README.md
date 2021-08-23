@@ -2,8 +2,8 @@
 
 [![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.9/images/optimus-logo.png)](https://hi-optimus.com)
 
-![Tests](https://github.com/hi-primus/optimus/actions/workflows/main.yml/badge.svg)
-![![Docker image updated](https://hub.docker.com/r/hiprimus/optimus)](https://github.com/hi-primus/optimus/actions/workflows/docker.yml/badge.svg)
+[![Tests](https://github.com/hi-primus/optimus/actions/workflows/main.yml/badge.svg)](https://github.com/hi-primus/optimus/actions/workflows/main.yml)
+[![Docker image updated](https://github.com/hi-primus/optimus/actions/workflows/docker.yml/badge.svg)](https://hub.docker.com/r/hiprimus/optimus)
 [![PyPI Latest Release](https://img.shields.io/pypi/v/pyoptimus.svg)](https://pypi.org/project/pyoptimus/) 
 [![GitHub release](https://img.shields.io/github/release/hi-primus/optimus.svg?include_prereleases)](https://github.com/hi-primus/optimus/releases)
 [![CalVer](https://img.shields.io/badge/calver-YY.MM.MICRO-22bfda.svg)](http://calver.org)
