@@ -2,6 +2,7 @@ import collections
 import functools
 import glob
 import ntpath
+from typing import Union
 from optimus.helpers.constants import DATE_FORMAT_ITEMS, DATE_FORMAT_ITEMS_MONTH
 import os
 import random
@@ -14,6 +15,7 @@ from pathlib import Path
 from urllib.parse import unquote
 from urllib.request import Request, urlopen
 
+import numpy as np
 import fastnumbers
 import humanize
 import pandas as pd
@@ -24,7 +26,7 @@ from optimus import ROOT_DIR
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_url
+from optimus.infer import is_dict, is_list_with_dicts, is_url
 
 def _list_variables(ins, namespace=None):
     
@@ -677,9 +679,8 @@ def match_date(value):
 
     return "".join(exprs)
 
-def df_dicts_equal(df1, df2, decimal=True, assertion=False):
-    import numpy as np
-    if decimal == True:
+def df_dicts_equal(df1, df2, decimal: Union[int, bool] = True, assertion=False):
+    if decimal is True:
         decimal = 7
     for k in df1:
         try:
@@ -693,6 +694,53 @@ def df_dicts_equal(df1, df2, decimal=True, assertion=False):
                 if assertion:
                     raise AssertionError(f"Dataframes are not equal on column '{k}'")
                 return False
+    return True
+
+def results_equal(r1, r2, decimal: Union[int, bool] = True, assertion=False):
+    
+    if decimal is True:
+        decimal = 7
+
+    try:
+        if type(r1) != type(r2):
+            raise AssertionError(f"Types '{str(type(r1))}' and '{str(type(r2))}' do not match")
+        
+        if hasattr(r1, "__len__") and len(r1) != len(r2):
+            raise AssertionError(f"Lengths '{len(r1)}' and '{len(r2)}' do not match")
+
+        matching = None
+
+        if is_dict(r1):
+            matching = True
+            for k1, k2 in zip(list(r1.keys()), list(r2.keys())):
+                if not results_equal(r1[k1], r2[k2], decimal, assertion):
+                    matching = False
+                    break
+
+        if is_list_with_dicts(r1):
+            for e1, e2 in zip(r1, r2):
+                if not results_equal(e1, e2, decimal, assertion):
+                    matching = False
+                    break
+
+        if matching is not None:
+            return matching
+        
+        try:
+            np.testing.assert_almost_equal(r1, r2, decimal=decimal)
+        except AssertionError as e:
+            raise e
+        except Exception:
+            if r1 != r2:
+                raise AssertionError(f"'{r1}' and '{r2}' do not match")
+            else:
+                return True
+
+    except Exception as e:
+        if assertion:
+            raise e
+        return False
+
     return True
 
 # Taken from https://github.com/Kemaweyan/singleton_decorator/

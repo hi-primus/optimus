@@ -14,6 +14,22 @@ class DataFrameBaseFunctions(BaseFunctions):
         result.index = dfd_or_series.index
         return result
 
+    @staticmethod
+    def all(series):
+        return series.all()
+
+    @staticmethod
+    def not_all(series):
+        return not series.all()
+
+    @staticmethod
+    def any(series):
+        return series.any()
+    
+    @staticmethod
+    def not_any(series):
+        return not series.any()
+
     def reverse(self, series):
         return self.to_string(series).map(lambda v: v[::-1])
 

@@ -58,7 +58,7 @@ class TestCreator:
             "nan = float(\"nan\")",
             "inf = float(\"inf\")",
             "from optimus.helpers.json import json_encoding",
-            "from optimus.helpers.functions import deep_sort, df_dicts_equal"
+            "from optimus.helpers.functions import deep_sort, df_dicts_equal, results_equal"
         ]
 
         if self.options.get("imports", None) is not None:
@@ -284,7 +284,7 @@ class TestCreator:
         expected_is_df = isinstance(expected_df, (BaseDataFrame,))
 
         if compare_by == "df" and not expected_is_df:
-            compare_by = "json"
+            compare_by = "dict"
 
         if compare_by != "df" and expected_is_df:
             add_buffer("    result = result.to_dict()\n")
@@ -307,8 +307,13 @@ class TestCreator:
         if compare_by == "df":
             add_buffer("    self.assertTrue(result.equals(expected, decimal=True, assertion=True))\n")
         elif compare_by == "dict":
-            add_buffer(
-                "    self.assertTrue(df_dicts_equal(result, expected, assertion=True))\n")
+            if expected_is_df:
+                add_buffer(
+                    "    self.assertTrue(df_dicts_equal(result, expected, assertion=True))\n")
+            else:
+                add_buffer(
+                    "    self.assertTrue(results_equal(result, expected, assertion=True))\n")
+
         elif compare_by == "json":
             add_buffer(
                 "    self.assertEqual(json_encoding(result), json_encoding(expected))\n")
@@ -376,9 +381,9 @@ default_configs = {
     "Pandas": {"engine": "pandas"},
     "Dask": {"engine": "dask", "n_partitions": 1},
     "PartitionDask": {"engine": "dask", "n_partitions": 2},
-    "CUDF": {"engine": "cudf", "try_package": "cudf"},
-    "DC": {"engine": "dask_cudf", "n_partitions": 1, "try_package": "dask_cudf"},
-    "PartitionDC": {"engine": "dask_cudf", "n_partitions": 2, "try_package": "dask_cudf"},
-    "Spark": {"engine": "spark"},
-    "Vaex": {"engine": "vaex"},
+    # "CUDF": {"engine": "cudf", "try_package": "cudf"},
+    # "DC": {"engine": "dask_cudf", "n_partitions": 1, "try_package": "dask_cudf"},
+    # "PartitionDC": {"engine": "dask_cudf", "n_partitions": 2, "try_package": "dask_cudf"},
+    # "Spark": {"engine": "spark"},
+    # "Vaex": {"engine": "vaex"},
 }

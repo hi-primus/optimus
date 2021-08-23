@@ -1,3 +1,5 @@
+import numpy as np
+
 from optimus.infer import is_dict, is_dict_of_one_element, is_list_value, is_list_of_one_element
 
 
@@ -59,10 +61,20 @@ def format_dict(_dict, tidy=True):
         else:
             return _dict
 
+def convert_numpy(value):
+    if isinstance(value, (dict,)):
+        for key in value:
+            value[key] = convert_numpy(value[key])
+        return value
+    elif isinstance(value, (list, set, tuple)):
+        return value.__class__(map(convert_numpy, value))
+    elif isinstance(value, (np.generic,)):
+        return np.asscalar(value)
+    else:
+        return value
 
 # def cudf_series_to_pandas(serie):
 #     return serie.to_pandas()
-
 
 def dask_dataframe_to_dask_cudf(df):
     import cudf

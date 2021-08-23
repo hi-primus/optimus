@@ -78,12 +78,6 @@ class DaskBaseFunctions(DistributedBaseFunctions):
         else:
             return self._to_float(series)
 
-    def all(self, series):
-        return series.all()
-
-    def any(self, series):
-        return series.any()
-
     def duplicated(self, dfd, keep, subset):
         return self.from_dataframe(self.to_dataframe(dfd).duplicated(keep=keep, subset=subset))
 

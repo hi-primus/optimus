@@ -287,29 +287,33 @@ class BaseFunctions(ABC):
         mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
         if more:
             mad_value.update({"median": median_value})
+        else:
+            mad_value = mad_value["mad"]
 
         return mad_value
 
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
     # cudf seems to be calculate faster in on pass using df.min()
     def range(self, series):
-        
-        return {"min": self.to_float(series).min(), "max": self.to_float(series).max()}
+
+        @self.delayed
+        def min_max(_result):
+            return {"min": _result.min(), "max": _result.max()}
+
+        return min_max(self.to_float(series))        
 
     def percentile(self, series, values, error):
 
-        series = self.to_float(series)
-
         @self.delayed
         def to_dict(_result):
-            ## In pandas if all values are none it return {} on dict
+            # In pandas if all values are none it return {} on dict
             # Dask raise an exception is all values in the series are np.nan
             if _result.isnull().all():
                 return np.nan
             else:
                 return _result.quantile(values).to_dict()
 
-        return to_dict(series)
+        return to_dict(self.to_float(series))
 
     # def radians(series):
     #     return series.to_float().radians()

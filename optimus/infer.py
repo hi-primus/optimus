@@ -362,6 +362,22 @@ def is_list_of_int(value):
     """
     return isinstance(value, list) and all(isinstance(elem, int) for elem in value)
 
+def is_list_of_dicts(value):
+    """
+    Check if an object is a list of dictionaries
+    :param value:
+    :return:
+    """
+    return isinstance(value, list) and all(isinstance(elem, dict) for elem in value)
+
+def is_list_with_dicts(value):
+    """
+    Check if an object is a list with some dictionaries
+    :param value:
+    :return:
+    """
+    return isinstance(value, list) and any(isinstance(elem, dict) for elem in value)
+
 
 def is_list_of_float(value):
     """

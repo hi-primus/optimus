@@ -20,6 +20,7 @@ from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
+from optimus.helpers.converter import convert_numpy
 from optimus.infer import is_str, is_tuple, is_list
 from optimus.profiler.constants import MAX_BUCKETS
 from optimus.profiler.templates.html import HEADER, FOOTER
@@ -1057,7 +1058,7 @@ class BaseDataFrame(ABC):
             if output == "dataframe":
                 result = self.new(result)
 
-        return format_dict(result, tidy=tidy)
+        return convert_numpy(format_dict(result, tidy=tidy))
 
     def report(self, df, cols="*", buckets=MAX_BUCKETS, infer=False, relative_error=RELATIVE_ERROR,
                approx_count=True,
