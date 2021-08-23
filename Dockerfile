@@ -26,11 +26,12 @@ RUN sudo chown -R root ~/anaconda3/bin && \
 
 RUN echo "Version 21.9.0-beta"
 
-RUN pip install cytoolz --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/dateinfer.git --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/url_parser.git --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[pandas] --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[dask] --no-cache-dir
+RUN pip install cytoolz && \
+    pip install git+https://github.com/hi-primus/dateinfer.git && \
+    pip install git+https://github.com/hi-primus/url_parser.git && \
+    pip install llvmlite --ignore-installed && \
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[pandas] && \
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[dask]
 
 CMD jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
 
