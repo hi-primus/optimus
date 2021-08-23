@@ -56,9 +56,9 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestExampleSpark(TestExamplePandas):
-    config = {'engine': 'spark'}
+# class TestExampleSpark(TestExamplePandas):
+#     config = {'engine': 'spark'}
 
 
-class TestExampleVaex(TestExamplePandas):
-    config = {'engine': 'vaex'}
+# class TestExampleVaex(TestExamplePandas):
+#     config = {'engine': 'vaex'}

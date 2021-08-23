@@ -53,9 +53,9 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestCSVSpark(TestCSVPandas):
-    config = {'engine': 'spark'}
+# class TestCSVSpark(TestCSVPandas):
+#     config = {'engine': 'spark'}
 
 
-class TestCSVVaex(TestCSVPandas):
-    config = {'engine': 'vaex'}
+# class TestCSVVaex(TestCSVPandas):
+#     config = {'engine': 'vaex'}

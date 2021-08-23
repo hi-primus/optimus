@@ -4,7 +4,7 @@ Timestamp = lambda t: datetime.datetime.strptime(t,"%Y-%m-%d %H:%M:%S")
 nan = float("nan")
 inf = float("inf")
 from optimus.helpers.json import json_encoding
-from optimus.helpers.functions import deep_sort, df_dicts_equal
+from optimus.helpers.functions import deep_sort, df_dicts_equal, results_equal
 
 class TestWebPandas(TestBase):
     config = {'engine': 'pandas'}

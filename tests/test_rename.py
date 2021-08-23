@@ -77,9 +77,9 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestRenameSpark(TestRenamePandas):
-    config = {'engine': 'spark'}
+# class TestRenameSpark(TestRenamePandas):
+#     config = {'engine': 'spark'}
 
 
-class TestRenameVaex(TestRenamePandas):
-    config = {'engine': 'vaex'}
+# class TestRenameVaex(TestRenamePandas):
+#     config = {'engine': 'vaex'}

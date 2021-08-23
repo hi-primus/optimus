@@ -67,9 +67,9 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestUDFSpark(TestUDFPandas):
-    config = {'engine': 'spark'}
+# class TestUDFSpark(TestUDFPandas):
+#     config = {'engine': 'spark'}
 
 
-class TestUDFVaex(TestUDFPandas):
-    config = {'engine': 'vaex'}
+# class TestUDFVaex(TestUDFPandas):
+#     config = {'engine': 'vaex'}

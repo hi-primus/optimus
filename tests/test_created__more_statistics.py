@@ -4,7 +4,7 @@ Timestamp = lambda t: datetime.datetime.strptime(t,"%Y-%m-%d %H:%M:%S")
 nan = float("nan")
 inf = float("inf")
 from optimus.helpers.json import json_encoding
-from optimus.helpers.functions import deep_sort, df_dicts_equal
+from optimus.helpers.functions import deep_sort, df_dicts_equal, results_equal
 
 class TestMoreStatisticsPandas(TestBase):
     config = {'engine': 'pandas'}
@@ -29,103 +29,103 @@ class TestMoreStatisticsPandas(TestBase):
         df = self.df
         result = df.cols.boxplot(cols='price')
         expected = {'price': {'mean': 99.441, 'median': 82.495, 'q1': 51.9975, 'q3': 160.74, 'whisker_low': -111.11625000000001, 'whisker_high': 323.85375, 'fliers': [], 'label': 'price'}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_correlation_all_kendall(self):
         df = self.df
         result = df.cols.correlation('*','kendall')
         expected = {'id': {'id': 1.0, 'price': 0.1111111111111111}, 'price': {'id': 0.1111111111111111, 'price': 1.0}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_correlation_all_pearson(self):
         df = self.df
         result = df.cols.correlation('*','pearson')
         expected = {'id': {'id': 1.0, 'price': 0.15785706335886504}, 'price': {'id': 0.15785706335886504, 'price': 1.0}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_correlation_all_spearman(self):
         df = self.df
         result = df.cols.correlation('*','spearman')
         expected = {'id': {'id': 1.0, 'price': 0.1393939393939394}, 'price': {'id': 0.1393939393939394, 'price': 1.0}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_correlation_multiple_kendall(self):
         df = self.df
         result = df.cols.correlation(['id', 'price'],'kendall')
         expected = 0.1111111111111111
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_correlation_multiple_pearson(self):
         df = self.df
         result = df.cols.correlation(['id', 'price'],'pearson')
         expected = 0.15785706335886504
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_correlation_multiple_spearman(self):
         df = self.df
         result = df.cols.correlation(['id', 'price'],'spearman')
         expected = 0.1393939393939394
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_correlation_numeric_kendall(self):
         df = self.df
         result = df.cols.correlation('price','kendall')
         expected = {'price': {'price': 1.0}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_correlation_numeric_pearson(self):
         df = self.df
         result = df.cols.correlation('price','pearson')
         expected = {'price': {'price': 1.0}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_correlation_numeric_spearman(self):
         df = self.df
         result = df.cols.correlation('price','spearman')
         expected = {'price': {'price': 1.0}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_count_uniques_all(self):
         df = self.df
         result = df.cols.count_uniques(cols='*')
         expected = {'id': 10, 'name': 3, 'code': 9, 'price': 10, 'discount': 4}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_count_uniques_multiple(self):
         df = self.df
         result = df.cols.count_uniques(cols=['id', 'code', 'discount'],estimate=False)
         expected = {'id': 10, 'code': 9, 'discount': 4}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_count_uniques_numeric(self):
         df = self.df
         result = df.cols.count_uniques(cols='price',estimate=True)
         expected = 10
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_count_zeros_all(self):
         df = self.df
         result = df.cols.count_zeros(cols='*')
         expected = {'id': 0, 'name': 0, 'code': 0, 'price': 0, 'discount': 0}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_count_zeros_multiple(self):
         df = self.df
         result = df.cols.count_zeros(cols=['id', 'code', 'discount'])
         expected = {'id': 0, 'code': 0, 'discount': 0}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_count_zeros_numeric(self):
         df = self.df
         result = df.cols.count_zeros(cols='price')
         expected = 0
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_crosstab_numeric_numeric(self):
         df = self.df
         result = df.cols.crosstab(col_x='discount',col_y='price',output='dict')
         expected = {30.0: {'0': 0, '15%': 0, '20%': 0, '5%': 1}, 34.99: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 50.0: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 57.99: {'0': 0, '15%': 0, '20%': 1, '5%': 0}, 69.99: {'0': 0, '15%': 1, '20%': 0, '5%': 0}, 95.0: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 132.99: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 169.99: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 173.47: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 179.99: {'0': 0, '15%': 1, '20%': 0, '5%': 0}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_crosstab_numeric_string(self):
         df = self.df
@@ -143,31 +143,31 @@ class TestMoreStatisticsPandas(TestBase):
         df = self.df
         result = df.cols.crosstab(col_x='code',col_y='name',output='dict')
         expected = {'pants': {'B': 0, 'FT50': 0, 'J10': 1, 'JG15': 2, 'JG20': 1, 'L15': 1, 'L20': 1, 'RG30': 0, 'SH': 0}, 'shirt': {'B': 0, 'FT50': 1, 'J10': 0, 'JG15': 0, 'JG20': 0, 'L15': 0, 'L20': 0, 'RG30': 1, 'SH': 0}, 'shoes': {'B': 1, 'FT50': 0, 'J10': 0, 'JG15': 0, 'JG20': 0, 'L15': 0, 'L20': 0, 'RG30': 0, 'SH': 1}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_frequency_all(self):
         df = self.df
         result = df.cols.frequency(cols='*',n=10,count_uniques=True)
-        expected = {'frequency': {'id': {'values': [{'value': 1, 'count': 1}, {'value': 2, 'count': 1}, {'value': 3, 'count': 1}, {'value': 4, 'count': 1}, {'value': 5, 'count': 1}, {'value': 6, 'count': 1}, {'value': 7, 'count': 1}, {'value': 8, 'count': 1}, {'value': 9, 'count': 1}, {'value': 10, 'count': 1}], 'count_uniques': 10}, 'name': {'values': [{'value': 'pants', 'count': 6}, {'value': 'shoes', 'count': 2}, {'value': 'shirt', 'count': 2}], 'count_uniques': 3}, 'code': {'values': [{'value': 'JG15', 'count': 2}, {'value': 'L15', 'count': 1}, {'value': 'SH', 'count': 1}, {'value': 'RG30', 'count': 1}, {'value': 'J10', 'count': 1}, {'value': 'B', 'count': 1}, {'value': 'JG20', 'count': 1}, {'value': 'L20', 'count': 1}, {'value': 'FT50', 'count': 1}], 'count_uniques': 9}, 'price': {'values': [{'value': 173.47, 'count': 1}, {'value': 69.99, 'count': 1}, {'value': 30.0, 'count': 1}, {'value': 34.99, 'count': 1}, {'value': 132.99, 'count': 1}, {'value': 57.99, 'count': 1}, {'value': 179.99, 'count': 1}, {'value': 95.0, 'count': 1}, {'value': 50.0, 'count': 1}, {'value': 169.99, 'count': 1}], 'count_uniques': 10}, 'discount': {'values': [{'value': '0', 'count': 6}, {'value': '15%', 'count': 2}, {'value': '5%', 'count': 1}, {'value': '20%', 'count': 1}], 'count_uniques': 4}}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        expected = {'frequency': {'id': {'values': [{'value': 1, 'count': 1}, {'value': 2, 'count': 1}, {'value': 3, 'count': 1}, {'value': 4, 'count': 1}, {'value': 5, 'count': 1}, {'value': 6, 'count': 1}, {'value': 7, 'count': 1}, {'value': 8, 'count': 1}, {'value': 9, 'count': 1}, {'value': 10, 'count': 1}], 'count_uniques': 10}, 'name': {'values': [{'value': 'pants', 'count': 6}, {'value': 'shoes', 'count': 2}, {'value': 'shirt', 'count': 2}], 'count_uniques': 3}, 'code': {'values': [{'value': 'JG15', 'count': 2}, {'value': 'RG30', 'count': 1}, {'value': 'J10', 'count': 1}, {'value': 'L15', 'count': 1}, {'value': 'SH', 'count': 1}, {'value': 'B', 'count': 1}, {'value': 'L20', 'count': 1}, {'value': 'JG20', 'count': 1}, {'value': 'FT50', 'count': 1}], 'count_uniques': 9}, 'price': {'values': [{'value': 69.99, 'count': 1}, {'value': 179.99, 'count': 1}, {'value': 57.99, 'count': 1}, {'value': 34.99, 'count': 1}, {'value': 95.0, 'count': 1}, {'value': 50.0, 'count': 1}, {'value': 30.0, 'count': 1}, {'value': 169.99, 'count': 1}, {'value': 132.99, 'count': 1}, {'value': 173.47, 'count': 1}], 'count_uniques': 10}, 'discount': {'values': [{'value': '0', 'count': 6}, {'value': '15%', 'count': 2}, {'value': '20%', 'count': 1}, {'value': '5%', 'count': 1}], 'count_uniques': 4}}}
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_frequency_multiple(self):
         df = self.df
         result = df.cols.frequency(cols=['id', 'code', 'discount'],n=6,percentage=True)
-        expected = {'frequency': {'id': {'values': [{'value': 1, 'count': 1, 'percentage': 10.0}, {'value': 2, 'count': 1, 'percentage': 10.0}, {'value': 3, 'count': 1, 'percentage': 10.0}, {'value': 4, 'count': 1, 'percentage': 10.0}, {'value': 5, 'count': 1, 'percentage': 10.0}, {'value': 6, 'count': 1, 'percentage': 10.0}]}, 'code': {'values': [{'value': 'JG15', 'count': 2, 'percentage': 20.0}, {'value': 'L15', 'count': 1, 'percentage': 10.0}, {'value': 'SH', 'count': 1, 'percentage': 10.0}, {'value': 'RG30', 'count': 1, 'percentage': 10.0}, {'value': 'J10', 'count': 1, 'percentage': 10.0}, {'value': 'B', 'count': 1, 'percentage': 10.0}]}, 'discount': {'values': [{'value': '0', 'count': 6, 'percentage': 60.0}, {'value': '15%', 'count': 2, 'percentage': 20.0}, {'value': '5%', 'count': 1, 'percentage': 10.0}, {'value': '20%', 'count': 1, 'percentage': 10.0}]}}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        expected = {'frequency': {'id': {'values': [{'value': 1, 'count': 1, 'percentage': 10.0}, {'value': 2, 'count': 1, 'percentage': 10.0}, {'value': 3, 'count': 1, 'percentage': 10.0}, {'value': 4, 'count': 1, 'percentage': 10.0}, {'value': 5, 'count': 1, 'percentage': 10.0}, {'value': 6, 'count': 1, 'percentage': 10.0}]}, 'code': {'values': [{'value': 'JG15', 'count': 2, 'percentage': 20.0}, {'value': 'RG30', 'count': 1, 'percentage': 10.0}, {'value': 'J10', 'count': 1, 'percentage': 10.0}, {'value': 'L15', 'count': 1, 'percentage': 10.0}, {'value': 'SH', 'count': 1, 'percentage': 10.0}, {'value': 'B', 'count': 1, 'percentage': 10.0}]}, 'discount': {'values': [{'value': '0', 'count': 6, 'percentage': 60.0}, {'value': '15%', 'count': 2, 'percentage': 20.0}, {'value': '20%', 'count': 1, 'percentage': 10.0}, {'value': '5%', 'count': 1, 'percentage': 10.0}]}}}
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_frequency_numeric(self):
         df = self.df
         result = df.cols.frequency(cols='price',n=4,percentage=True,total_rows=3)
-        expected = {'frequency': {'price': {'values': [{'value': 173.47, 'count': 1, 'percentage': 10.0}, {'value': 69.99, 'count': 1, 'percentage': 10.0}, {'value': 30.0, 'count': 1, 'percentage': 10.0}, {'value': 34.99, 'count': 1, 'percentage': 10.0}]}}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        expected = {'frequency': {'price': {'values': [{'value': 69.99, 'count': 1, 'percentage': 10.0}, {'value': 179.99, 'count': 1, 'percentage': 10.0}, {'value': 57.99, 'count': 1, 'percentage': 10.0}, {'value': 34.99, 'count': 1, 'percentage': 10.0}]}}}
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_frequency_string(self):
         df = self.df
         result = df.cols.frequency(cols='name',n=5,percentage=False)
         expected = {'frequency': {'name': {'values': [{'value': 'pants', 'count': 6}, {'value': 'shoes', 'count': 2}, {'value': 'shirt', 'count': 2}]}}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_heatmap_numeric_numeric(self):
         df = self.df
@@ -201,25 +201,25 @@ class TestMoreStatisticsPandas(TestBase):
         df = self.df
         result = df.cols.hist(cols='*',buckets=2)
         expected = {'hist': {'id': [{'lower': 1.0, 'upper': 10.0, 'count': 10}], 'name': [{'lower': nan, 'upper': nan, 'count': 10}], 'code': [{'lower': nan, 'upper': nan, 'count': 10}], 'price': [{'lower': 30.0, 'upper': 179.99, 'count': 10}], 'discount': [{'lower': 0.0, 'upper': 0.0, 'count': 6}]}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_hist_multiple(self):
         df = self.df
         result = df.cols.hist(cols=['id', 'code', 'discount'],buckets=4)
         expected = {'hist': {'id': [{'lower': 1.0, 'upper': 4.0, 'count': 3}, {'lower': 4.0, 'upper': 7.0, 'count': 3}, {'lower': 7.0, 'upper': 10.0, 'count': 4}], 'code': [{'lower': nan, 'upper': nan, 'count': 0}, {'lower': nan, 'upper': nan, 'count': 0}, {'lower': nan, 'upper': nan, 'count': 10}], 'discount': [{'lower': 0.0, 'upper': 0.0, 'count': 0}, {'lower': 0.0, 'upper': 0.0, 'count': 0}, {'lower': 0.0, 'upper': 0.0, 'count': 6}]}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_hist_numeric(self):
         df = self.df
         result = df.cols.hist(cols='price',buckets=10)
         expected = {'hist': {'price': [{'lower': 30.0, 'upper': 46.66555555555556, 'count': 2}, {'lower': 46.66555555555556, 'upper': 63.33111111111111, 'count': 2}, {'lower': 63.33111111111111, 'upper': 79.99666666666667, 'count': 1}, {'lower': 79.99666666666667, 'upper': 96.66222222222223, 'count': 1}, {'lower': 96.66222222222223, 'upper': 113.32777777777778, 'count': 0}, {'lower': 113.32777777777778, 'upper': 129.99333333333334, 'count': 0}, {'lower': 129.99333333333334, 'upper': 146.6588888888889, 'count': 1}, {'lower': 146.6588888888889, 'upper': 163.32444444444445, 'count': 0}, {'lower': 163.32444444444445, 'upper': 179.99, 'count': 3}]}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_infer_types_all(self):
         df = self.df
         result = df.cols.infer_types(cols='*')
         expected = {'id': {'data_type': 'int', 'categorical': True}, 'name': {'data_type': 'str', 'categorical': True}, 'code': {'data_type': 'str', 'categorical': True}, 'price': {'data_type': 'decimal', 'categorical': False}, 'discount': {'data_type': 'int', 'categorical': True}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_infer_types_multiple(self):
         df = self.df
@@ -238,14 +238,14 @@ class TestMoreStatisticsPandas(TestBase):
     def test_cols_profile_all(self):
         df = self.df
         result = df.cols.profile(cols='*')
-        expected = [{'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [{'value': 1, 'count': 1}, {'value': 2, 'count': 1}, {'value': 3, 'count': 1}, {'value': 4, 'count': 1}, {'value': 5, 'count': 1}, {'value': 6, 'count': 1}, {'value': 7, 'count': 1}, {'value': 8, 'count': 1}, {'value': 9, 'count': 1}, {'value': 10, 'count': 1}], 'count_uniques': 10}, 'data_type': 'int64'}, {'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}, 'frequency': [{'value': 'pants', 'count': 6}, {'value': 'shoes', 'count': 2}, {'value': 'shirt', 'count': 2}], 'count_uniques': 3}, 'data_type': 'object'}, {'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}, 'frequency': [{'value': 'JG15', 'count': 2}, {'value': 'L15', 'count': 1}, {'value': 'SH', 'count': 1}, {'value': 'RG30', 'count': 1}, {'value': 'J10', 'count': 1}, {'value': 'B', 'count': 1}, {'value': 'JG20', 'count': 1}, {'value': 'L20', 'count': 1}, {'value': 'FT50', 'count': 1}], 'count_uniques': 9}, 'data_type': 'object'}, {'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'decimal', 'categorical': False}, 'hist': [{'lower': 30.0, 'upper': 34.6871875, 'count': 1}, {'lower': 34.6871875, 'upper': 39.374375, 'count': 1}, {'lower': 39.374375, 'upper': 44.0615625, 'count': 0}, {'lower': 44.0615625, 'upper': 48.74875, 'count': 0}, {'lower': 48.74875, 'upper': 53.4359375, 'count': 1}, {'lower': 53.4359375, 'upper': 58.123125, 'count': 1}, {'lower': 58.123125, 'upper': 62.8103125, 'count': 0}, {'lower': 62.8103125, 'upper': 67.4975, 'count': 0}, {'lower': 67.4975, 'upper': 72.1846875, 'count': 1}, {'lower': 72.1846875, 'upper': 76.871875, 'count': 0}, {'lower': 76.871875, 'upper': 81.55906250000001, 'count': 0}, {'lower': 81.55906250000001, 'upper': 86.24625, 'count': 0}, {'lower': 86.24625, 'upper': 90.9334375, 'count': 0}, {'lower': 90.9334375, 'upper': 95.620625, 'count': 1}, {'lower': 95.620625, 'upper': 100.30781250000001, 'count': 0}, {'lower': 100.30781250000001, 'upper': 104.995, 'count': 0}, {'lower': 104.995, 'upper': 109.6821875, 'count': 0}, {'lower': 109.6821875, 'upper': 114.369375, 'count': 0}, {'lower': 114.369375, 'upper': 119.05656250000001, 'count': 0}, {'lower': 119.05656250000001, 'upper': 123.74375, 'count': 0}, {'lower': 123.74375, 'upper': 128.4309375, 'count': 0}, {'lower': 128.4309375, 'upper': 133.11812500000002, 'count': 1}, {'lower': 133.11812500000002, 'upper': 137.8053125, 'count': 0}, {'lower': 137.8053125, 'upper': 142.4925, 'count': 0}, {'lower': 142.4925, 'upper': 147.1796875, 'count': 0}, {'lower': 147.1796875, 'upper': 151.866875, 'count': 0}, {'lower': 151.866875, 'upper': 156.55406250000001, 'count': 0}, {'lower': 156.55406250000001, 'upper': 161.24125, 'count': 0}, {'lower': 161.24125, 'upper': 165.9284375, 'count': 0}, {'lower': 165.9284375, 'upper': 170.61562500000002, 'count': 1}, {'lower': 170.61562500000002, 'upper': 175.30281250000002, 'count': 1}, {'lower': 175.30281250000002, 'upper': 179.99, 'count': 1}]}, 'data_type': 'float64'}, {'stats': {'match': 6, 'missing': 0, 'mismatch': 4, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [{'value': '0', 'count': 6}, {'value': '15%', 'count': 2}, {'value': '5%', 'count': 1}, {'value': '20%', 'count': 1}], 'count_uniques': 4}, 'data_type': 'object'}]
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        expected = [{'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [{'value': 1, 'count': 1}, {'value': 2, 'count': 1}, {'value': 3, 'count': 1}, {'value': 4, 'count': 1}, {'value': 5, 'count': 1}, {'value': 6, 'count': 1}, {'value': 7, 'count': 1}, {'value': 8, 'count': 1}, {'value': 9, 'count': 1}, {'value': 10, 'count': 1}], 'count_uniques': 10}, 'data_type': 'int64'}, {'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}, 'frequency': [{'value': 'pants', 'count': 6}, {'value': 'shoes', 'count': 2}, {'value': 'shirt', 'count': 2}], 'count_uniques': 3}, 'data_type': 'object'}, {'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}, 'frequency': [{'value': 'JG15', 'count': 2}, {'value': 'RG30', 'count': 1}, {'value': 'J10', 'count': 1}, {'value': 'L15', 'count': 1}, {'value': 'SH', 'count': 1}, {'value': 'B', 'count': 1}, {'value': 'L20', 'count': 1}, {'value': 'JG20', 'count': 1}, {'value': 'FT50', 'count': 1}], 'count_uniques': 9}, 'data_type': 'object'}, {'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'decimal', 'categorical': False}, 'hist': [{'lower': 30.0, 'upper': 34.6871875, 'count': 1}, {'lower': 34.6871875, 'upper': 39.374375, 'count': 1}, {'lower': 39.374375, 'upper': 44.0615625, 'count': 0}, {'lower': 44.0615625, 'upper': 48.74875, 'count': 0}, {'lower': 48.74875, 'upper': 53.4359375, 'count': 1}, {'lower': 53.4359375, 'upper': 58.123125, 'count': 1}, {'lower': 58.123125, 'upper': 62.8103125, 'count': 0}, {'lower': 62.8103125, 'upper': 67.4975, 'count': 0}, {'lower': 67.4975, 'upper': 72.1846875, 'count': 1}, {'lower': 72.1846875, 'upper': 76.871875, 'count': 0}, {'lower': 76.871875, 'upper': 81.55906250000001, 'count': 0}, {'lower': 81.55906250000001, 'upper': 86.24625, 'count': 0}, {'lower': 86.24625, 'upper': 90.9334375, 'count': 0}, {'lower': 90.9334375, 'upper': 95.620625, 'count': 1}, {'lower': 95.620625, 'upper': 100.30781250000001, 'count': 0}, {'lower': 100.30781250000001, 'upper': 104.995, 'count': 0}, {'lower': 104.995, 'upper': 109.6821875, 'count': 0}, {'lower': 109.6821875, 'upper': 114.369375, 'count': 0}, {'lower': 114.369375, 'upper': 119.05656250000001, 'count': 0}, {'lower': 119.05656250000001, 'upper': 123.74375, 'count': 0}, {'lower': 123.74375, 'upper': 128.4309375, 'count': 0}, {'lower': 128.4309375, 'upper': 133.11812500000002, 'count': 1}, {'lower': 133.11812500000002, 'upper': 137.8053125, 'count': 0}, {'lower': 137.8053125, 'upper': 142.4925, 'count': 0}, {'lower': 142.4925, 'upper': 147.1796875, 'count': 0}, {'lower': 147.1796875, 'upper': 151.866875, 'count': 0}, {'lower': 151.866875, 'upper': 156.55406250000001, 'count': 0}, {'lower': 156.55406250000001, 'upper': 161.24125, 'count': 0}, {'lower': 161.24125, 'upper': 165.9284375, 'count': 0}, {'lower': 165.9284375, 'upper': 170.61562500000002, 'count': 1}, {'lower': 170.61562500000002, 'upper': 175.30281250000002, 'count': 1}, {'lower': 175.30281250000002, 'upper': 179.99, 'count': 1}]}, 'data_type': 'float64'}, {'stats': {'match': 6, 'missing': 0, 'mismatch': 4, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [{'value': '0', 'count': 6}, {'value': '15%', 'count': 2}, {'value': '20%', 'count': 1}, {'value': '5%', 'count': 1}], 'count_uniques': 4}, 'data_type': 'object'}]
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_profile_multiple(self):
         df = self.df
         result = df.cols.profile(cols=['id', 'code', 'discount'],bins=4,flush=False)
-        expected = [{'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [{'value': 1, 'count': 1}, {'value': 2, 'count': 1}, {'value': 3, 'count': 1}, {'value': 4, 'count': 1}, {'value': 5, 'count': 1}, {'value': 6, 'count': 1}, {'value': 7, 'count': 1}, {'value': 8, 'count': 1}, {'value': 9, 'count': 1}, {'value': 10, 'count': 1}], 'count_uniques': 10}, 'data_type': 'int64'}, {'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}, 'frequency': [{'value': 'JG15', 'count': 2}, {'value': 'L15', 'count': 1}, {'value': 'SH', 'count': 1}, {'value': 'RG30', 'count': 1}, {'value': 'J10', 'count': 1}, {'value': 'B', 'count': 1}, {'value': 'JG20', 'count': 1}, {'value': 'L20', 'count': 1}, {'value': 'FT50', 'count': 1}], 'count_uniques': 9}, 'data_type': 'object'}, {'stats': {'match': 6, 'missing': 0, 'mismatch': 4, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [{'value': '0', 'count': 6}, {'value': '15%', 'count': 2}, {'value': '5%', 'count': 1}, {'value': '20%', 'count': 1}], 'count_uniques': 4}, 'data_type': 'object'}]
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        expected = [{'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [{'value': 1, 'count': 1}, {'value': 2, 'count': 1}, {'value': 3, 'count': 1}, {'value': 4, 'count': 1}, {'value': 5, 'count': 1}, {'value': 6, 'count': 1}, {'value': 7, 'count': 1}, {'value': 8, 'count': 1}, {'value': 9, 'count': 1}, {'value': 10, 'count': 1}], 'count_uniques': 10}, 'data_type': 'int64'}, {'stats': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}, 'frequency': [{'value': 'JG15', 'count': 2}, {'value': 'RG30', 'count': 1}, {'value': 'J10', 'count': 1}, {'value': 'L15', 'count': 1}, {'value': 'SH', 'count': 1}, {'value': 'B', 'count': 1}, {'value': 'L20', 'count': 1}, {'value': 'JG20', 'count': 1}, {'value': 'FT50', 'count': 1}], 'count_uniques': 9}, 'data_type': 'object'}, {'stats': {'match': 6, 'missing': 0, 'mismatch': 4, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [{'value': '0', 'count': 6}, {'value': '15%', 'count': 2}, {'value': '20%', 'count': 1}, {'value': '5%', 'count': 1}], 'count_uniques': 4}, 'data_type': 'object'}]
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_profile_numeric(self):
         df = self.df
@@ -258,37 +258,37 @@ class TestMoreStatisticsPandas(TestBase):
         df = self.df
         result = df.cols.quality(cols='*')
         expected = {'id': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}}, 'name': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}}, 'code': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}}, 'price': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'decimal', 'categorical': False}}, 'discount': {'match': 6, 'missing': 0, 'mismatch': 4, 'inferred_type': {'data_type': 'int', 'categorical': True}}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_quality_multiple(self):
         df = self.df
         result = df.cols.quality(cols=['id', 'code', 'discount'],flush=False)
         expected = {'id': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}}, 'code': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}}, 'discount': {'match': 6, 'missing': 0, 'mismatch': 4, 'inferred_type': {'data_type': 'int', 'categorical': True}}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_quality_numeric(self):
         df = self.df
         result = df.cols.quality(cols='price',flush=True)
         expected = {'price': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'decimal', 'categorical': False}}}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_unique_values_all(self):
         df = self.df
         result = df.cols.unique_values(cols='*')
         expected = {'id': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], 'name': ['pants', 'shoes', 'shirt'], 'code': ['L15', 'SH', 'RG30', 'J10', 'JG15', 'B', 'JG20', 'L20', 'FT50'], 'price': ['173.47', '69.99', '30.0', '34.99', '132.99', '57.99', '179.99', '95.0', '50.0', '169.99'], 'discount': ['0', '15%', '5%', '20%']}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_unique_values_multiple(self):
         df = self.df
         result = df.cols.unique_values(cols=['id', 'code', 'discount'],estimate=False)
         expected = {'id': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], 'code': ['L15', 'SH', 'RG30', 'J10', 'JG15', 'B', 'JG20', 'L20', 'FT50'], 'discount': ['0', '15%', '5%', '20%']}
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
     
     def test_cols_unique_values_numeric(self):
         df = self.df
         result = df.cols.unique_values(cols='price',estimate=True)
         expected = ['173.47', '69.99', '30.0', '34.99', '132.99', '57.99', '179.99', '95.0', '50.0', '169.99']
-        self.assertEqual(json_encoding(result), json_encoding(expected))
+        self.assertTrue(results_equal(result, expected, assertion=True))
 
 
 class TestMoreStatisticsDask(TestMoreStatisticsPandas):
