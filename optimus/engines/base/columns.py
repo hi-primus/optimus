@@ -3143,7 +3143,7 @@ class BaseColumns(ABC):
         :param compute:
         :return:
         """
-        return self.count_equal(cols, 0, tidy)
+        return self.count_equal(cols, 0, tidy=tidy)
         # df = self.root
         # return df.cols.agg_exprs(cols, self.F.count_zeros, tidy=tidy, compute=compute)
 
