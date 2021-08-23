@@ -28,7 +28,8 @@ class CUDFBaseFunctions(BaseFunctions, ABC):
     def _to_float(self, series):
         return cudf.to_numeric(series, errors="ignore", downcast="float")
 
-    def to_string(self, series):
+    @staticmethod
+    def to_string(series):
         return series.astype(str)
 
     def _to_datetime(self, value, format):

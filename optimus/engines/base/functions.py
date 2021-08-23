@@ -31,7 +31,7 @@ class BaseFunctions(ABC):
 
     def __getattr__(self, name):
         type_msg = "" if self.root is None else f" using {type(self.root).__name__}"
-        raise NotImplementedError(f"\"{name}\" is not available"+type_msg)
+        raise NotImplementedError(f"\"{name}\" is not available" + type_msg)
 
     @property
     def n_partitions(self):
@@ -173,10 +173,12 @@ class BaseFunctions(ABC):
     def to_datetime(self, series, format):
         return self._to_datetime(series, format)
 
-    def to_string(self, series):
+    @staticmethod
+    def to_string(series):
         return series.astype(str)
 
-    def to_string_accessor(self, series):
+    @staticmethod
+    def to_string_accessor(series):
         return series.astype(str).str
 
 

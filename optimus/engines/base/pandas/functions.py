@@ -25,14 +25,16 @@ class PandasBaseFunctions(BaseFunctions, ABC):
     def is_integer(series):
         return np.vectorize(isintlike)(series).flatten()
 
-    def is_float(self, series):
+    @staticmethod
+    def is_float(series):
         return np.vectorize(isfloat)(series).flatten()
 
     @staticmethod
     def is_numeric(series):
         return np.vectorize(isreal)(series).flatten()
 
-    def _to_integer(self, series, default=0):
+    @staticmethod
+    def _to_integer(series, default=0):
         try:
             series = pd.Series(np.vectorize(fast_int)(series, default=default).flatten())
         except:
@@ -49,13 +51,15 @@ class PandasBaseFunctions(BaseFunctions, ABC):
 
         return series
 
-    def _to_float(self, series):
+    @staticmethod
+    def _to_float(series):
         try:
             return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
         except:
             return pd.Series(pd.to_numeric(series, errors='coerce')).astype('float')
 
-    def _to_datetime(self, value, format=None):
+    @staticmethod
+    def _to_datetime(value, format=None):
         if format is None:
             return pd.to_datetime(value, errors="coerce")
         else:

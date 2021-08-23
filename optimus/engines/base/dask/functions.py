@@ -15,20 +15,24 @@ from optimus.engines.base.distributed.functions import DistributedBaseFunctions
 
 class DaskBaseFunctions(DistributedBaseFunctions):
 
+    @staticmethod
     @property
-    def _engine(self):
+    def _engine():
         return dask
 
+    @staticmethod
     @property
-    def _functions(self):
+    def _functions():
         return dd
 
-    def _new_series(self, series, *args, **kwargs):
+    @staticmethod
+    def _new_series(series, *args, **kwargs):
         if isinstance(series, dd.Series):
             return series
         return dd.from_array(series, *args, **kwargs)
 
-    def compute(self, *args, **kwargs):
+    @staticmethod
+    def compute(*args, **kwargs):
         result = dask.compute(*(*(a for a in args), *(kwargs[k] for k in kwargs)))
         return one_tuple_to_val(result)
 
@@ -58,19 +62,19 @@ class DaskBaseFunctions(DistributedBaseFunctions):
 
     def to_float(self, series):
         if getattr(series, "map_partitions", False):
-            return series.map_partitions(self._to_float)
+            return self.map_partitions(series, self._to_float)
         else:
             return self._to_float(series)
 
-    def to_integer(self, series):
+    def to_integer(self, series, default=0):
         if getattr(series, "map_partitions", False):
-            return series.map_partitions(self._to_float)
+            return self.map_partitions(series, self._to_integer, default=default)
         else:
-            return self._to_float(series)
+            return self._to_integer(series, default=default)
 
     def to_datetime(self, series):
         if getattr(series, "map_partitions", False):
-            return series.map_partitions(self._to_datetime)
+            return self.map_partitions(series, self._to_datetime)
         else:
             return self._to_float(series)
 
@@ -86,7 +90,8 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     def word_tokenize(self, series):
         pass
 
-    def delayed(self, func):
+    @staticmethod
+    def delayed(func):
         def wrapper(*args, **kwargs):
             return dask.delayed(func)(*args, **kwargs)
 

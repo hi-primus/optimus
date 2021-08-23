@@ -8,6 +8,12 @@ from optimus.engines.base.functions import BaseFunctions
 
 class DataFrameBaseFunctions(BaseFunctions):
 
+    @staticmethod
+    def map_partitions(dfd_or_series, func, *args, **kwargs):
+        result = dfd_or_series.map_partitions(func, *args, **kwargs)
+        result.index = dfd_or_series.index
+        return result
+
     def reverse(self, series):
         return self.to_string(series).map(lambda v: v[::-1])
 
