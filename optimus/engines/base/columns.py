@@ -36,7 +36,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import transform_date_format
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
-from optimus.infer import is_dict, is_int_like, is_numeric_like, is_str, is_list_value, is_one_element, \
+from optimus.infer import is_dict, is_int_like, is_list_of_list, is_numeric_like, is_str, is_list_value, is_one_element, \
     is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -1160,18 +1160,23 @@ class BaseColumns(ABC):
 
         return agg_result
 
-    @staticmethod
-    def exec_agg(exprs, compute):
+    def exec_agg(self, exprs, compute):
         """
 
         :param exprs:
         :param compute:
         :return:
         """
+        return self.format_agg(exprs)
+
+    @staticmethod
+    def format_agg(exprs):
         while isinstance(exprs, (list, tuple)) and len(exprs) == 1:
             exprs = exprs[0]
         if getattr(exprs, "tolist", None):
-            exprs = one_list_to_val(exprs.tolist())
+            exprs = exprs.tolist()
+            if not is_list_of_list(exprs):
+                exprs = one_list_to_val(exprs)
         if getattr(exprs, "to_dict", None):
             exprs = exprs.to_dict()
         return exprs

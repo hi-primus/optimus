@@ -1,7 +1,6 @@
 import dask
 import dask.dataframe as dd
 import pandas as pd
-from dask import delayed
 
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, name_col
@@ -14,8 +13,7 @@ from optimus.engines.base.distributed.columns import DistributedBaseColumns
 
 class DaskBaseColumns(DistributedBaseColumns):
 
-    @staticmethod
-    def exec_agg(exprs, compute):
+    def exec_agg(self, exprs, compute):
         """
         Execute and aggregation
         :param exprs:
@@ -23,16 +21,10 @@ class DaskBaseColumns(DistributedBaseColumns):
         :return:
         """
 
+        result = self.F.delayed(self.format_agg)(exprs)
+        
         if compute:
-            result = dask.compute(exprs)
-            while isinstance(result, (list, tuple)) and len(result) == 1:
-                result = result[0]
-            if getattr(result, "tolist", None):
-                result = one_list_to_val(result.tolist())
-            if getattr(result, "to_dict", None):
-                result = result.to_dict()
-        else:
-            result = delayed(exprs)
+            result = self.F.compute(result)
 
         return result
 
