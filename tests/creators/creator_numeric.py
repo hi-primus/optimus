@@ -388,7 +388,9 @@ def create():
 
     t = TestCreator(op, df, name="statistics", configs=default_configs)
 
-    t.create(method="cols.mad", variant="all", cols="*")
+    all_non_date = ['NullType', 'attributes', 'date arrival', 'function(binary)', 'height(ft)', 'japanese name', 'last date seen', 'last position seen', 'rank', 'Cybertronian', 'age', 'function', 'names', 'timestamp', 'weight(t)']
+
+    t.create(method="cols.mad", variant="all", cols=all_non_date)
     t.create(method="cols.mad", variant="numeric", cols="weight(t)", relative_error=0.45)
     t.create(method="cols.mad", variant="multiple", cols=["height(ft)", "age", "rank"], more=True)
 
@@ -449,11 +451,11 @@ def create():
     t.create(method="cols.cummin", variant="numeric", cols="weight(t)")
     t.create(method="cols.cummin", variant="multiple", cols=["height(ft)", "age", "rank"])
 
-    t.create(method="cols.var", variant="all", cols="*")
+    t.create(method="cols.var", variant="all", cols=all_non_date)
     t.create(method="cols.var", variant="numeric", cols="weight(t)")
     t.create(method="cols.var", variant="multiple", cols=["height(ft)", "age", "rank"])
 
-    t.create(method="cols.std", variant="all", cols="*")
+    t.create(method="cols.std", variant="all", cols=all_non_date)
     t.create(method="cols.std", variant="numeric", cols="weight(t)")
     t.create(method="cols.std", variant="multiple", cols=["height(ft)", "age", "rank"])
 
