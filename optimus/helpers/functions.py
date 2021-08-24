@@ -702,8 +702,8 @@ def results_equal(r1, r2, decimal: Union[int, bool] = True, assertion=False):
         decimal = 7
 
     try:
-        if type(r1) != type(r2):
-            raise AssertionError(f"Types '{str(type(r1))}' and '{str(type(r2))}' do not match")
+        # if type(r1) != type(r2):
+        #     raise AssertionError(f"Types '{str(type(r1))}' and '{str(type(r2))}' do not match")
         
         if hasattr(r1, "__len__") and len(r1) != len(r2):
             raise AssertionError(f"Lengths '{len(r1)}' and '{len(r2)}' do not match")
