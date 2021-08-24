@@ -1,11 +1,12 @@
+from typing import Any, Dict, Union
 import unittest
 
 
 class TestBase(unittest.TestCase):
 
-    config = {"engine": "pandas", "n_partitions": 1}
-    dict = {}
-    load = {}
+    config: Dict[str, Union[str, int]]  = {"engine": "pandas", "n_partitions": 1}
+    dict: Dict[Any, Any] = {}
+    load: Dict[Any, Any]  = {}
 
     @classmethod
     def setUpClass(cls):

@@ -52,13 +52,13 @@ class TestCreator:
 
         # Imports
         _imports = [
-            "from optimus.tests.base import TestBase",
             "import datetime",
-            "Timestamp = lambda t: datetime.datetime.strptime(t,\"%Y-%m-%d %H:%M:%S\")",
+            "from optimus.tests.base import TestBase",
+            "from optimus.helpers.json import json_encoding",
+            "from optimus.helpers.functions import deep_sort, df_dicts_equal, results_equal",
+            "\n\ndef Timestamp(t):\n    return datetime.datetime.strptime(t, \"%Y-%m-%d %H:%M:%S\")\n\n",
             "nan = float(\"nan\")",
             "inf = float(\"inf\")",
-            "from optimus.helpers.json import json_encoding",
-            "from optimus.helpers.functions import deep_sort, df_dicts_equal, results_equal"
         ]
 
         if self.options.get("imports", None) is not None:
@@ -75,12 +75,12 @@ class TestCreator:
 
         # Class name
         base_class = "Test"+list(classes.keys())[0]
-        cls = "\nclass " + base_class + "(TestBase):\n"
+        cls = "\n\nclass " + base_class + "(TestBase):\n"
         test_file.write(cls)
 
         # First Config
         test_file.write("    config = " +
-                        pformat(list(classes.values())[0])+"\n")
+                        pformat(list(classes.values())[0]) + "\n")
 
         # Global Dataframe
         if self.df is not None:
@@ -155,8 +155,8 @@ class TestCreator:
 
         buffer = []
 
-        def add_buffer(value):
-            buffer.append("    " + value)
+        def add_buffer(value, tab=1):
+            buffer.append(("    " * tab) + value)
 
         # Create name
         name = []
@@ -183,10 +183,10 @@ class TestCreator:
 
         filename = test_name + ".test"
 
-        add_buffer("\n")
+        add_buffer("\n", 0)
         add_buffer("def " + func_test_name + ":\n")
 
-        if select_cols == True:
+        if select_cols is True:
             select_cols = kwargs["cols"] if "cols" in kwargs else args[0] if len(
                 args) else False
 
@@ -200,21 +200,20 @@ class TestCreator:
             if select_cols:
                 df = df.cols.select(select_cols)
                 add_buffer(
-                    f"    df = self.df.cols.select({pformat(select_cols, compact=True)})\n")
+                    f"df = self.df.cols.select({pformat(select_cols, compact=True)})\n", 2)
             else:
-                add_buffer(f"    df = self.df\n")
+                add_buffer(f"df = self.df\n", 2)
             df_func = df
         elif isinstance(df, (BaseDataFrame,)):
             if select_cols:
                 df = df.cols.select(select_cols)
-            add_buffer(
-                "    df = self.create_dataframe(dict=" + df.export(data_types="internal") + ", force_data_types=True)\n")
+            add_buffer("df = self.create_dataframe(dict=" + df.export(data_types="internal") + ", force_data_types=True)\n", 2)
             df_func = df
         else:
             if select_cols:
                 df = [df[col] for col in df if df in select_cols] if select_cols != "*" else df
-            add_buffer("    df = self.create_dataframe(dict=" +
-                       pformat(df, compact=True, sort_dicts=False) + ", force_data_types=True)\n")
+            add_buffer("df = self.create_dataframe(dict=" + pformat(df, compact=True, sort_dicts=False) +
+                       ", force_data_types=True)\n", 2)
             df_func = df
 
         # Process simple arguments
@@ -223,14 +222,14 @@ class TestCreator:
             if is_function(v):
                 _args.append(v.__qualname__)
             elif isinstance(v, (BaseDataFrame,)):
-                _df = "    self.create_dataframe(dict=" + v.export(data_types="internal") + ", force_data_types=True)\n"
+                _df = "self.create_dataframe(dict=" + v.export(data_types="internal") + ", force_data_types=True)"
                 _args.append(_df)
             elif isinstance(v, (str, bool, dict, list)):
                 _args.append(pformat(v, compact=True, sort_dicts=False))
             else:
                 _args.append(str(v))
 
-        _args = ','.join(_args)
+        _args = ', '.join(_args)
         _kwargs = []
 
         # Process keywords arguments
@@ -241,18 +240,18 @@ class TestCreator:
         # Separator if we have positional and keyword arguments
         separator = ""
         if (not is_list_empty(args)) & (not is_list_empty(kwargs)):
-            separator = ","
+            separator = ", "
 
         if method is None:
-            add_buffer("    result = df\n")
+            add_buffer("result = df\n", 2)
 
         else:
             ams = ""
             for m in additional_method:
                 ams += "." + m + "()"
 
-            add_buffer("    result = df." + method + "(" + _args + separator + ','.join(
-                _kwargs) + ")" + ams + "\n")
+            add_buffer("result = df." + method + "(" + _args + separator + ', '.join(
+                _kwargs) + ")" + ams + "\n", 2)
 
         # print("expected_df", expected_df)
 
@@ -287,38 +286,33 @@ class TestCreator:
             compare_by = "dict"
 
         if compare_by != "df" and expected_is_df:
-            add_buffer("    result = result.to_dict()\n")
+            add_buffer("result = result.to_dict()\n", 2)
 
         if failed:
-            add_buffer(
-                "    # The following value does not represent a correct output of the operation\n")
-            add_buffer("    expected = self.dict\n")
+            add_buffer("# The following value does not represent a correct output of the operation\n", 2)
+            add_buffer("expected = self.dict\n", 2)
         elif compare_by == "df":
             if expected_is_df:
                 expected_df = expected_df.export(data_types="internal")
-            add_buffer(
-                f"    expected = self.create_dataframe(dict={expected_df}, force_data_types=True)\n")
+            add_buffer(f"expected = self.create_dataframe(dict={expected_df}, force_data_types=True)\n", 2)
         else:
             if expected_is_df:
                 expected_df = expected_df.export(data_types=False)
-            add_buffer(f"    expected = {expected_df}\n")
+            add_buffer(f"expected = {expected_df}\n", 2)
 
         # Output
         if compare_by == "df":
-            add_buffer("    self.assertTrue(result.equals(expected, decimal=True, assertion=True))\n")
+            add_buffer("self.assertTrue(result.equals(expected, decimal=True, assertion=True))\n", 2)
         elif compare_by == "dict":
             if expected_is_df:
-                add_buffer(
-                    "    self.assertTrue(df_dicts_equal(result, expected, assertion=True))\n")
+                add_buffer("self.assertTrue(df_dicts_equal(result, expected, assertion=True))\n", 2)
             else:
-                add_buffer(
-                    "    self.assertTrue(results_equal(result, expected, assertion=True))\n")
+                add_buffer("self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))\n", 2)
 
         elif compare_by == "json":
-            add_buffer(
-                "    self.assertEqual(json_encoding(result), json_encoding(expected))\n")
+            add_buffer("self.assertEqual(json_encoding(result), json_encoding(expected))\n", 2)
         else:
-            add_buffer("    self.assertEqual(result, expected)\n")
+            add_buffer("self.assertEqual(result, expected)\n", 2)
 
         filename = self.create_path + "/" + filename
         if not os.path.exists(os.path.dirname(filename)):
