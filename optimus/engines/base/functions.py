@@ -240,7 +240,7 @@ class BaseFunctions(ABC):
         return self.to_float(series).mean()
 
     @staticmethod
-    def mode(self, series):
+    def mode(series):
         return series.mode()
 
     def std(self, series):
