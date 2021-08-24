@@ -94,6 +94,17 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     def to_delayed(self, value):
         return value.to_delayed()
 
+    def mode(self, series):
+        # Uses delayed wrapper to avoid unexpected Dask errors
+        # TODO should this be done in every static function called from Dask instead?
+        @self.delayed
+        def compute_mode(series):
+            # dfd = series.rename(0).value_counts().reset_index(drop=False)
+            # _max = dfd[0].max(skipna=True)
+            # return dfd[dfd[0] == _max]['index'].rename(series.name)
+            return series.mode()
+        return compute_mode(series)
+
     def count_zeros(self, series):
         return int((self.to_float(series).values == 0).sum())
 
