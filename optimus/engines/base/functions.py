@@ -294,16 +294,24 @@ class BaseFunctions(ABC):
         pass
 
     def mad(self, series, error, more):
-        series = self.to_float(series)
-        series = series[series.notnull()]
-        median_value = series.quantile(0.5)
-        mad_value = {"mad": (series - median_value).abs().quantile(0.5)}
-        if more:
-            mad_value.update({"median": median_value})
-        else:
-            mad_value = mad_value["mad"]
 
-        return mad_value
+        @self.delayed
+        def compute_mad(_series):
+            if _series.isnull().all():
+                return np.nan
+            else:
+                _series = _series.dropna()
+                
+                median_value = _series.quantile(0.5)
+                mad_value = {"mad": (_series - median_value).abs().quantile(0.5)}
+                if more:
+                    mad_value.update({"median": median_value})
+                else:
+                    mad_value = mad_value["mad"]
+
+                return mad_value
+
+        return compute_mad(self.to_float(series))
 
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
     # cudf seems to be calculate faster in on pass using df.min()
