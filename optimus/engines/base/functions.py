@@ -318,15 +318,18 @@ class BaseFunctions(ABC):
     def percentile(self, series, values, error):
 
         @self.delayed
-        def to_dict(_result):
+        def compute_percentile(_series):
             # In pandas if all values are none it return {} on dict
             # Dask raise an exception is all values in the series are np.nan
-            if _result.isnull().all():
+            if _series.isnull().all():
                 return np.nan
             else:
-                return _result.quantile(values).to_dict()
+                result = _series.quantile(values)
+                if hasattr(result, "to_dict"):
+                    result = result.to_dict()
+                return result
 
-        return to_dict(self.to_float(series))
+        return compute_percentile(self.to_float(series))
 
     # def radians(series):
     #     return series.to_float().radians()
