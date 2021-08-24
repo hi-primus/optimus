@@ -70,6 +70,8 @@ def convert_numpy(value):
         return value.__class__(map(convert_numpy, value))
     elif isinstance(value, (np.generic,)):
         return np.asscalar(value)
+    elif hasattr(value, "to_pydatetime"):
+        return value.to_pydatetime()
     else:
         return value
 
