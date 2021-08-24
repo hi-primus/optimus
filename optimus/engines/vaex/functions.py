@@ -23,9 +23,6 @@ class VaexFunctions(BaseFunctions):
     def skew(series):
         pass
 
-    def word_tokenize(self, series):
-        pass
-
     @staticmethod
     def sqrt(series):
         pass

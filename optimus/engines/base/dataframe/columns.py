@@ -100,7 +100,7 @@ class DataFrameBaseColumns(BaseColumns):
         df = self.root
         return df.cols.apply(cols, "reverse", func_return_type=str,
                              filter_col_by_dtypes=df.constants.STRING_TYPES,
-                             output_cols=output_cols, mode="vectorized", set_index=True)
+                             output_cols=output_cols, mode="vectorized")
 
     @staticmethod
     def astype(*args, **kwargs):

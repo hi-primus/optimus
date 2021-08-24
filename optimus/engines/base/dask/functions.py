@@ -81,9 +81,6 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     def duplicated(self, dfd, keep, subset):
         return self.from_dataframe(self.to_dataframe(dfd).duplicated(keep=keep, subset=subset))
 
-    def word_tokenize(self, series):
-        pass
-
     @staticmethod
     def delayed(func):
         def wrapper(*args, **kwargs):

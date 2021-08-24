@@ -1917,7 +1917,7 @@ class BaseColumns(ABC):
         :return:
         """
 
-        return self.apply(cols, self.F.word_tokenize, func_return_type=str, output_cols=output_cols,
+        return self.apply(cols, self.F.word_tokenize, func_return_type=object, output_cols=output_cols,
                           meta_action=Actions.WORD_TOKENIZE.value, mode="vectorized")
 
     def word_count(self, cols="*", output_cols=None) -> 'DataFrameType':
@@ -1995,11 +1995,8 @@ class BaseColumns(ABC):
         :return:
         """
 
-        def _remove_numbers(value):
-            return value.astype(str).str.replace(r'\d+', '')
-
-        return self.apply(cols, _remove_numbers, func_return_type=str,
-                          output_cols=output_cols, mode="vectorized", set_index=True)
+        return self.apply(cols, self.F.remove_numbers, func_return_type=str,
+                          output_cols=output_cols, mode="vectorized")
 
     def remove_white_spaces(self, cols="*", output_cols=None) -> 'DataFrameType':
         """

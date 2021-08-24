@@ -52,6 +52,19 @@ class BaseFunctions(ABC):
     def to_delayed(self, delayed):
         return [delayed]
 
+    def apply_delayed(self, series, func, *args, **kwargs):
+        result = self.to_delayed(series)
+        result = [partition.apply(func, *args, **kwargs) for partition in result]
+        result = self.from_delayed(result)
+        result.index = series.index
+        return result
+
+    def map_delayed(self, series, func, *args, **kwargs):
+        result = self.to_delayed(series)
+        result = [partition.map(func, *args, **kwargs) for partition in result]
+        result = self.from_delayed(result)
+        result.index = series.index
+        return result
     
     @property
     def constants(self):
@@ -361,13 +374,18 @@ class BaseFunctions(ABC):
         lemmatizer = nltk.stem.WordNetLemmatizer()
 
         def lemmatize_verbs_map(text):
-            return " ".join([lemmatizer.lemmatize(w, 'v') for w in w_tokenizer.tokenize(text)])
+            return " ".join([lemmatizer.lemmatize(w, "v") for w in w_tokenizer.tokenize(text)])
 
-        return self.to_string(series).map(lemmatize_verbs_map, na_action=None)
+        return self.map_delayed(self.to_string(series), lemmatize_verbs_map, na_action=None)
 
-    @abstractmethod
     def word_tokenize(self, series):
-        pass
+        import nltk
+        w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
+
+        def lemmatize_verbs_map(text):
+            return w_tokenizer.tokenize(text)
+
+        return self.map_delayed(self.to_string(series), lemmatize_verbs_map, na_action=None, meta="object")
 
     def word_count(self, series):
         return self.word_tokenize(series).str.len()
@@ -555,6 +573,9 @@ class BaseFunctions(ABC):
         search = val_to_list(search, convert_tuple=True)
         str_regex = [r'^%s$' % s for s in search]
         return self.to_string_accessor(series).replace(str_regex, replace_by, regex=True, case=not ignore_case)
+
+    def remove_numbers(self, series):
+        return self.to_string_accessor(series).replace(r'\d+', '', regex=True)
 
     def remove_white_spaces(self, series):
         return self.to_string_accessor(series).replace(" ", "")

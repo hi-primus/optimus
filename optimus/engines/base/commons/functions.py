@@ -15,7 +15,6 @@ def word_tokenize(series):
     import nltk
     return nltk.word_tokenize(series)
 
-
 def hist(series, bins):
     return np.histogram(series.to_float(), bins=bins)
 

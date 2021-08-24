@@ -13,9 +13,6 @@ class CUDFFunctions(CUDFBaseFunctions, DataFrameBaseFunctions):
     def _engine(self):
         return cudf
 
-    def word_tokenize(self, series):
-        pass
-
     def count_zeros(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.
         non_zero_value = 1
