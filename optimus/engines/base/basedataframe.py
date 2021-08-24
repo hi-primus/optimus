@@ -12,7 +12,6 @@ from glom import assign
 from tabulate import tabulate
 
 from optimus.helpers.types import *
-from optimus.engines.base.stringclustering import string_clustering
 from optimus.helpers.check import is_notebook
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import BUFFER_SIZE, Actions, RELATIVE_ERROR
@@ -1022,6 +1021,7 @@ class BaseDataFrame(ABC):
         return df
 
     def string_clustering(self, cols="*", algorithm="fingerprint", *args, **kwargs):
+        from optimus.engines.base.stringclustering import string_clustering
         return string_clustering(self, cols, algorithm, *args, **kwargs)
         # return clusters
 
