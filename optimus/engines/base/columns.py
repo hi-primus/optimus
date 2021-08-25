@@ -3037,10 +3037,33 @@ class BaseColumns(ABC):
         # avoid passing "self" to a Dask worker
         to_items = self.F.to_items
 
+
         @self.F.delayed
-        def series_to_dict(_series, _total_freq_count=None):
-            _result = [{"value": i, "count": j}
-                       for i, j in to_items(_series)]
+        def calculate_n_largest(_series, include_uniques):
+            _value_counts = _series.value_counts()
+            _n_largest = _value_counts.nlargest(n)
+
+            if include_uniques:
+                _count_uniques = _value_counts.count()
+                return _n_largest, _count_uniques
+
+            return _n_largest
+
+        def kc(x):
+            f = x[0] if is_numeric(x[0]) else float("inf")
+            return (-x[1], f, str(x[0]))
+
+        @self.F.delayed
+        def series_to_dict(_series):
+
+            if is_tuple(_series):
+                _series, _total_freq_count = _series
+            else:
+                _series, _total_freq_count = _series, None
+
+            series_items = sorted(to_items(_series), key=kc)
+            _result = [{"value": value, "count": count}
+                       for value, count in series_items]
 
             if _total_freq_count is None:
                 _result = {_series.name: {"values": _result}}
@@ -3063,17 +3086,9 @@ class BaseColumns(ABC):
 
             return _value_counts
 
-        value_counts = [df.data[col_name].value_counts() for col_name in cols]
-        n_largest = [_value_counts.nlargest(n)
-                     for _value_counts in value_counts]
+        n_largest = [calculate_n_largest(df.data[col], count_uniques) for col in cols]
         
-        if count_uniques is True:
-            count_uniques = [_value_counts.count()
-                             for _value_counts in value_counts]
-            b = [series_to_dict(_n_largest, _count)
-                 for _n_largest, _count in zip(n_largest, count_uniques)]
-        else:
-            b = [series_to_dict(_n_largest) for _n_largest in n_largest]
+        b = [series_to_dict(_n_largest) for _n_largest in n_largest]
 
         c = flat_dict(b)
 

@@ -473,10 +473,15 @@ def create():
     t.create(method="cols.quality", variant="numeric", cols="price", flush=True)
     t.create(method="cols.quality", variant="multiple", cols=["id", "code", "discount"], flush=False)
 
-    t.create(method="cols.frequency", variant="all", cols="*", n=10, count_uniques=True)
-    t.create(method="cols.frequency", variant="numeric", cols="price", n=4, percentage=True, total_rows=3)
-    t.create(method="cols.frequency", variant="string", cols="name", n=5, percentage=False)
-    t.create(method="cols.frequency", variant="multiple", cols=["id", "code", "discount"], n=6, percentage=True)
+    _v = [9, 9, 9, 9, 3, 3, 3, 20, 20, 1, 1, 0, 4]
+    _v2 = ["nine", [9], {"nine": 9}, 9, 3, 3, 3, None, None, 1, 1, 1, 1]
+
+    df = op.create.dataframe(vf=list(map(lambda x: x * 1.1, _v)), vs=list(map(lambda x: "STR" + str(x), _v)), values=_v, o=_v2)
+
+    t.create(df=df, method="cols.frequency", variant="all", cols="*", n=10, count_uniques=True)
+    t.create(df=df, method="cols.frequency", variant="numeric", cols="values", n=4, percentage=True, total_rows=3)
+    t.create(df=df, method="cols.frequency", variant="string", cols="vs", n=5, percentage=False)
+    t.create(df=df, method="cols.frequency", variant="multiple", cols=["vs", "vf"], n=6, percentage=True)
 
     t.create(method="cols.hist", variant="all", cols="*", buckets=2)
     t.create(method="cols.hist", variant="numeric", cols="price", buckets=10)
