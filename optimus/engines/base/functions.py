@@ -243,6 +243,10 @@ class BaseFunctions(ABC):
     def mode(series):
         return series.mode()
 
+    @staticmethod
+    def crosstab(series, other):
+        return pd.crosstab(series, other)
+
     def std(self, series):
         return self.to_float(series).std()
 

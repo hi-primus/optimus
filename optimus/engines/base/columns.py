@@ -36,7 +36,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions import transform_date_format
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
-from optimus.infer import is_dict, is_int_like, is_list_of_list, is_numeric_like, is_str, is_list_value, is_one_element, \
+from optimus.infer import is_dict, is_int_like, is_list_of_list, is_numeric, is_numeric_like, is_str, is_list_value, is_one_element, \
     is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -898,7 +898,7 @@ class BaseColumns(ABC):
 
         return result
 
-    def crosstab(self, col_x, col_y, output="dict") -> dict:
+    def crosstab(self, col_x, col_y, output="dict", compute=True) -> dict:
         """
 
         :param col_x:
@@ -906,7 +906,33 @@ class BaseColumns(ABC):
         :param output:
         :return:
         """
-        pass
+        if output not in ["dict", "dataframe"]:
+            RaiseIt.value_error(output, ["dict", "dataframe"])
+
+        dfd = self.root.data
+
+        result = self.F.delayed(self.F.crosstab)(dfd[col_x], dfd[col_y])
+
+        @self.F.delayed
+        def format_crosstab(_r):
+            if output == "dict":
+                _r = _r.to_dict()
+            elif output == "dataframe":
+                _r.columns = map(lambda c: str(c), _r.columns)
+                _r = _r.reset_index()
+
+            return _r
+
+        result = format_crosstab(result)
+
+        # compute before assigning to a dataframe since it uses a pandas function
+        if compute or output == "dataframe":
+            result = self.F.compute(result)
+
+        if output == "dataframe":
+            result = self.root.new(result)
+
+        return result
 
     def pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> dict:
         """
@@ -3105,7 +3131,7 @@ class BaseColumns(ABC):
 
         return result
 
-    def boxplot(self, cols) -> dict:
+    def boxplot(self, cols="*") -> dict:
         """
         Output the boxplot data in python dict format.
         :param cols: "*", column name or list of column names to be processed.
@@ -3117,6 +3143,9 @@ class BaseColumns(ABC):
 
         for col_name in cols:
             iqr = df.cols.iqr(col_name, more=True)
+            if not is_dict(iqr):
+                stats[col_name] = np.nan
+                continue
             lb = iqr["q1"] - (iqr["iqr"] * 1.5)
             ub = iqr["q3"] + (iqr["iqr"] * 1.5)
 

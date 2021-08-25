@@ -4,6 +4,7 @@ import statsmodels.api as sm
 from matplotlib import pyplot as plt
 from numpy.core._multiarray_umath import array
 
+from optimus.infer import is_dict, is_list
 from optimus.helpers.core import one_list_to_val
 from optimus.helpers.functions import ellipsis
 from optimus.helpers.output import output_image, output_base64, print_html
@@ -43,6 +44,8 @@ def plot_boxplot(column_data=None, output=None, path=None):
     :return:
     """
     for col_name, stats in column_data.items():
+        if not is_dict(stats):
+            continue
         fig, axes = plt.subplots(1, 1)
         stats["whislo"] = stats.pop("whisker_low")
         stats["whishi"] = stats.pop("whisker_high")
@@ -65,7 +68,7 @@ def plot_boxplot(column_data=None, output=None, path=None):
         if output == "base64":
             return output_base64(fig)
         elif output == "image":
-            output_image(fig, path)
+            output_image(plt, path)
             print_html("<img src='" + path + "'>")
 
 
@@ -79,6 +82,8 @@ def plot_frequency(column_data=None, output=None, path=None):
     :return:
     """
     for col_name, data in column_data.items():
+        if not is_dict(data):
+            continue
 
         # Transform Optimus' format to matplotlib's format
         x = []
@@ -128,6 +133,8 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
     """
 
     for col_name, data in column_data.items():
+        if not is_list(data):
+            continue
         bins = []
         for d in data:
             bins.append(d['lower'])
@@ -203,6 +210,8 @@ def plot_missing_values(column_data=None, output=None, path=None):
     columns = []
     labels = []
     for col_name, data in column_data["data"].items():
+        if not is_dict(data):
+            continue
         values.append(data["missing"])
         columns.append(col_name)
         labels.append(data["%"])

@@ -52,27 +52,6 @@ class DataFrameBaseColumns(BaseColumns):
     def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
         pass
 
-    def crosstab(self, col_x, col_y, output="dict"):
-        """
-        :param col_x:
-        :param col_y:
-        :param output:
-        :return:
-        """
-        dfd = self.root.data
-
-        result = self.F._engine.crosstab(dfd[col_x], dfd[col_y])
-
-        if output == "dict":
-            result = result.to_dict()
-        elif output == "dataframe":
-            result.columns = map(lambda c: str(c), result.columns)
-            result = self.root.new(result.reset_index())
-        else:
-            RaiseIt.value_error(output, ["dict", "dataframe"])
-
-        return result
-
     def replace_regex(self, cols="*", regex=None, value="", output_cols=None):
         """
         Use a Regex to replace values
