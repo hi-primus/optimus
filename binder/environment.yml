@@ -3,6 +3,4 @@ name: optimus-environment
 dependencies:
   - pip
   - pip:
-    - -e git+https://github.com/hi-primus/optimus.git#egg=pyoptimus
-    - -e git+https://github.com/hi-primus/optimus.git#egg=pyoptimus[pandas]
     - -e git+https://github.com/hi-primus/optimus.git#egg=pyoptimus[dask]
