@@ -1,7 +1,8 @@
 name: optimus-environment
-channels:
-  - bioconda
+
 dependencies:
-  - java-jdk
+  - pip
   - pip:
-    - pyoptimus
+    - -e git+https://github.com/hi-primus/optimus.git#egg=pyoptimus
+    - -e git+https://github.com/hi-primus/optimus.git#egg=pyoptimus[pandas]
+    - -e git+https://github.com/hi-primus/optimus.git#egg=pyoptimus[dask]
