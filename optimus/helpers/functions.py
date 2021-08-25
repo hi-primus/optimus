@@ -702,18 +702,21 @@ def results_equal(r1, r2, decimal: Union[int, bool] = True, assertion=False):
         decimal = 7
 
     try:
-        # if type(r1) != type(r2):
-        #     raise AssertionError(f"Types '{str(type(r1))}' and '{str(type(r2))}' do not match")
         
         if hasattr(r1, "__len__") and len(r1) != len(r2):
-            raise AssertionError(f"Lengths '{len(r1)}' and '{len(r2)}' do not match")
+            raise AssertionError(f"Lengths '{len(r1)}' and '{len(r2)}' do not match ('{r1}', '{r2}')")
 
         matching = None
 
         if is_dict(r1):
+
+            if not is_dict(r2):
+                raise AssertionError(f"Types '{str(type(r1))}' and '{str(type(r2))}' do not match")
+                
             matching = True
-            for k1, k2 in zip(list(r1.keys()), list(r2.keys())):
-                if not results_equal(r1[k1], r2[k2], decimal, assertion):
+            
+            for key in r1:
+                if not results_equal(r1[key], r2.get(key, None), decimal, assertion):
                     matching = False
                     break
 
