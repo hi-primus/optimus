@@ -20,16 +20,14 @@ class TestMoreStatisticsPandas(TestBase):
     def test_cols_boxplot_all(self):
         df = self.df
         result = df.cols.boxplot(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+        expected = {'id': {'mean': {'id': 5.5, 'name': nan, 'code': nan, 'price': 99.441, 'discount': 0.0}, 'median': 5.5, 'q1': 3.25, 'q3': 7.75, 'whisker_low': -3.5, 'whisker_high': 14.5, 'fliers': [], 'label': 'id'}, 'name': nan, 'code': nan, 'price': {'mean': {'id': 5.5, 'name': nan, 'code': nan, 'price': 99.441, 'discount': 0.0}, 'median': 82.495, 'q1': 51.9975, 'q3': 160.74, 'whisker_low': -111.11625000000001, 'whisker_high': 323.85375, 'fliers': [], 'label': 'price'}, 'discount': {'mean': {'id': 5.5, 'name': nan, 'code': nan, 'price': 99.441, 'discount': 0.0}, 'median': 0.0, 'q1': 0.0, 'q3': 0.0, 'whisker_low': 0.0, 'whisker_high': 0.0, 'fliers': [], 'label': 'discount'}}
+        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_boxplot_multiple(self):
         df = self.df
         result = df.cols.boxplot(cols=['id', 'code', 'discount'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+        expected = {'id': {'mean': {'id': 5.5, 'code': nan, 'discount': 0.0}, 'median': 5.5, 'q1': 3.25, 'q3': 7.75, 'whisker_low': -3.5, 'whisker_high': 14.5, 'fliers': [], 'label': 'id'}, 'code': nan, 'discount': {'mean': {'id': 5.5, 'code': nan, 'discount': 0.0}, 'median': 0.0, 'q1': 0.0, 'q3': 0.0, 'whisker_low': 0.0, 'whisker_high': 0.0, 'fliers': [], 'label': 'discount'}}
+        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_boxplot_numeric(self):
         df = self.df
