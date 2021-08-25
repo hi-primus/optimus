@@ -35,8 +35,8 @@ jupyter:
 
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-21.9)
-[![Colab](https://img.shields.io/badge/launch-colab-yellow.svg?logo=googlecolab&color=e6a210)](https://colab.research.google.com/github/hi-primus/optimus/blob/master/examples/10_min_to_optimus.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-21.9?filepath=https%3A%2F%2Fraw.githubusercontent.com%2Fhi-primus%2Foptimus%2Fdevelop-21.9%2Fexamples%2F10_min_to_optimus.ipynb)
+[![Colab](https://img.shields.io/badge/launch-colab-yellow.svg?logo=googlecolab&color=e6a210)](https://colab.research.google.com/github/hi-primus/optimus/blob/master/examples/10_min_to_optimus_colab.ipynb)
 
 ## Installation (pip): 
  
