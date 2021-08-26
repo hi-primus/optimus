@@ -882,16 +882,29 @@ class BaseColumns(ABC):
         dfd = self.root.data
         cols = parse_columns(df, cols)
 
-        result = dfd[cols].corr(method)
+        if df.op.engine in [Engine.DASK.value] and method != "pearson":
+
+            logger.warn(f"'method' argument does not support '{method}' "
+                        f"on {EnginePretty.DASK.value}.\n"
+                        f"Delayed {EnginePretty.PANDAS.value} version will be used")
+
+
+            @self.F.delayed
+            def delayed_correlation(series, _method):
+                return series.corr(_method)
+
+            result = delayed_correlation(dfd[cols], method)
+        else:
+            result = dfd[cols].corr(method)
 
         @self.F.delayed
-        def compute_correlation(values):
+        def format_correlation(values):
             values = values.to_dict()
             if tidy and is_list(cols) and len(cols) == 2:
                 return values[cols[0]][cols[1]]
             return values
 
-        result = compute_correlation(result)
+        result = format_correlation(result)
 
         if compute:
             result = self.F.compute(result)
