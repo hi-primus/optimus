@@ -293,52 +293,49 @@ class BaseFunctions(ABC):
     @abstractmethod
     def skew(series):
         pass
+    
+    # import dask.dataframe as dd
+    def mad(self, series, error=False, more=False, estimate=False):
 
-    def mad(self, series, error, more):
+        _series = self.to_float(series).dropna()
 
-        @self.delayed
-        def compute_mad(_series):
-            if _series.isnull().all():
-                return np.nan
+        if not estimate:
+            _series = self.compute(_series)
+
+        if not len(_series):
+            return np.nan
+        else:
+            median_value = _series.quantile(0.5)
+            mad_value = (_series - median_value).abs().quantile(0.5)
+            if more:
+                return {"mad": mad_value, "median": median_value}
             else:
-                _series = _series.dropna()
-                
-                median_value = _series.quantile(0.5)
-                mad_value = {"mad": (_series - median_value).abs().quantile(0.5)}
-                if more:
-                    mad_value.update({"median": median_value})
-                else:
-                    mad_value = mad_value["mad"]
-
                 return mad_value
-
-        return compute_mad(self.to_float(series))
 
     # TODO: dask seems more efficient triggering multiple .min() task, one for every column
     # cudf seems to be calculate faster in on pass using df.min()
     def range(self, series):
+        series = self.to_float(series)
+        return {"min": series.min(), "max": series.max()}
 
-        @self.delayed
-        def min_max(_result):
-            return {"min": _result.min(), "max": _result.max()}
+    def percentile(self, series, values, error, estimate=False):
 
-        return min_max(self.to_float(series))        
+        _series = self.to_float(series).dropna()
 
-    def percentile(self, series, values, error):
+        if not estimate:
+            _series = self.compute(_series)
 
-        @self.delayed
-        def compute_percentile(_series):
-            # In pandas if all values are none it return {} on dict
-            # Dask raise an exception is all values in the series are np.nan
-            if _series.isnull().all():
-                return np.nan
-            else:
-                result = _series.quantile(values)
-                if hasattr(result, "to_dict"):
-                    result = result.to_dict()
-                return result
+        if not len(_series):
+            return np.nan
+        else:
+            @self.delayed
+            def format_percentile(_s):
+                if hasattr(_s, "to_dict"):
+                    return _s.to_dict()
+                else:
+                    return _s
 
-        return compute_percentile(self.to_float(series))
+            return format_percentile(_series.quantile(values))
 
     # def radians(series):
     #     return series.to_float().radians()
@@ -352,13 +349,21 @@ class BaseFunctions(ABC):
         t = self.to_float(series)
         return t - t.mean() / t.std(ddof=0)
 
-    def modified_z_score(self, series):
+    def modified_z_score(self, series, estimate):
         series = self.to_float(series)
-        mad_median = self.mad(series, True, True)
-        median = mad_median["median"]
-        mad = mad_median["mad"]
 
-        return abs(0.6745 * (series - median) / mad)
+        _series = series.dropna()
+
+        if not estimate:
+            _series = self.compute(_series)
+
+        if not len(_series):
+            return np.nan
+        else:
+            median = _series.quantile(0.5)
+            mad = (_series - median).abs().quantile(0.5)
+
+            return abs(0.6745 * (series - median) / mad)
 
     def clip(self, series, lower_bound, upper_bound):
         return self.to_float(series).clip(float(lower_bound), float(upper_bound))

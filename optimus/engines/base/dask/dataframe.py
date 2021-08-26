@@ -14,7 +14,7 @@ from optimus.helpers.types import *
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_int, is_one_element
+from optimus.infer import is_int
 
 from optimus.engines.base.distributed.dataframe import DistributedBaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame

@@ -1181,11 +1181,10 @@ class BaseColumns(ABC):
         if parallel:
             all_funcs = [getattr(df[cols].data, func.__name__)()
                          for func in funcs]
-            agg_result = {func.__name__: self.exec_agg(
-                all_funcs, compute) for func in funcs}
+            agg_result = {func.__name__: self.exec_agg(all_funcs, compute=False) for func in funcs}
 
         else:
-            agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute) for
+            agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute=False) for
                                           col_name in cols} for func in funcs}
 
         @self.F.delayed
@@ -1199,7 +1198,7 @@ class BaseColumns(ABC):
 
         return agg_result
 
-    def exec_agg(self, exprs, compute):
+    def exec_agg(self, exprs, compute=True):
         """
 
         :param exprs:
@@ -1210,7 +1209,7 @@ class BaseColumns(ABC):
 
     @staticmethod
     def format_agg(exprs):
-        while isinstance(exprs, (list, tuple)) and len(exprs) == 1:
+        while isinstance(exprs, (list, tuple, set)) and len(exprs) == 1:
             exprs = exprs[0]
         if getattr(exprs, "tolist", None):
             exprs = exprs.tolist()
@@ -1220,7 +1219,7 @@ class BaseColumns(ABC):
             exprs = exprs.to_dict()
         return exprs
 
-    def mad(self, cols="*", relative_error=RELATIVE_ERROR, more=False, tidy=True, compute=True):
+    def mad(self, cols="*", relative_error=RELATIVE_ERROR, more=False, estimate=True, tidy=True, compute=True):
         """
         :param cols: "*", column name or list of column names to be processed.
         :param relative_error:
@@ -1230,7 +1229,7 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.mad, relative_error, more, compute=compute, tidy=tidy)
+        return df.cols.agg_exprs(cols, self.F.mad, relative_error, more, estimate, compute=compute, tidy=tidy)
 
     def min(self, cols="*", numeric=None, tidy: bool = True, compute: bool = True):
         """
@@ -1290,7 +1289,7 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.range, compute=compute, tidy=tidy)
 
-    def percentile(self, cols="*", values=None, relative_error=RELATIVE_ERROR, tidy=True, compute=True):
+    def percentile(self, cols="*", values=None, relative_error=RELATIVE_ERROR, estimate=False, tidy=True, compute=True):
         """
         Return values at the given percentile over requested column.
         :param cols: "*", column name or list of column names to be processed.
@@ -1304,7 +1303,7 @@ class BaseColumns(ABC):
 
         if values is None:
             values = [0.25, 0.5, 0.75]
-        return df.cols.agg_exprs(cols, self.F.percentile, values, relative_error, tidy=tidy, compute=True)
+        return df.cols.agg_exprs(cols, self.F.percentile, values, relative_error, estimate, tidy=tidy, compute=True)
 
     def median(self, cols="*", relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         """
@@ -2665,23 +2664,23 @@ class BaseColumns(ABC):
                           output_col=output_col, name="rdiv")
 
     def z_score(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.root.cols.apply(cols, "z_score", func_return_type=float, output_cols=output_cols,
+        return self.root.cols.apply(cols, func=self.F.z_score, func_return_type=float, output_cols=output_cols,
                                     meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
-    def modified_z_score(self, cols="*", output_cols=None) -> 'DataFrameType':
-        return self.root.cols.apply(cols, "modified_z_score", func_return_type=float, output_cols=output_cols,
-                                    meta_action=Actions.Z_SCORE.value, mode="vectorized")
+    def modified_z_score(self, cols="*", estimate=False, output_cols=None) -> 'DataFrameType':
+        return self.root.cols.apply(cols, func=self.F.modified_z_score, args=(estimate,), func_return_type=float,
+                                    output_cols=output_cols, meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
     def standard_scaler(self, cols="*", output_cols=None):
-        return self.root.cols.apply(cols, func="standard_scaler", output_cols=output_cols,
+        return self.root.cols.apply(cols, func=self.F.standard_scaler, output_cols=output_cols,
                                     meta_action=Actions.STANDARD_SCALER.value)
 
     def max_abs_scaler(self, cols="*", output_cols=None):
-        return self.root.cols.apply(cols, func="max_abs_scaler", output_cols=output_cols,
+        return self.root.cols.apply(cols, func=self.F.max_abs_scaler, output_cols=output_cols,
                                     meta_action=Actions.MAX_ABS_SCALER.value)
 
     def min_max_scaler(self, cols="*", output_cols=None):
-        return self.root.cols.apply(cols, func="min_max_scaler", output_cols=output_cols,
+        return self.root.cols.apply(cols, func=self.F.min_max_scaler, output_cols=output_cols,
                                     meta_action=Actions.MIN_MAX_SCALER.value)
 
     def iqr(self, cols="*", more=None, relative_error=RELATIVE_ERROR):
