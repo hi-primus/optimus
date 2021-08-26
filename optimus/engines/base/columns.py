@@ -1289,7 +1289,7 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.range, compute=compute, tidy=tidy)
 
-    def percentile(self, cols="*", values=None, relative_error=RELATIVE_ERROR, estimate=False, tidy=True, compute=True):
+    def percentile(self, cols="*", values=None, relative_error=RELATIVE_ERROR, estimate=True, tidy=True, compute=True):
         """
         Return values at the given percentile over requested column.
         :param cols: "*", column name or list of column names to be processed.
@@ -2667,7 +2667,7 @@ class BaseColumns(ABC):
         return self.root.cols.apply(cols, func=self.F.z_score, func_return_type=float, output_cols=output_cols,
                                     meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
-    def modified_z_score(self, cols="*", estimate=False, output_cols=None) -> 'DataFrameType':
+    def modified_z_score(self, cols="*", estimate=True, output_cols=None) -> 'DataFrameType':
         return self.root.cols.apply(cols, func=self.F.modified_z_score, args=(estimate,), func_return_type=float,
                                     output_cols=output_cols, meta_action=Actions.Z_SCORE.value, mode="vectorized")
 
