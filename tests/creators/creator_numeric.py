@@ -90,10 +90,10 @@ def create():
     t.create(method="cols.z_score", variant="string", cols=["names"], output_cols=["names_2"], select_cols=True)
     t.create(method="cols.z_score", variant="multiple", cols=["NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
-    t.create(method="cols.modified_z_score", variant="all", cols="*")
-    t.create(method="cols.modified_z_score", variant="numeric", cols=["height(ft)"], select_cols=True)
-    t.create(method="cols.modified_z_score", variant="string", cols=["names"], output_cols=["names_2"], select_cols=True)
-    t.create(method="cols.modified_z_score", variant="multiple", cols=["NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
+    t.create(method="cols.modified_z_score", variant="all", cols="*", estimate=False)
+    t.create(method="cols.modified_z_score", variant="numeric", cols=["height(ft)"], select_cols=True, estimate=False)
+    t.create(method="cols.modified_z_score", variant="string", cols=["names"], output_cols=["names_2"], select_cols=True, estimate=False)
+    t.create(method="cols.modified_z_score", variant="multiple", cols=["NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"], estimate=False)
 
     t.create(method="cols.min_max_scaler", variant="all", cols="*")
     t.create(method="cols.min_max_scaler", variant="numeric", cols=["height(ft)"], select_cols=True)
@@ -390,9 +390,9 @@ def create():
 
     all_non_date = ['NullType', 'attributes', 'date arrival', 'function(binary)', 'height(ft)', 'japanese name', 'last date seen', 'last position seen', 'rank', 'Cybertronian', 'age', 'function', 'names', 'timestamp', 'weight(t)']
 
-    t.create(method="cols.mad", variant="all", cols=all_non_date)
-    t.create(method="cols.mad", variant="numeric", cols="weight(t)", relative_error=0.45)
-    t.create(method="cols.mad", variant="multiple", cols=["height(ft)", "age", "rank"], more=True)
+    t.create(method="cols.mad", variant="all", cols=all_non_date, estimate=False)
+    t.create(method="cols.mad", variant="numeric", cols="weight(t)", relative_error=0.45, estimate=False)
+    t.create(method="cols.mad", variant="multiple", cols=["height(ft)", "age", "rank"], more=True, estimate=False)
 
     t.create(method="cols.min", variant="all", cols="*")
     t.create(method="cols.min", variant="numeric", cols="weight(t)")
@@ -406,10 +406,10 @@ def create():
     t.create(method="cols.mode", variant="numeric", cols="weight(t)")
     t.create(method="cols.mode", variant="multiple", cols=["height(ft)", "age", "rank"])
 
-    t.create(method="cols.percentile", variant="all", cols="*")
-    t.create(method="cols.percentile", variant="numeric_single", cols="weight(t)", values=0.30)
-    t.create(method="cols.percentile", variant="numeric_multiple", cols="weight(t)", values=[0.25, 0.50, 0.75])
-    t.create(method="cols.percentile", variant="multiple", cols=["height(ft)", "age", "rank"], values=0.95, relative_error=0.012)
+    t.create(method="cols.percentile", variant="all", cols="*", estimate=False)
+    t.create(method="cols.percentile", variant="numeric_single", cols="weight(t)", values=0.30, estimate=False)
+    t.create(method="cols.percentile", variant="numeric_multiple", cols="weight(t)", values=[0.25, 0.50, 0.75], estimate=False)
+    t.create(method="cols.percentile", variant="multiple", cols=["height(ft)", "age", "rank"], values=0.95, relative_error=0.012, estimate=False)
 
     t.create(method="cols.range", variant="all", cols="*")
     t.create(method="cols.range", variant="numeric", cols="weight(t)")

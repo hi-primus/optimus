@@ -111,19 +111,19 @@ class TestStatisticsPandas(TestBase):
         df = self.df
         result = df.cols.mad(cols=['NullType', 'attributes', 'date arrival', 'function(binary)', 'height(ft)',
  'japanese name', 'last date seen', 'last position seen', 'rank',
- 'Cybertronian', 'age', 'function', 'names', 'timestamp', 'weight(t)'])
+ 'Cybertronian', 'age', 'function', 'names', 'timestamp', 'weight(t)'], estimate=False)
         expected = {'NullType': nan, 'attributes': nan, 'date arrival': nan, 'function(binary)': nan, 'height(ft)': 9.0, 'japanese name': nan, 'last date seen': nan, 'last position seen': nan, 'rank': 1.0, 'Cybertronian': 0.0, 'age': 0.0, 'function': nan, 'names': nan, 'timestamp': 0.0, 'weight(t)': 1.7000000000000002}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_mad_multiple(self):
         df = self.df
-        result = df.cols.mad(cols=['height(ft)', 'age', 'rank'], more=True)
+        result = df.cols.mad(cols=['height(ft)', 'age', 'rank'], more=True, estimate=False)
         expected = {'height(ft)': {'mad': 9.0, 'median': 17.0}, 'age': {'mad': 0.0, 'median': 5000000.0}, 'rank': {'mad': 1.0, 'median': 8.0}}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_mad_numeric(self):
         df = self.df
-        result = df.cols.mad(cols='weight(t)', relative_error=0.45)
+        result = df.cols.mad(cols='weight(t)', relative_error=0.45, estimate=False)
         expected = 1.7000000000000002
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
@@ -166,19 +166,19 @@ class TestStatisticsPandas(TestBase):
     def test_cols_median_all(self):
         df = self.df
         result = df.cols.median(cols='*')
-        expected = {'NullType': nan, 'attributes': nan, 'date arrival': nan, 'function(binary)': nan, 'height(ft)': 17.0, 'japanese name': nan, 'last date seen': nan, 'last position seen': nan, 'rank': 8.0, 'Cybertronian': 1.0, 'Date Type': 1.3878e+18, 'age': 5000000.0, 'function': nan, 'names': nan, 'timestamp': 1.403568e+18, 'weight(t)': 4.0}
+        expected = {'NullType': nan, 'attributes': nan, 'date arrival': nan, 'function(binary)': nan, 'height(ft)': {0.5: 17.0}, 'japanese name': nan, 'last date seen': nan, 'last position seen': nan, 'rank': {0.5: 8.0}, 'Cybertronian': {0.5: 1.0}, 'Date Type': {0.5: 1.3878e+18}, 'age': {0.5: 5000000.0}, 'function': nan, 'names': nan, 'timestamp': {0.5: 1.403568e+18}, 'weight(t)': {0.5: 4.0}}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_median_multiple(self):
         df = self.df
         result = df.cols.median(cols=['height(ft)', 'age', 'rank'], relative_error=0.012)
-        expected = {'height(ft)': 17.0, 'age': 5000000.0, 'rank': 8.0}
+        expected = {'height(ft)': {0.5: 17.0}, 'age': {0.5: 5000000.0}, 'rank': {0.5: 8.0}}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_median_numeric(self):
         df = self.df
         result = df.cols.median(cols='weight(t)', relative_error=0.33)
-        expected = 4.0
+        expected = None
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_min_all(self):
@@ -219,25 +219,25 @@ class TestStatisticsPandas(TestBase):
 
     def test_cols_percentile_all(self):
         df = self.df
-        result = df.cols.percentile(cols='*')
+        result = df.cols.percentile(cols='*', estimate=False)
         expected = {'NullType': nan, 'attributes': nan, 'date arrival': nan, 'function(binary)': nan, 'height(ft)': {0.25: 13.0, 0.5: 17.0, 0.75: 26.0}, 'japanese name': nan, 'last date seen': nan, 'last position seen': nan, 'rank': {0.25: 7.25, 0.5: 8.0, 0.75: 9.5}, 'Cybertronian': {0.25: 1.0, 0.5: 1.0, 0.75: 1.0}, 'Date Type': {0.25: 1.345464e+18, 0.5: 1.3878e+18, 0.75: 1.4302656e+18}, 'age': {0.25: 5000000.0, 0.5: 5000000.0, 0.75: 5000000.0}, 'function': nan, 'names': nan, 'timestamp': {0.25: 1.403568e+18, 0.5: 1.403568e+18, 0.75: 1.403568e+18}, 'weight(t)': {0.25: 2.0, 0.5: 4.0, 0.75: 4.3}}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_percentile_multiple(self):
         df = self.df
-        result = df.cols.percentile(cols=['height(ft)', 'age', 'rank'], values=0.95, relative_error=0.012)
+        result = df.cols.percentile(cols=['height(ft)', 'age', 'rank'], values=0.95, relative_error=0.012, estimate=False)
         expected = {'height(ft)': 245.19999999999996, 'age': 5000000.0, 'rank': 10.0}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_percentile_numeric_multiple(self):
         df = self.df
-        result = df.cols.percentile(cols='weight(t)', values=[0.25, 0.5, 0.75])
-        expected = {'weight(t)': {0.25: 2.0, 0.5: 4.0, 0.75: 4.3}}
+        result = df.cols.percentile(cols='weight(t)', values=[0.25, 0.5, 0.75], estimate=False)
+        expected = {0.25: 2.0, 0.5: 4.0, 0.75: 4.3}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_percentile_numeric_single(self):
         df = self.df
-        result = df.cols.percentile(cols='weight(t)', values=0.3)
+        result = df.cols.percentile(cols='weight(t)', values=0.3, estimate=False)
         expected = 2.4
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
@@ -256,7 +256,7 @@ class TestStatisticsPandas(TestBase):
     def test_cols_range_numeric(self):
         df = self.df
         result = df.cols.range(cols='weight(t)')
-        expected = {'weight(t)': {'min': 1.8, 'max': 5.7}}
+        expected = {'min': 1.8, 'max': 5.7}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_skew_all(self):
