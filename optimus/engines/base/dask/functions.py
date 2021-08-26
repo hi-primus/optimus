@@ -119,6 +119,11 @@ class DaskBaseFunctions(DistributedBaseFunctions):
         dfd = MinMaxScaler().fit_transform(self.to_float(series).to_frame())
         return dfd[dfd.columns[0]]
 
+    # @staticmethod
+    # def heatmap(df, bins):
+    #     counts, edges = da.histogramdd((df['x'], df['y'].values), bins=bins)
+    #     return counts, edges[0], edges[1]
+
     def _replace_chars(self, series, search, replace_by, ignore_case, is_regex=False):
 
         regex = is_regex

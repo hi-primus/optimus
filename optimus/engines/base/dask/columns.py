@@ -50,9 +50,6 @@ class DaskBaseColumns(DistributedBaseColumns):
         df[cols] = df[cols].map_partitions(pd.qcut, quantiles)
         return df
 
-    def heatmap(self, cols="*", buckets=10):
-        raise NotImplementedError('Not implemented yet')
-
     # Date operations
     def to_timestamp(self, cols="*", date_format=None, output_cols=None):
         raise NotImplementedError('Not implemented yet')

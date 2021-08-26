@@ -139,9 +139,6 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns):
                 df = ~df if invert is True else df
             return df
 
-    def heatmap(self, cols="*", buckets=10):
-        raise NotImplementedError('Not implemented yet')
-
     def hist(self, cols="*", buckets=20, compute=True):
         import cupy as cp
         df = self.root

@@ -20,7 +20,8 @@ def plot_heatmap(column_data=None, output=None, path=None):
     """
 
     fig = plt.figure(figsize=(12, 5))
-    plt.imshow(column_data["x"]["values"], extent=column_data["y"]["values"], origin='lower')
+    extent = column_data["x"]["edges"] + column_data["y"]["edges"]
+    plt.imshow(column_data["values"], extent=extent, origin='lower')
     plt.xlabel(column_data["x"]["name"])
     plt.ylabel(column_data["y"]["name"])
 

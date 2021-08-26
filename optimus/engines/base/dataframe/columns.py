@@ -49,9 +49,6 @@ class DataFrameBaseColumns(BaseColumns):
 
         return self.root.new(dfd)
 
-    def heatmap(self, col_x, col_y, bins_x=10, bins_y=10):
-        pass
-
     def replace_regex(self, cols="*", regex=None, value="", output_cols=None):
         """
         Use a Regex to replace values

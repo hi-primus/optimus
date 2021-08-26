@@ -1,4 +1,4 @@
-
+import numpy as np
 
 from optimus.engines.base.commons.functions import word_tokenize
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
@@ -44,3 +44,8 @@ class DataFrameBaseFunctions(BaseFunctions):
 
     def min_max_scaler(self, series):
         return MinMaxScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
+
+    @staticmethod
+    def heatmap(df, bins):
+        heatmap, xedges, yedges = np.histogram2d(df['x'].values, df['y'].values, bins=bins)
+        return heatmap, xedges, yedges

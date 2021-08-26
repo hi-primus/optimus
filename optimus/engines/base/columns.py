@@ -2818,9 +2818,27 @@ class BaseColumns(ABC):
 
         return df
 
-    @abstractmethod
-    def heatmap(self, col_x, col_y, bins_x=10, bins_y=10) -> dict:
-        pass
+    def heatmap(self, col_x, col_y, bins_x=10, bins_y=10, compute=True) -> dict:
+        dfd = self.root.data
+       
+        @self.F.delayed
+        def format_heatmap(data):
+            heatmap, xedges, yedges = data
+            extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+            return {"x": {"name": col_x, "edges": extent[0:2]}, "y": {"name": col_y, "edges": extent[2:4]}, "values": heatmap.T.tolist()}
+
+        heatmap_df = self.F.to_float(dfd[col_x]).rename('x').to_frame()
+        heatmap_df['y'] = self.F.to_float(dfd[col_y])
+
+        heatmap_df = heatmap_df.dropna()
+        
+        result = self.F.delayed(self.F.heatmap)(heatmap_df, (bins_x, bins_y))
+        result = format_heatmap(result)
+        
+        if compute:
+            result = self.F.compute(result)
+
+        return result
 
     def hist(self, cols="*", buckets=MAX_BUCKETS, compute=True) -> dict:
         """

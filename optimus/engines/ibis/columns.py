@@ -131,10 +131,6 @@ class Cols(DataFrameBaseColumns):
                                                                                        args=(sub,))
         return df
 
-    @staticmethod
-    def heatmap(columns, buckets=10):
-        pass
-
     def count_by_data_types(self, cols, data_type):
 
         df = self.root
