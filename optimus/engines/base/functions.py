@@ -41,10 +41,7 @@ class BaseFunctions(ABC):
 
     @staticmethod
     def delayed(func):
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return wrapper
+        return func
 
     def from_delayed(self, delayed):
         return delayed[0]
