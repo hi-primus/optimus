@@ -2823,51 +2823,51 @@ class BaseColumns(ABC):
 
         @self.F.delayed
         def _bins_col(_cols, _min, _max):
-            return {col_name: list(np.linspace(float(_min["min"][col_name]), float(_max["max"][col_name]), num=buckets))
+            return {col_name: list(np.linspace(float(_min["min"][col_name]), float(_max["max"][col_name]), num=buckets + 1))
                     for
                     col_name in _cols}
 
-        _min = df.cols.min(cols, numeric=True, compute=True, tidy=False)
-        _max = df.cols.max(cols, numeric=True, compute=True, tidy=False)
+        _min = df.cols.min(cols, numeric=True, compute=compute, tidy=False)
+        _max = df.cols.max(cols, numeric=True, compute=compute, tidy=False)
         _bins = _bins_col(cols, _min, _max)
 
         @self.F.delayed
-        def _hist(pdf, col_name, _bins):
-            # import cupy as cp
+        def get_hist(pdf, col_name, _bins):
             _count, bins_edges = np.histogram(pd.to_numeric(
                 pdf, errors='coerce'), bins=_bins[col_name])
-            # _count, bins_edges = np.histogram(self.to_float(col_name).data[col_name], bins=_bins[col_name])
-            # _count, bins_edges = cp.histogram(cp.array(_series.to_gpu_array()), buckets)
-            return {col_name: [list(_count), list(bins_edges)]}
+            return (col_name, [list(_count), list(bins_edges)])
 
         @self.F.delayed
-        def _agg_hist(values):
+        def format_histograms(values):
             _result = {}
-            x = np.zeros(buckets - 1)
-            for i in values:
-                for j in i:
-                    t = i.get(j)
-                    if t is not None:
-                        _count = np.sum([x, t[0]], axis=0)
-                        _bins = t[1]
-                        col_name = j
-                l = len(_count)
-                r = [{"lower": float(_bins[i]), "upper": float(_bins[i + 1]),
-                      "count": int(_count[i])} for i in range(l)]
-                _result[col_name] = r
+            x = np.zeros(buckets)
+            for col_name, count_edges in values:
+                if count_edges is not None:
+                    _count = np.sum([x, count_edges[0]], axis=0)
+                    _bins = count_edges[1]
+                    dr = {}
+                    for i in range(len(_count)):
+                        key = (float(_bins[i]), float(_bins[i + 1]))
+                        if np.isnan(key[0]) and np.isnan(key[1]):
+                            continue
+                        dr[key] = dr.get(key, 0) + int(_count[i])
+
+                    r = [{"lower": k[0], "upper": k[1], "count": count} for k, count in dr.items()]
+                    if len(r):
+                        _result[col_name] = r
 
             return {"hist": _result}
 
         partitions = self.F.to_delayed(df.data)
-        c = [_hist(part[col_name], col_name, _bins)
-             for part in partitions for col_name in cols]
 
-        d = _agg_hist(c)
+        result = [get_hist(part[col_name], col_name, _bins)
+                  for part in partitions for col_name in cols]
 
-        if is_dict(d) or compute is False:
-            result = d
-        elif compute is True:
-            result = d.compute()
+        result = format_histograms(result)
+
+        if compute:
+            result = self.F.compute(result)
+
         return result
 
     def quality(self, cols="*", flush=False, compute=True) -> dict:

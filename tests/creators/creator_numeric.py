@@ -465,18 +465,18 @@ def create():
 
     t = TestCreator(op, df, name="more_statistics", configs=default_configs)
 
-    t.create(method="cols.profile", variant="all", cols="*")
-    t.create(method="cols.profile", variant="numeric", cols="price", bins=0, flush=True)
-    t.create(method="cols.profile", variant="multiple", cols=["id", "code", "discount"], bins=4, flush=False)
+    _v = [9, 9, 9, 9, 3, 3, 3, 20, 20, 1, 1, 0, 0, 4]
+    _v2 = ["nine", [9], {"nine": 9}, 9, 3, 3, 3, None, None, 1, 1, 1, 1, 1]
+
+    df = op.create.dataframe(vf=list(map(lambda x: x * 1.1, _v)), vs=list(map(lambda x: "STR" + str(x), _v)), values=_v, o=_v2)
+
+    t.create(df=df, method="cols.profile", variant="all", cols="*")
+    t.create(df=df, method="cols.profile", variant="numeric", cols="values", bins=0, flush=True)
+    t.create(df=df, method="cols.profile", variant="multiple", cols=["vs", "vf"], bins=4, flush=False)
 
     t.create(method="cols.quality", variant="all", cols="*")
     t.create(method="cols.quality", variant="numeric", cols="price", flush=True)
     t.create(method="cols.quality", variant="multiple", cols=["id", "code", "discount"], flush=False)
-
-    _v = [9, 9, 9, 9, 3, 3, 3, 20, 20, 1, 1, 0, 4]
-    _v2 = ["nine", [9], {"nine": 9}, 9, 3, 3, 3, None, None, 1, 1, 1, 1]
-
-    df = op.create.dataframe(vf=list(map(lambda x: x * 1.1, _v)), vs=list(map(lambda x: "STR" + str(x), _v)), values=_v, o=_v2)
 
     t.create(df=df, method="cols.frequency", variant="all", cols="*", n=10, count_uniques=True)
     t.create(df=df, method="cols.frequency", variant="numeric", cols="values", n=4, percentage=True, total_rows=3)
