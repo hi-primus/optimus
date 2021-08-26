@@ -176,30 +176,26 @@ class TestMoreStatisticsPandas(TestBase):
     def test_cols_heatmap_numeric_numeric(self):
         df = self.df
         result = df.cols.heatmap(col_x='discount', col_y='price', bins_x=5, bins_y=10)
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+        expected = {'x': {'name': 'discount', 'edges': [-0.5, 0.5]}, 'y': {'name': 'price', 'edges': [34.99, 173.47]}, 'values': [[0.0, 0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 2.0, 0.0, 0.0]]}
+        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_heatmap_numeric_string(self):
         df = self.df
         result = df.cols.heatmap(col_x='price', col_y='code', bins_x=3, bins_y=1)
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+        expected = {'x': {'name': 'price', 'edges': [0.0, 1.0]}, 'y': {'name': 'code', 'edges': [0.0, 1.0]}, 'values': [[0.0, 0.0, 0.0]]}
+        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_heatmap_string_numeric(self):
         df = self.df
-        result = df.cols.heatmap(col_x='name', col_y='id', bins_x=7, bins_y=0)
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+        result = df.cols.heatmap(col_x='name', col_y='id', bins_x=7, bins_y=10)
+        expected = {'x': {'name': 'name', 'edges': [0.0, 1.0]}, 'y': {'name': 'id', 'edges': [0.0, 1.0]}, 'values': [[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]}
+        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_heatmap_string_string(self):
         df = self.df
         result = df.cols.heatmap(col_x='code', col_y='name', bins_x=4, bins_y=4)
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+        expected = {'x': {'name': 'code', 'edges': [0.0, 1.0]}, 'y': {'name': 'name', 'edges': [0.0, 1.0]}, 'values': [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]]}
+        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_hist_all(self):
         df = self.df
@@ -227,17 +223,15 @@ class TestMoreStatisticsPandas(TestBase):
 
     def test_cols_infer_types_multiple(self):
         df = self.df
-        result = df.cols.infer_types(cols=['id', 'code', 'discount'], output_cols=['id_types', 'code_types', 'just a col'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+        result = df.cols.infer_types(cols=['id', 'code', 'discount'])
+        expected = {'id': {'data_type': 'int', 'categorical': True}, 'code': {'data_type': 'str', 'categorical': True}, 'discount': {'data_type': 'int', 'categorical': True}}
+        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_infer_types_numeric(self):
         df = self.df
-        result = df.cols.infer_types(cols='price', output_cols='price_types')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+        result = df.cols.infer_types(cols='price')
+        expected = {'data_type': 'decimal', 'categorical': False}
+        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_profile_all(self):
         df = self.create_dataframe(dict={('vf', 'float64'): [9.9, 9.9, 9.9, 9.9, 3.3000000000000003, 3.3000000000000003, 3.3000000000000003, 22.0, 22.0, 1.1, 1.1, 0.0, 0.0, 4.4], ('vs', 'object'): ['STR9', 'STR9', 'STR9', 'STR9', 'STR3', 'STR3', 'STR3', 'STR20', 'STR20', 'STR1', 'STR1', 'STR0', 'STR0', 'STR4'], ('values', 'int64'): [9, 9, 9, 9, 3, 3, 3, 20, 20, 1, 1, 0, 0, 4], ('o', 'object'): ['nine', [9], {'nine': 9}, 9, 3, 3, 3, None, None, 1, 1, 1, 1, 1]}, force_data_types=True)
@@ -247,14 +241,14 @@ class TestMoreStatisticsPandas(TestBase):
 
     def test_cols_profile_multiple(self):
         df = self.create_dataframe(dict={('vf', 'float64'): [9.9, 9.9, 9.9, 9.9, 3.3000000000000003, 3.3000000000000003, 3.3000000000000003, 22.0, 22.0, 1.1, 1.1, 0.0, 0.0, 4.4], ('vs', 'object'): ['STR9', 'STR9', 'STR9', 'STR9', 'STR3', 'STR3', 'STR3', 'STR20', 'STR20', 'STR1', 'STR1', 'STR0', 'STR0', 'STR4'], ('values', 'int64'): [9, 9, 9, 9, 3, 3, 3, 20, 20, 1, 1, 0, 0, 4], ('o', 'object'): ['nine', [9], {'nine': 9}, 9, 3, 3, 3, None, None, 1, 1, 1, 1, 1]}, force_data_types=True)
-        result = df.cols.profile(cols=['vs', 'vf'], bins=4, flush=False)
-        expected = [{'stats': {'match': 14, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}, 'frequency': [{'value': 'STR9', 'count': 4}, {'value': 'STR3', 'count': 3}, {'value': 'STR0', 'count': 2}, {'value': 'STR1', 'count': 2}], 'count_uniques': 6}, 'data_type': 'object'}, {'stats': {'match': 14, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'decimal', 'categorical': False}, 'hist': [{'lower': 0.0, 'upper': 5.5, 'count': 8}, {'lower': 5.5, 'upper': 11.0, 'count': 4}, {'lower': 11.0, 'upper': 16.5, 'count': 0}, {'lower': 16.5, 'upper': 22.0, 'count': 2}]}, 'data_type': 'float64'}]
+        result = df.cols.profile(cols=['vs', 'vf'], bins=8, flush=False)
+        expected = [{'stats': {'match': 14, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}, 'frequency': [{'value': 'STR9', 'count': 4}, {'value': 'STR3', 'count': 3}, {'value': 'STR0', 'count': 2}, {'value': 'STR1', 'count': 2}, {'value': 'STR20', 'count': 2}, {'value': 'STR4', 'count': 1}], 'count_uniques': 6}, 'data_type': 'object'}, {'stats': {'match': 14, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'decimal', 'categorical': False}, 'hist': [{'lower': 0.0, 'upper': 2.75, 'count': 4}, {'lower': 2.75, 'upper': 5.5, 'count': 4}, {'lower': 5.5, 'upper': 8.25, 'count': 0}, {'lower': 8.25, 'upper': 11.0, 'count': 4}, {'lower': 11.0, 'upper': 13.75, 'count': 0}, {'lower': 13.75, 'upper': 16.5, 'count': 0}, {'lower': 16.5, 'upper': 19.25, 'count': 0}, {'lower': 19.25, 'upper': 22.0, 'count': 2}]}, 'data_type': 'float64'}]
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_profile_numeric(self):
         df = self.create_dataframe(dict={('vf', 'float64'): [9.9, 9.9, 9.9, 9.9, 3.3000000000000003, 3.3000000000000003, 3.3000000000000003, 22.0, 22.0, 1.1, 1.1, 0.0, 0.0, 4.4], ('vs', 'object'): ['STR9', 'STR9', 'STR9', 'STR9', 'STR3', 'STR3', 'STR3', 'STR20', 'STR20', 'STR1', 'STR1', 'STR0', 'STR0', 'STR4'], ('values', 'int64'): [9, 9, 9, 9, 3, 3, 3, 20, 20, 1, 1, 0, 0, 4], ('o', 'object'): ['nine', [9], {'nine': 9}, 9, 3, 3, 3, None, None, 1, 1, 1, 1, 1]}, force_data_types=True)
-        result = df.cols.profile(cols='values', bins=0, flush=True)
-        expected = {'stats': {'match': 14, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [], 'count_uniques': 6}, 'data_type': 'int64'}
+        result = df.cols.profile(cols='values', bins=10, flush=True)
+        expected = {'stats': {'match': 14, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}, 'frequency': [{'value': 9, 'count': 4}, {'value': 3, 'count': 3}, {'value': 0, 'count': 2}, {'value': 1, 'count': 2}, {'value': 20, 'count': 2}, {'value': 4, 'count': 1}], 'count_uniques': 6}, 'data_type': 'int64'}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_quality_all(self):

@@ -471,8 +471,8 @@ def create():
     df = op.create.dataframe(vf=list(map(lambda x: x * 1.1, _v)), vs=list(map(lambda x: "STR" + str(x), _v)), values=_v, o=_v2)
 
     t.create(df=df, method="cols.profile", variant="all", cols="*")
-    t.create(df=df, method="cols.profile", variant="numeric", cols="values", bins=0, flush=True)
-    t.create(df=df, method="cols.profile", variant="multiple", cols=["vs", "vf"], bins=4, flush=False)
+    t.create(df=df, method="cols.profile", variant="numeric", cols="values", bins=10, flush=True)
+    t.create(df=df, method="cols.profile", variant="multiple", cols=["vs", "vf"], bins=8, flush=False)
 
     t.create(method="cols.quality", variant="all", cols="*")
     t.create(method="cols.quality", variant="numeric", cols="price", flush=True)
@@ -498,7 +498,7 @@ def create():
 
     t.create(method="cols.heatmap", variant="numeric_numeric", col_x="discount", col_y="price", bins_x=5, bins_y=10)
     t.create(method="cols.heatmap", variant="numeric_string", col_x="price", col_y="code", bins_x=3, bins_y=1)
-    t.create(method="cols.heatmap", variant="string_numeric", col_x="name", col_y="id", bins_x=7, bins_y=0)
+    t.create(method="cols.heatmap", variant="string_numeric", col_x="name", col_y="id", bins_x=7, bins_y=10)
     t.create(method="cols.heatmap", variant="string_string", col_x="code", col_y="name", bins_x=4, bins_y=4)
 
     t.create(method="cols.correlation", variant="all_pearson", args=["*", "pearson"])
@@ -512,8 +512,8 @@ def create():
     t.create(method="cols.correlation", variant="multiple_kendall", args=[["id", "price"], "kendall"])
 
     t.create(method="cols.infer_types", variant="all", cols="*")
-    t.create(method="cols.infer_types", variant="numeric", cols="price", output_cols="price_types")
-    t.create(method="cols.infer_types", variant="multiple", cols=["id", "code", "discount"], output_cols=["id_types", "code_types", "just a col"])
+    t.create(method="cols.infer_types", variant="numeric", cols="price")
+    t.create(method="cols.infer_types", variant="multiple", cols=["id", "code", "discount"])
 
     t.create(method="cols.unique_values", variant="all", cols="*")
     t.create(method="cols.unique_values", variant="numeric", cols="price", estimate=True)
