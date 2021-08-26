@@ -23,40 +23,18 @@ def format_dict(_dict, tidy=True):
     """
 
     if tidy is True:
-        def _format_dict(_dict):
-
-            if not is_dict(_dict):
-                return _dict
-            for k, v in _dict.items():
-                # If the value is a dict
-                if is_dict(v):
-                    # and only have one value
-                    if len(v) == 1:
-                        _dict[k] = next(iter(v.values()))
-                else:
-                    if len(_dict) == 1:
-                        _dict = v
-            return _dict
-
-        if is_list_of_one_element(_dict):
-            _dict = _dict[0]
-        elif is_dict_of_one_element(_dict):
-            # if dict_depth(_dict) >4:
-            _dict = next(iter(_dict.values()))
-
-        # Some aggregation like min or max return a string column
-        def repeat(f, n, _dict):
-            if n == 1:  # note 1, not 0
-                return f(_dict)
+        levels = 2
+        while (levels>=0):
+            levels -= 1
+            if is_list_of_one_element(_dict):
+                _dict = _dict[0]
+            elif is_dict_of_one_element(_dict):
+                _dict = next(iter(_dict.values()))
             else:
-                return f(repeat(f, n - 1, _dict))  # call f with returned value
-
-        # TODO: Maybe this can be done in a recursive way
-        # We apply two passes to the dict so we can process internals dicts and the superiors ones
-        return repeat(_format_dict, 2, _dict)
+                return _dict
+                
     else:
-        # Return the dict from a list
-        if is_list_value(_dict):
+        if is_list_of_one_element(_dict):
             return _dict[0]
         else:
             return _dict
