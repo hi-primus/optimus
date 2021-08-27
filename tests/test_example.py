@@ -21,44 +21,53 @@ class TestExamplePandas(TestBase):
         self.assertTrue(self.df.cols.abs().equals(expected_df))
 
 
-class TestExampleDask(TestExamplePandas):
-    config = {'engine': 'dask', 'n_partitions': 1}
+# class TestExampleDask(TestExamplePandas):
+#     config = {'engine': 'dask', 'n_partitions': 1}
 
 
-class TestExamplePartitionDask(TestExamplePandas):
-    config = {'engine': 'dask', 'n_partitions': 2}
+# class TestExamplePartitionDask(TestExamplePandas):
+#     config = {'engine': 'dask', 'n_partitions': 2}
 
 
-try:
-    import cudf # pyright: reportMissingImports=false
-except:
-    pass
-else:
-    class TestExampleCUDF(TestExamplePandas):
-        config = {'engine': 'cudf'}
+# try:
+#     import cudf # pyright: reportMissingImports=false
+# except:
+#     pass
+# else:
+#     class TestExampleCUDF(TestExamplePandas):
+#         config = {'engine': 'cudf'}
 
 
-try:
-    import dask_cudf # pyright: reportMissingImports=false
-except:
-    pass
-else:
-    class TestExampleDC(TestExamplePandas):
-        config = {'engine': 'dask_cudf', 'n_partitions': 1}
+# try:
+#     import dask_cudf # pyright: reportMissingImports=false
+# except:
+#     pass
+# else:
+#     class TestExampleDC(TestExamplePandas):
+#         config = {'engine': 'dask_cudf', 'n_partitions': 1}
 
 
-try:
-    import dask_cudf # pyright: reportMissingImports=false
-except:
-    pass
-else:
-    class TestExamplePartitionDC(TestExamplePandas):
-        config = {'engine': 'dask_cudf', 'n_partitions': 2}
+# try:
+#     import dask_cudf # pyright: reportMissingImports=false
+# except:
+#     pass
+# else:
+#     class TestExamplePartitionDC(TestExamplePandas):
+#         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-# class TestExampleSpark(TestExamplePandas):
-#     config = {'engine': 'spark'}
+# try:
+#     import spark
+# except:
+#     pass
+# else:
+#     class TestExampleSpark(TestExamplePandas):
+#         config = {'engine': 'spark'}
 
-
-# class TestExampleVaex(TestExamplePandas):
-#     config = {'engine': 'vaex'}
+# try:
+#     import vaex
+# except:
+#     pass
+# else:
+#     class TestExampleVaex(TestExamplePandas):
+#         config = {'engine': 'vaex'}

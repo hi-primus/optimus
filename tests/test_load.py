@@ -128,9 +128,18 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-# class TestLoadSpark(TestLoadPandas):
-#     config = {'engine': 'spark'}
+try:
+    import spark
+except:
+    pass
+else:
+    class TestLoadSpark(TestLoadPandas):
+        config = {'engine': 'spark'}
 
-
-# class TestLoadVaex(TestLoadPandas):
-#     config = {'engine': 'vaex'}
+try:
+    import vaex
+except:
+    pass
+else:
+    class TestLoadVaex(TestLoadPandas):
+        config = {'engine': 'vaex'}

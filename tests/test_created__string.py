@@ -503,9 +503,19 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestStringSpark(TestStringPandas):
-    config = {'engine': 'spark'}
+try:
+    import spark # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestStringSpark(TestStringPandas):
+        config = {'engine': 'spark'}
 
 
-class TestStringVaex(TestStringPandas):
-    config = {'engine': 'vaex'}
+try:
+    import vaex # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestStringVaex(TestStringPandas):
+        config = {'engine': 'vaex'}

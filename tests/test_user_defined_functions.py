@@ -66,10 +66,18 @@ else:
     class TestUDFPartitionDC(TestUDFPandas):
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
+try:
+    import spark
+except:
+    pass
+else:
+    class TestUDFSpark(TestUDFPandas):
+        config = {'engine': 'spark'}
 
-# class TestUDFSpark(TestUDFPandas):
-#     config = {'engine': 'spark'}
-
-
-# class TestUDFVaex(TestUDFPandas):
-#     config = {'engine': 'vaex'}
+try:
+    import vaex
+except:
+    pass
+else:
+    class TestUDFVaex(TestUDFPandas):
+        config = {'engine': 'vaex'}

@@ -13,7 +13,7 @@ inf = float("inf")
 
 
 class TestReplacePandas(TestBase):
-    config = {'engine': 'dask'}
+    config = {'engine': 'pandas'}
     dict = {('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('Code', 'object'): ['123A', '456', 456, 'e', None, '{code}'], ('Cybertronian', 'object'): ['False', 'True + 1', 1, None, True, False], ('NullType', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan]}
     maxDiff = None
 
@@ -287,9 +287,19 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestReplaceSpark(TestReplacePandas):
-    config = {'engine': 'spark'}
+try:
+    import spark # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestReplaceSpark(TestReplacePandas):
+        config = {'engine': 'spark'}
 
 
-class TestReplaceVaex(TestReplacePandas):
-    config = {'engine': 'vaex'}
+try:
+    import vaex # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestReplaceVaex(TestReplacePandas):
+        config = {'engine': 'vaex'}

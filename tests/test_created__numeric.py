@@ -635,9 +635,19 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestNumericSpark(TestNumericPandas):
-    config = {'engine': 'spark'}
+try:
+    import spark # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestNumericSpark(TestNumericPandas):
+        config = {'engine': 'spark'}
 
 
-class TestNumericVaex(TestNumericPandas):
-    config = {'engine': 'vaex'}
+try:
+    import vaex # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestNumericVaex(TestNumericPandas):
+        config = {'engine': 'vaex'}

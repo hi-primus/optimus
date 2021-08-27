@@ -323,9 +323,19 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestMoreStatisticsSpark(TestMoreStatisticsPandas):
-    config = {'engine': 'spark'}
+try:
+    import spark # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestMoreStatisticsSpark(TestMoreStatisticsPandas):
+        config = {'engine': 'spark'}
 
 
-class TestMoreStatisticsVaex(TestMoreStatisticsPandas):
-    config = {'engine': 'vaex'}
+try:
+    import vaex # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestMoreStatisticsVaex(TestMoreStatisticsPandas):
+        config = {'engine': 'vaex'}

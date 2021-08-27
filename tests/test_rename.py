@@ -76,10 +76,18 @@ else:
     class TestRenamePartitionDC(TestRenamePandas):
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
+try:
+    import spark
+except:
+    pass
+else:
+    class TestRenameSpark(TestRenamePandas):
+        config = {'engine': 'spark'}
 
-# class TestRenameSpark(TestRenamePandas):
-#     config = {'engine': 'spark'}
-
-
-# class TestRenameVaex(TestRenamePandas):
-#     config = {'engine': 'vaex'}
+try:
+    import vaex
+except:
+    pass
+else:
+    class TestRenameVaex(TestRenamePandas):
+        config = {'engine': 'vaex'}

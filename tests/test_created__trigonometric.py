@@ -413,9 +413,19 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestTrigonometricSpark(TestTrigonometricPandas):
-    config = {'engine': 'spark'}
+try:
+    import spark # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestTrigonometricSpark(TestTrigonometricPandas):
+        config = {'engine': 'spark'}
 
 
-class TestTrigonometricVaex(TestTrigonometricPandas):
-    config = {'engine': 'vaex'}
+try:
+    import vaex # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestTrigonometricVaex(TestTrigonometricPandas):
+        config = {'engine': 'vaex'}

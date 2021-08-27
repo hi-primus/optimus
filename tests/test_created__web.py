@@ -443,9 +443,19 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestWebSpark(TestWebPandas):
-    config = {'engine': 'spark'}
+try:
+    import spark # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestWebSpark(TestWebPandas):
+        config = {'engine': 'spark'}
 
 
-class TestWebVaex(TestWebPandas):
-    config = {'engine': 'vaex'}
+try:
+    import vaex # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestWebVaex(TestWebPandas):
+        config = {'engine': 'vaex'}

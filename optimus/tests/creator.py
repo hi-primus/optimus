@@ -371,6 +371,7 @@ class TestCreator:
         except FileNotFoundError as e:
             warnings.warn(e)
 
+
 default_configs = {
     "Pandas": {"engine": "pandas"},
     "Dask": {"engine": "dask", "n_partitions": 1},
@@ -378,6 +379,6 @@ default_configs = {
     "CUDF": {"engine": "cudf", "try_package": "cudf"},
     "DC": {"engine": "dask_cudf", "n_partitions": 1, "try_package": "dask_cudf"},
     "PartitionDC": {"engine": "dask_cudf", "n_partitions": 2, "try_package": "dask_cudf"},
-    "Spark": {"engine": "spark"},
-    "Vaex": {"engine": "vaex"},
+    "Spark": {"engine": "spark", "try_package": "spark"},
+    "Vaex": {"engine": "vaex", "try_package": "vaex"}
 }

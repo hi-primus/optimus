@@ -52,10 +52,18 @@ else:
     class TestCSVPartitionDC(TestCSVPandas):
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
+try:
+    import spark
+except:
+    pass
+else:
+    class TestCSVSpark(TestCSVPandas):
+        config = {'engine': 'spark'}
 
-# class TestCSVSpark(TestCSVPandas):
-#     config = {'engine': 'spark'}
-
-
-# class TestCSVVaex(TestCSVPandas):
-#     config = {'engine': 'vaex'}
+try:
+    import vaex
+except:
+    pass
+else:
+    class TestCSVVaex(TestCSVPandas):
+        config = {'engine': 'vaex'}

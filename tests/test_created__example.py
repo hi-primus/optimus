@@ -66,9 +66,19 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 
-class TestExampleSpark(TestExamplePandas):
-    config = {'engine': 'spark'}
+try:
+    import spark # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestExampleSpark(TestExamplePandas):
+        config = {'engine': 'spark'}
 
 
-class TestExampleVaex(TestExamplePandas):
-    config = {'engine': 'vaex'}
+try:
+    import vaex # pyright: reportMissingImports=false
+except:
+    pass
+else:
+    class TestExampleVaex(TestExamplePandas):
+        config = {'engine': 'vaex'}
