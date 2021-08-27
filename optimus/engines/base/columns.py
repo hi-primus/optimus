@@ -1789,8 +1789,6 @@ class BaseColumns(ABC):
         return self.apply(cols, self.F.extract, args=(regex,), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.EXTRACT.value, mode="vectorized")
 
-        # def replace_regex(cols, regex=None, value=None, output_cols=None):
-
     def slice(self, cols="*", start=None, stop=None, step=None, output_cols=None) -> 'DataFrameType':
         def _slice(value, _start, _stop, _step):
             return self.F.slice(value, _start, _stop, _step)
@@ -2321,24 +2319,15 @@ class BaseColumns(ABC):
         if is_dict(cols):
             search_by = search_by or "full"
             for col, replace in cols.items():
-                _search = []
-                _replace_by = []
-                for replace_by, search in replace.items():
-                    _replace_by.append(replace_by)
-                    _search.append(search)
-                df = df.cols._replace(
-                    col, _search, _replace_by, search_by=search_by)
+                _replace_by, _search = zip(*replace.items())
+                df = df.cols._replace_regex(col, _search, _replace_by, search_by=search_by)
 
         else:
             search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
-            replace_by = val_to_list(replace_by, convert_tuple=True)
-            if len(replace_by) == 1:
-                replace_by = replace_by[0]
-            df = df.cols._replace(cols, search, replace_by,
-                                  search_by, ignore_case, output_cols)
+            df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
 
         return df
 
@@ -2356,22 +2345,22 @@ class BaseColumns(ABC):
         """
 
         search = val_to_list(search, convert_tuple=True)
-        replace_by = one_list_to_val(replace_by)
+        replace_by = one_list_to_val(replace_by, convert_tuple=True)
 
         if search_by == "full" and (not is_list_of_str(search) or not is_list_of_str(replace_by)):
             search_by = "values"
 
         if search_by == "chars":
-            func = "replace_chars"
+            func = self.F.replace_chars
             func_return_type = str
         elif search_by == "words":
-            func = "replace_words"
+            func = self.F.replace_words
             func_return_type = str
         elif search_by == "full":
-            func = "replace_full"
+            func = self.F.replace_full
             func_return_type = str
         elif search_by == "values":
-            func = "replace_values"
+            func = self.F.replace_values
             func_return_type = None
         else:
             RaiseIt.value_error(
@@ -2383,7 +2372,7 @@ class BaseColumns(ABC):
     def replace_regex(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,
                 output_cols=None) -> 'DataFrameType':
         """
-        Replace a value, list of values by a specified string
+        Replace a value, list of values by a specified regex
         :param cols: '*', list of columns names or a single column name.
         :param search: Values to look at to be replaced
         :param replace_by: New value to replace the old one. Supports an array when searching by characters.
@@ -2395,30 +2384,18 @@ class BaseColumns(ABC):
 
         df = self.root
 
-        if isinstance(cols, Clusters):
-            cols = cols.to_dict()
-
         if is_dict(cols):
             search_by = search_by or "full"
             for col, replace in cols.items():
-                _search = []
-                _replace_by = []
-                for replace_by, search in replace.items():
-                    _replace_by.append(replace_by)
-                    _search.append(search)
-                df = df.cols._replace(
-                    col, _search, _replace_by, search_by=search_by)
+                _replace_by, _search = zip(*replace.items())
+                df = df.cols._replace_regex(col, _search, _replace_by, search_by=search_by)
 
         else:
             search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
-            replace_by = val_to_list(replace_by, convert_tuple=True)
-            if len(replace_by) == 1:
-                replace_by = replace_by[0]
-            df = df.cols._replace_regex(cols, search, replace_by,
-                                  search_by, ignore_case, output_cols)
+            df = df.cols._replace_regex(cols, search, replace_by, search_by, ignore_case, output_cols)
 
         return df
 
@@ -2436,19 +2413,16 @@ class BaseColumns(ABC):
         """
 
         search = val_to_list(search, convert_tuple=True)
-        replace_by = one_list_to_val(replace_by)
-
-        if search_by == "full":
-            search_by = "values"
+        replace_by = one_list_to_val(replace_by, convert_tuple=True)
 
         if search_by == "chars":
-            func = "replace_regex_chars"
+            func = self.F.replace_regex_chars
             func_return_type = str
         elif search_by == "words":
-            func = "replace_regex_words"
+            func = self.F.replace_regex_words
             func_return_type = str
-        elif search_by == "values":
-            func = "replace_regex_values"
+        elif search_by in ["values", "full"]:
+            func = self.F.replace_regex_full
             func_return_type = None
         else:
             RaiseIt.value_error(

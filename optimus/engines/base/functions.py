@@ -579,17 +579,27 @@ class BaseFunctions(ABC):
 
     def replace_regex_chars(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
-        return self.to_string_accessor(series).replace(search, replace_by, regex=True, case=not ignore_case)
+        if ignore_case:
+            str_regex = [r'(?i)%s' % s for s in search]
+        else:
+            str_regex = [r'%s' % s for s in search]
+        return self.to_string(series).replace(str_regex, replace_by, regex=True)
 
     def replace_regex_words(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
-        str_regex = [r'\b%s\b' % s for s in search]
-        return self.to_string_accessor(series).replace(str_regex, replace_by, regex=True, case=not ignore_case)
+        if ignore_case:
+            str_regex = [r'(?i)\b%s\b' % s for s in search]
+        else:
+            str_regex = [r'\b%s\b' % s for s in search]
+        return self.to_string(series).replace(str_regex, replace_by, regex=True)
 
     def replace_regex_full(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
-        str_regex = [r'^%s$' % s for s in search]
-        return self.to_string_accessor(series).replace(str_regex, replace_by, regex=True, case=not ignore_case)
+        if ignore_case:
+            str_regex = [r'(?i)^%s$' % s for s in search]
+        else:
+            str_regex = [r'^%s$' % s for s in search]
+        return series.replace(str_regex, replace_by, regex=True)
 
     def remove_numbers(self, series):
         return self.to_string_accessor(series).replace(r'\d+', '', regex=True)

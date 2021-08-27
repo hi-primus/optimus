@@ -49,24 +49,6 @@ class DataFrameBaseColumns(BaseColumns):
 
         return self.root.new(dfd)
 
-    def replace_regex(self, cols="*", regex=None, value="", output_cols=None):
-        """
-        Use a Regex to replace values
-        :param cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :param regex: values to look at to be replaced
-        :param value: new value to replace the old one
-        :return:
-        """
-
-        df = self.root
-
-        def _replace_regex(_value, _regex, _replace):
-            return _value.replace(_regex, _replace, regex=True)
-
-        return df.cols.apply(cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
-                             filter_col_by_dtypes=df.constants.STRING_TYPES + df.constants.NUMERIC_TYPES)
-
     def reverse(self, cols="*", output_cols=None):
         """
         Reverse values as strings

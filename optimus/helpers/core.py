@@ -14,13 +14,13 @@ def val_to_list(val, allow_none=False, convert_tuple=False):
     return val
 
 
-def one_list_to_val(val):
+def one_list_to_val(val, convert_tuple=False):
     """
     Convert a single list element to val
     :param val:
     :return:
     """
-    if isinstance(val, list) and len(val) == 1:
+    if isinstance(val, (list, tuple) if convert_tuple else (list,)) and len(val) == 1:
         result = val[0]
     else:
         result = val

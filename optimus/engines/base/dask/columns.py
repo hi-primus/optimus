@@ -54,22 +54,6 @@ class DaskBaseColumns(DistributedBaseColumns):
     def to_timestamp(self, cols="*", date_format=None, output_cols=None):
         raise NotImplementedError('Not implemented yet')
 
-    def replace_regex(self, cols="*", regex=None, value="", output_cols=None):
-        """
-        Use a Regex to replace values
-        :param cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :param regex: values to look at to be replaced
-        :param value: new value to replace the old one
-        :return:
-        """
-
-        def _replace_regex(_value, _regex, _replace):
-            return _value.replace(_regex, _replace, regex=True)
-
-        return self.apply(cols, func=_replace_regex, args=(regex, value,), output_cols=output_cols,
-                          filter_col_by_dtypes=self.root.constants.STRING_TYPES + self.root.constants.NUMERIC_TYPES)
-
     def astype(self, cols="*", output_cols=None, *args, **kwargs):
         raise NotImplementedError('Not implemented yet')
 
