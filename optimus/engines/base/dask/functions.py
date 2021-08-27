@@ -124,39 +124,6 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     #     counts, edges = da.histogramdd((df['x'], df['y'].values), bins=bins)
     #     return counts, edges[0], edges[1]
 
-    def _replace_chars(self, series, search, replace_by, ignore_case, is_regex=False):
-
-        regex = is_regex
-        replace_by = val_to_list(replace_by)
-
-        if len(search) == 1:
-            _search = search[0]
-        else:
-            regex = True
-            if is_regex:
-                _search = '|'.join(search)
-            else:
-                _search = '|'.join(map(re.escape, search))
-            if ignore_case:
-                _search = f"(?i){_search}"
-
-        if len(replace_by) <= 1:
-            _r = replace_by[0]
-        else:
-            regex = True
-            _map = {s: r for s, r in zip(search, replace_by)}
-
-            def _r(value):
-                return _map.get(value[0], "ERROR")
-
-        return self.to_string(series).replace(_search, _r, regex=regex)
-
-    def replace_chars(self, series, search, replace_by, ignore_case):
-        return self._replace_chars(series, search, replace_by, ignore_case, is_regex=False)
-    
-    def replace_regex_chars(self, series, search, replace_by, ignore_case):
-        return self._replace_chars(series, search, replace_by, ignore_case, is_regex=True)
-
     def domain(self, series):
         import url_parser
         return self.to_string(series).map(lambda v: url_parser.parse_url(v)["domain"], na_action=None, meta=(series.name, "str")) 

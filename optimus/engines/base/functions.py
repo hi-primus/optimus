@@ -570,10 +570,10 @@ class BaseFunctions(ABC):
 
         if is_list(replace_by) and is_list_of_list(search):
             for _s, _r in zip(search, replace_by):
-                series.replace(_s, _r, inplace=True, regex=regex)
+                series = series.replace(_s, _r, regex=regex)
                 
         else:
-            series.replace(search, replace_by, inplace=True, regex=regex)
+            series = series.replace(search, replace_by, regex=regex)
 
         return series
 
