@@ -289,6 +289,53 @@ def is_function(value):
     return hasattr(value, '__call__')
 
 
+def is_empty_function(value):
+    """
+    Returns True if f is an empty function.
+    """
+
+    if not is_function(value):
+        return False
+
+    def empty_func():
+        pass
+
+    def empty_func_with_docstring():
+        """
+        Empty function with docstring.
+        """
+        pass
+
+    empty_lambda = lambda: None
+
+    empty_lambda_with_docstring = lambda: None
+    empty_lambda_with_docstring.__doc__ = """Empty function with docstring."""
+
+    def constants(f):
+        """
+        Return a tuple containing all the constants of a function without a docstring
+        """
+        return tuple(
+            x
+            for x in f.__code__.co_consts
+            if x != f.__doc__
+        )
+
+    return (
+            value.__code__.co_code == empty_func.__code__.co_code and
+            constants(value) == constants(empty_func)
+        ) or (
+            value.__code__.co_code == empty_func_with_docstring.__code__.co_code and
+            constants(value) == constants(empty_func_with_docstring)
+        ) or (
+            value.__code__.co_code == empty_lambda.__code__.co_code and
+            constants(value) == constants(empty_lambda)
+        ) or (
+            value.__code__.co_code == empty_lambda_with_docstring.__code__.co_code and
+            constants(value) == constants(empty_lambda_with_docstring)
+        )
+
+
 def is_list(value, mode=None):
     """
     Check if a string or any not string value is a python list

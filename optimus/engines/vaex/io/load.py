@@ -40,11 +40,8 @@ class Load(BaseLoad):
             raise
         return df
 
-    def tsv(self, path, header=True, infer_schema=True, *args, **kwargs):
-        return self.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
-
     def csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=False,
+            quoting=0, lineterminator=None, on_bad_lines='warn', engine="c", keep_default_na=False,
             na_filter=False, null_value=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
         filepath_or_buffer = unquote_path(filepath_or_buffer)
@@ -67,7 +64,7 @@ class Load(BaseLoad):
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
             dfd = vaex.read_csv(filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
-                                quoting=quoting, lineterminator=lineterminator, error_bad_lines=error_bad_lines,
+                                quoting=quoting, lineterminator=lineterminator, on_bad_lines=on_bad_lines,
                                 keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
                                 storage_options=storage_options, *args, **kwargs)
 

@@ -1,251 +1,192 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ejb-jar xmlns="http://java.sun.com/xml/ns/javaee">
-    <enterprise-beans>
-        <session id="Movies">
-            <ejb-name>Movies</ejb-name>
-            <mapped-name></mapped-name>
-            <local-bean/>
-            <ejb-class>org.superbiz.injection.tx.Movies</ejb-class>
-            <session-type>Singleton</session-type>
-            <timer>
-                <schedule>
-                    <second>0</second>
-                    <minute>0</minute>
-                    <hour>8</hour>
-                    <day-of-month>20-Last</day-of-month>
-                    <month>5</month>
-                    <day-of-week>*</day-of-week>
-                    <year>*</year>
-                </schedule>
-                <timeout-method>
-                    <method-name>plantTheCorn</method-name>
-                    <method-params/>
-                </timeout-method>
-                <persistent>true</persistent>
-            </timer>
-            <init-on-startup>false</init-on-startup>
-            <concurrency-management-type>Container</concurrency-management-type>
-            <depends-on/>
-            <transaction-type>Container</transaction-type>
-            <env-entry>
-                <env-entry-name>java:module/ModuleName</env-entry-name>
-                <env-entry-type>java.lang.String</env-entry-type>
-                <env-entry-value>movies-complete</env-entry-value>
-            </env-entry>
-            <env-entry>
-                <env-entry-name>java:app/AppName</env-entry-name>
-                <env-entry-type>java.lang.String</env-entry-type>
-                <env-entry-value></env-entry-value>
-            </env-entry>
-            <env-entry>
-                <env-entry-name>java:comp/ComponentName</env-entry-name>
-                <env-entry-type>java.lang.String</env-entry-type>
-                <env-entry-value>Movies</env-entry-value>
-            </env-entry>
-            <resource-env-ref>
-                <resource-env-ref-name>java:comp/BeanManager</resource-env-ref-name>
-                <resource-env-ref-type>javax.enterprise.inject.spi.BeanManager</resource-env-ref-type>
-            </resource-env-ref>
-            <resource-env-ref>
-                <resource-env-ref-name>java:comp/Validator</resource-env-ref-name>
-                <resource-env-ref-type>javax.validation.Validator</resource-env-ref-type>
-            </resource-env-ref>
-            <resource-env-ref>
-                <resource-env-ref-name>java:comp/ValidatorFactory</resource-env-ref-name>
-                <resource-env-ref-type>javax.validation.ValidatorFactory</resource-env-ref-type>
-            </resource-env-ref>
-            <resource-env-ref>
-                <resource-env-ref-name>java:comp/TransactionManager</resource-env-ref-name>
-                <resource-env-ref-type>javax.transaction.TransactionManager</resource-env-ref-type>
-            </resource-env-ref>
-            <resource-env-ref>
-                <resource-env-ref-name>java:comp/TransactionSynchronizationRegistry</resource-env-ref-name>
-                <resource-env-ref-type>javax.transaction.TransactionSynchronizationRegistry</resource-env-ref-type>
-            </resource-env-ref>
-            <persistence-context-ref>
-                <persistence-context-ref-name>java:comp/env/org.superbiz.injection.tx.Movies/entityManager</persistence-context-ref-name>
-                <persistence-unit-name>movie-unit</persistence-unit-name>
-                <persistence-context-type>Transaction</persistence-context-type>
-                <mapped-name>movie-unit -2025446736</mapped-name>
-                <injection-target>
-                    <injection-target-class>org.superbiz.injection.tx.Movies</injection-target-class>
-                    <injection-target-name>entityManager</injection-target-name>
-                </injection-target>
-            </persistence-context-ref>
-            <security-role-ref>
-                <role-name>Employee</role-name>
-            </security-role-ref>
-            <security-role-ref>
-                <role-name>Manager</role-name>
-            </security-role-ref>
-            <security-role-ref>
-                <role-name>Manager</role-name>
-            </security-role-ref>
-            <security-role-ref>
-                <role-name>Manager</role-name>
-            </security-role-ref>
-        </session>
-    </enterprise-beans>
-    <interceptors>
-        <interceptor>
-            <interceptor-class>org.superbiz.injection.tx.AddInterceptor</interceptor-class>
-            <around-invoke>
-                <class>org.superbiz.injection.tx.AddInterceptor</class>
-                <method-name>invoke</method-name>
-            </around-invoke>
-        </interceptor>
-        <interceptor>
-            <interceptor-class>org.superbiz.injection.tx.DeleteInterceptor</interceptor-class>
-            <around-invoke>
-                <class>org.superbiz.injection.tx.DeleteInterceptor</class>
-                <method-name>invoke</method-name>
-            </around-invoke>
-        </interceptor>
-        <interceptor>
-            <interceptor-class>org.superbiz.injection.tx.ReadInterceptor</interceptor-class>
-            <around-invoke>
-                <class>org.superbiz.injection.tx.ReadInterceptor</class>
-                <method-name>invoke</method-name>
-            </around-invoke>
-        </interceptor>
-    </interceptors>
-    <assembly-descriptor>
-        <method-permission>
-            <unchecked/>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>*</method-name>
-            </method>
-        </method-permission>
-        <method-permission>
-            <role-name>Employee</role-name>
-            <role-name>Manager</role-name>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>addMovie</method-name>
-                <method-params>
-                    <method-param>org.superbiz.injection.tx.Movie</method-param>
-                </method-params>
-            </method>
-        </method-permission>
-        <method-permission>
-            <role-name>Manager</role-name>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>deleteMovie</method-name>
-                <method-params>
-                    <method-param>org.superbiz.injection.tx.Movie</method-param>
-                </method-params>
-            </method>
-        </method-permission>
-        <method-permission>
-            <role-name>Manager</role-name>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>plantTheCorn</method-name>
-                <method-params/>
-            </method>
-        </method-permission>
-        <method-permission>
-            <unchecked/>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>getMovies</method-name>
-                <method-params/>
-            </method>
-        </method-permission>
-        <container-transaction>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>getMovies</method-name>
-                <method-params/>
-            </method>
-            <trans-attribute>Supports</trans-attribute>
-        </container-transaction>
-        <container-transaction>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>addMovie</method-name>
-                <method-params>
-                    <method-param>org.superbiz.injection.tx.Movie</method-param>
-                </method-params>
-            </method>
-            <trans-attribute>Required</trans-attribute>
-        </container-transaction>
-        <container-transaction>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>deleteMovie</method-name>
-                <method-params>
-                    <method-param>org.superbiz.injection.tx.Movie</method-param>
-                </method-params>
-            </method>
-            <trans-attribute>Mandatory</trans-attribute>
-        </container-transaction>
-        <container-transaction>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>plantTheCorn</method-name>
-                <method-params/>
-            </method>
-            <trans-attribute>Supports</trans-attribute>
-        </container-transaction>
-        <container-concurrency>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>*</method-name>
-            </method>
-            <concurrency-attribute>Write</concurrency-attribute>
-        </container-concurrency>
-        <container-concurrency>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>getMovies</method-name>
-                <method-params/>
-            </method>
-            <concurrency-attribute>Read</concurrency-attribute>
-        </container-concurrency>
-        <container-concurrency>
-            <method>
-                <ejb-name>Movies</ejb-name>
-                <method-name>plantTheCorn</method-name>
-                <method-params/>
-            </method>
-            <concurrency-attribute>Read</concurrency-attribute>
-        </container-concurrency>
-        <interceptor-binding>
-            <ejb-name>Movies</ejb-name>
-            <interceptor-class>org.superbiz.injection.tx.ReadInterceptor</interceptor-class>
-            <exclude-default-interceptors>false</exclude-default-interceptors>
-            <exclude-class-interceptors>false</exclude-class-interceptors>
-            <method>
-                <method-name>plantTheCorn</method-name>
-                <method-params/>
-            </method>
-        </interceptor-binding>
-        <interceptor-binding>
-            <ejb-name>Movies</ejb-name>
-            <interceptor-class>org.superbiz.injection.tx.DeleteInterceptor</interceptor-class>
-            <exclude-default-interceptors>false</exclude-default-interceptors>
-            <exclude-class-interceptors>false</exclude-class-interceptors>
-            <method>
-                <method-name>deleteMovie</method-name>
-                <method-params>
-                    <method-param>org.superbiz.injection.tx.Movie</method-param>
-                </method-params>
-            </method>
-        </interceptor-binding>
-        <interceptor-binding>
-            <ejb-name>Movies</ejb-name>
-            <interceptor-class>org.superbiz.injection.tx.AddInterceptor</interceptor-class>
-            <exclude-default-interceptors>false</exclude-default-interceptors>
-            <exclude-class-interceptors>false</exclude-class-interceptors>
-            <method>
-                <method-name>addMovie</method-name>
-                <method-params>
-                    <method-param>org.superbiz.injection.tx.Movie</method-param>
-                </method-params>
-            </method>
-        </interceptor-binding>
-    </assembly-descriptor>
-</ejb-jar>
+<root>
+<row>
+    <id>1</id>
+    <firstName>Luis</firstName>
+    <lastName>Alvarez$$%!</lastName>
+    <billingId>123</billingId>
+    <product>Cake</product>
+    <price>10</price>
+    <birth>1980/07/07</birth>
+    <dummyCol>never</dummyCol>
+</row>
+<row>
+    <id>2</id>
+    <firstName>André</firstName>
+    <lastName>Ampère</lastName>
+    <billingId>423</billingId>
+    <product>piza</product>
+    <price>8</price>
+    <birth>1950/07/08</birth>
+    <dummyCol>gonna</dummyCol>
+</row>
+<row>
+    <id>3</id>
+    <firstName>NiELS</firstName>
+    <lastName>Böhr//((%%</lastName>
+    <billingId>551</billingId>
+    <product>pizza</product>
+    <price>8</price>
+    <birth>1990/07/09</birth>
+    <dummyCol>give</dummyCol>
+</row>
+<row>
+    <id>4</id>
+    <firstName>PAUL</firstName>
+    <lastName>dirac$</lastName>
+    <billingId>521</billingId>
+    <product>pizza</product>
+    <price>8</price>
+    <birth>1954/07/10</birth>
+    <dummyCol>you</dummyCol>
+</row>
+<row>
+    <id>5</id>
+    <firstName>Albert</firstName>
+    <lastName>Einstein</lastName>
+    <billingId>634</billingId>
+    <product>pizza</product>
+    <price>8</price>
+    <birth>1990/07/11</birth>
+    <dummyCol>up</dummyCol>
+</row>
+<row>
+    <id>6</id>
+    <firstName>Galileo</firstName>
+    <lastName>             GALiLEI</lastName>
+    <billingId>672</billingId>
+    <product>arepa</product>
+    <price>5</price>
+    <birth>1930/08/12</birth>
+    <dummyCol>never</dummyCol>
+</row>
+<row>
+    <id>7</id>
+    <firstName>CaRL</firstName>
+    <lastName>Ga%%%uss</lastName>
+    <billingId>323</billingId>
+    <product>taco</product>
+    <price>3</price>
+    <birth>1970/07/13</birth>
+    <dummyCol>gonna</dummyCol>
+</row>
+<row>
+    <id>8</id>
+    <firstName>David</firstName>
+    <lastName>H$$$ilbert</lastName>
+    <billingId>624</billingId>
+    <product>taaaccoo</product>
+    <price>3</price>
+    <birth>1950/07/14</birth>
+    <dummyCol>let</dummyCol>
+</row>
+<row>
+    <id>9</id>
+    <firstName>Johannes</firstName>
+    <lastName>KEPLER</lastName>
+    <billingId>735</billingId>
+    <product>taco</product>
+    <price>3</price>
+    <birth>1920/04/22</birth>
+    <dummyCol>you</dummyCol>
+</row>
+<row>
+    <id>10</id>
+    <firstName>JaMES</firstName>
+    <lastName>M$$ax%%well</lastName>
+    <billingId>875</billingId>
+    <product>taco</product>
+    <price>3</price>
+    <birth>1923/03/12</birth>
+    <dummyCol>down</dummyCol>
+</row>
+<row>
+    <id>11</id>
+    <firstName>Isaac</firstName>
+    <lastName>Newton</lastName>
+    <billingId>992</billingId>
+    <product>pasta</product>
+    <price>9</price>
+    <birth>1999/02/15</birth>
+    <dummyCol>never </dummyCol>
+</row>
+<row>
+    <id>12</id>
+    <firstName>Emmy%%</firstName>
+    <lastName>Nöether$</lastName>
+    <billingId>234</billingId>
+    <product>pasta</product>
+    <price>9</price>
+    <birth>1993/12/08</birth>
+    <dummyCol>gonna</dummyCol>
+</row>
+<row>
+    <id>13</id>
+    <firstName>Max!!!</firstName>
+    <lastName>Planck!!!</lastName>
+    <billingId>111</billingId>
+    <product>hamburguer</product>
+    <price>4</price>
+    <birth>1994/01/04</birth>
+    <dummyCol>run </dummyCol>
+</row>
+<row>
+    <id>14</id>
+    <firstName>Fred</firstName>
+    <lastName>Hoyle</lastName>
+    <billingId>553</billingId>
+    <product>pizzza</product>
+    <price>8</price>
+    <birth>1997/06/27</birth>
+    <dummyCol>around</dummyCol>
+</row>
+<row>
+    <id>15</id>
+    <firstName>(((   Heinrich )))))</firstName>
+    <lastName>Hertz</lastName>
+    <billingId>116</billingId>
+    <product>pizza</product>
+    <price>8</price>
+    <birth>1956/11/30</birth>
+    <dummyCol>and</dummyCol>
+</row>
+<row>
+    <id>16</id>
+    <firstName>William</firstName>
+    <lastName>Gilbert###</lastName>
+    <billingId>886</billingId>
+    <product>BEER</product>
+    <price>2</price>
+    <birth>1958/03/26</birth>
+    <dummyCol>desert</dummyCol>
+</row>
+<row>
+    <id>17</id>
+    <firstName>Marie</firstName>
+    <lastName>CURIE</lastName>
+    <billingId>912</billingId>
+    <product>Rice</product>
+    <price>1</price>
+    <birth>2000/03/22</birth>
+    <dummyCol>you</dummyCol>
+</row>
+<row>
+    <id>18</id>
+    <firstName>Arthur</firstName>
+    <lastName>COM%%%pton</lastName>
+    <billingId>812</billingId>
+    <product>110790</product>
+    <price>5</price>
+    <birth>1899/01/01</birth>
+    <dummyCol>#</dummyCol>
+</row>
+<row>
+    <id>19</id>
+    <firstName>JAMES</firstName>
+    <lastName>Chadwick</lastName>
+    <billingId>467</billingId>
+    <product>null</product>
+    <price>10</price>
+    <birth>1921/05/03</birth>
+    <dummyCol>#</dummyCol>
+</row>
+</root>

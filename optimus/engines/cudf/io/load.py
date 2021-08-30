@@ -33,11 +33,8 @@ class Load(BaseLoad):
             raise
         return df
 
-    def tsv(self, path, header=True, infer_schema=True, *args, **kwargs):
-        return self.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
-
     def csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, keep_default_na=False, na_filter=True, data_type=None,
+            quoting=0, lineterminator=None, on_bad_lines='warn', keep_default_na=False, na_filter=True, data_type=None,
             *args, **kwargs):
 
         filepath_or_buffer = unquote_path(filepath_or_buffer)
@@ -55,7 +52,7 @@ class Load(BaseLoad):
                 data_type = ["str"]
 
             cdf = cudf.read_csv(filepath_or_buffer, sep=sep, header=header, encoding=encoding,
-                                quoting=quoting, error_bad_lines=error_bad_lines,
+                                quoting=quoting, on_bad_lines=on_bad_lines,
                                 keep_default_na=keep_default_na, na_values=null_value, nrows=n_rows,
                                 na_filter=na_filter, dtype=data_type, *args, **kwargs)
             df = CUDFDataFrame(cdf, op=self.op)

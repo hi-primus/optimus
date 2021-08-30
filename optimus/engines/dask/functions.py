@@ -15,7 +15,6 @@ from optimus.engines.base.dask.functions import DaskBaseFunctions
 
 class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
 
-    @staticmethod
     @property
     def _partition_engine(self):
         return pd

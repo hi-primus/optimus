@@ -44,6 +44,16 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     def to_dataframe(dfd):
         return dfd.compute()
 
+    @staticmethod
+    def df_concat(df_list):
+        return dd.concat(df_list, axis=0)
+
+    def new_df(self, *args, **kwargs):
+        if len(args) < 4 and all([k not in kwargs for k in ['dsk', 'name', 'meta', 'divisions']]):
+            print(self._partition_engine)
+            return self.from_dataframe(self._partition_engine.DataFrame(*args, **kwargs))
+        return dd.DataFrame(*args, **kwargs)
+
     def sort_df(self, dfd, cols, ascending):
         for c, a in list(zip(cols, ascending))[::-1]:
             dfd = dfd.sort_values(c)

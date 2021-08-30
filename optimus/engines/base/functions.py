@@ -23,7 +23,7 @@ class BaseFunctions(ABC):
     Note: some methods needs to be static so they can be passed to a Dask worker.
     """
 
-    def __init__(self, df):
+    def __init__(self, df=None):
         if df is not None and getattr(df, "partitions", False):
             self.root = df
         else:

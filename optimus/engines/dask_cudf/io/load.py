@@ -42,11 +42,8 @@ class Load(BaseLoad):
             raise
         return df
 
-    def tsv(self, path, header=True, infer_schema=True, *args, **kwargs):
-        return self.csv(path, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
-
     def csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, error_bad_lines=False, engine="c", keep_default_na=True, na_filter=True,
+            quoting=0, lineterminator=None, on_bad_lines=False, engine="c", keep_default_na=True, na_filter=True,
             storage_options=None, conn=None, *args, **kwargs):
 
 
@@ -66,14 +63,14 @@ class Load(BaseLoad):
             import dask_cudf
             if engine == "python":
 
-                # na_filter=na_filter, error_bad_lines and low_memory are not support by pandas engine
+                # na_filter=na_filter, on_bad_lines and low_memory are not support by pandas engine
                 dcdf = dask_cudf.read_csv(filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
                                           quoting=quoting, keep_default_na=True, na_values=None, engine=engine,
-                                          storage_options=storage_options, error_bad_lines=False, *args, **kwargs)
+                                          storage_options=storage_options, on_bad_lines='skip', *args, **kwargs)
 
             elif engine == "c":
                 dcdf = dask_cudf.read_csv(filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
-                                          quoting=quoting, error_bad_lines=error_bad_lines,
+                                          quoting=quoting, on_bad_lines=on_bad_lines,
                                           keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
                                           storage_options=storage_options, low_memory=False, *args, **kwargs)
 

@@ -12,6 +12,14 @@ class PandasFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
     def _engine(self):
         return pd
 
+    @staticmethod
+    def df_concat(df_list):
+        return pd.concat(df_list, axis=0, ignore_index=True)
+
+    @staticmethod
+    def new_df(*args, **kwargs):
+        return pd.DataFrame(*args, **kwargs)
+
     def count_zeros(self, series, *args):
         return int((self.to_float(series).values == 0).sum())
 

@@ -1,5 +1,4 @@
 import math
-from optimus.helpers.logger import logger
 import re
 import string
 import time
@@ -26,6 +25,7 @@ from num2words import num2words
 from optimus.optimus import Engine, EnginePretty
 from optimus.engines.base.meta import Meta
 from optimus.engines.base.stringclustering import Clusters
+from optimus.helpers.logger import logger
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, prepare_columns_arguments, \
     validate_columns_names, name_col

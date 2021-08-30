@@ -1,10 +1,17 @@
 import os
+import glob
+import ntpath
+import psutil
+
 from abc import abstractmethod
 
-from optimus.engines.base.basedataframe import BaseDataFrame
-from optimus.helpers.functions import prepare_path
+from optimus.infer import is_empty_function, is_list, is_str, is_url
+from optimus.helpers.core import one_list_to_val, val_to_list
+from optimus.helpers.functions import prepare_path, unquote_path
+from optimus.helpers.types import DataFrameType, InternalDataFrameType
+from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-from optimus.helpers.types import DataFrameType
+from optimus.engines.base.meta import Meta
 
 XML_THRESHOLD = 10
 JSON_THRESHOLD = 20
@@ -16,9 +23,31 @@ class BaseLoad:
     def __init__(self, op):
         self.op = op
 
+    @abstractmethod
+    def df(self, *args, **kwargs) -> 'DataFrameType':
+        pass
+
+    def _csv(self, *args, **kwargs) -> 'InternalDataFrameType':
+        pass
+
+    def _json(self, *args, **kwargs) -> 'InternalDataFrameType':
+        pass
+
+    def _excel(self, *args, **kwargs) -> 'InternalDataFrameType':
+        pass
+
+    def _avro(self, *args, **kwargs) -> 'InternalDataFrameType':
+        pass
+
+    def _xml(self, *args, **kwargs) -> 'InternalDataFrameType':
+        pass
+
+    def _parquet(self, *args, **kwargs) -> 'InternalDataFrameType':
+        pass
+
     def csv(self, filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
-            null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
-            storage_options=None, conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+            null_value="None", quoting=3, lineterminator='\r\n', on_bad_lines='warn', cache=False, na_filter=False,
+            storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params
@@ -36,21 +65,136 @@ class BaseLoad:
         :param cache:
         :param na_filter:
         :param lineterminator:
-        :param error_bad_lines:
+        :param on_bad_lines:
         :param conn:
         It requires one extra pass over the data. True default.
 
         :return dataFrame
         """
-        raise NotImplementedError('Not implemented yet')
 
-    def xml(self, path, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
-        raise NotImplementedError('Not implemented yet')
+        if is_empty_function(self._csv):
+            raise NotImplementedError(f"'load.csv' is not implemented on '{self.op.engine_label}'")
 
-    def json(self, path, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
-        raise NotImplementedError('Not implemented yet')
+        if not is_url(filepath_or_buffer):
+            filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
+            meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer[0])}
+        else:
+            meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
-    def excel(self, path, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+        filepath_or_buffer = one_list_to_val(filepath_or_buffer)
+
+        try:
+
+            # Pandas do not support \r\n terminator.
+            if lineterminator and lineterminator.encode(encoding='UTF-8', errors='strict') == b'\r\n':
+                lineterminator = None
+
+            if conn is not None:
+                filepath_or_buffer = conn.path(filepath_or_buffer)
+                storage_options = conn.storage_options
+
+            if kwargs.get("chunk_size") == "auto":
+                # Chunk size is going to be 75% of the memory available
+                kwargs.pop("chunk_size")
+                kwargs["chunksize"] = psutil.virtual_memory().free * 0.75
+
+            na_filter = na_filter if null_value else False
+
+            if not is_str(on_bad_lines):
+                on_bad_lines = 'error' if on_bad_lines else 'skip'
+
+            def _read(_filepath_or_buffer):
+                return self._csv(_filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
+                                 nrows=n_rows, quoting=quoting, lineterminator=lineterminator,
+                                 on_bad_lines=on_bad_lines, na_filter=na_filter,
+                                 na_values=val_to_list(null_value), index_col=False,
+                                 storage_options=storage_options, *args, **kwargs)
+
+            if is_list(filepath_or_buffer):
+                df = self.op.F.new_df()
+                for f in filepath_or_buffer:
+                    df = df.append(_read(f))
+            else:
+                df = _read(filepath_or_buffer)
+
+            df = self.df(df, op=self.op)
+
+            df.meta = Meta.set(df.meta, value=meta)
+
+        except IOError as error:
+            logger.print(error)
+            raise
+
+        return df
+
+    def xml(self, path, n_rows=None, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
+
+        if is_empty_function(self._xml):
+            raise NotImplementedError(f"'load.xml' is not implemented on '{self.op.engine_label}'")
+
+        path = unquote_path(path)
+
+        if conn is not None:
+            path = conn.path(path)
+            storage_options = conn.storage_options
+
+        file, file_name = prepare_path(path, "xml")[0]
+
+        try:
+            df = self._xml(file, n_rows, storage_options=storage_options, *args, **kwargs)
+            df = self.df(df, op=self.op)
+            df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
+        except IOError as error:
+            logger.print(error)
+            raise
+
+        return df
+
+    def json(self, filepath_or_buffer, multiline=False, n_rows=False, storage_options=None,
+             conn=None, *args, **kwargs) -> 'DataFrameType':
+        """
+        Loads a dataframe from a json file.
+        :param filepath_or_buffer: path or location of the file.
+        :param multiline:
+
+        :return:
+        """
+
+        if is_empty_function(self._json):
+            raise NotImplementedError(f"'load.json' is not implemented on '{self.op.engine_label}'")
+        
+        if conn is not None:
+            filepath_or_buffer = conn.path(filepath_or_buffer)
+            storage_options = conn.storage_options
+
+        if n_rows:
+            kwargs["nrows"] = n_rows
+            multiline = True
+
+        if is_str(filepath_or_buffer):
+            try:
+                filepath_or_buffer = unquote_path(filepath_or_buffer)
+                local_file_names = prepare_path(filepath_or_buffer, "json")
+                df_list = []
+
+                for file_name, j in local_file_names:
+                    df = self._json(file_name, lines=multiline, *args, **kwargs)
+                    df_list.append(df)
+                df = self.op.F.df_concat(df_list)
+                df = self.df(df, op=self.op)
+                df.meta = Meta.set(df.meta, "file_name", local_file_names[0])
+            except IOError as error:
+                logger.print(error)
+                raise
+
+        else:
+            df = self._json(filepath_or_buffer, lines=multiline, storage_options=storage_options, *args, **kwargs)
+            df = self.df(df, op=self.op)
+
+        return df
+
+    def excel(self, filepath_or_buffer, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=None, storage_options=None,
+              conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a excel file.
         :param path: Path or location of the file. Must be string dataType
@@ -58,21 +202,72 @@ class BaseLoad:
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
         """
-        raise NotImplementedError('Not implemented yet')
 
-    def avro(self, path, sheet_name=0, storage_options=None, conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+        if is_empty_function(self._excel):
+            raise NotImplementedError(f"'load.excel' is not implemented on '{self.op.engine_label}'")
+
+        filepath_or_buffer = unquote_path(filepath_or_buffer)
+
+        if conn is not None:
+            filepath_or_buffer = conn.path(filepath_or_buffer)
+            storage_options = conn.storage_options
+
+        file, file_name = prepare_path(filepath_or_buffer, "xls")[0]
+        header = None
+        if merge_sheets is True:
+            skiprows = -1
+        else:
+            header = 0
+            skiprows = 0
+
+        df, sheet_names = self._excel(file, sheet_name=sheet_name, skiprows=skiprows, header=header, nrows=n_rows,
+                                      storage_options=storage_options, n_partitions=n_partitions, *args, **kwargs)
+
+        df = self.df(df, op=self.op)
+
+        df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
+        df.meta = Meta.set(df.meta, "sheet_names", sheet_names)
+
+        return df
+
+    def avro(self, filepath_or_buffer, n_rows=None, storage_options=None, conn=None,
+             *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a avro file.
         :param path: path or location of the file. Must be string dataType
-        :param sheet_name: A specific sheet name in the excel file to be loaded.
+        :param n_rows:
         :param storage_options:
         :param conn:
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
-        raise NotImplementedError('Not implemented yet')
 
-    def parquet(self, path, columns=None, storage_options=None, conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+        if is_empty_function(self._avro):
+            raise NotImplementedError(f"'load.avro' is not implemented on '{self.op.engine_label}'")
+
+        filepath_or_buffer = unquote_path(filepath_or_buffer)
+
+        if conn is not None:
+            logger.warn("'load.avro' does not support connection options ('conn')")
+
+        if storage_options is not None:
+            logger.warn("'load.avro' does not support 'storage_options'")
+
+        file, file_name = prepare_path(filepath_or_buffer, "avro")[0]
+
+        try:
+            df = self._avro(filepath_or_buffer, nrows=n_rows, *args, **kwargs)
+            df = self.df(df, op=self.op)
+            df.meta = Meta.set(df.meta, value={"file_name": file_name, "name": ntpath.basename(filepath_or_buffer)})
+
+        except IOError as error:
+            logger.print(error)
+            raise
+
+        return df
+
+    def parquet(self, filepath_or_buffer, columns=None, n_rows=None, storage_options=None, conn=None,
+                *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a parquet file.
         :param path: path or location of the file. Must be string dataType
@@ -82,9 +277,30 @@ class BaseLoad:
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         """
-        raise NotImplementedError('Not implemented yet')
 
-    def orc(self, path, columns, storage_options=None, conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+        if is_empty_function(self._parquet):
+            raise NotImplementedError(f"'load.parquet' is not implemented on '{self.op.engine_label}'")
+
+        filepath_or_buffer = unquote_path(filepath_or_buffer)
+
+        if conn is not None:
+            filepath_or_buffer = conn.path(filepath_or_buffer)
+            storage_options = conn.storage_options
+
+        try:
+            dfd = self._parquet(filepath_or_buffer, columns=columns, nrows=n_rows,
+                                storage_options=storage_options, *args, **kwargs)
+            df = self.df(dfd, op=self.op)
+            df.meta = Meta.set(df.meta, value={"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)})
+
+        except IOError as error:
+            logger.print(error)
+            raise
+
+        return df
+
+    def orc(self, path, columns, storage_options=None, conn=None, n_partitions=None, *args,
+            **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a OCR file.
         :param path: path or location of the file. Must be string dataType
@@ -96,12 +312,15 @@ class BaseLoad:
         """
         raise NotImplementedError('Not implemented yet')
 
-    def zip(self, path, filename, dest=None, columns=None, storage_options=None, conn=None, n_partitions=None, *args,
-            **kwargs) -> 'DataFrameType':
+    def zip(self, path, filename, dest=None, columns=None, storage_options=None, conn=None, n_partitions=None, 
+            *args, **kwargs) -> 'DataFrameType':
         pass
 
     def hdf5(self, path, columns=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
         raise NotImplementedError('Not implemented yet')
+
+    def tsv(self, filepath_or_buffer, header=True, infer_schema=True, *args, **kwargs):
+        return self.csv(filepath_or_buffer, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     def file(self, path, *args, **kwargs) -> 'DataFrameType':
         """
@@ -171,30 +390,24 @@ class BaseLoad:
                 mime_info["encoding"] = "latin-1"
 
             if mime:
-                try:
-                    import csv
-                    dialect = csv.Sniffer().sniff(str(buffer))
-                    mime_info["file_type"] = "csv"
+                import csv
+                dialect = csv.Sniffer().sniff(str(buffer))
+                mime_info["file_type"] = "csv"
 
-                    r = {"properties": {"sep": dialect.delimiter,
-                                        "doublequote": dialect.doublequote,
-                                        "escapechar": dialect.escapechar,
-                                        "lineterminator": dialect.lineterminator,
-                                        "quotechar": dialect.quotechar,
-                                        "quoting": dialect.quoting,
-                                        "skipinitialspace": dialect.skipinitialspace}}
+                r = {"properties": {"sep": dialect.delimiter,
+                                    "doublequote": dialect.doublequote,
+                                    "escapechar": dialect.escapechar,
+                                    "lineterminator": dialect.lineterminator,
+                                    "quotechar": dialect.quotechar,
+                                    "quoting": dialect.quoting,
+                                    "skipinitialspace": dialect.skipinitialspace}}
 
-                    mime_info.update(r)
-                    kwargs.update({
-                        "encoding": mime_info.get("encoding", None),
-                        **mime_info.get("properties", {})
-                    })
-                    df = self.csv(filepath_or_buffer=path, *args, **kwargs)
-                except Exception as err:
-                    raise err
-                    pass
-            else:
-                df = self.csv(filepath_or_buffer=path, *args, **kwargs)
+                mime_info.update(r)
+                kwargs.update({
+                    "encoding": mime_info.get("encoding", None),
+                    **mime_info.get("properties", {})
+                })
+            df = self.csv(filepath_or_buffer=path, *args, **kwargs)
 
         elif file_type == "json":
             mime_info["file_type"] = "json"

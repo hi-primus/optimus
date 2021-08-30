@@ -52,9 +52,6 @@ class Load(BaseLoad):
         df.meta = Meta.set(df.meta, value=df.meta.add_action("columns", df.cols.names()).get())
         return df
 
-    def tsv(self, path, header=True, infer_schema=True, charset="UTF-8", *args, **kwargs):
-        return self.csv(path, sep='\t', header=header, infer_schema=infer_schema, charset=charset, *args, **kwargs)
-
     def csv(self, filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3, lineterminator='\r\n', error_bad_lines=False, cache=False, na_filter=False,
             storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
