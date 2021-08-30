@@ -112,8 +112,12 @@ class BaseConstants:
     def DATETIME_TYPES(self):
         return self.ANY_TYPES + [ProfilerDataTypes.DATETIME.value] +\
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1]==ProfilerDataTypes.DATETIME.value]
-    
-    OBJECT_TYPES = ["object"]
+
+    @property
+    def OBJECT_TYPES(self):
+        types = [ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.ARRAY.value]
+        return self.ANY_TYPES + types +\
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] in types]
 
     COMPATIBLE_DTYPES = {}
 
