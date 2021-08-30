@@ -5,7 +5,7 @@ from optimus.engines.base.engine import BaseEngine
 from optimus.engines.base.remote import MAX_TIMEOUT, RemoteOptimusInterface, RemoteDummyVariable, RemoteDummyDataFrame
 from optimus.engines.dask_cudf.io.load import Load
 from optimus.helpers.logger import logger
-from optimus.optimus import Engine
+from optimus.optimus import Engine, EnginePretty
 
 BIG_NUMBER = 100000
 
@@ -27,6 +27,7 @@ class DaskCUDFEngine(BaseEngine):
         """
 
         self.engine = Engine.DASK_CUDF.value
+        self.engine_label = EnginePretty.DASK_CUDF.value
 
         self.verbose(verbose)
 
