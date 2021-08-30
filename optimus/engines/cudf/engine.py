@@ -1,3 +1,4 @@
+from optimus.optimus import Engine, EnginePretty
 from optimus.engines.base.engine import BaseEngine
 
 from optimus.engines.cudf.cudf import CUDF
@@ -34,7 +35,11 @@ class CUDFEngine(BaseEngine):
 
     @property
     def engine(self):
-        return "cudf"
+        return Engine.CUDF.value
+    
+    @property
+    def engine_label(self):
+        return EnginePretty.CUDF.value
 
     def remote_run(self, callback, *args, **kwargs):
         if kwargs.get("client_timeout"):

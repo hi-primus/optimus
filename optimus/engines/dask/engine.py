@@ -7,7 +7,7 @@ from optimus.engines.base.remote import MAX_TIMEOUT, RemoteOptimusInterface, Rem
 from optimus.engines.dask.dask import Dask
 from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.dask.io.load import Load
-from optimus.optimus import Engine
+from optimus.optimus import Engine, EnginePretty
 from optimus._version import __version__
 
 
@@ -108,6 +108,10 @@ class DaskEngine(BaseEngine):
     @property
     def engine(self):
         return Engine.DASK.value
+    
+    @property
+    def engine_label(self):
+        return EnginePretty.DASK.value
 
     def dataframe(self, pdf, n_partitions=1, *args, **kwargs):
         from dask import dataframe as dd

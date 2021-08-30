@@ -2,7 +2,7 @@ import ibis
 
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.ibis.io.jdbc import JDBC
-from optimus.optimus import Engine
+from optimus.optimus import Engine, EnginePretty
 from optimus._version import __version__
 
 
@@ -11,6 +11,7 @@ class IbisEngine(BaseEngine):
 
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
         self.engine = Engine.IBIS.value
+        self.engine_label = EnginePretty.IBIS.value
 
         self.verbose(verbose)
 

@@ -1,5 +1,6 @@
 import pandas as pd
 
+from optimus.optimus import Engine, EnginePretty
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.pandas.create import Create
 from optimus.engines.pandas.io.extract import Extract
@@ -37,7 +38,11 @@ class PandasEngine(BaseEngine):
 
     @property
     def engine(self):
-        return "pandas"
+        return Engine.PANDAS.value
+
+    @property
+    def engine_label(self):
+        return EnginePretty.PANDAS.value
 
     def remote_run(self, callback, *args, **kwargs):
         if kwargs.get("client_timeout"):

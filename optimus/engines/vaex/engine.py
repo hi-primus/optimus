@@ -1,7 +1,7 @@
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.vaex.create import Create
 from optimus.engines.vaex.io.load import Load
-from optimus.optimus import Engine
+from optimus.optimus import Engine, EnginePretty
 from optimus._version import __version__
 import vaex
 
@@ -24,6 +24,10 @@ class VaexEngine(BaseEngine):
     @property
     def engine(self):
         return Engine.VAEX.value
+
+    @property
+    def engine_label(self):
+        return EnginePretty.VAEX.value
 
     @property
     def constants(self):

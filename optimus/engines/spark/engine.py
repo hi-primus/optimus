@@ -21,7 +21,7 @@ from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.output import output_json
 from optimus.helpers.raiseit import RaiseIt
-from optimus.optimus import Engine
+from optimus.optimus import Engine, EnginePretty
 
 # Singletons
 Spark.instance = None
@@ -69,6 +69,7 @@ class SparkEngine(BaseEngine):
 
         """
         self.engine = Engine.SPARK.value
+        self.engine_label = EnginePretty.SPARK.value
         self.client = session
         self.preserve = False
 

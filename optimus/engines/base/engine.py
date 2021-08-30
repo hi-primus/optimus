@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from optimus.engines.base.constants import BaseConstants
+from optimus.engines.base.functions import BaseFunctions
 
 from optimus.engines.base.io.connect import Connect
 from optimus.helpers.logger import logger
@@ -48,6 +49,10 @@ class BaseEngine:
     @abstractmethod
     def engine(self):
         pass
+
+    @property
+    def engine_label(self):
+        return self.__class__.__name__
 
     @abstractmethod
     def remote_run(self, callback, *args, **kwargs):
