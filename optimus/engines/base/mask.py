@@ -60,21 +60,25 @@ class Mask(ABC):
 
         mask = None
 
-        for lb, ub in bounds:
+        for lower_b, upper_b in bounds:
             
-            if ub is not None and lb is not None:
-                if ub < lb:
-                    ub, lb = lb, ub
+            if upper_b is not None and lower_b is not None:
+
+                upper_b = float(upper_b) if is_str(upper_b) else upper_b
+                lower_b = float(lower_b) if is_str(lower_b) else lower_b
+
+                if upper_b < lower_b:
+                    upper_b, lower_b = lower_b, upper_b
 
                 if equal:
-                    _mask = (dfc >= lb) & (dfc <= ub)
+                    _mask = (dfc >= lower_b) & (dfc <= upper_b)
                 else:
-                    _mask = (dfc > lb) & (dfc < ub)
+                    _mask = (dfc > lower_b) & (dfc < upper_b)
             else:
                 if equal:
-                    _mask = (dfc >= lb) if lb is not None else (dfc <= ub)
+                    _mask = (dfc >= lower_b) if lower_b is not None else (dfc <= upper_b)
                 else:
-                    _mask = (dfc > lb) if lb is not None else (dfc < ub)
+                    _mask = (dfc > lower_b) if lower_b is not None else (dfc < upper_b)
 
             mask = _mask if mask is None else (mask | _mask)
 
@@ -334,6 +338,10 @@ class Mask(ABC):
             subset_df = dfd
 
         col_name = cols[0] if len(cols) == 1 else "__duplicated__"
+
+        object_cols = [col for col in subset_df.columns if subset_df[col].dtype.name in df.constants.OBJECT_TYPES]
+
+        subset_df[object_cols] = subset_df[object_cols].astype(str)
 
         mask = self.F.duplicated(subset_df, keep, cols).rename(col_name)
 
