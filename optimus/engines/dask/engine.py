@@ -90,6 +90,11 @@ class DaskEngine(BaseEngine):
         return Constants()
 
     @property
+    def F(self):
+        from optimus.engines.dask.functions import DaskFunctions
+        return DaskFunctions()
+
+    @property
     def create(self):
         if self.remote:
             return RemoteDummyVariable(self, "_create")

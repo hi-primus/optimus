@@ -449,3 +449,8 @@ class SparkEngine(BaseEngine):
 
         else:
             RaiseIt.type_error(method, ["json", "collect"])
+
+    @property
+    def F(self):
+        from optimus.engines.spark.functions import SparkFunctions
+        return SparkFunctions(self)

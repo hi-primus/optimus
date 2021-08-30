@@ -17,6 +17,11 @@ class IbisEngine(BaseEngine):
 
         self.client = ibis
 
+    @property
+    def F(self):
+        from optimus.engines.ibis.functions import IbisFunctions
+        return IbisFunctions(self)
+
     @staticmethod
     def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
                 oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None,

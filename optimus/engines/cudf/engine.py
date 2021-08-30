@@ -25,6 +25,11 @@ class CUDFEngine(BaseEngine):
         return Constants()
 
     @property
+    def F(self):
+        from optimus.engines.cudf.functions import CUDFFunctions
+        return CUDFFunctions()
+
+    @property
     def create(self):
         from optimus.engines.cudf.create import Create
         return Create(self)

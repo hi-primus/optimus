@@ -105,6 +105,11 @@ class DaskCUDFEngine(BaseEngine):
         return Constants()
 
     @property
+    def F(self):
+        from optimus.engines.dask_cudf.functions import DaskCUDFFunctions
+        return DaskCUDFFunctions()
+
+    @property
     def create(self):
         if self.remote:
             return RemoteDummyVariable(self, "_create")

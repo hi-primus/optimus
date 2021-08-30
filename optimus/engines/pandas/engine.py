@@ -29,6 +29,11 @@ class PandasEngine(BaseEngine):
         return Constants()
 
     @property
+    def F(self):
+        from optimus.engines.pandas.functions import PandasFunctions
+        return PandasFunctions()
+
+    @property
     def create(self):
         return Create(self)
 

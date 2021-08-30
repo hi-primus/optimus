@@ -33,3 +33,8 @@ class VaexEngine(BaseEngine):
     def constants(self):
         from optimus.engines.vaex.constants import Constants
         return Constants()
+
+    @property
+    def F(self):
+        from optimus.engines.vaex.functions import VaexFunctions
+        return VaexFunctions()

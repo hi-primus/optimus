@@ -42,6 +42,10 @@ class BaseEngine:
     def constants(self):
         return BaseConstants()
 
+    @property
+    def F(self):
+        return BaseFunctions()
+
     @abstractmethod
     def load(self):
         pass
