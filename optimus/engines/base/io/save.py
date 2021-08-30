@@ -58,25 +58,27 @@ class BaseSave:
         """
         dfd = self.root.data
 
-        def row_to_xml(row):
-            xml = ['<item>']
-            for i, col_name in enumerate(row.index):
-                xml.append('  <field name="{0}">{1}</field>'.format(col_name, row.iloc[i]))
-            xml.append('</item>')
-            return '\n'.join(xml)
+        columns = list(dfd.columns)
 
-        res = '\n'.join(dfd.apply(row_to_xml, axis=1))
+        xml_data = ['<root>']
+        for i in range(len(dfd)):
+            xml_data.append('<row>')  # Opening element tag
+            for column in columns:
+                # writing sub-elements
+                xml_data.append(f'    <{column}>{dfd[column][i]}</{column}>')
+            xml_data.append('</row>')  # Closing element tag
+        xml_data.append('</root>')
 
         if filename is None:
-            return res
+            return '\n'.join(xml_data)
 
         folder_name = "/".join(filename.split('/')[0:-1])
 
         from pathlib import Path
         Path(folder_name).mkdir(parents=True, exist_ok=True)
 
-        with open(filename, mode) as f:
-            f.write(res)
+        with open(filename, mode, encoding="utf-8") as f:
+            f.write('\n'.join(xml_data))
 
     def json(self, path, *args, **kwargs):
         """
