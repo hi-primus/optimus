@@ -118,7 +118,7 @@ class VaexFunctions(BaseFunctions):
         pass
 
     @staticmethod
-    def days_between(self, date_format=None):
+    def td_between(self, date_format=None):
         pass
 
     def slice(self, series, start, stop, step):

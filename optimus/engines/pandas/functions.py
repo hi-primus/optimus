@@ -103,7 +103,7 @@ class PandasFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
         return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format).reset_index(
             drop=True)
 
-    def days_between(self, series, value=None, date_format=None):
+    def td_between(self, series, value=None, date_format=None):
 
         value_date_format = date_format
 
@@ -116,4 +116,4 @@ class PandasFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
         date = pd.to_datetime(series, format=date_format, errors="coerce")
         value = pd.Timestamp.now() if value is None else pd.to_datetime(value, format=value_date_format, errors="coerce")
         
-        return (value - date).dt.days
+        return (value - date)

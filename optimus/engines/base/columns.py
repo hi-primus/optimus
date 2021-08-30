@@ -2211,16 +2211,16 @@ class BaseColumns(ABC):
         """
         return self._date_format(cols, format, output_cols, "weekday", meta_action=Actions.WEEKDAY.value)
 
-    def _td_between(self, cols="*", func=None, value=None, date_format=None, round=None,
-                    output_cols=None) -> 'DataFrameType':
+    def td_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None,
+                   func=None) -> 'DataFrameType':
         """
-        # TODO ?
+        Returns a TimeDelta of the units between two datetimes
         :param cols: "*", column name or list of column names to be processed.
-        :param func:
         :param value:
         :param date_format:
         :param round:
         :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :param func: Custom function to pass to the apply, like self.F.days_between
         :return:
         """
 
@@ -2241,6 +2241,9 @@ class BaseColumns(ABC):
 
         value = prepare_columns_arguments(cols, value)
 
+        if func is None:
+            func = self.F.td_between
+
         for col, v, output_col in zip(cols, value, output_cols):
             df = df.cols.apply(col, func, args=[v, date_format], func_return_type=str, output_cols=output_col,
                                meta_action=Actions.YEARS_BETWEEN.value, mode="vectorized", set_index=True)\
@@ -2260,11 +2263,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-
-        def _years_between(series, args):
-            return self.F.days_between(series, *args) / 365.25
-
-        return self._td_between(cols, _years_between, value, date_format, round, output_cols)
+        return self.td_between(cols, self.F.years_between, value, date_format, round, output_cols)
 
     def months_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2276,11 +2275,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-
-        def _months_between(series, args):
-            return self.F.days_between(series, *args) / 30.4375
-
-        return self._td_between(cols, _months_between, value, date_format, round, output_cols)
+        return self.td_between(cols, self.F.months_between, value, date_format, round, output_cols)
 
     def days_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2292,11 +2287,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-
-        def _days_between(series, args):
-            return self.F.days_between(series, *args)
-
-        return self._td_between(cols, _days_between, value, date_format, round, output_cols)
+        return self.td_between(cols, self.F.days_between, value, date_format, round, output_cols)
 
     def replace(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,
                 output_cols=None) -> 'DataFrameType':
