@@ -1,11 +1,10 @@
-from optimus.helpers.types import *
-import re
+import url_parser
 
+from optimus.helpers.types import *
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
 from optimus.engines.spark.io.properties import DriverProperties
 from optimus.helpers.constants import Schemas
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import regex_full_url
 
 
 class Connection:
@@ -76,13 +75,12 @@ class S3(Connection):
         if endpoint_url is None:
             RaiseIt.value_error(endpoint_url, "")
 
-        schema_result = re.search(regex_full_url, endpoint_url)
+        schema = url_parser.parse_url(endpoint_url)["schema"]
 
-        if schema_result is not None:
-            schema = schema_result[1]
+        if schema is not None:
             endpoint_url = endpoint_url[len(schema + "://"):]  # removes schema from endpoint_url
-
-        schema = schema if schema else "https"
+        else:
+            schema = "https"
 
         kwargs["client_kwargs"] = kwargs.get("client_kwargs", {})
         kwargs["client_kwargs"]["endpoint_url"] = kwargs["client_kwargs"].get("endpoint_url",
