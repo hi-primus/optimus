@@ -1,7 +1,7 @@
 
 import numpy as np
 import pandas as pd
-from fastnumbers import isintlike, isfloat, isreal, fast_int, fast_float
+from fastnumbers import isintlike, isfloat, isreal, fast_forceint, fast_float
 
 from optimus.infer import is_int_like
 
@@ -39,11 +39,27 @@ class PandasBaseFunctions(BaseFunctions, ABC):
 
     @staticmethod
     def _to_integer(series, default=0):
+
+        # TODO replace_inf
+
+        if is_int_like(default):
+            int_type = True
+            default = int(default)
+            otypes = [int]
+        else:
+            int_type = False
+            otypes = [object]
+
         try:
-            series = pd.Series(np.vectorize(fast_int)(series, default=default).flatten())
-        except:
-            if is_int_like(default):
-                default = int(default)
+            if default is not None:
+                series = series.fillna(default)
+            series = pd.Series(np.vectorize(fast_forceint,
+                               otypes=otypes)(series, default=default,
+                                              on_fail=lambda x: default).flatten())
+                                              
+        except Exception:
+            series = series.replace([np.inf, -np.inf], default)
+            if int_type:
                 series = pd.Series(np.floor(pd.to_numeric(series, errors='coerce', downcast='integer'))).fillna(default)
                 try:
                     series = series.astype('int64')
