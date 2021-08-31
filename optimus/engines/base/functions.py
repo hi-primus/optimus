@@ -786,7 +786,9 @@ class BaseFunctions(ABC):
         elif is_missing(value):
             dtype = ProfilerDataTypes.MISSING.value
         elif is_str(value):
-            if is_ip(value):
+            if is_datetime_str(value):
+                dtype = ProfilerDataTypes.DATETIME.value
+            elif is_ip(value):
                 dtype = ProfilerDataTypes.IP.value
             elif is_url(value):
                 dtype = ProfilerDataTypes.URL.value
