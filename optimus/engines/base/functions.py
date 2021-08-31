@@ -10,7 +10,7 @@ from fastnumbers import fast_float, fast_int
 
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
-from optimus.infer import is_list, is_list_of_list, is_null, is_bool, \
+from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
     is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
     is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number, is_int_like
 
@@ -662,36 +662,66 @@ class BaseFunctions(ABC):
     # dates
     def year(self, series, format):
         """
+        Extract the year from a series of dates
         :param series:
         :param format: "%Y-%m-%d HH:mm:ss"
         :return:
         """
-        # return self.to_datetime(format=format).strftime('%Y').to_self().reset_index(drop=True)
         return self.to_datetime(series, format=format).dt.year
 
-    @staticmethod
-    def month(series, format):
-        return series.to_datetime(format=format).dt.month
+    def month(self, series, format):
+        """
+        Extract the month from a series of dates
+        :param series:
+        :param format: "%Y-%m-%d HH:mm:ss"
+        :return:
+        """
+        return self.to_datetime(series, format=format).dt.month
 
-    @staticmethod
-    def day(series, format):
-        return series.to_datetime(format=format).dt.day
+    def day(self, series, format):
+        """
+        Extract the day from a series of dates
+        :param series:
+        :param format: "%Y-%m-%d HH:mm:ss"
+        :return:
+        """
+        return self.to_datetime(series, format=format).dt.day
 
-    @staticmethod
-    def hour(series, format):
-        return series.to_datetime(format=format).dt.hour
+    def hour(self, series, format):
+        """
+        Extract the hour from a series of dates
+        :param series:
+        :param format: "%Y-%m-%d HH:mm:ss"
+        :return:
+        """
+        return self.to_datetime(series, format=format).dt.hour
 
-    @staticmethod
-    def minute(series, format):
-        return series.to_datetime(format=format).dt.minute
+    def minute(self, series, format):
+        """
+        Extract the minute from a series of dates
+        :param series:
+        :param format: "%Y-%m-%d HH:mm:ss"
+        :return:
+        """
+        return self.to_datetime(series, format=format).dt.minute
 
-    @staticmethod
-    def second(series, format):
-        return series.to_datetime(format=format).dt.second
+    def second(self, series, format):
+        """
+        Extract the second from a series of dates
+        :param series:
+        :param format: "%Y-%m-%d HH:mm:ss"
+        :return:
+        """
+        return self.to_datetime(series, format=format).dt.second
 
-    @staticmethod
-    def weekday(series, format):
-        return series.to_datetime(format=format).dt.weekday
+    def weekday(self, series, format):
+        """
+        Extract the weekday from a series of dates
+        :param series:
+        :param format: "%Y-%m-%d HH:mm:ss"
+        :return:
+        """
+        return self.to_datetime(series, format=format).dt.weekday
 
     @staticmethod
     @abstractmethod
@@ -711,6 +741,18 @@ class BaseFunctions(ABC):
     
     def days_between(self, series, value=None, date_format=None):
         return self.td_between(series, value, date_format).dt.days
+    
+    def hours_between(self, series, value=None, date_format=None):
+        series = self.td_between(series, value, date_format)
+        return series.dt.days * 24.0 + series.dt.seconds / 3600.0
+    
+    def minutes_between(self, series, value=None, date_format=None):
+        series = self.td_between(series, value, date_format)
+        return series.dt.days * 1440.0 + series.dt.seconds / 60.0
+    
+    def seconds_between(self, series, value=None, date_format=None):
+        series = self.td_between(series, value, date_format)
+        return series.dt.days * 86400 + series.dt.seconds
 
     def domain(self, series):
         import url_parser

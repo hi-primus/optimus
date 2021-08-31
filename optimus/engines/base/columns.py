@@ -2116,12 +2116,12 @@ class BaseColumns(ABC):
 
     def _date_format(self, cols="*", format=None, output_cols=None, func=None, meta_action=None) -> 'DataFrameType':
         """
-        # TODO ?
+        Get the year, month, day... of a date
         :param cols: "*", column name or list of column names to be processed.
-        :param format:
+        :param format: Input format / formats
         :param output_cols: Column name or list of column names where the transformed data will be saved.
-        :param func:
-        :param meta_action:
+        :param func: Unit function like F.year or F.month
+        :param meta_action: Metadata action to be applied
         :return:
         """
 
@@ -2149,7 +2149,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self._date_format(cols, format, output_cols, "year", meta_action=Actions.YEAR.value)
+        return self._date_format(cols, format, output_cols, self.F.year, meta_action=Actions.YEAR.value)
 
     def month(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2159,7 +2159,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self._date_format(cols, format, output_cols, "year", meta_action=Actions.MONTH.value)
+        return self._date_format(cols, format, output_cols, self.F.month, meta_action=Actions.MONTH.value)
 
     def day(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2169,7 +2169,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self._date_format(cols, format, output_cols, "day", meta_action=Actions.DAY.value)
+        return self._date_format(cols, format, output_cols, self.F.day, meta_action=Actions.DAY.value)
 
     def hour(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2179,7 +2179,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self._date_format(cols, format, output_cols, "hour", meta_action=Actions.HOUR.value)
+        return self._date_format(cols, format, output_cols, self.F.hour, meta_action=Actions.HOUR.value)
 
     def minute(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2189,7 +2189,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self._date_format(cols, format, output_cols, "minute", meta_action=Actions.MINUTE.value)
+        return self._date_format(cols, format, output_cols, self.F.minute, meta_action=Actions.MINUTE.value)
 
     def second(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2199,7 +2199,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self._date_format(cols, format, output_cols, "second", meta_action=Actions.SECOND.value)
+        return self._date_format(cols, format, output_cols, self.F.second, meta_action=Actions.SECOND.value)
 
     def weekday(self, cols="*", format=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2209,7 +2209,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self._date_format(cols, format, output_cols, "weekday", meta_action=Actions.WEEKDAY.value)
+        return self._date_format(cols, format, output_cols, self.F.weekday, meta_action=Actions.WEEKDAY.value)
 
     def td_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None,
                    func=None) -> 'DataFrameType':
@@ -2240,12 +2240,19 @@ class BaseColumns(ABC):
             value = [value]
 
         value = prepare_columns_arguments(cols, value)
+        date_format = prepare_columns_arguments(cols, date_format)
 
         if func is None:
             func = self.F.td_between
 
-        for col, v, output_col in zip(cols, value, output_cols):
-            df = df.cols.apply(col, func, args=[v, date_format], func_return_type=str, output_cols=output_col,
+        for col_name, v, _date_format, output_col in zip(cols, value, date_format, output_cols):
+            if _date_format is None:
+                _date_format = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.format")
+            
+            if _date_format is None:
+                logger.warn(f"date format for column '{col_name}' could not be found, using 'None' instead")
+
+            df = df.cols.apply(col_name, func, args=[v, _date_format], func_return_type=str, output_cols=output_col,
                                meta_action=Actions.YEARS_BETWEEN.value, mode="vectorized", set_index=True)\
         
         if round:
@@ -2263,7 +2270,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.td_between(cols, self.F.years_between, value, date_format, round, output_cols)
+        return self.td_between(cols=cols, func=self.F.years_between, value=value, date_format=date_format, round=round, output_cols=output_cols)
 
     def months_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2275,7 +2282,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.td_between(cols, self.F.months_between, value, date_format, round, output_cols)
+        return self.td_between(cols=cols, func=self.F.months_between, value=value, date_format=date_format, round=round, output_cols=output_cols)
 
     def days_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2287,7 +2294,43 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.td_between(cols, self.F.days_between, value, date_format, round, output_cols)
+        return self.td_between(cols=cols, func=self.F.days_between, value=value, date_format=date_format, round=round, output_cols=output_cols)
+
+    def hours_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
+        """
+        Return the number of hours between two dates.
+        :param cols: "*", column name or list of column names to be processed.
+        :param value:
+        :param date_format:
+        :param round:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        return self.td_between(cols=cols, func=self.F.hours_between, value=value, date_format=date_format, round=round, output_cols=output_cols)
+
+    def minutes_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
+        """
+        Return the number of minutes between two dates.
+        :param cols: "*", column name or list of column names to be processed.
+        :param value:
+        :param date_format:
+        :param round:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        return self.td_between(cols=cols, func=self.F.minutes_between, value=value, date_format=date_format, round=round, output_cols=output_cols)
+
+    def seconds_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
+        """
+        Return the number of seconds between two dates.
+        :param cols: "*", column name or list of column names to be processed.
+        :param value:
+        :param date_format:
+        :param round:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        return self.td_between(cols=cols, func=self.F.seconds_between, value=value, date_format=date_format, round=round, output_cols=output_cols)
 
     def replace(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,
                 output_cols=None) -> 'DataFrameType':
@@ -2907,6 +2950,8 @@ class BaseColumns(ABC):
             dtype = profiler_to_mask_func.get(
                 props["data_type"], props["data_type"])
 
+            dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
+
             matches_mismatches = getattr(df[col_name].mask, dtype)(
                 col_name).cols.frequency()
 
@@ -3033,6 +3078,7 @@ class BaseColumns(ABC):
             infer_value_counts = sample_formats["frequency"][col_name]["values"]
             # Common datatype in a column
             date_format = infer_value_counts[0]["value"]
+            self.root.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.inferred_type.format", date_format)
             result.update({col_name: date_format})
 
         return format_dict(result, tidy)

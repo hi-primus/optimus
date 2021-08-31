@@ -10,6 +10,7 @@ from ast import literal_eval
 import fastnumbers
 import pandas as pd
 import pendulum
+import pydateinfer
 
 
 
@@ -17,13 +18,15 @@ import pendulum
 from optimus.helpers.constants import CURRENCIES
 
 
-def is_datetime_str(_value):
+def is_datetime_str(_value: str):
     try:
-        pendulum.parse(_value, strict=False)
-        return True
-    except ValueError:
+        pdi = pydateinfer.infer([_value])
+        code_count = pdi.count('%')
+        value_code_count = _value.count('%')
+        return code_count >= 2 and value_code_count < code_count and code_count >= len(_value) / 7 and any(
+            [c in pdi for c in ['/', '-', ':', '%b', '%B']])
+    except Exception:
         return False
-
 
 def str_to_date_format(_value, date_format):
     # Check this https://stackoverflow.com/questions/17134716/convert-dataframe-column-type-from-string-to-datetime-dd-mm-yyyy-format
