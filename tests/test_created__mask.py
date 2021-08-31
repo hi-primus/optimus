@@ -112,8 +112,7 @@ class TestMaskPandas(TestBase):
     def test_mask_between_multiple(self):
         df = self.df
         result = df.mask.between(cols=['age', 'NullType', 'weight(t)'], bounds=[['-inf', -10], [0, 1.9999], [300, 5000000]], equal=True)
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('age', 'bool'): [True, True, True, True, True, True], ('NullType', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [False, False, False, True, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_between_numeric(self):
@@ -125,8 +124,7 @@ class TestMaskPandas(TestBase):
     def test_mask_between_string(self):
         df = self.df
         result = df.mask.between(cols=['names'], upper_bound='-inf', lower_bound=0, equal=False)
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('names', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_boolean(self):
@@ -246,22 +244,19 @@ class TestMaskPandas(TestBase):
     def test_mask_duplicated_all(self):
         df = self.df
         result = df.mask.duplicated(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('__duplicated__', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_duplicated_all_first(self):
         df = self.df
         result = df.mask.duplicated(cols='*', keep='first')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('__duplicated__', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_duplicated_all_last(self):
         df = self.df
         result = df.mask.duplicated(cols='*', keep='last')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('__duplicated__', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_duplicated_multiple(self):
@@ -422,52 +417,50 @@ class TestMaskPandas(TestBase):
 
     def test_mask_expression_all_colname(self):
         df = self.df
-        result = df.mask.expression(cols='*', value='last position seen')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.mask.expression(where='last position seen')
+        expected = self.create_dataframe(dict={('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_expression_all_expression(self):
         df = self.df
-        result = df.mask.expression(cols='*', where='df["rank"]>5')
-        expected = self.create_dataframe(dict={('rank', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
+        result = df.mask.expression(where='df["rank"]>8')
+        expected = self.create_dataframe(dict={('rank', 'bool'): [True, False, False, False, True, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_expression_multiple_colname(self):
         df = self.df
-        result = df.mask.expression(cols=['NullType', 'weight(t)', 'Cybertronian'], where='NullType')
+        result = df.mask.expression(where='NullType')
         expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_expression_multiple_expression(self):
         df = self.df
-        result = df.mask.expression(cols=['NullType', 'weight(t)', 'Cybertronian'], where='df["Cybertronian"]>0')
-        expected = self.create_dataframe(dict={('Cybertronian', 'bool'): [True, True, True, True, True, False]}, force_data_types=True)
+        result = df.mask.expression(where='df["Cybertronian"]==False')
+        expected = self.create_dataframe(dict={('Cybertronian', 'bool'): [False, False, False, False, False, True]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_expression_numeric_colname(self):
         df = self.df
-        result = df.mask.expression(cols=['height(ft)'], where='height(ft)')
+        result = df.mask.expression(where='height(ft)')
         expected = self.create_dataframe(dict={('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_expression_numeric_expression(self):
         df = self.df
-        result = df.mask.expression(cols=['height(ft)'], where='df["height(ft"]>=0')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.mask.expression(where='df["height(ft)"]>=0')
+        expected = self.create_dataframe(dict={('height(ft)', 'bool'): [False, True, True, True, False, True]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_expression_string_colname(self):
         df = self.df
-        result = df.mask.expression(cols=['function'], where='function')
+        result = df.mask.expression(where='function')
         expected = self.create_dataframe(dict={('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_expression_string_expression(self):
         df = self.df
-        result = df.mask.expression(cols=['function'], where='df["function"]>0')
-        expected = self.create_dataframe(dict={('function', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
+        result = df.mask.expression(where='df["function"]=="Leader"')
+        expected = self.create_dataframe(dict={('function', 'bool'): [True, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_find_all(self):
@@ -629,7 +622,7 @@ class TestMaskPandas(TestBase):
     def test_mask_int_all(self):
         df = self.df
         result = df.mask.int(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'bool'): [False, False, False, False, False, False], ('Code', 'bool'): [False, True, True, False, False, False], ('Multiple', 'bool'): [False, False, True, True, False, False], ('attributes', 'bool'): [False, False, False, False, False, False], ('date arrival', 'bool'): [False, False, False, False, False, False], ('function(binary)', 'bool'): [False, False, False, False, False, False], ('height(ft)', 'bool'): [True, True, True, True, False, True], ('japanese name', 'bool'): [False, False, False, False, False, False], ('last date seen', 'bool'): [False, False, False, False, False, False], ('last position seen', 'bool'): [False, False, False, False, False, False], ('rank', 'bool'): [True, True, True, True, True, True], ('Cybertronian', 'bool'): [True, True, True, True, True, True], ('Date Type', 'bool'): [False, False, False, False, False, False], ('age', 'bool'): [True, True, True, True, True, True], ('function', 'bool'): [False, False, False, False, False, False], ('names', 'bool'): [False, False, False, False, False, False], ('timestamp', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [False, True, True, False, False, False]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('NullType', 'bool'): [False, False, False, False, False, False], ('Code', 'bool'): [False, False, False, False, False, False], ('Multiple', 'bool'): [False, False, False, False, False, False], ('attributes', 'bool'): [False, False, False, False, False, False], ('date arrival', 'bool'): [False, False, False, False, False, False], ('function(binary)', 'bool'): [False, False, False, False, False, False], ('height(ft)', 'bool'): [True, True, True, True, False, True], ('japanese name', 'bool'): [False, False, False, False, False, False], ('last date seen', 'bool'): [False, False, False, False, False, False], ('last position seen', 'bool'): [False, False, False, False, False, False], ('rank', 'bool'): [True, True, True, True, True, True], ('Cybertronian', 'bool'): [True, True, True, True, True, True], ('Date Type', 'bool'): [False, False, False, False, False, False], ('age', 'bool'): [True, True, True, True, True, True], ('function', 'bool'): [False, False, False, False, False, False], ('names', 'bool'): [False, False, False, False, False, False], ('timestamp', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [False, True, True, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_int_multiple(self):
@@ -851,7 +844,7 @@ class TestMaskPandas(TestBase):
     def test_mask_numeric_all(self):
         df = self.df
         result = df.mask.numeric(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'bool'): [False, False, False, False, False, False], ('Code', 'bool'): [False, True, True, False, False, False], ('Multiple', 'bool'): [False, False, True, True, False, False], ('attributes', 'bool'): [False, False, False, False, False, False], ('date arrival', 'bool'): [False, False, False, False, False, False], ('function(binary)', 'bool'): [False, False, False, False, False, False], ('height(ft)', 'bool'): [True, True, True, True, True, True], ('japanese name', 'bool'): [False, False, False, False, False, False], ('last date seen', 'bool'): [False, False, False, False, False, False], ('last position seen', 'bool'): [False, False, False, False, False, False], ('rank', 'bool'): [True, True, True, True, True, True], ('Cybertronian', 'bool'): [True, True, True, True, True, True], ('Date Type', 'bool'): [False, False, False, False, False, False], ('age', 'bool'): [True, True, True, True, True, True], ('function', 'bool'): [False, False, False, False, False, False], ('names', 'bool'): [False, False, False, False, False, False], ('timestamp', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('NullType', 'bool'): [False, False, False, False, False, False], ('Code', 'bool'): [False, False, False, False, False, False], ('Multiple', 'bool'): [False, False, False, False, False, False], ('attributes', 'bool'): [False, False, False, False, False, False], ('date arrival', 'bool'): [False, False, False, False, False, False], ('function(binary)', 'bool'): [False, False, False, False, False, False], ('height(ft)', 'bool'): [True, True, True, True, True, True], ('japanese name', 'bool'): [False, False, False, False, False, False], ('last date seen', 'bool'): [False, False, False, False, False, False], ('last position seen', 'bool'): [False, False, False, False, False, False], ('rank', 'bool'): [True, True, True, True, True, True], ('Cybertronian', 'bool'): [True, True, True, True, True, True], ('Date Type', 'bool'): [False, False, False, False, False, False], ('age', 'bool'): [True, True, True, True, True, True], ('function', 'bool'): [False, False, False, False, False, False], ('names', 'bool'): [False, False, False, False, False, False], ('timestamp', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_numeric_multiple(self):
@@ -1037,22 +1030,19 @@ class TestMaskPandas(TestBase):
     def test_mask_unique_all(self):
         df = self.df
         result = df.mask.unique(cols='*')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('__duplicated__', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_unique_all_first(self):
         df = self.df
         result = df.mask.unique(cols='*', keep='first')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('__duplicated__', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_unique_all_last(self):
         df = self.df
         result = df.mask.unique(cols='*', keep='last')
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        expected = self.create_dataframe(dict={('__duplicated__', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_unique_multiple(self):
@@ -1111,33 +1101,32 @@ class TestMaskPandas(TestBase):
 
     def test_mask_url(self):
         df = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('Code', 'object'): ['123A', '456', 456, 'e', None, '{code}'], ('Multiple', 'object'): ['12/12/12', 'True', 1, '0.0', 'None', '{}'], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('urls_test', 'object'): ['https://github.com/hi-primus/optimus', 'localhost:3000?help=true', 'http://www.images.hi-example.com:54/images.php#id?help=1&freq=2', 'hi-optimus.com', 'https://www.computerhope.com/cgi-bin/search.cgi?q=example%20search&example=test', 'https://www.google.com/search?q=this+is+a+test&client=safari&sxsrf=ALe&source=hp&ei=NL0-y4&iflsig=AINF&oq=this+is+a+test&gs_lcp=MZgBAKA&sclient=gws-wiz&ved=0ah&uact=5']}, force_data_types=True)
-        result = df.mask.url(cols=['url_test'])
-        # The following value does not represent a correct output of the operation
-        expected = self.dict
+        result = df.mask.url(cols=['urls_test'])
+        expected = self.create_dataframe(dict={('urls_test', 'bool'): [True, False, True, False, True, True]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_url_all(self):
         df = self.df
         result = df.mask.url(cols='*')
-        expected = self.create_dataframe(dict={('NullType', 'bool'): [True, True, True, True, True, True], ('Code', 'bool'): [True, True, True, True, True, False], ('Multiple', 'bool'): [True, True, True, True, True, False], ('attributes', 'bool'): [False, False, False, False, False, False], ('date arrival', 'bool'): [True, True, True, True, True, True], ('function(binary)', 'bool'): [True, True, True, True, True, True], ('height(ft)', 'bool'): [True, True, True, True, True, True], ('japanese name', 'bool'): [False, False, False, False, False, False], ('last date seen', 'bool'): [True, True, True, True, True, True], ('last position seen', 'bool'): [True, True, True, True, True, True], ('rank', 'bool'): [True, True, True, True, True, True], ('Cybertronian', 'bool'): [True, True, True, True, True, True], ('Date Type', 'bool'): [True, True, True, True, True, True], ('age', 'bool'): [True, True, True, True, True, True], ('function', 'bool'): [True, True, True, True, True, True], ('names', 'bool'): [True, True, True, True, True, True], ('timestamp', 'bool'): [True, True, True, True, True, True], ('weight(t)', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('NullType', 'bool'): [False, False, False, False, False, False], ('Code', 'bool'): [False, False, False, False, False, False], ('Multiple', 'bool'): [False, False, False, False, False, False], ('attributes', 'bool'): [False, False, False, False, False, False], ('date arrival', 'bool'): [False, False, False, False, False, False], ('function(binary)', 'bool'): [False, False, False, False, False, False], ('height(ft)', 'bool'): [False, False, False, False, False, False], ('japanese name', 'bool'): [False, False, False, False, False, False], ('last date seen', 'bool'): [False, False, False, False, False, False], ('last position seen', 'bool'): [False, False, False, False, False, False], ('rank', 'bool'): [False, False, False, False, False, False], ('Cybertronian', 'bool'): [False, False, False, False, False, False], ('Date Type', 'bool'): [False, False, False, False, False, False], ('age', 'bool'): [False, False, False, False, False, False], ('function', 'bool'): [False, False, False, False, False, False], ('names', 'bool'): [False, False, False, False, False, False], ('timestamp', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_url_multiple(self):
         df = self.df
         result = df.mask.url(cols=['NullType', 'weight(t)', 'japanese name'])
-        expected = self.create_dataframe(dict={('NullType', 'bool'): [True, True, True, True, True, True], ('weight(t)', 'bool'): [True, True, True, True, True, True], ('japanese name', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('NullType', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [False, False, False, False, False, False], ('japanese name', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_url_numeric(self):
         df = self.df
         result = df.mask.url(cols=['height(ft)'])
-        expected = self.create_dataframe(dict={('height(ft)', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('height(ft)', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_url_string(self):
         df = self.df
         result = df.mask.url(cols=['names'])
-        expected = self.create_dataframe(dict={('names', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
+        expected = self.create_dataframe(dict={('names', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_value_in_all(self):
