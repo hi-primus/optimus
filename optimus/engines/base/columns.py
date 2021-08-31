@@ -3028,8 +3028,6 @@ class BaseColumns(ABC):
         sample_df = df.cols.select(cols).rows.limit(sample).to_optimus_pandas()
         sample_formats = sample_df.cols.date_formats().cols.frequency()
 
-        print(sample_formats)
-
         result = {}
         for col_name in cols:
             infer_value_counts = sample_formats["frequency"][col_name]["values"]
