@@ -406,7 +406,7 @@ def prepare_columns_arguments(cols, *args):
     args = list(args)
     
     for i, arg in enumerate(args):
-        arg = val_to_list(arg, convert_tuple=True)
+        arg = val_to_list(arg, allow_none=True, convert_tuple=True)
         if len(cols) > len(arg):
             arg *= math.floor(len(cols) / len(arg))
 
