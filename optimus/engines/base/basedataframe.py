@@ -790,7 +790,8 @@ class BaseDataFrame(ABC):
         cols_data_types = None
 
         profiler_time["beginning"] = {"elapsed_time": time.process_time() - _t}
-        if cols_to_profile or not is_cached or flush is True:
+
+        if cols_to_profile or not is_cached or flush:
             # Reset profiler metadata
             meta = Meta.set(meta, "profile", {})
             df.meta = meta
@@ -801,17 +802,17 @@ class BaseDataFrame(ABC):
             cols_data_types = {}
             cols_to_infer = [*cols_to_profile]
 
-            for col_name in cols_to_profile:
-                _props = Meta.get(df.meta, f"columns_data_types.{col_name}")
+            if not flush:
+                for col_name in cols_to_profile:
+                    _props = Meta.get(df.meta, f"columns_data_types.{col_name}")
 
-                if _props is not None:
-                    cols_data_types[col_name] = _props
-                    cols_to_infer.remove(col_name)
+                    if _props is not None:
+                        cols_data_types[col_name] = _props
+                        cols_to_infer.remove(col_name)
 
             if cols_to_infer:
                 cols_data_types = {**cols_data_types, **df.cols.infer_types(cols_to_infer, tidy=False)}
-                cols_data_types = {col: cols_data_types[col]
-                               for col in cols_to_profile}
+                cols_data_types = {col: cols_data_types[col] for col in cols_to_profile}
 
             _t = time.process_time()
             mismatch = df.cols.quality(cols_data_types)
