@@ -7,7 +7,7 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
     regex_credit_card_number, regex_zip_code, regex_gender, regex_ip, regex_email, \
-    is_datetime, is_list, is_bool, is_object, regex_full_url
+    is_datetime, is_list, is_bool, is_object, regex_url
 
 
 class Mask(ABC):
@@ -372,8 +372,30 @@ class Mask(ABC):
     def ip(self, cols="*") -> 'MaskDataFrameType':
         return self.match_regex(cols, regex_ip)
 
-    def url(self, cols="*") -> 'MaskDataFrameType':
-        return self.match_regex(cols, regex_full_url)
+    def url(self, cols="*", schemes="default", allow_schemeless=True) -> 'MaskDataFrameType':
+        """
+        Find the rows with urls
+        :param cols:
+        :param schemes: 
+        :param allow_schemeless:
+        """
+
+        if schemes == "default":
+            schemes = ['http', 'https', 'ftp', 'ftps']
+
+        if schemes == "any":
+            schemes_regex = r"[a-zA-Z0-9]*:\/\/"
+        elif schemes is not None:
+            schemes = val_to_list(schemes)
+            schemes_regex = r"(" + "|".join(schemes) + r"):\/\/"
+        else:
+            schemes_regex = ""
+            allow_schemeless = False
+
+        if allow_schemeless:
+            schemes_regex = r"(" + schemes_regex + r")?"
+        
+        return self.match_regex(cols, r"^" + schemes_regex + regex_url)
 
     def gender(self, cols="*") -> 'MaskDataFrameType':
         return self.match_regex(cols, regex_gender)

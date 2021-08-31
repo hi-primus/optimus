@@ -108,7 +108,7 @@ def is_gender(value, compile=False):
 
 regex_full_url = r"^(?:([A-Za-z0-9]*)\://)?(?:(\w+)\.)?([A-Za-z0-9\-\.]+):?(\d+)?(?:/|$)?(\w+\.?\w+)?\??(\w.+)?$"
 
-regex_url = r"(http|https|ftp|s3):\/\/.?[a-zA-Z]*.\w*.[a-zA-Z0-9]*\/?[a-zA-z_-]*.?[a-zA-Z]*\/?"
+regex_url = r"([a-zA-Z]+\.)?([a-zA-Z0-9]+\.)+([a-zA-Z]+)\/?"
 
 regex_url_compiled = re.compile(regex_url, re.IGNORECASE)
 
