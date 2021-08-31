@@ -687,6 +687,7 @@ def df_dicts_equal(df1, df2, decimal: Union[int, bool] = True, assertion=False):
             np.testing.assert_almost_equal(df1[k], df2[k], decimal=decimal)
         except AssertionError as e:
             if assertion:
+                logger.warn(f"AssertionError on column {k}")
                 raise e
             return False
         except Exception:
