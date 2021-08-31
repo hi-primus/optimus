@@ -98,6 +98,11 @@ class BaseConstants:
     ANY_TYPES = ["object"]
 
     @property
+    def INT_TYPES(self):
+        return self.ANY_TYPES + [ProfilerDataTypes.INT.value] +\
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1]==ProfilerDataTypes.INT.value]
+
+    @property
     def NUMERIC_TYPES(self):
         types = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
         return self.ANY_TYPES + types +\
