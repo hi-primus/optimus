@@ -2691,7 +2691,7 @@ class BaseColumns(ABC):
         return self.root.cols.apply(cols, func=self.F.min_max_scaler, output_cols=output_cols,
                                     meta_action=Actions.MIN_MAX_SCALER.value)
 
-    def iqr(self, cols="*", more=None, relative_error=RELATIVE_ERROR):
+    def iqr(self, cols="*", more=None, relative_error=RELATIVE_ERROR, estimate=True):
         """
         Return the column Inter Quartile Range
         :param cols: "*", column name or list of column names to be processed.
@@ -2703,8 +2703,8 @@ class BaseColumns(ABC):
         iqr_result = {}
         cols = parse_columns(df, cols)
 
-        quartile = df.cols.percentile(cols, [0.25, 0.5, 0.75], relative_error=relative_error, tidy=False)[
-            "percentile"]
+        quartile = df.cols.percentile(cols, [0.25, 0.5, 0.75], relative_error=relative_error,
+                                      estimate=estimate, tidy=False)["percentile"]
         # print("quantile",quartile)
         for col_name in cols:
             if is_null(quartile[col_name]):
@@ -3181,7 +3181,7 @@ class BaseColumns(ABC):
         stats = {}
 
         for col_name in cols:
-            iqr = df.cols.iqr(col_name, more=True)
+            iqr = df.cols.iqr(col_name, more=True, estimate=False)
             if not is_dict(iqr):
                 stats[col_name] = np.nan
                 continue
