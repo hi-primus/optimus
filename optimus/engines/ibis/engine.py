@@ -11,7 +11,6 @@ class IbisEngine(BaseEngine):
 
     def __init__(self, verbose=False, comm=None, *args, **kwargs):
         self.engine = Engine.IBIS.value
-        self.engine_label = EnginePretty.IBIS.value
 
         self.verbose(verbose)
 
@@ -33,3 +32,7 @@ class IbisEngine(BaseEngine):
 
         return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
                     presto_catalog, cassandra_keyspace, cassandra_table, bigquery_project, bigquery_dataset)
+
+    @property
+    def engine_label(self):
+        return EnginePretty.IBIS.value

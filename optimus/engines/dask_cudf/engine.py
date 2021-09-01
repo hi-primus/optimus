@@ -27,7 +27,6 @@ class DaskCUDFEngine(BaseEngine):
         """
 
         self.engine = Engine.DASK_CUDF.value
-        self.engine_label = EnginePretty.DASK_CUDF.value
 
         self.verbose(verbose)
 
@@ -173,3 +172,7 @@ class DaskCUDFEngine(BaseEngine):
         if isinstance(func, (RemoteDummyAttribute,)):
             return func(client_submit=True, *args, **kwargs)
         return dask.distributed.get_client().submit(func, priority=priority, pure=pure, *args, **kwargs)
+
+    @property
+    def engine_label(self):
+        return EnginePretty.DASK_CUDF.value
