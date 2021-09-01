@@ -1,5 +1,5 @@
 import numpy as np
-from databricks import koalas
+import databricks.koalas as ks
 
 from optimus.engines.base.commons.functions import word_tokenize
 from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
@@ -14,7 +14,11 @@ class SparkFunctions(SparkBaseFunctions, DataFrameBaseFunctions):
 
     @property
     def _engine(self):
-        return koalas
+        return ks
+
+    @staticmethod
+    def df_concat(df_list):
+        return ks.concat(df_list, axis=0, ignore_index=True)
 
     def word_tokenize(self, series):
         return self.to_string(series).map(word_tokenize, na_action=None)
