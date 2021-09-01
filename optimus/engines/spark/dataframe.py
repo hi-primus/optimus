@@ -2,6 +2,7 @@ from imgkit import imgkit
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
 
+from optimus.helpers.types import *
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
@@ -45,20 +46,12 @@ class SparkDataFrame(BaseDataFrame):
         from optimus.engines.spark.functions import SparkFunctions
         return SparkFunctions(self)
 
-    def _buffer_window():
-        pass
+    def _buffer_window(self, input_cols, lower_bound, upper_bound):
+        return self.__class__(self.data[input_cols][lower_bound: upper_bound], op=self.op)
 
     def cache(self):
         df = self.data
         return self.new(df.cache(), meta=self.meta)
-
-    @staticmethod
-    def roll_out():
-        """
-        Just a function to check if the Spark dataframe has been Monkey Patched
-        :return:
-        """
-        print("Yes!")
 
     # @staticmethod
     # def to_json():
