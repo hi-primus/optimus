@@ -69,7 +69,6 @@ class SparkEngine(BaseEngine):
 
         """
         self.engine = Engine.SPARK.value
-        self.engine_label = EnginePretty.SPARK.value
         self.client = session
         self.preserve = False
 
@@ -143,20 +142,9 @@ class SparkEngine(BaseEngine):
 
         logger.print(STARTING_OPTIMUS)
 
-        # Pickling
-        Spark.instance.sc.addPyFile(absolute_path("/infer.py"))
-
         logger.print(SUCCESS)
 
         self.create = Create(self)
-        # self.load = Load()
-        # self.read = self.spark.read
-        #
-        # # Create singleton profiler
-        # self.ml = ML()
-        #
-        # # Set global output as html
-        # self.output("html")
 
     @property
     def load(self):
@@ -454,3 +442,7 @@ class SparkEngine(BaseEngine):
     def F(self):
         from optimus.engines.spark.functions import SparkFunctions
         return SparkFunctions(self)
+
+    @property
+    def engine_label(self):
+        return EnginePretty.SPARK.value
