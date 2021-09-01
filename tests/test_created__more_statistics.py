@@ -164,7 +164,7 @@ class TestMoreStatisticsPandas(TestBase):
     def test_cols_frequency_numeric(self):
         df = self.create_dataframe(dict={('vf', 'float64'): [9.9, 9.9, 9.9, 9.9, 3.3000000000000003, 3.3000000000000003, 3.3000000000000003, 22.0, 22.0, 1.1, 1.1, 0.0, 0.0, 4.4], ('vs', 'object'): ['STR9', 'STR9', 'STR9', 'STR9', 'STR3', 'STR3', 'STR3', 'STR20', 'STR20', 'STR1', 'STR1', 'STR0', 'STR0', 'STR4'], ('values', 'int64'): [9, 9, 9, 9, 3, 3, 3, 20, 20, 1, 1, 0, 0, 4], ('o', 'object'): ['nine', [9], {'nine': 9}, 9, 3, 3, 3, None, None, 1, 1, 1, 1, 1]}, force_data_types=True)
         result = df.cols.frequency(cols='values', n=4, percentage=True, total_rows=3)
-        expected = {'frequency': {'values': {'values': [{'value': 9, 'count': 4, 'percentage': 28.57}, {'value': 3, 'count': 3, 'percentage': 21.43}, {'value': 0, 'count': 2, 'percentage': 14.29}, {'value': 1, 'count': 2, 'percentage': 14.29}]}}}
+        expected = {'frequency': {'values': {'values': [{'value': 9, 'count': 4, 'percentage': 28.57}, {'value': 3, 'count': 3, 'percentage': 21.43}, {'value': 1, 'count': 2, 'percentage': 14.29}, {'value': 20, 'count': 2, 'percentage': 14.29}]}}}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_frequency_string(self):
@@ -254,13 +254,13 @@ class TestMoreStatisticsPandas(TestBase):
     def test_cols_quality_all(self):
         df = self.df
         result = df.cols.quality(cols='*')
-        expected = {'id': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}}, 'name': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}}, 'code': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}}, 'price': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'decimal', 'categorical': False}}, 'discount': {'match': 6, 'missing': 0, 'mismatch': 4, 'inferred_type': {'data_type': 'int', 'categorical': True}}}
+        expected = {'id': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}}, 'name': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}}, 'code': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}}, 'price': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'decimal', 'categorical': False}}, 'discount': {'match': 0, 'missing': 0, 'mismatch': 10, 'inferred_type': {'data_type': 'int', 'categorical': True}}}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_quality_multiple(self):
         df = self.df
         result = df.cols.quality(cols=['id', 'code', 'discount'], flush=False)
-        expected = {'id': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}}, 'code': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}}, 'discount': {'match': 6, 'missing': 0, 'mismatch': 4, 'inferred_type': {'data_type': 'int', 'categorical': True}}}
+        expected = {'id': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'int', 'categorical': True}}, 'code': {'match': 10, 'missing': 0, 'mismatch': 0, 'inferred_type': {'data_type': 'str', 'categorical': True}}, 'discount': {'match': 0, 'missing': 0, 'mismatch': 10, 'inferred_type': {'data_type': 'int', 'categorical': True}}}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_quality_numeric(self):
