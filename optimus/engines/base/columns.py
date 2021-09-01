@@ -2947,10 +2947,11 @@ class BaseColumns(ABC):
                     continue
 
             # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
-            dtype = profiler_to_mask_func.get(
-                props["data_type"], props["data_type"])
+            dtype = props["data_type"]
 
             dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
+
+            dtype = profiler_to_mask_func.get(dtype, dtype)
 
             matches_mismatches = getattr(df[col_name].mask, dtype)(
                 col_name).cols.frequency()
