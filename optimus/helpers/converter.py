@@ -113,3 +113,7 @@ def pandas_to_dask_cudf_dataframe(pdf, n_partitions=1):
     # Seems that from_cudf also accepts pandas
     cdf = cudf.DataFrame.from_pandas(pdf)
     return dask_cudf.from_cudf(cdf, npartitions=n_partitions)
+
+def pandas_to_spark_dataframe(pdf, n_partitions=1):
+    import databricks.koalas as ks
+    return ks.from_pandas(pdf)

@@ -2,6 +2,8 @@ from pyspark.ml.linalg import VectorUDT
 from pyspark.sql.types import StringType, BooleanType, IntegerType, ArrayType, FloatType, DoubleType, StructType, \
     DateType, LongType, ByteType, ShortType, TimestampType, BinaryType, NullType
 
+from optimus.engines.base.constants import BaseConstants
+
 # Python to PySpark reference
 #
 # type(None): NullType,
@@ -57,7 +59,7 @@ SPARK_PATH_COLAB = "/content/spark-{SPARK_VERSION}-bin-hadoop{HADOOP_VERSION}".f
 STARTING_SPARK = "Starting or getting SparkSession and SparkContext..."
 
 
-class Constants:
+class Constants(BaseConstants):
     SHORT_DTYPES = SHORT_DTYPES
 
     DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatType,
