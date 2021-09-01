@@ -379,6 +379,6 @@ default_configs = {
     "CUDF": {"engine": "cudf", "try_package": "cudf"},
     "DC": {"engine": "dask_cudf", "n_partitions": 1, "try_package": "dask_cudf"},
     "PartitionDC": {"engine": "dask_cudf", "n_partitions": 2, "try_package": "dask_cudf"},
-    "Spark": {"engine": "spark", "try_package": "spark"},
+    "Spark": {"engine": "spark", "try_package": "pyspark"},
     "Vaex": {"engine": "vaex", "try_package": "vaex"}
 }

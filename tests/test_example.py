@@ -57,7 +57,7 @@ else:
 
 
 try:
-    import spark
+    import pyspark
 except:
     pass
 else:

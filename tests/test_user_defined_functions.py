@@ -67,7 +67,7 @@ else:
         config = {'engine': 'dask_cudf', 'n_partitions': 2}
 
 try:
-    import spark
+    import pyspark
 except:
     pass
 else:

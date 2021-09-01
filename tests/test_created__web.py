@@ -444,7 +444,7 @@ else:
 
 
 try:
-    import spark # pyright: reportMissingImports=false
+    import pyspark # pyright: reportMissingImports=false
 except:
     pass
 else:
