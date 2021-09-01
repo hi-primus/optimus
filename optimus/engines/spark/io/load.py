@@ -1,21 +1,20 @@
-import glob
 import io
 import ntpath
 import zipfile
 
 import databricks.koalas as ks
-import psutil
 from packaging import version
 
+from optimus.helpers.types import *
+from optimus.optimus import EnginePretty
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.spark.dataframe import SparkDataFrame
 from optimus.engines.spark.spark import Spark
-from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import prepare_path, unquote_path
+from optimus.helpers.columns import replace_columns_special_characters
+from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
-from optimus.infer import is_list, is_url
 
 
 class Load(BaseLoad):
@@ -25,42 +24,16 @@ class Load(BaseLoad):
         return SparkDataFrame(*args, **kwargs)
 
     @staticmethod
-    def xml(path, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    @staticmethod
-    def orc(path, columns, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    @staticmethod
-    def hdf5(path, columns=None, *args, **kwargs) -> 'DataFrameType':
-        pass
-
-    @staticmethod
-    def json(path, multiline=False, *args, **kwargs):
-        file, file_name = prepare_path(path, "json")
-
-        try:
-            df = Spark.instance.spark.read \
-                .option("multiLine", multiline) \
-                .option("mode", "PERMISSIVE") \
-                .json(file, *args, **kwargs)
-
-            df.meta = Meta.set(df.meta, "file_name", file_name)
-
-        except IOError as error:
-            print(error)
-            raise
-        df = replace_columns_special_characters(df)
-
-        df.meta = Meta.set(df.meta, value=df.meta.add_action("columns", df.cols.names()).get())
-        return df
+    def _json(filepath_or_buffer, *args, **kwargs):
+        kwargs.pop("n_partitions", None)
+        kwargs.pop("storage_options", None)
+        return ks.read_json(filepath_or_buffer, *args, **kwargs)
 
     @staticmethod
     def _csv(filepath_or_buffer, *args, **kwargs):
 
         # TODO support arguments
-        
+
         kwargs.pop("n_partitions", None)
         kwargs.pop("encoding", None)
         kwargs.pop("quoting", None)
@@ -77,17 +50,14 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def parquet(path, *args, **kwargs):
-
-        file, file_name = prepare_path(path, "parquet")
-
-        try:
-            df = Spark.instance.spark.read.parquet(file, *args, **kwargs)
-            df.meta = Meta.set(df.meta, "file_name", file_name)
-
-        except IOError as error:
-            print(error)
-            raise
+    def _parquet(filepath_or_buffer, nrows=None, engine="pyarrow", *args, **kwargs):
+        kwargs.pop("n_partitions", None)        
+        kwargs.pop("storage_options", None)
+        df = ks.read_parquet(filepath_or_buffer, engine=engine, *args, **kwargs)
+        if nrows:
+            logger.warn(f"'load.parquet' on {EnginePretty.SPARK.value} loads the whole dataset and then truncates it")
+            df = df[:nrows]
+        
         return df
 
     @staticmethod
