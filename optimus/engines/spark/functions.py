@@ -2,15 +2,16 @@ import numpy as np
 import databricks.koalas as ks
 
 from optimus.engines.base.commons.functions import word_tokenize
+
 from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
-from optimus.engines.base.spark.functions import SparkBaseFunctions
+from optimus.engines.base.pandas.functions import PandasBaseFunctions
 
 
 # These function can return a Column Expression or a list of columns expression
 # Must return None if the data type can not be handle
 
 
-class SparkFunctions(SparkBaseFunctions, DataFrameBaseFunctions):
+class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
 
     _engine = ks
 
@@ -111,7 +112,6 @@ class SparkFunctions(SparkBaseFunctions, DataFrameBaseFunctions):
             value, value_date_format = value
 
         date = pd.to_datetime(series, format=date_format, errors="coerce")
-        value = pd.Timestamp.now() if value is None else pd.to_datetime(value, format=value_date_format,
-                                                                        errors="coerce")
-
+        value = pd.Timestamp.now() if value is None else pd.to_datetime(value, format=value_date_format, errors="coerce")
+        
         return (value - date)
