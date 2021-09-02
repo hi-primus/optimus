@@ -1,13 +1,12 @@
 import cudf
 import dask_cudf
+
 from optimus.engines.base.cudf.functions import CUDFBaseFunctions
 from optimus.engines.base.dask.functions import DaskBaseFunctions
 
 class DaskCUDFFunctions(CUDFBaseFunctions, DaskBaseFunctions):
-    
-    @property
-    def _partition_engine(self):
-        return cudf
+
+    _partition_engine = cudf
 
     @staticmethod
     def from_dataframe(dfd):

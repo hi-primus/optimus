@@ -15,9 +15,7 @@ from optimus.engines.base.dask.functions import DaskBaseFunctions
 
 class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
 
-    @property
-    def _partition_engine(self):
-        return pd
+    _partition_engine = pd
 
     def from_dataframe(self, dfd):
         return dask.dataframe.from_pandas(dfd, npartitions=self.n_partitions)

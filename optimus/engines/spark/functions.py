@@ -12,9 +12,7 @@ from optimus.engines.base.spark.functions import SparkBaseFunctions
 
 class SparkFunctions(SparkBaseFunctions, DataFrameBaseFunctions):
 
-    @property
-    def _engine(self):
-        return ks
+    _engine = ks
 
     @staticmethod
     def df_concat(df_list):

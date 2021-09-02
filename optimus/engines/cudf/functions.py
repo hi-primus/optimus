@@ -9,9 +9,7 @@ from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
 
 class CUDFFunctions(CUDFBaseFunctions, DataFrameBaseFunctions):
 
-    @property
-    def _engine(self):
-        return cudf
+    _engine = cudf
 
     def count_zeros(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.

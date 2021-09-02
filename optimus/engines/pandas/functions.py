@@ -1,16 +1,14 @@
-from optimus.infer import is_list_or_tuple
-
 import numpy as np
 import pandas as pd
+
+
 from optimus.engines.base.pandas.functions import PandasBaseFunctions
 from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
 
 
 class PandasFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
 
-    @property
-    def _engine(self):
-        return pd
+    _engine = pd
 
     @staticmethod
     def df_concat(df_list):

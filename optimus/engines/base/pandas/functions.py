@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from fastnumbers import isintlike, isfloat, isreal, fast_forceint, fast_float
 
-from optimus.infer import is_int_like
+from optimus.infer import is_int_like, is_list_or_tuple
 
 from optimus.engines.base.functions import BaseFunctions
 from abc import ABC
@@ -37,8 +37,8 @@ class PandasBaseFunctions(BaseFunctions, ABC):
             return False
         return np.vectorize(isreal)(series).flatten()
 
-    @staticmethod
-    def _to_integer(series, default=0):
+    @classmethod
+    def _to_integer(cls, series, default=0):
 
         # TODO replace_inf
 
@@ -53,34 +53,34 @@ class PandasBaseFunctions(BaseFunctions, ABC):
         try:
             if default is not None:
                 series = series.fillna(default)
-            series = pd.Series(np.vectorize(fast_forceint,
+            series = cls._partition_engine.Series(np.vectorize(fast_forceint,
                                otypes=otypes)(series, default=default,
                                               on_fail=lambda x: default).flatten())
                                               
         except Exception:
             series = series.replace([np.inf, -np.inf], default)
             if int_type:
-                series = pd.Series(np.floor(pd.to_numeric(series, errors='coerce', downcast='integer'))).fillna(default)
+                series = cls._partition_engine.Series(np.floor(cls._partition_engine.to_numeric(series, errors='coerce', downcast='integer'))).fillna(default)
                 try:
                     series = series.astype('int64')
                 except:
                     pass
             else:
-                series = pd.Series(np.floor(pd.to_numeric(series, errors='coerce')))
+                series = cls._partition_engine.Series(np.floor(cls._partition_engine.to_numeric(series, errors='coerce')))
                 series = series if default is None else series.fillna(default)
 
         return series
 
-    @staticmethod
-    def _to_float(series):
+    @classmethod
+    def _to_float(cls, series):
         try:
-            return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
+            return cls._partition_engine.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
         except:
-            return pd.Series(pd.to_numeric(series, errors='coerce')).astype('float')
+            return cls._partition_engine.Series(cls._partition_engine.to_numeric(series, errors='coerce')).astype('float')
 
-    @staticmethod
-    def _to_datetime(value, format=None):
+    @classmethod
+    def _to_datetime(cls, value, format=None):
         if format is None:
-            return pd.to_datetime(value, errors="coerce")
+            return cls._partition_engine.to_datetime(value, errors="coerce")
         else:
-            return pd.to_datetime(value, format=format, errors="coerce")
+            return cls._partition_engine.to_datetime(value, format=format, errors="coerce")

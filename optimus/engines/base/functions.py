@@ -11,7 +11,7 @@ from fastnumbers import fast_float, fast_int
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_int, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
+    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
     is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number, is_int_like
 
 
@@ -23,7 +23,19 @@ class BaseFunctions(ABC):
     Note: some methods needs to be static so they can be passed to a Dask worker.
     """
 
+    _engine = None
+    _partition_engine = None
+
+    def __init_subclass__(cls):
+            
+        if cls._partition_engine is None:
+            cls._partition_engine = cls._engine
+
     def __init__(self, df=None):
+
+        if self._engine is None:
+            raise TypeError("Can't instantiate class without attribute '_engine'")
+
         if df is not None and getattr(df, "partitions", False):
             self.root = df
         else:
@@ -67,21 +79,6 @@ class BaseFunctions(ABC):
     def constants(self):
         from optimus.engines.base.constants import BaseConstants
         return BaseConstants()
-
-    @property
-    @abstractmethod
-    def _engine(self):
-        """
-        Gets the engine used
-        """
-        pass
-
-    @property
-    def _partition_engine(self):
-        """
-        Gets the internal engine used in partitioned DataFrame technologies
-        """
-        return self._engine
 
     @property
     def _functions(self):

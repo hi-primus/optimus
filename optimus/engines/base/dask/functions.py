@@ -15,10 +15,7 @@ from optimus.engines.base.distributed.functions import DistributedBaseFunctions
 
 class DaskBaseFunctions(DistributedBaseFunctions):
 
-    @staticmethod
-    @property
-    def _engine():
-        return dask
+    _engine = dask
 
     @staticmethod
     @property
@@ -50,7 +47,6 @@ class DaskBaseFunctions(DistributedBaseFunctions):
 
     def new_df(self, *args, **kwargs):
         if len(args) < 4 and all([k not in kwargs for k in ['dsk', 'name', 'meta', 'divisions']]):
-            print(self._partition_engine)
             return self.from_dataframe(self._partition_engine.DataFrame(*args, **kwargs))
         return dd.DataFrame(*args, **kwargs)
 

@@ -2,14 +2,13 @@ import vaex
 import numpy as np
 from fastnumbers import fast_float, fast_int
 
+
 from optimus.engines.base.functions import BaseFunctions
 
 
 class VaexFunctions(BaseFunctions):
 
-    @property
-    def _engine(self):
-        return vaex
+    _engine = vaex
 
     @staticmethod
     def count_zeros(series, *args):
