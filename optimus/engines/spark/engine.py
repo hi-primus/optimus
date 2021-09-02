@@ -12,7 +12,6 @@ from optimus.engines.base.engine import BaseEngine
 from optimus.engines.spark.create import Create
 from optimus.engines.spark.io.jdbc import JDBC
 from optimus.engines.spark.io.load import Load
-from optimus.engines.spark.ml.models import ML
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.constants import *
 from optimus.helpers.core import val_to_list
@@ -68,8 +67,6 @@ class SparkEngine(BaseEngine):
         :type jars: (list[str])
 
         """
-        self.engine = Engine.SPARK.value
-        self.client = session
         self.preserve = False
 
         if jars is None:
@@ -130,25 +127,40 @@ class SparkEngine(BaseEngine):
             # logger.print("Spark session")
             Spark.instance = Spark().load(session)
 
+        self.client = Spark.instance._spark
+
         # Initialize Spark
         logger.print("""
-                             ____        __  _                     
+                             ____        __  _
                             / __ \____  / /_(_)___ ___  __  _______
                            / / / / __ \/ __/ / __ `__ \/ / / / ___/
-                          / /_/ / /_/ / /_/ / / / / / / /_/ (__  ) 
-                          \____/ .___/\__/_/_/ /_/ /_/\__,_/____/  
-                              /_/                                  
+                          / /_/ / /_/ / /_/ / / / / / / /_/ (__  )
+                          \____/ .___/\__/_/_/ /_/ /_/\__,_/____/
+                              /_/
                               """)
-
         logger.print(STARTING_OPTIMUS)
-
         logger.print(SUCCESS)
 
-        self.create = Create(self)
+    @property
+    def F(self):
+        from optimus.engines.spark.functions import SparkFunctions
+        return SparkFunctions(self)
+
+    @property
+    def create(self):
+        return Create(self)
 
     @property
     def load(self):
         return Load(self)
+
+    @property
+    def engine(self):
+        return Engine.SPARK.value
+
+    @property
+    def engine_label(self):
+        return EnginePretty.SPARK.value
 
     @staticmethod
     def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
@@ -361,7 +373,7 @@ class SparkEngine(BaseEngine):
         :return:
         """
 
-        ## Get python.exe fullpath
+        # Get python.exe fullpath
         os.environ['PYSPARK_PYTHON'] = sys.executable
 
         # Remove duplicated strings
@@ -424,10 +436,10 @@ class SparkEngine(BaseEngine):
         :param method: json or a
         :return:
         """
-        if method is "json":
+        if method == "json":
             diff = DeepDiff(df1.to_json(), df2.to_json(), ignore_order=False)
             print(output_json(diff))
-        elif method is "collect":
+        elif method == "collect":
             if df1.collect() == df2.collect():
                 print("Dataframes are equal")
                 return True
@@ -437,12 +449,3 @@ class SparkEngine(BaseEngine):
 
         else:
             RaiseIt.type_error(method, ["json", "collect"])
-
-    @property
-    def F(self):
-        from optimus.engines.spark.functions import SparkFunctions
-        return SparkFunctions(self)
-
-    @property
-    def engine_label(self):
-        return EnginePretty.SPARK.value
