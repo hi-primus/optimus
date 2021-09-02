@@ -84,3 +84,24 @@ class PandasBaseFunctions(BaseFunctions, ABC):
             return cls._partition_engine.to_datetime(value, errors="coerce")
         else:
             return cls._partition_engine.to_datetime(value, format=format, errors="coerce")
+
+    @classmethod
+    def format_date(cls, series, current_format=None, output_format=None):
+        return cls._partition_engine.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format).reset_index(
+            drop=True)
+
+    @classmethod
+    def td_between(cls, series, value=None, date_format=None):
+
+        value_date_format = date_format
+
+        if is_list_or_tuple(date_format) and len(date_format) == 2:
+            date_format, value_date_format = date_format
+
+        if is_list_or_tuple(value) and len(value) == 2:
+            value, value_date_format = value
+
+        date = cls._partition_engine.to_datetime(series, format=date_format, errors="coerce")
+        value = pd.Timestamp.now() if value is None else cls._partition_engine.to_datetime(value, format=value_date_format, errors="coerce")
+
+        return (value - date)
