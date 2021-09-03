@@ -2132,8 +2132,10 @@ class BaseColumns(ABC):
         if format is None:
             format = df.cols.date_format(cols, tidy=False)["date_format"]
             formats = [format[col] for col in cols]
-        elif not is_list(format):
-            formats = [format for col in cols]
+        else:
+            formats = format
+        
+        formats = prepare_columns_arguments(cols, formats)
 
         for col, col_format in zip(cols, formats):
             df = df.cols.apply(col, func, args=col_format, output_cols=output_cols,
