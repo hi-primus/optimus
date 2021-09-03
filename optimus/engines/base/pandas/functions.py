@@ -1,4 +1,5 @@
 
+from optimus.helpers.logger import logger
 import numpy as np
 import pandas as pd
 from fastnumbers import isintlike, isfloat, isreal, fast_forceint, fast_float
@@ -80,10 +81,12 @@ class PandasBaseFunctions(BaseFunctions, ABC):
 
     @classmethod
     def _to_datetime(cls, value, format=None):
-        if format is None:
-            return cls._partition_engine.to_datetime(value, errors="coerce")
-        else:
-            return cls._partition_engine.to_datetime(value, format=format, errors="coerce")
+        try:
+            if format is not None:
+                return cls._partition_engine.to_datetime(value, format=format, errors="coerce")
+        except Exception as e:
+            logger.warn(e)
+        return cls._partition_engine.to_datetime(value, errors="coerce")
 
     @classmethod
     def format_date(cls, series, current_format=None, output_format=None):
