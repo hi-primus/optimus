@@ -14,18 +14,31 @@
 [![Mentioned in Awesome Data Science](https://awesome.re/mentioned-badge.svg)](https://github.com/bulutyazilim/awesome-datascience) 
 [![Slack](https://img.shields.io/badge/chat-slack-red.svg?logo=slack&color=36c5f0)](https://communityinviter.com/apps/hi-bumblebee/welcome)
 
-# Get started 🏃
+# Overview
+Optimus is an opinionated python library to easily load, process, plot and create ML models that run over pandas, Dask, cuDF, dask-cuDF, Vaex or Spark. 
+Some amazing thing Optimus can do for you:
+* Easy to use for newcomers.
+* More than 100 function to process data?
+* Out of box functions to data quality, plotting, process dates,url, emails
+* Use the same code using to process your data in your laptop or cluster of GPUs.
 
 ## Try Optimus
-
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-21.8)
 [![Colab](https://img.shields.io/badge/launch-colab-yellow.svg?logo=googlecolab&color=e6a210)](https://colab.research.google.com/github/hi-primus/optimus/blob/master/examples/10_min_to_optimus.ipynb)
 
 ## Installation (pip): 
- 
 In your terminal just type  ```pip install pyoptimus```
+
+By default Optimus install pandas and Dask as default engines:
+to install other engines you can:
+* cuDF ```pip install pyoptimus[cuDF]```
+* dask-cudf ```pip install pyoptimus[dask-cudf]```
+* Vaex ```pip install pyoptimus[vaex]```
+* Spark ```pip install pyoptimus[spark]```
+
+
 
 ### Requirements
 * Python 3.7 or 3.8
@@ -34,13 +47,13 @@ In your terminal just type  ```pip install pyoptimus```
 
 You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/optimus/blob/develop-21.8/examples/10_min_to_optimus.ipynb) where you can find the basic to start working.
 
-Also you can go to [Examples](https://github.com/hi-primus/optimus/tree/develop-21.8/examples/examples.md) and found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
+Also you can go to [Examples](https://github.com/hi-primus/optimus/tree/develop-21.8/examples/examples.md) and found specific notebooks about data cleaning, data munging, profiling, quality and how to create ML.
 
 Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-21.8/docs/cheatsheet/optimus_cheat_sheet.html)
 
 ## Start Optimus
 
-Start Optimus using ```"pandas"```, ```"dask"```, ```"cudf"``` or ```"dask_cudf"```.
+Start Optimus using ```"pandas"```, ```"dask"```, ```"cudf"```,```"dask_cudf"```,```"vaex"``` or ```"spark"```.
 
 ```python
 from optimus import Optimus
