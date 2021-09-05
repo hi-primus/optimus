@@ -10,7 +10,7 @@ class TestBase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        
+
         if not cls.config:
             raise Exception("Please initialize device before running tests")
 
@@ -19,7 +19,6 @@ class TestBase(unittest.TestCase):
         from optimus import Optimus
         cls.op = Optimus(cls.config["engine"])
         print(f"optimus using {cls.op.engine}")
-
 
         if cls.dict:
             cls.df = cls.create_dataframe(cls.dict, force_data_types=True)

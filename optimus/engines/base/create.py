@@ -1,9 +1,11 @@
-from abc import abstractmethod
 import warnings
-from optimus.engines.base.meta import Meta
-from optimus.infer import is_tuple
-from optimus.helpers.types import *
+from abc import abstractmethod
+
 import pandas as pd
+
+from optimus.engines.base.meta import Meta
+from optimus.helpers.types import *
+from optimus.infer import is_tuple
 
 
 class BaseCreate:
@@ -13,7 +15,7 @@ class BaseCreate:
     def _dictionary(self, dict, force_dtypes=False):
 
         new_dict = {}
-        
+
         for key, values in dict.items():
             if is_tuple(key):
                 dtype = None
@@ -40,7 +42,7 @@ class BaseCreate:
     @property
     def _pd(self):
         return pd
-    
+
     def _dfd_from_dict(self, dict) -> 'InternalDataFrameType':
         pd_dict = {}
         for (name, dtype, nulls, force_dtype), values in dict.items():
@@ -53,13 +55,16 @@ class BaseCreate:
     def _df_from_dfd(self, dfd, *args, **kwargs) -> 'DataFrameType':
         pass
 
-    def dataframe(self, dict: dict = None, dfd: 'InternalDataFrameType' = None, force_data_types=False, n_partitions: int = 1, *args, **kwargs) -> 'DataFrameType':
+    def dataframe(self, dict: dict = None, dfd: 'InternalDataFrameType' = None, force_data_types=False,
+                  n_partitions: int = 1, *args, **kwargs) -> 'DataFrameType':
         """
         Creates a dictionary using the form 
         {"Column name": ["value 1", "value 2"], ...} or {("Column name", "str", True, True): ["value 1", "value 2"]}
         Where the tuple uses the form (str, str, boolean, boolean) for (name, data type, allow nulls, force data type in creation)
         You can also pass 2-length and 3-length tuples.
         :param dict: A dictionary to construct the dataframe for
+        :param force_data_types:
+        :param n_partitions:
         :param dfd: A pandas dataframe, ignores dict when passed
         :return: BaseDataFrame
         """
@@ -72,16 +77,15 @@ class BaseCreate:
             dfd = self._dfd_from_dict(dict)
 
         df = self._df_from_dfd(dfd, n_partitions=n_partitions, *args, **kwargs)
-        
+
         try:
             df.meta = Meta.set(df.meta, value={"max_cell_length": df.cols.len("*").cols.max()})
         except:
             warnings.warn("Could not set max_cell_length")
-        
+
         if dict is not None:
             for (name, dtype, nulls, force_dtype) in dict:
                 if dtype and not force_dtype:
                     df = df.cols.set_data_type(name, dtype)
 
         return df
-

@@ -3160,7 +3160,7 @@ class BaseColumns(ABC):
 
         c = flat_dict(b)
 
-        if percentage:
+        if percentage is True:
             c = freq_percentage(c, self.F.delayed(len)(df.data))
 
         if compute is True:
