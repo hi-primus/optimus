@@ -8,6 +8,7 @@ import pandas as pd
 from jsonschema._format import is_email
 from fastnumbers import fast_float, fast_int
 
+from optimus.engines.base.constants import BaseConstants
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
@@ -18,13 +19,24 @@ from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is
 # ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
 
 class BaseFunctions(ABC):
+    """Functions for internal use or to be called using `from optimus.functions
+    import F`, `op.F` or `df.functions`
+
     """
-    Functions for internal use or to be called using 'F': `from optimus.functions import F`
-    Note: some methods needs to be static so they can be passed to a Dask worker.
-    """
+    # Note for developers
+    # -------------------
+    # Some methods need to be static or classmethods to be passed to a Dask worker.
 
     _engine = None
+    """The engine to be used for internal use:
+        `pd` from `import pandas as pd` or `dask` from `import dask`.
+    """
+        
     _partition_engine = None
+    """(optional, defaults to `_engine`) The engine to be used for internal use
+        in a distributed engine (if supported):
+        `pd` from `import pandas as pd` which is used by `Dask`.
+    """
 
     def __init_subclass__(cls):
             
@@ -32,6 +44,13 @@ class BaseFunctions(ABC):
             cls._partition_engine = cls._engine
 
     def __init__(self, df=None):
+        """Initializes the class.
+
+        Parameters
+        ----------
+        df : Optimus DataFrame, optional
+            DataFrame to link to this instance.
+        """
 
         if self._engine is None:
             raise TypeError("Can't instantiate class without attribute '_engine'")
@@ -46,22 +65,82 @@ class BaseFunctions(ABC):
         raise NotImplementedError(f"\"{name}\" is not available" + type_msg)
 
     @property
-    def n_partitions(self):
+    def constants(self) -> BaseConstants:
+        """Constants used internally.
+        """
+        return BaseConstants()
+
+    @property
+    def n_partitions(self) -> int:
+        """Number of partitions in linked DataFrame.
+        """
         if self.root is None:
             return 1
         return self.root.partitions()
 
     @staticmethod
     def delayed(func):
+        """Convert function to a delayed function.
+
+        (Dummy method on unsupported engine)
+
+        Parameters
+        ----------
+        func
+            Callable to transform
+
+        Returns
+        -------
+        Callable
+        """
         return func
 
     def from_delayed(self, delayed):
+        """Convert delayed objects to a DataFrame or Series.
+
+        (Dummy method on unsupported engine)
+
+        Parameters
+        ----------
+        delayed : list
+            List of delayed objects.
+
+        Returns
+        -------
+        Internal DataFrame or Series
+            DataFrame or Series instance.
+        """
         return delayed[0]
 
-    def to_delayed(self, delayed):
-        return [delayed]
+    def to_delayed(self, df_or_series):
+        """Convert DataFrame or Series to a list of delayed objects.
+
+        (Dummy method on unsupported engine)
+
+        Parameters
+        ----------
+        df_or_series
+            DataFrame or Series instance.
+
+        Returns
+        -------
+        list
+            List of delayed objects
+        """
+        return [df_or_series]
 
     def apply_delayed(self, series, func, *args, **kwargs):
+        """Applies a function to a Series for every partition using apply
+
+        Parameters
+        ----------
+        series
+        func
+
+        Returns
+        -------
+        Series
+        """
         result = self.to_delayed(series)
         result = [partition.apply(func, *args, **kwargs) for partition in result]
         result = self.from_delayed(result)
@@ -69,16 +148,22 @@ class BaseFunctions(ABC):
         return result
 
     def map_delayed(self, series, func, *args, **kwargs):
+        """Applies a function to a Series for every partition using map
+
+        Parameters
+        ----------
+        series
+        func
+
+        Returns
+        -------
+        Series
+        """
         result = self.to_delayed(series)
         result = [partition.map(func, *args, **kwargs) for partition in result]
         result = self.from_delayed(result)
         result.index = series.index
         return result
-    
-    @property
-    def constants(self):
-        from optimus.engines.base.constants import BaseConstants
-        return BaseConstants()
 
     @property
     def _functions(self):
@@ -107,7 +192,7 @@ class BaseFunctions(ABC):
         Append two dataframes
         """
         return dfd.append(dfd2)
-    
+
     def _new_series(self, *args, **kwargs):
         """
         Creates a new series (also known as column)
@@ -134,13 +219,16 @@ class BaseFunctions(ABC):
 
     def _to_boolean(self, series):
         """
-        Converts series to bool
+        Converts series to bool.
         """
         return series.map(lambda v: bool(v), na_action=None).astype('bool')
 
     def to_boolean(self, series):
+        """
+        Converts series to bool.
+        """
         return self._to_boolean(series)
-    
+
     def _to_boolean_none(self, series):
         """
         Converts series to boolean
@@ -148,11 +236,14 @@ class BaseFunctions(ABC):
         return series.map(lambda v: bool(v), na_action='ignore').astype('object')
 
     def to_boolean_none(self, series):
+        """
+        Converts series to boolean (allowing None values).
+        """
         return self._to_boolean_none(series)
 
     def _to_float(self, series):
         """
-        Converts a series values to floats
+        Converts a series values to floats.
         """
         try:
             return self._new_series(np.vectorize(fast_float)(series, default=np.nan).flatten())
@@ -160,11 +251,14 @@ class BaseFunctions(ABC):
             return self._new_series(self._functions.to_numeric(series, errors='coerce')).astype('float')
 
     def to_float(self, series):
+        """
+        Converts a series values to floats.
+        """
         return self._to_float(series)
 
     def _to_integer(self, series, default=0):
         """
-        Converts a series values to integers
+        Converts a series values to integers.
         """
         try:
             return self._new_series(np.vectorize(fast_int)(series, default=default).flatten())
@@ -172,25 +266,53 @@ class BaseFunctions(ABC):
             return self._new_series(self._functions.to_numeric(series, errors='coerce').fillna(default)).astype('int')
 
     def to_integer(self, series, default=0):
+        """
+        Converts a series values to integers.
+        """
         return self._to_integer(series, default)
 
     def _to_datetime(self, series, format):
+        """
+        Converts a series values to datetimes.
+        """
         return series
-    
+
     def to_datetime(self, series, format):
+        """
+        Converts a series values to datetimes.
+        """
         return self._to_datetime(series, format)
 
     @staticmethod
     def to_string(series):
+        """
+        Converts a series values to strings.
+        """
         return series.astype(str)
 
     @staticmethod
     def to_string_accessor(series):
+        """
+        Converts a series values to strings and returns it's main functions
+        accessor.
+        """
         return series.astype(str).str
-
 
     @staticmethod
     def duplicated(dfd, keep, subset):
+        """Mark the duplicated values in a DataFrame
+
+        Parameters
+        ----------
+        dfd : Internal DataFrame
+        keep : {'first', 'last'}
+        subset
+            List of columns names
+
+        Returns
+        -------
+        Series
+        """
         return dfd.duplicated(keep=keep, subset=subset)
 
     @staticmethod
@@ -290,7 +412,7 @@ class BaseFunctions(ABC):
     @abstractmethod
     def skew(series):
         pass
-    
+
     # import dask.dataframe as dd
     def mad(self, series, error=False, more=False, estimate=False):
 
@@ -658,65 +780,138 @@ class BaseFunctions(ABC):
 
     # dates
     def year(self, series, format):
-        """
-        Extract the year from a series of dates
-        :param series:
-        :param format: "%Y-%m-%d HH:mm:ss"
-        :return:
+        """Extract the year from a series of dates.
+
+        Extract the year of each value in a column as an integer.
+
+        Parameters
+        ----------
+        series
+            Internal series or column to operate.
+        format : str
+            "%Y-%m-%d HH:mmss"
+
+        Returns
+        -------
+        Internal series
+            Internal series or column
+
         """
         return self.to_datetime(series, format=format).dt.year
 
     def month(self, series, format):
-        """
-        Extract the month from a series of dates
-        :param series:
-        :param format: "%Y-%m-%d HH:mm:ss"
-        :return:
+        """Extract the month from a series of dates.
+
+        Extract the month of each value in a column as an integer.
+
+        Parameters
+        ----------
+        series
+            Internal series or column to operate.
+        format : str
+            "%Y-%m-%d HH:mmss"
+
+        Returns
+        -------
+        Internal series
+            Internal series or column
+
         """
         return self.to_datetime(series, format=format).dt.month
 
     def day(self, series, format):
-        """
-        Extract the day from a series of dates
-        :param series:
-        :param format: "%Y-%m-%d HH:mm:ss"
-        :return:
+        """Extract the day of the month from a series of dates.
+
+        Extract the day of the month of each value in a column as an integer.
+
+        Parameters
+        ----------
+        series
+            Internal series or column to operate.
+        format : str
+            "%Y-%m-%d HH:mmss"
+
+        Returns
+        -------
+        Internal series
+            Internal series or column
+
         """
         return self.to_datetime(series, format=format).dt.day
 
     def hour(self, series, format):
         """
         Extract the hour from a series of dates
-        :param series:
-        :param format: "%Y-%m-%d HH:mm:ss"
-        :return:
+
+        Parameters
+        ----------
+        series
+            Internal series or column to operate.
+        format : str
+            "%Y-%m-%d HH:mmss"
+
+        Returns
+        -------
+        Internal series
+            Internal series or column
+
         """
         return self.to_datetime(series, format=format).dt.hour
 
     def minute(self, series, format):
         """
         Extract the minute from a series of dates
-        :param series:
-        :param format: "%Y-%m-%d HH:mm:ss"
-        :return:
+
+        Parameters
+        ----------
+        series
+            Internal series or column to operate.
+        format : str
+            "%Y-%m-%d HH:mmss"
+
+        Returns
+        -------
+        Internal series
+            Internal series or column
+
         """
         return self.to_datetime(series, format=format).dt.minute
 
     def second(self, series, format):
         """
         Extract the second from a series of dates
-        :param series:
-        :param format: "%Y-%m-%d HH:mm:ss"
-        :return:
+
+        Parameters
+        ----------
+        series
+            Internal series or column to operate.
+        format : str
+            "%Y-%m-%d HH:mmss"
+
+        Returns
+        -------
+        Internal series
+            Internal series or column
+
         """
         return self.to_datetime(series, format=format).dt.second
 
     def weekday(self, series, format):
         """
         Extract the weekday from a series of dates
-        :param series:
-        :param format: "%Y-%m-%d HH:mm:ss"
-        :return:
+
+        Parameters
+        ----------
+        series
+            Internal series or column to operate.
+        format : str
+            "%Y-%m-%d HH:mmss"
+
+        Returns
+        -------
+        Internal series
+            Internal series or column
+
         """
         return self.to_datetime(series, format=format).dt.weekday
 
@@ -738,15 +933,15 @@ class BaseFunctions(ABC):
 
     def days_between(self, series, value=None, date_format=None):
         return self.td_between(series, value, date_format).dt.days
-    
+
     def hours_between(self, series, value=None, date_format=None):
         series = self.td_between(series, value, date_format)
         return series.dt.days * 24.0 + series.dt.seconds / 3600.0
-    
+
     def minutes_between(self, series, value=None, date_format=None):
         series = self.td_between(series, value, date_format)
         return series.dt.days * 1440.0 + series.dt.seconds / 60.0
-    
+
     def seconds_between(self, series, value=None, date_format=None):
         series = self.td_between(series, value, date_format)
         return series.dt.days * 86400 + series.dt.seconds
@@ -798,12 +993,25 @@ class BaseFunctions(ABC):
         return self.to_string_accessor(series).split('@').str[1]
 
     def infer_data_types(self, value, cols_data_types):
-        """
-        Infer the data types.
-        Please be aware that the order in which the value is checked is important and will change the final result
-        :param value:
-        :param cols_data_types:
-        :return:
+        """Infer the data types.
+
+        Return a data type label for value.
+
+        Note
+        ----
+            The order in which the value is checked is important and will change the final result
+
+        Parameters
+        ----------
+        value
+            Value to extract the data type from.
+        cols_data_types
+
+        Returns
+        -------
+        str
+            Data type label
+            
         """
 
         if is_list(value):
@@ -847,16 +1055,16 @@ class BaseFunctions(ABC):
     def date_formats(self, series):
         import pydateinfer
         return series.map(lambda v: pydateinfer.infer([v]))
-    
+
     def metaphone(self, series):
         return self.to_string(series).map(jellyfish.metaphone, na_action='ignore')
-    
+
     def double_metaphone(self, series):
         return self.to_string(series).map(doublemetaphone, na_action='ignore')
 
     def nysiis(self, series):
         return self.to_string(series).map(jellyfish.nysiis, na_action='ignore')
-    
+
     def match_rating_codex(self, series):
         return self.to_string(series).map(jellyfish.match_rating_codex, na_action='ignore')
 
