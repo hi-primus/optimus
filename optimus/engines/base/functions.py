@@ -731,11 +731,11 @@ class BaseFunctions(ABC):
         pass
 
     def years_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.years
+        return self.td_between(series, value, date_format).dt.days / 365.25
 
     def months_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.months
-    
+        return self.td_between(series, value, date_format).dt.days / 30.436875
+
     def days_between(self, series, value=None, date_format=None):
         return self.td_between(series, value, date_format).dt.days
     
