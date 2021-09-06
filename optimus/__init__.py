@@ -8,3 +8,14 @@ ROOT_DIR = os.path.dirname(os.path.abspath(
 
 # Preserve compatibility with <3.x branch
 os.environ["PYTHONIOENCODING"] = "utf8"
+
+# module level doc-string
+__doc__ = """
+🚚 Agile Data Preparation Workflows made easy with Pandas, Dask, cuDF, Dask-cuDF and PySpark
+
+Usage
+-----
+`from optimus import Optimus
+
+op = Optimus("pandas")`
+"""
