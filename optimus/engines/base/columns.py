@@ -584,10 +584,11 @@ class BaseColumns(ABC):
             result.update({col_name: data_type})
         return result
 
-    def inferred_types(self, cols="*"):
+    def inferred_types(self, cols="*", tidy=True):
         """
         Get the inferred data types from the meta data
         :param cols: "*", column name or list of column names to be processed.
+        :param tidy:
         :return:
         """
         df = self.root
@@ -598,7 +599,8 @@ class BaseColumns(ABC):
             column_meta = Meta.get(
                 df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
             result.update({col_name: column_meta})
-        return result
+        
+        return format_dict(result, tidy)
 
     def set_data_type(self, cols: Union[str, list, dict] = "*", data_types: Union[str, list] = None,
                       inferred: bool = False) -> 'DataFrameType':

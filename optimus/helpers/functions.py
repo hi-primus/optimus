@@ -3,7 +3,7 @@ import functools
 import glob
 import ntpath
 from typing import Union
-from optimus.helpers.constants import DATE_FORMAT_ITEMS, DATE_FORMAT_ITEMS_MONTH
+from optimus.helpers.constants import DATE_FORMAT_ITEMS, DATE_FORMAT_ITEMS_MONTH, PYTHON_DATE_TO_FORMAT
 import os
 import random
 import re
@@ -207,7 +207,7 @@ def check_env_vars(env_vars):
 
 def transform_date_format(format: str):
     """
-    Transform an incompatible date format like yyyy/mm/dd to a compatible one like %Y/%m/%d
+    Transform a date format like `yyyy/mm/dd` to a compatible one like `%Y/%m/%d`
     """
 
     has_time = "H" in format or "h" in format
@@ -561,16 +561,37 @@ def path_is_local(path):
     return True
 
 
+def month_names(directive="%B"):
+    """
+    Gets an array with month names
+    """
+    import datetime
+    return [datetime.datetime.strptime(str(n + 1), '%m').strftime(directive) for n in range(12)]
+
+def weekday_names(directive="%B"):
+    """
+    Gets an array with month names
+    """
+    import datetime
+    return [datetime.datetime.strptime(str(n + 1), '%m').strftime(directive) for n in range(12)]
+
+
 def match_date(value):
     """
-    Returns Create a regex from a string with a date format
-    :param value:
-    :return:
+    Create a regex from a string with a date format like
+    `dd/MM/yyyy hh:mm:ss-sss mi` or `%d/%m/%Y`.
+    :param value: Value to test
+    :return: String regex
     """
-    # value = "dd/MM/yyyy hh:mm:ss-sss MA"
-    formats = ["d", "dd", "M", "MM", "yy", "yyyy", "h", "hh", "H", "HH", "kk", "k", "m", "mm", "s", "ss", "sss", "/",
-               ":", "-", " ", "+", "|", "mi"]
+    formats = ["d", "dd", "M", "MM", "MMM", "MMMM", "MMMMM", "yy", "yyyy", "w",
+               "ww", "www", "wwww", "wwwww", "h", "hh", "H", "HH", "kk", "k",
+               "m", "mm", "s", "ss", "sss", "/", ":", "-", " ", "+", "|", "a",
+               "mi"]
     formats.sort(key=len, reverse=True)
+
+    if "%" in value:
+        for i, j in PYTHON_DATE_TO_FORMAT.items():
+            value = value.replace(i, j)
 
     result = []
 
@@ -582,7 +603,9 @@ def match_date(value):
     while start < end:
         found = False
         for f in formats:
-            if value.startswith(f, start):
+            ignore_case = ("h" not in f.lower() and "m" not in f.lower())
+            _value = value.lower() if ignore_case else value
+            if _value.startswith(f, start):
                 start = start + len(f)
                 result.append(f)
                 found = True
@@ -595,41 +618,51 @@ def match_date(value):
         # Separators
         if f in ["/", ":", "-", " ", "|", "+", " "]:
             exprs.append("\\" + f)
-        # elif f == ":":
-        #     exprs.append("\\:")
-        # elif f == "-":
-        #     exprs.append("\\-")
-        # elif f == " ":
-        #     exprs.append(" ")
-        # elif f == "|":
-        #     exprs.append("\\|")
-        # elif f == "+":
-        #     exprs.append("\\+")
 
         # Day
         # d  -> 1 ... 31
         # dd -> 01 ... 31
 
         elif f == "d":
-            exprs.append("(3[01]|[12][0-9]|0?[1-9])")
+            exprs.append("((3[01]|[12][0-9])|(0?[1-9]))")
         elif f == "dd":
             exprs.append("(3[01]|[12][0-9]|0[1-9])")
 
-            # Month
-        # M  -> 1 ... 12
-        # MM -> 01 ... 12
+        # Month
+        # M    -> 1 ... 12
+        # MM   -> 01 ... 12
+        # MMM  -> Jan, Feb, Sep
+        # MMMM -> January, February, September
         elif f == "M":
-            exprs.append("(1[0-2]|0?[1-9])")
+            exprs.append("((1[0-2])|(0?[1-9]))")
         elif f == "MM":
-            exprs.append("(1[0-2]|0[1-9])")
+            exprs.append("((1[0-2])|(0[1-9]))")
+        elif f == "MMM":
+            exprs.append(f"({'|'.join(month_names('%b'))})")
+        elif f in ["MMMM", "MMMMM"]:
+            exprs.append(f"({'|'.join(month_names('%B'))})")
+
+        # Weekday
+        # w    -> 0 ... 6
+        # ww   -> 00 ... 06
+        # www  -> Mon, Tues, Sat
+        # wwww -> Monday, Tuesday, Saturday
+        elif f == "w":
+            exprs.append("(0?[0-6])")
+        elif f == "ww":
+            exprs.append("(0[0-6])")
+        elif f == "www":
+            exprs.append(f"({'|'.join(weekday_names('%w'))})")
+        elif f in ["wwww", "wwwww"]:
+            exprs.append(f"({'|'.join(weekday_names('%W'))})")
 
         # Year
         # yy   -> 00 ... 99
         # yyyy -> 0000 ... 9999
         elif f == "yy":
-            exprs.append("[0-9]{2}")
+            exprs.append("([0-9]{2})")
         elif f == "yyyy":
-            exprs.append("[0-9]{4}")
+            exprs.append("([0-9]{4})")
 
             # Hours
         # h  -> 1,2 ... 12
@@ -639,17 +672,17 @@ def match_date(value):
         # k  -> 1,2 ... 24
         # kk -> 01,02 ... 24
         elif f == "h":
-            exprs.append("(1[0-2]|0?[1-9])")
+            exprs.append("((1[0-2])|(0?[1-9]))")
         elif f == "hh":
-            exprs.append("(1[0-2]|0[1-9])")
+            exprs.append("((1[0-2])|(0[1-9]))")
         elif f == "H":
-            exprs.append("(0?[0-9]|1[0-9]|2[0-3]|[0-9])")
+            exprs.append("((0?[0-9])|(1[0-9])|(2[0-3])|[0-9])")
         elif f == "HH":
-            exprs.append("(0[0-9]|1[0-9]|2[0-3]|[0-9])")
+            exprs.append("((0[0-9])|(1[0-9])|(2[0-3])|[0-9])")
         elif f == "k":
-            exprs.append("(0?[1-9]|1[0-9]|2[0-4]|[1-9])")
+            exprs.append("((0?[1-9])|(1[0-9])|(2[0-4])|[1-9])")
         elif f == "kk":
-            exprs.append("(0[1-9]|1[0-9]|2[0-4])")
+            exprs.append("((0[1-9])|(1[0-9])|(2[0-4]))")
 
         # Minutes
         # m  -> 0 ... 59
@@ -670,14 +703,15 @@ def match_date(value):
         # Milliseconds
         # sss -> 0 ... 999
         elif f == "sss":
-            exprs.append("[0-9]{3}")
+            exprs.append("([0-9]{3})")
 
         # Extras
-        # mi -> Meridian indicator (AM am Am) (PM pm Pm) (m M)
-        elif f == "mi":
-            exprs.append("([AaPp][Mm]|[Mm]).?")
+        # mi or a -> Meridian indicator (AM am Am) (PM pm Pm) (m M)
+        elif f in ["mi", "a"]:
+            exprs.append("(([AaPp].?\s?)[Mm]|[Mm]).?")
 
-    return "".join(exprs)
+    return r"(?i)%s" % "".join(exprs)
+
 
 def df_dicts_equal(df1, df2, decimal: Union[int, bool] = True, assertion=False):
     if decimal is True:

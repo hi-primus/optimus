@@ -1,4 +1,6 @@
 from abc import ABC
+from optimus.helpers.functions import match_date
+from optimus.engines.base.meta import Meta
 from optimus.helpers.types import *
 
 from optimus.helpers.columns import parse_columns
@@ -410,10 +412,21 @@ class Mask(ABC):
         return self.match_regex(cols, regex_credit_card_number)
 
     def datetime(self, cols="*") -> 'MaskDataFrameType':
-        # df = self.root
-        # if df[cols].cols.data_type  == df.constants.
-        return self.root[cols].cols.apply(cols, is_datetime)
-        # return self.match_regex(cols, regex_date)
+        df = self.root
+        dtypes = list(set(df.constants.DATETIME_TYPES) - set(df.constants.ANY_TYPES))
+        datetime_cols = parse_columns(df, cols, filter_by_column_types=dtypes)
+        cols = parse_columns(df, cols)
+        non_datetime_cols = list(set(cols) - set(datetime_cols)) if datetime_cols else cols
+        df = df[cols]
+        if datetime_cols and len(datetime_cols):
+            df = df.cols.apply(datetime_cols, is_datetime)
+        if non_datetime_cols and len(non_datetime_cols):
+            date_formats = [Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.format") for col_name in non_datetime_cols]
+            for col_name, date_format in zip(non_datetime_cols, date_formats):
+                regex = match_date(date_format)
+                df = df.mask.match_regex(col_name, regex)
+
+        return df
 
     def object(self, cols="*") -> 'MaskDataFrameType':
         return self.root[cols].cols.apply(cols, is_object)
