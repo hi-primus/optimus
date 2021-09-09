@@ -1,4 +1,3 @@
-import math
 import re
 import string
 import time
@@ -11,9 +10,7 @@ import nltk
 import numpy as np
 import pandas as pd
 import wordninja
-from dask import dataframe as dd
 from glom import glom
-from multipledispatch import dispatch
 from nltk import LancasterStemmer
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -650,6 +647,45 @@ class BaseColumns(ABC):
 
             if props is not None:
                 df.meta = Meta.reset(df.meta, f"columns_data_types.{col_name}")
+                df.meta = Meta.action(
+                    df.meta, Actions.INFERRED_TYPE.value, col_name)
+
+        return df
+
+    def set_date_format(self, cols: Union[str, list, dict] = "*", date_formats: Union[str, list] = None,
+                        inferred: bool = False) -> 'DataFrameType':
+        """
+        Set date format
+        :param cols: A dict with the form {"col_name": "date format"}, a list of
+            columns or a single column
+        :param date_formats: If a string or a list passed to cols, uses this
+            parameter to set the date format to those columns.
+        :param inferred: Whether it was inferred or not
+        :return:
+        """
+        df = self.root
+
+        cols = parse_columns(df, cols)
+        date_formats = prepare_columns_arguments(cols, date_formats) 
+
+        date_formats = [{"data_type": "datetime", "format": date_format} for date_format in date_formats]
+
+        return df.cols.set_data_type(cols, date_formats, inferred)
+
+    def unset_date_format(self, cols="*"):
+        """
+        Unset user defined date format
+        :param cols:
+        :return:
+        """
+        df = self.root
+        cols = parse_columns(df, cols)
+
+        for col_name in cols:
+            props = Meta.get(df.meta, f"columns_data_types.{col_name}.format")
+
+            if props is not None:
+                df.meta = Meta.reset(df.meta, f"columns_data_types.{col_name}.format")
                 df.meta = Meta.action(
                     df.meta, Actions.INFERRED_TYPE.value, col_name)
 
@@ -1426,12 +1462,13 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.std, tidy=tidy, compute=compute)
 
-    def date_format(self, cols="*", tidy=True, compute=True, *args, **kwargs):
+    def date_format(self, cols="*", tidy=True, compute=True, cached=None, **kwargs):
         """
         Get the date format from a column, compatible with 'format_date'
         :param cols: "*", column name or list of column names to be processed.
         :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
         :param compute: Compute the final result. False imply to return a delayed object.
+        :param cached: {None, True, False}, Gets cached date_formats (True), calculates them (False) or a combination of both (None).
         :param args:
         :param kwargs:
         :return:
@@ -1445,8 +1482,8 @@ class BaseColumns(ABC):
         if is_str(compute):
             kwargs.update({"output_format": tidy})
 
-        if len(args):
-            kwargs.update({"output_cols": args[0]})
+        if is_str(cached):
+            kwargs.update({"output_cols": cached})
 
         if any([v in kwargs for v in ["current_format", "output_format", "output_cols"]]):
             warnings.warn(
@@ -1456,7 +1493,35 @@ class BaseColumns(ABC):
         # date_format
 
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.date_format, compute=compute, tidy=tidy)
+
+        cols = parse_columns(df, cols)
+
+        result = {col_name: None for col_name in cols}
+        
+        if cached is False:
+            remaining_cols = cols
+        else:
+            for col_name in cols:
+                date_format = Meta.get(df.meta, f"columns_data_types.{col_name}.format")
+
+                if date_format is None:
+                    date_format = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.format")
+
+                result[col_name] = date_format
+
+            remaining_cols = [col_name for col_name, date_format in result.items() if date_format is None]
+
+        if remaining_cols and cached in [False, None]:
+            agg_result = df.cols.agg_exprs(remaining_cols, self.F.date_format, compute=compute, tidy=False)["date_format"]
+        else:
+            agg_result = {}
+
+        for col_name in agg_result:
+            result[col_name] = agg_result[col_name]
+
+        result = {"date_format": result}
+
+        return format_dict(result, tidy=tidy)
 
     def item(self, cols="*", n=None, output_cols=None) -> 'DataFrameType':
         """
@@ -1843,6 +1908,12 @@ class BaseColumns(ABC):
                           meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
 
     def date_formats(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+        Get the date format for every value in specified columns
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return: BaseDataFrame
+        """
         return self.apply(cols, self.F.date_formats, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="partitioned", func_type="column_expr")
 
@@ -1946,7 +2017,7 @@ class BaseColumns(ABC):
             formats = [current_format for col in cols]
 
         for col, col_format in zip(cols, formats):
-            df = df.cols.apply(col, "format_date", args=(col_format, output_format), func_return_type=str,
+            df = df.cols.apply(col, self.F.format_date, args=(col_format, output_format), func_return_type=str,
                                output_cols=output_cols, meta_action=Actions.FORMAT_DATE.value, mode="vectorized",
                                set_index=False)
 
@@ -2230,10 +2301,13 @@ class BaseColumns(ABC):
 
         df = self.root
         cols = parse_columns(df, cols)
-        output_cols = get_output_cols(cols, output_cols)
         col_names = df.cols.names()
+        move_after = None
 
         if is_list(cols) and len(cols) == 2 and value is None:
+            if output_cols is None:
+                output_cols = "_".join(cols)
+            move_after = cols
             value = [df.data[cols[1]]]
             cols = [cols[0]]
         elif is_str(value) and value in col_names:
@@ -2242,6 +2316,8 @@ class BaseColumns(ABC):
             value = [df.data[v] if v in col_names else v for v in value]
         else:
             value = [value]
+
+        output_cols = get_output_cols(cols, output_cols)
 
         value = prepare_columns_arguments(cols, value)
         date_format = prepare_columns_arguments(cols, date_format)
@@ -2257,7 +2333,10 @@ class BaseColumns(ABC):
                 logger.warn(f"date format for column '{col_name}' could not be found, using 'None' instead")
 
             df = df.cols.apply(col_name, func, args=[v, _date_format], func_return_type=str, output_cols=output_col,
-                               meta_action=Actions.YEARS_BETWEEN.value, mode="vectorized", set_index=True)\
+                               meta_action=Actions.YEARS_BETWEEN.value, mode="vectorized", set_index=True)
+            
+            if move_after:
+                df = df.cols.move(output_col, "after", move_after)
         
         if round:
             df = df.cols._round(output_cols, round)
@@ -3020,8 +3099,9 @@ class BaseColumns(ABC):
                 infer_value_counts) > 1 else None
 
             if dtype == ProfilerDataTypes.MISSING.value and second_dtype:
+                # In case we have missings and a secondary type, use the secondary type
                 _dtype = second_dtype
-            elif dtype != ProfilerDataTypes.NULL.value and dtype != ProfilerDataTypes.MISSING.value:
+            elif dtype not in [ProfilerDataTypes.NULL.value, ProfilerDataTypes.MISSING.value]:
                 if dtype == ProfilerDataTypes.INT.value and second_dtype == ProfilerDataTypes.DECIMAL.value:
                     # In case we have integers and decimal values no matter if we have more integer we cast to decimal
                     _dtype = second_dtype
@@ -3051,11 +3131,16 @@ class BaseColumns(ABC):
 
             cols_and_inferred_dtype[col_name] = {
                 "data_type": _dtype, "categorical": is_categorical}
+            
             if dtype == ProfilerDataTypes.DATETIME.value:
                 # pydatainfer do not accepts None value so we must filter them
+                # TODO: should this be inside date_format?
                 __df = sample_df[col_name].rows.drop_missings()
-                _format = __df.cols.date_format()
-                cols_and_inferred_dtype[col_name].update({"format": _format})
+                _format = __df.cols.date_format(cached=False)
+                if not _format:
+                    _format = self.root.cols.date_format(col_name, cached=True)
+                if _format:
+                    cols_and_inferred_dtype[col_name].update({"format": _format})
 
         for col in cols_and_inferred_dtype:
             self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type",

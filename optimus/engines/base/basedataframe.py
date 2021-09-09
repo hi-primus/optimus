@@ -792,9 +792,10 @@ class BaseDataFrame(ABC):
         profiler_time["beginning"] = {"elapsed_time": time.process_time() - _t}
 
         if cols_to_profile or not is_cached or flush:
-            # Reset profiler metadata
-            meta = Meta.set(meta, "profile", {})
-            df.meta = meta
+
+            if flush:
+                meta = Meta.set(meta, "profile", {})
+                df.meta = meta
 
             hist_cols = []
             freq_cols = []
@@ -946,7 +947,7 @@ class BaseDataFrame(ABC):
 
         if cols_data_types is not None:
             df.meta = meta
-            df = df.cols.set_data_type(cols_data_types, True)
+            df = df.cols.set_data_type(cols_data_types, inferred=True)
             meta = df.meta
 
         # Reset Actions

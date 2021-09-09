@@ -421,10 +421,15 @@ class Mask(ABC):
         if datetime_cols and len(datetime_cols):
             df = df.cols.apply(datetime_cols, is_datetime)
         if non_datetime_cols and len(non_datetime_cols):
-            date_formats = [Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.format") for col_name in non_datetime_cols]
-            for col_name, date_format in zip(non_datetime_cols, date_formats):
-                regex = match_date(date_format)
-                df = df.mask.match_regex(col_name, regex)
+
+            date_formats = df.cols.date_format(non_datetime_cols, tidy=False)["date_format"]
+
+            for col_name, date_format in date_formats.items():
+                if date_format:
+                    regex = match_date(date_format)
+                    df = df.mask.match_regex(col_name, regex)
+                else:
+                    df = df.cols.assign({col_name: False})
 
         return df
 

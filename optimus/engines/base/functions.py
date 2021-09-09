@@ -11,7 +11,7 @@ from fastnumbers import fast_float, fast_int
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
+    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_valid_datetime_format, is_object_value, is_ip, is_url, is_missing, \
     is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number, is_int_like
 
 
@@ -205,7 +205,8 @@ class BaseFunctions(ABC):
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
             import pydateinfer
-            return pydateinfer.infer(self.compute(series).values)
+            result = pydateinfer.infer(self.compute(series).values)
+            return result if is_valid_datetime_format(result) else False
         elif dtype in self.constants.DATETIME_TYPES:
             return True
 

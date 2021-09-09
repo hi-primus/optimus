@@ -573,7 +573,7 @@ def weekday_names(directive="%B"):
     Gets an array with month names
     """
     import datetime
-    return [datetime.datetime.strptime(str(n + 1), '%m').strftime(directive) for n in range(12)]
+    return [datetime.datetime.strptime(str(n + 1), '%m').strftime(directive) for n in range(7)]
 
 
 def match_date(value):
@@ -611,7 +611,7 @@ def match_date(value):
                 found = True
                 break
         if found is False:
-            raise ValueError('{} is not a valid date format'.format(value[start]))
+            raise ValueError(f"{value[start]} is not a valid date format. ({value})")
 
     exprs = []
     for f in result:
@@ -624,9 +624,9 @@ def match_date(value):
         # dd -> 01 ... 31
 
         elif f == "d":
-            exprs.append("((3[01]|[12][0-9])|(0?[1-9]))")
+            exprs.append("((3[0-1])|([1-2][0-9])|(0?[1-9]))")
         elif f == "dd":
-            exprs.append("(3[01]|[12][0-9]|0[1-9])")
+            exprs.append("((3[0-1])|([1-2][0-9])|(0[1-9]))")
 
         # Month
         # M    -> 1 ... 12
@@ -652,9 +652,9 @@ def match_date(value):
         elif f == "ww":
             exprs.append("(0[0-6])")
         elif f == "www":
-            exprs.append(f"({'|'.join(weekday_names('%w'))})")
+            exprs.append(f"({'|'.join(weekday_names('%a'))})")
         elif f in ["wwww", "wwwww"]:
-            exprs.append(f"({'|'.join(weekday_names('%W'))})")
+            exprs.append(f"({'|'.join(weekday_names('%A'))})")
 
         # Year
         # yy   -> 00 ... 99
@@ -708,7 +708,7 @@ def match_date(value):
         # Extras
         # mi or a -> Meridian indicator (AM am Am) (PM pm Pm) (m M)
         elif f in ["mi", "a"]:
-            exprs.append("(([AaPp].?\s?)[Mm]|[Mm]).?")
+            exprs.append(r"([A|P]?.?\s?)M.?")
 
     return r"(?i)%s" % "".join(exprs)
 
@@ -730,6 +730,7 @@ def df_dicts_equal(df1, df2, decimal: Union[int, bool] = True, assertion=False):
                     raise AssertionError(f"Dataframes are not equal on column '{k}'")
                 return False
     return True
+
 
 def results_equal(r1, r2, decimal: Union[int, bool] = True, assertion=False):
     

@@ -698,6 +698,18 @@ def is_datetime(value):
     return result
 
 
+def is_valid_datetime_format(value):
+    try:
+        now = datetime.datetime.strftime(datetime.datetime.now(), value)
+        datetime.datetime.strptime(now, value)
+    except ValueError:
+        return False
+    except re.error:
+        return False
+
+    return True
+
+
 def is_binary(value):
     """
     Check if an object is a bytearray
