@@ -50,6 +50,10 @@ class DaskBaseFunctions(DistributedBaseFunctions):
             return self.from_dataframe(self._partition_engine.DataFrame(*args, **kwargs))
         return dd.DataFrame(*args, **kwargs)
 
+    @staticmethod
+    def dask_to_compatible(dfd):
+        return dfd
+
     def sort_df(self, dfd, cols, ascending):
         for c, a in list(zip(cols, ascending))[::-1]:
             dfd = dfd.sort_values(c)

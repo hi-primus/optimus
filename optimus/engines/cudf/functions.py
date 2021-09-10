@@ -11,6 +11,11 @@ class CUDFFunctions(CUDFBaseFunctions, DataFrameBaseFunctions):
 
     _engine = cudf
 
+    @staticmethod
+    def dask_to_compatible(dfd):
+        from optimus.helpers.converter import dask_dataframe_to_cudf
+        return dask_dataframe_to_cudf(dfd)
+
     def count_zeros(self, series, *args):
         # Cudf can not handle null so we fill it with non zero values.
         non_zero_value = 1

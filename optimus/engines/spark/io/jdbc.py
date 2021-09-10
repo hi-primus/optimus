@@ -6,7 +6,7 @@ from optimus.engines.spark.spark import Spark
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import collect_as_list
 from optimus.helpers.logger import logger
-
+from optimus.engines.spark.dataframe import SparkDataFrame
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
@@ -122,7 +122,7 @@ class JDBC:
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
         df = df.run()
-        return df
+        return SparkDataFrame(df, op=self.op)
 
     def _build_conf(self, query=None, limit=None):
         """

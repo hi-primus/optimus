@@ -12,6 +12,11 @@ class DaskCUDFFunctions(CUDFBaseFunctions, DaskBaseFunctions):
     def from_dataframe(dfd):
         dask_cudf.from_cudf(dfd)
 
+    @staticmethod
+    def dask_to_compatible(dfd):
+        from optimus.helpers.converter import dask_dataframe_to_dask_cudf
+        return dask_dataframe_to_dask_cudf(dfd)
+
     def kurtosis(self, series):
         return series.map_partitions(lambda _series: _series.kurtosis())
 

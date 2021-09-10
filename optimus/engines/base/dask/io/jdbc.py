@@ -83,9 +83,6 @@ class DaskBaseJDBC:
         self.schema = schema
         print(self.uri)
         logger.print(self.uri)
-
-    def _dask_to_compatible(self, dfd):
-        return dfd
     
     def tables(self, schema=None, database=None, limit=None):
         """
@@ -114,7 +111,7 @@ class DaskBaseJDBC:
         """
         return Table(self)
 
-    def table_to_df(self, table_name: str, columns="*", limit=None):
+    def table_to_df(self, table_name: str, columns="*", limit=None, n_partitions=1):
         """
         Return cols as Spark data frames from a specific table
         :type table_name: object
@@ -140,20 +137,21 @@ class DaskBaseJDBC:
 
         logger.print(query)
 
-        dfd = self.execute(query, limit)
+        dfd = self.execute(query, limit, n_partitions=n_partitions)
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
         # dfd = dfd.run()
         # dfd = dask_pandas_to_dask_cudf(dfd)
-        from optimus.engines.dask.dataframe import DaskDataFrame
-        return DaskDataFrame(self._dask_to_compatible(dfd), op=self.op)
+        # print(dfd)
+        # print(self.op.F.dask_to_compatible(dfd).head())
+        return self.op.create.dataframe(self.op.F.dask_to_compatible(dfd))
 
-    def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
+    def execute(self, query, limit=None, n_partitions: int = NUM_PARTITIONS, partition_column: str = None,
                 table_name=None):
         """
         Execute a SQL query
         :param limit: default limit the whole query. We play defensive here in case the result is a big chunk of data
-        :param num_partitions:
+        :param n_partitions:
         :param partition_column:
         :param query: SQL query string
         :param table_name:
@@ -173,7 +171,7 @@ class DaskBaseJDBC:
         # df = dd.read_sql_table(table='test_data', uri=self.url, index_col='id')
         # "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'optimus'"
         df = DaskBaseJDBC.read_sql_table(table_name=table_name, uri=self.uri, index_col=partition_column,
-                                         npartitions=num_partitions, query=query)
+                                         npartitions=n_partitions, query=query)
         # print(len(df))
 
         # conf = Spark.instance.spark.read \
@@ -259,8 +257,10 @@ class DaskBaseJDBC:
         if meta is None:
             # derive metadata from first few rows
             # q = sql.select(columns).limit(head_rows).select_from(table)
+            print(query)
             head = pd.read_sql(query, engine, **kwargs)
-            # print("head", head)
+            print("head")
+            print(head)
             # print("META", head.iloc[:0])
             if head.empty:
                 # no results at all

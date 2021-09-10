@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import numpy as np
 
 from optimus.engines.base.commons.functions import word_tokenize
@@ -13,6 +14,14 @@ class DataFrameBaseFunctions(BaseFunctions):
         result = dfd_or_series.map_partitions(func, *args, **kwargs)
         result.index = dfd_or_series.index
         return result
+
+    @staticmethod
+    def dask_to_compatible(dfd):
+        """Convert a Dask DataFrame to a compatible type of DataFrame
+        Args:
+            dfd (dd.DataFrame)
+        """
+        return dfd
 
     @staticmethod
     def all(series):

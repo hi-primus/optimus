@@ -11,6 +11,11 @@ class PandasFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
     _engine = pd
 
     @staticmethod
+    def dask_to_compatible(dfd):
+        from optimus.helpers.converter import dask_dataframe_to_pandas
+        return dask_dataframe_to_pandas(dfd)
+
+    @staticmethod
     def df_concat(df_list):
         return pd.concat(df_list, axis=0, ignore_index=True)
 
