@@ -92,3 +92,31 @@ class DaskBaseRows(DistributedBaseRows):
         """
         df = self.root
         return df.rows.count()
+
+    def between_index(self, lower_bound=None, upper_bound=None, cols="*"):
+        """
+
+        :param columns:
+        :param lower_bound:
+        :param upper_bound:
+        :return:
+        """
+        df = self.root
+        dfd = df.data
+
+        if lower_bound is not None:
+            length = len(dfd)
+            dfd = dfd.tail(length - lower_bound, compute=False)
+
+            if upper_bound is not None:
+                upper_bound -= lower_bound
+
+        if upper_bound is not None:
+            dfd = dfd.head(upper_bound, compute=False)
+        
+        if lower_bound is not None or upper_bound is not None:
+            dfd = dfd.reset_index(drop=True)
+
+        cols = parse_columns(df, cols)
+
+        return self.root.new(dfd[cols])

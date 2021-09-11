@@ -188,7 +188,7 @@ class BaseRows(ABC):
         meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 
-    def between_index(self, cols="*", lower_bound=None, upper_bound=None):
+    def between_index(self, lower_bound=None, upper_bound=None, cols="*"):
         """
 
         :param columns:
@@ -196,8 +196,9 @@ class BaseRows(ABC):
         :param upper_bound:
         :return:
         """
-        dfd = self.root.data
-        cols = val_to_list(parse_columns(dfd, cols))
+        df = self.root
+        dfd = df.data
+        cols = parse_columns(df, cols)
         return self.root.new(dfd[lower_bound: upper_bound][cols])
 
     def limit(self, count=10) -> 'DataFrameType':
