@@ -108,7 +108,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         def func(value):
             return value[lower_bound:upper_bound]
 
-        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute(), op=self.op)
+        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute(), op=self.op, label_encoder=self.le)
 
     def graph(self) -> dict:
         """

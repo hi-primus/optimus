@@ -44,13 +44,13 @@ class BaseDataFrame(ABC):
     Optimus DataFrame
     """
 
-    def __init__(self, data: 'InternalDataFrameType', op: 'EngineType'):
+    def __init__(self, data: 'InternalDataFrameType', op: 'EngineType', label_encoder=None):
         data = self._compatible_data(data)
         self.data = data
         self.buffer = None
         self.updated = None
         self.meta = {}
-        self.le = None
+        self.le = label_encoder
         self.op = op
 
         # .profile and .set are properties to support docstrings

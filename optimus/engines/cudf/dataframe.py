@@ -42,7 +42,7 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         return Constants()
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas(), op=self.op)
+        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas(), op=self.op, label_encoder=self.le)
 
     def get_buffer(self):
         return self
