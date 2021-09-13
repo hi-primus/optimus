@@ -55,13 +55,14 @@ class Clusters:
             if not is_list(clusters):
                 clusters = list(clusters.values())
                 
-            for i, cluster in enumerate(clusters[0:limit_clusters]):
-                cluster_name = cluster["suggestion"]
+            for cluster in clusters[0:limit_clusters]:
                 if verbose:
+                    cluster_name = cluster["cluster"]
                     _cluster = copy.deepcopy(cluster)
-                    del _cluster["suggestion"]
-                    result[column][(cluster_name, i)] = _cluster
+                    del _cluster["cluster"]
+                    result[column][cluster_name] = _cluster
                 else:
+                    cluster_name = cluster["suggestion"]
                     result[column][cluster_name] = result[column].get(cluster_name, [])
                     result[column][cluster_name] += cluster["suggestions"][0:limit_suggestions]
 
