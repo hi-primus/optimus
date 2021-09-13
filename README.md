@@ -18,9 +18,10 @@
 Optimus is an opinionated python library to easily load, process, plot and create ML models that run over pandas, Dask, cuDF, dask-cuDF, Vaex or Spark. 
 Some amazing thing Optimus can do for you:
 * Easy to use for newcomers.
-* More than 100 function to process data?
-* Out of box functions to data quality, plotting, process dates,url, emails
-* Use the same code using to process your data in your laptop or cluster of GPUs.
+* More than 100 function to handle strings, process dates, url and emails.
+* Easily plot data from any size.
+* Out of box functions to explore and fix data quality. 
+* Use the same code to process your data in your laptop or cluster of GPUs.
 
 ## Try Optimus
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:

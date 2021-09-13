@@ -73,7 +73,7 @@ class BaseRows(ABC):
 
     def select(self, expr=None, contains=None, case=None, flags=0, na=False, regex=False) -> 'DataFrameType':
         """
-        Return selected rows using ans expression
+        Return selected rows using an expression
         :param expr: Expression used, For Ex: (df["A"] > 3) & (df["A"] <= 1000) or Column name "A"
         :param contains: List of string
         :param case:
