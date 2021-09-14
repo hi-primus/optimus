@@ -3361,6 +3361,15 @@ class BaseColumns(ABC):
 
         return self.apply(cols, _clip, output_cols=output_cols, meta_action=Actions.CLIP.value, mode="vectorized")
 
+    def one_hot_encode(self, cols="*", prefix=None, **kwargs) -> 'DataFrameType':
+        """
+        Maps a categorical column to multiple binary columns, with at most a single one-value.
+        :param cols: Columns to be encoded.
+        :param prefix: Prefix of the columns where the output is going to be saved.
+        :return: Dataframe with encoded columns.
+        """
+        return self.root.encoding.one_hot_encoder(cols=cols, prefix=prefix, **kwargs)
+
     @staticmethod
     @abstractmethod
     def string_to_index(cols=None, output_cols=None) -> 'DataFrameType':

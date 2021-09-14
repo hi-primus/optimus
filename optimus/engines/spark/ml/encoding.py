@@ -95,22 +95,22 @@ def index_to_string(df, input_cols, output_cols=None, columns=None, **kargs):
     return df
 
 
-def one_hot_encoder(df, input_cols, output_col=None, **kargs):
+def one_hot_encoder(df, cols="*", output_col=None, **kwargs):
     """
     Maps a column of label indices to a column of binary vectors, with at most a single one-value.
     :param df: Dataframe to be transformed.
-    :param input_cols: Columns to be encoded.
+    :param cols: Columns to be encoded.
     :param output_col: Column where the output is going to be saved.
     :return: Dataframe with encoded columns.
     """
 
-    input_cols = parse_columns(df, input_cols)
+    cols = parse_columns(df, cols)
 
     if output_col is None:
-        output_col = name_col(input_cols, "one_hot_encoder")
+        output_col = name_col(cols, "one_hot_encoder")
 
-    encode = [OneHotEncoder(inputCol=column, outputCol=output_col, **kargs) for column in
-              list(set(input_cols))]
+    encode = [OneHotEncoder(inputCol=column, outputCol=output_col, **kwargs) for column in
+              list(set(cols))]
 
     pipeline = Pipeline(stages=encode)
     df = pipeline.fit(df).transform(df)

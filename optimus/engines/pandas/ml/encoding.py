@@ -1,7 +1,8 @@
 # from dask_ml.preprocessing import DummyEncoder
 
-from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.logger import logger
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.infer import is_, is_str
 import pandas as pd
 
@@ -10,8 +11,6 @@ from optimus.engines.base.ml.encoding import BaseEncoding
 
 
 class Encoding(BaseEncoding):
-    def __init__(self, root: 'DataFrameType'):
-        self.root = root
 
     def n_gram(self, input_col, n=2):
         """
@@ -24,19 +23,25 @@ class Encoding(BaseEncoding):
 
         pass
 
-    def one_hot_encoder(self, input_cols, prefix=None, **kargs):
+    def one_hot_encoder(self, cols="*", prefix=None, **kwargs):
         """
         Maps a column of label indices to a column of binary vectors, with at most a single one-value.
-        :param df: Dataframe to be transformed.
-        :param input_cols: Columns to be encoded.
-        :param output_col: Column where the output is going to be saved.
+        :param cols: Columns to be encoded.
+        :param prefix: Prefix of the columns where the output is going to be saved.
         :return: Dataframe with encoded columns.
         """
         dfd = self.root.data
         df = self.root
-        input_cols = parse_columns(df, input_cols)
 
-        return self.root.new(pd.concat([dfd, pd.get_dummies(dfd[input_cols], prefix=prefix)], axis=1))
+        all_cols = parse_columns(df, cols)
+        cols = parse_columns(df, cols, filter_by_column_types=self.root.constants.OBJECT_TYPES)
+
+        excluded_cols = list(set(all_cols) - set(cols))
+
+        if len(excluded_cols):
+            logger.warn(f"{RaiseIt._and(excluded_cols)} cannot be encoded using 'one_hot_encoder'")
+
+        return self.root.new(pd.concat([dfd, pd.get_dummies(dfd[cols], prefix=prefix)], axis=1))
 
     # TODO: Must we use the pipeline version?
     def vector_assembler(self, input_cols, output_col=None):

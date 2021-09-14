@@ -14,7 +14,7 @@ class BaseEncoding:
         """
         raise NotImplementedError('Not implemented yet')
 
-    def one_hot_encoder(self, cols, prefix=None, **kargs):
+    def one_hot_encoder(self, cols, prefix=None, **kwargs):
         """
         Maps a column of label indices to a column of binary vectors, with at most a single one-value.
         :param cols: Columns to be encoded.
