@@ -100,9 +100,27 @@ class BaseConstants:
     ANY_TYPES = ["object"]
 
     @property
+    def INT_INTERNAL_TYPES(self):
+        return [ProfilerDataTypes.INT.value] + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.INT.value]
+
+    @property
+    def NUMERIC_INTERNAL_TYPES(self):
+        types = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
+        return types + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] in types]
+
+    @property
+    def STRING_INTERNAL_TYPES(self):
+        return [ProfilerDataTypes.STRING.value] + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.STRING.value]
+    
+    @property
+    def DATETIME_INTERNAL_TYPES(self):
+        return [ProfilerDataTypes.DATETIME.value] +\
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.DATETIME.value]
+
+    @property
     def INT_TYPES(self):
         return self.ANY_TYPES + [ProfilerDataTypes.INT.value] +\
-               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1]==ProfilerDataTypes.INT.value]
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.INT.value]
 
     @property
     def NUMERIC_TYPES(self):
@@ -113,12 +131,12 @@ class BaseConstants:
     @property
     def STRING_TYPES(self):
         return self.ANY_TYPES + [ProfilerDataTypes.STRING.value] +\
-               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1]==ProfilerDataTypes.STRING.value]
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.STRING.value]
     
     @property
     def DATETIME_TYPES(self):
         return self.ANY_TYPES + [ProfilerDataTypes.DATETIME.value] +\
-               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1]==ProfilerDataTypes.DATETIME.value]
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.DATETIME.value]
 
     @property
     def OBJECT_TYPES(self):

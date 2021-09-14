@@ -410,7 +410,7 @@ PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": 
 PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOL.value,
                                ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value,
                                ProfilerDataTypes.STRING.value, ProfilerDataTypes.HTTP_CODE.value,
-                               ProfilerDataTypes.INT.value, ProfilerDataTypes.IP.value, ProfilerDataTypes.GENDER.value,
+                               ProfilerDataTypes.IP.value, ProfilerDataTypes.GENDER.value,
                                ProfilerDataTypes.PHONE_NUMBER.value, ProfilerDataTypes.US_STATE.value,
                                ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value
                                ]

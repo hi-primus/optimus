@@ -38,7 +38,8 @@ from optimus.infer import is_dict, is_int_like, is_list_of_list, is_numeric, is_
 from optimus.profiler.constants import MAX_BUCKETS
 
 TOTAL_PREVIEW_ROWS = 30
-CATEGORICAL_THRESHOLD = 0.10
+CATEGORICAL_RELATIVE_THRESHOLD = 0.10
+CATEGORICAL_THRESHOLD = 50
 ZIPCODE_THRESHOLD = 0.80
 INFER_PROFILER_ROWS = 200
 
@@ -3097,6 +3098,11 @@ class BaseColumns(ABC):
             dtype = infer_value_counts[0]["value"]
             second_dtype = infer_value_counts[1]["value"] if len(
                 infer_value_counts) > 1 else None
+            third_dtype = infer_value_counts[2]["value"] if len(
+                infer_value_counts) > 2 else None
+
+            if second_dtype == ProfilerDataTypes.NULL.value and third_dtype:
+                second_dtype = third_dtype
 
             if dtype == ProfilerDataTypes.MISSING.value and second_dtype:
                 # In case we have missings and a secondary type, use the secondary type
@@ -3125,7 +3131,8 @@ class BaseColumns(ABC):
             #     is_categorical = False
 
             if _dtype in PROFILER_CATEGORICAL_DTYPES \
-                    or _unique_counts / rows_count < CATEGORICAL_THRESHOLD \
+                    or _unique_counts / rows_count < CATEGORICAL_RELATIVE_THRESHOLD \
+                    or _unique_counts < CATEGORICAL_THRESHOLD \
                     or any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
                 is_categorical = True
 

@@ -23,9 +23,9 @@ class PandasBaseFunctions(BaseFunctions, ABC):
         return np.vectorize(_is_string)(series.values).flatten()
 
     def is_integer(self, series):
-        if str(series.dtype) in self.constants.DATETIME_TYPES:
+        if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
             return False
-        if str(series.dtype) in self.constants.INT_TYPES:
+        if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
             return True
         return np.vectorize(isintlike)(series).flatten()
 
@@ -34,7 +34,7 @@ class PandasBaseFunctions(BaseFunctions, ABC):
         return np.vectorize(isfloat)(series).flatten()
 
     def is_numeric(self, series):
-        if str(series.dtype) in self.constants.DATETIME_TYPES:
+        if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
             return False
         return np.vectorize(isreal)(series).flatten()
 
