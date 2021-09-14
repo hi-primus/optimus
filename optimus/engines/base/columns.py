@@ -3089,40 +3089,35 @@ class BaseColumns(ABC):
         rows_count = sample_df.rows.count()
         sample_dtypes = sample_df.cols.infer_data_types().cols.frequency()
 
-        _unique_counts = sample_df.cols.count_uniques()
+        unique_counts = sample_df.cols.count_uniques(tidy=False)['count_uniques']
 
         cols_and_inferred_dtype = {}
         for col_name in cols:
             infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
-            # Common datatype in a column
-            dtype = infer_value_counts[0]["value"]
-            second_dtype = infer_value_counts[1]["value"] if len(
-                infer_value_counts) > 1 else None
-            third_dtype = infer_value_counts[2]["value"] if len(
-                infer_value_counts) > 2 else None
 
-            if second_dtype == ProfilerDataTypes.NULL.value and third_dtype:
-                second_dtype = third_dtype
+            infer_value_counts = [
+                vc for vc in infer_value_counts if vc["value"] not in [
+                    ProfilerDataTypes.NULL.value, ProfilerDataTypes.MISSING.value
+                ]
+            ]
 
-            if dtype == ProfilerDataTypes.MISSING.value and second_dtype:
-                # In case we have missings and a secondary type, use the secondary type
-                _dtype = second_dtype
-            elif dtype not in [ProfilerDataTypes.NULL.value, ProfilerDataTypes.MISSING.value]:
-                if dtype == ProfilerDataTypes.INT.value and second_dtype == ProfilerDataTypes.DECIMAL.value:
-                    # In case we have integers and decimal values no matter if we have more integer we cast to decimal
-                    _dtype = second_dtype
-                else:
-                    _dtype = dtype
-            elif infer_value_counts[0]["count"] < len(sample_dtypes):
-                _dtype = second_dtype
-            else:
-                _dtype = ProfilerDataTypes.OBJECT.value
-            _unique_counts = df[col_name].cols.count_uniques()
+            if not len(infer_value_counts):
+                infer_value_counts = [infer_value_counts[0]]
 
-            if not (any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["zip", "zc"])) \
-                    and _dtype == ProfilerDataTypes.ZIP_CODE.value \
-                    and _unique_counts / rows_count < ZIPCODE_THRESHOLD:
-                _dtype = ProfilerDataTypes.INT.value
+            dtypes = [value_count["value"] for value_count in infer_value_counts]
+            dtypes_counts = [value_count["count"] for value_count in infer_value_counts]
+
+            dtype_i = 0
+
+            if len(dtypes) > 1:
+                if dtypes[0] == ProfilerDataTypes.INT.value and dtypes[1] == ProfilerDataTypes.DECIMAL.value:
+                    dtype_i = 1
+                
+                if dtypes[0] == ProfilerDataTypes.ZIP_CODE.value and dtypes[1] == ProfilerDataTypes.INT.value:
+                    if dtypes_counts[0] / rows_count < ZIPCODE_THRESHOLD:
+                        dtype_i = 1
+
+            dtype = dtypes[dtype_i]
 
             # Is the column categorical?. Try to infer the datatype using the column name
             is_categorical = False
@@ -3130,14 +3125,14 @@ class BaseColumns(ABC):
             # if any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
             #     is_categorical = False
 
-            if _dtype in PROFILER_CATEGORICAL_DTYPES \
-                    or _unique_counts / rows_count < CATEGORICAL_RELATIVE_THRESHOLD \
-                    or _unique_counts < CATEGORICAL_THRESHOLD \
+            if dtype in PROFILER_CATEGORICAL_DTYPES \
+                    or unique_counts[col_name] / rows_count < CATEGORICAL_RELATIVE_THRESHOLD \
+                    or unique_counts[col_name] < CATEGORICAL_THRESHOLD \
                     or any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
                 is_categorical = True
 
             cols_and_inferred_dtype[col_name] = {
-                "data_type": _dtype, "categorical": is_categorical}
+                "data_type": dtype, "categorical": is_categorical}
             
             if dtype == ProfilerDataTypes.DATETIME.value:
                 # pydatainfer do not accepts None value so we must filter them
