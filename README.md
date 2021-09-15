@@ -15,13 +15,15 @@
 [![Slack](https://img.shields.io/badge/chat-slack-red.svg?logo=slack&color=36c5f0)](https://communityinviter.com/apps/hi-bumblebee/welcome)
 
 # Overview
+
 Optimus is an opinionated python library to easily load, process, plot and create ML models that run over pandas, Dask, cuDF, dask-cuDF, Vaex or Spark. 
-Some amazing thing Optimus can do for you:
-* Easy to use for newcomers.
-* More than 100 function to handle strings, process dates, url and emails.
+
+Some amazing things Optimus can do for you:
+* Process using a simple API, making it easy to use for newcomers.
+* More than 100 functions to handle strings, process dates, urls and emails.
 * Easily plot data from any size.
 * Out of box functions to explore and fix data quality. 
-* Use the same code to process your data in your laptop or cluster of GPUs.
+* Use the same code to process your data in your laptop or in a remote cluster of GPUs.
 
 ## Try Optimus
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
@@ -30,14 +32,30 @@ To launch a live notebook server to test optimus using binder or Colab, click on
 [![Colab](https://img.shields.io/badge/launch-colab-yellow.svg?logo=googlecolab&color=e6a210)](https://colab.research.google.com/github/hi-primus/optimus/blob/master/examples/10_min_to_optimus_colab.ipynb)
 
 ## Installation (pip): 
-In your terminal just type  ```pip install pyoptimus```
+In your terminal just type:
+```
+pip install pyoptimus
+```
 
-By default Optimus install pandas and Dask as default engines:
-to install other engines you can:
-* cuDF ```pip install pyoptimus[cuDF]```
-* dask-cudf ```pip install pyoptimus[dask-cudf]```
-* Vaex ```pip install pyoptimus[vaex]```
-* Spark ```pip install pyoptimus[spark]```
+By default Optimus install Pandas as the default engine, to install other engines you can use the following commands:
+
+| Engine    | Command                                |
+|-----------|----------------------------------------|
+| Dask      | ```pip install pyoptimus[dask]```      |
+| cuDF      | ```pip install pyoptimus[cudf]```      |
+| Dask-cuDF | ```pip install pyoptimus[dask-cudf]``` |
+| Vaex      | ```pip install pyoptimus[vaex]```      |
+| Spark     | ```pip install pyoptimus[spark]```     |
+
+To install from the repo: 
+```
+pip install git+https://github.com/hi-primus/optimus.git@develop-21.9
+```
+
+To install other engines: 
+```
+pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[dask]
+```
 
 
 
@@ -46,11 +64,11 @@ to install other engines you can:
 
 ## Examples
 
-You can go to the 10 minutes to Optimus [notebook](https://github.com/hi-primus/optimus/blob/develop-21.9/examples/10_min_to_optimus.ipynb) where you can find the basic to start working.
+You can go to [10 minutes to Optimus](https://github.com/hi-primus/optimus/blob/develop-21.9/examples/10_min_to_optimus.ipynb) where you can find the basics to start working in a notebook.
 
-Also you can go to [Examples](https://github.com/hi-primus/optimus/tree/develop-21.9/examples/examples.md) and found specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
+Also you can go to the [Examples](https://github.com/hi-primus/optimus/tree/develop-21.9/examples/examples.md) section and find specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
-Besides check the [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-21.9/docs/cheatsheet/optimus_cheat_sheet.html)
+Here's a handy [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-21.9/docs/cheatsheet/optimus_cheat_sheet.html) with the most common Optimus' operations.
 
 ## Start Optimus
 
@@ -63,7 +81,7 @@ op = Optimus("pandas")
 
 ## Loading data
 
-Now Optimus can load data in csv, json, parquet, avro, excel from a local file or URL.
+Now Optimus can load data in csv, json, parquet, avro and excel formats from a local file or from a URL.
 
 ```python
 #csv
@@ -82,7 +100,7 @@ df = op.load.parquet("../examples/data/foo.parquet")
 df = op.load.file("../examples/data/titanic3.xls")
 ```
 
-Also, you can load data from oracle, redshift, mysql and postgres.
+Also, you can load data from Oracle, Redshift, MySQL and Postgres databases.
 
 ## Saving Data
 
