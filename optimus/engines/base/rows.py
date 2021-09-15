@@ -10,7 +10,7 @@ from optimus.helpers.columns import parse_columns, prepare_columns_arguments
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import one_list_to_val, val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_bool, is_dict, is_list_of_tuples, is_list_value, is_str, is_list_of_str_or_int
+from optimus.infer import is_bool, is_dict, is_list_of_str, is_list_of_tuples, is_list_value, is_str, is_list_of_str_or_int
 
 
 class BaseRows(ABC):
@@ -86,14 +86,17 @@ class BaseRows(ABC):
         df = self.root
         dfd = df.data
 
-        if is_str(expr):
-            if expr in df.cols.names():
+        if is_str(expr) or is_list_of_str(expr):
+            if expr in df.cols.names() or is_list_of_str(expr):
                 if contains is not None:
-                    expr = df.mask.contains(expr, value=contains, case=case, flags=flags, na=na, regex=regex)
+                    expr = df.mask.contains(expr, value=contains, case=case, flags=flags, na=na, regex=regex).mask.any()
                 else:
-                    expr = df[expr]
-            else:
+                    expr = df[expr].mask.any()
+            elif is_str(expr):
                 expr = eval(expr)
+
+        if not hasattr(expr, "get_series"):
+            raise ValueError(f"Invalid value for 'expr': {expr}")
                 
         dfd = dfd.reset_index(drop=True)[expr.get_series().reset_index(drop=True)]
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())

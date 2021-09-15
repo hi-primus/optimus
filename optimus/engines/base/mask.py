@@ -226,16 +226,16 @@ class Mask(ABC):
 
         mask = None
 
+        if is_list(value):
+            value = "|".join(value)
+            regex = True
+
         for col in cols:
             series = df.functions.to_string_accessor(df.data[col]).contains(value, case=case, flags=flags, na=na, regex=regex)
             if mask is None:
                 mask = self._to_frame(series)
             else:
                 mask[col] = series
-
-        if is_list(value):
-            value = "|".join(value)
-            regex = True
 
         return df.new(self._to_frame(mask))
 
