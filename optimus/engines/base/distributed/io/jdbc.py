@@ -139,7 +139,7 @@ class DaskBaseJDBC:
         # retrieved from the remote server
         # dfd = dfd.run()
         # dfd = dask_pandas_to_dask_cudf(dfd)
-        return self.op.create.dataframe(self.op.F.dask_to_compatible(dfd), op=self.op)
+        return self.op.create.dataframe(self.op.F.dask_to_compatible(dfd))
 
     def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
                 table_name=None):
