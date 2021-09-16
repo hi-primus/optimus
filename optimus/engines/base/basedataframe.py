@@ -398,6 +398,7 @@ class BaseDataFrame(ABC):
     def to_dict(self, cols="*", n=10, orient="list") -> dict:
         """
             Return a dict from a Collect result
+            :param cols:
             :param n:
             :param orient:
             :return:
@@ -624,7 +625,7 @@ class BaseDataFrame(ABC):
     def table_html(self, limit=10, cols=None, title=None, full=False, truncate=True, count=True, highlight=[]):
         """
         Return a HTML table with the spark cols, data types and values
-        :param columns: Columns to be printed
+        :param cols: Columns to be printed
         :param limit: How many rows will be printed
         :param title: Table title
         :param full: Include html header and footer
@@ -679,8 +680,19 @@ class BaseDataFrame(ABC):
             output = HEADER + output + FOOTER
         return output
 
-    def display(self, limit=10, cols=None, title=None, truncate=True, plain_text=False, highlight=[]):
-        # TODO: limit, columns, title, truncate
+    def display(self, limit=10, cols=None, title=None, truncate=True, plain_text=False, highlight=None):
+        """
+
+        :param limit:
+        :param cols:
+        :param title:
+        :param truncate:
+        :param plain_text:
+        :param highlight:
+        :return:
+        """
+        if highlight is None:
+            highlight = []
         df = self
 
         if is_notebook() and not plain_text:
@@ -692,7 +704,18 @@ class BaseDataFrame(ABC):
     def print(self, limit=10, cols=None):
         print(self.ascii(limit, cols))
 
-    def table(self, limit=None, cols=None, title=None, truncate=True, highlight=[]):
+    def table(self, limit=None, cols=None, title=None, truncate=True, highlight=None):
+        """
+        Print a dataframe in html format
+        :param limit: The number of files that will be printed
+        :param cols: Select the columns to be printed
+        :param title:
+        :param truncate:
+        :param highlight:
+        :return:
+        """
+        if highlight is None:
+            highlight = []
         df = self
         try:
             if is_notebook():
@@ -705,6 +728,12 @@ class BaseDataFrame(ABC):
         return df.ascii(limit, cols)
 
     def ascii(self, limit=10, cols=None):
+        """
+        Print a dataframe in ascii format
+        :param limit:
+        :param cols:
+        :return:
+        """
         df = self
         if not cols:
             cols = "*"
@@ -1022,7 +1051,7 @@ class BaseDataFrame(ABC):
 
         return df
 
-    def string_clustering(self, cols="*", algorithm="fingerprint", *args, **kwargs):
+    def string_clustering(self, cols="*", algorithm="fingerrint", *args, **kwargs):
         from optimus.engines.base.stringclustering import string_clustering
         return string_clustering(self, cols, algorithm, *args, **kwargs)
         # return clusters

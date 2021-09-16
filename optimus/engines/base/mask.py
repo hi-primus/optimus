@@ -220,6 +220,16 @@ class Mask(ABC):
         return df.new(self._to_frame(mask))
 
     def contains(self, cols="*", value=None, case=True, flags=0, na=False, regex=False) -> 'MaskDataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param case:
+        :param flags:
+        :param na:
+        :param regex:
+        :return:
+        """
                 
         df = self.root
         cols = val_to_list(parse_columns(df, cols))
@@ -243,7 +253,7 @@ class Mask(ABC):
         """
         Find rows and appends resulting mask to the dataset
         :param where: Mask, expression or name of the column to be taken as mask
-        :param output_col:
+        :param cols:
         :return: Optimus Dataframe
         """
 

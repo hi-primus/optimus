@@ -2,16 +2,17 @@ import re
 from abc import abstractmethod, ABC
 
 import jellyfish
-from metaphone import doublemetaphone
 import numpy as np
 import pandas as pd
-from jsonschema._format import is_email
 from fastnumbers import fast_float, fast_int
+from jsonschema._format import is_email
+from metaphone import doublemetaphone
 
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_valid_datetime_format, is_object_value, is_ip, is_url, is_missing, \
+    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_valid_datetime_format, is_object_value, is_ip, \
+    is_url, is_missing, \
     is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number, is_int_like
 
 
@@ -27,7 +28,7 @@ class BaseFunctions(ABC):
     _partition_engine = None
 
     def __init_subclass__(cls):
-            
+
         if cls._partition_engine is None:
             cls._partition_engine = cls._engine
 
@@ -74,7 +75,7 @@ class BaseFunctions(ABC):
         result = self.from_delayed(result)
         result.index = series.index
         return result
-    
+
     @property
     def constants(self):
         from optimus.engines.base.constants import BaseConstants
@@ -107,7 +108,7 @@ class BaseFunctions(ABC):
         Append two dataframes
         """
         return dfd.append(dfd2)
-    
+
     def _new_series(self, *args, **kwargs):
         """
         Creates a new series (also known as column)
@@ -140,7 +141,7 @@ class BaseFunctions(ABC):
 
     def to_boolean(self, series):
         return self._to_boolean(series)
-    
+
     def _to_boolean_none(self, series):
         """
         Converts series to boolean
@@ -176,7 +177,7 @@ class BaseFunctions(ABC):
 
     def _to_datetime(self, series, format):
         return series
-    
+
     def to_datetime(self, series, format):
         return self._to_datetime(series, format)
 
@@ -187,7 +188,6 @@ class BaseFunctions(ABC):
     @staticmethod
     def to_string_accessor(series):
         return series.astype(str).str
-
 
     @staticmethod
     def duplicated(dfd, keep, subset):
@@ -200,7 +200,6 @@ class BaseFunctions(ABC):
         return imputer.fit_transform(series.values.reshape(-1, 1))
 
     # Aggregation
-
     def date_format(self, series):
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
@@ -211,18 +210,18 @@ class BaseFunctions(ABC):
             return True
 
         return False
-        
+
     def min(self, series, numeric=False, string=False):
         if numeric:
             series = self.to_float(series)
-        
+
         if string or str(series.dtype) in self.constants.STRING_TYPES:
             return self.to_string(series.dropna()).min()
         else:
             return series.min()
 
     def max(self, series, numeric=False, string=False):
-        
+
         if numeric:
             series = self.to_float(series)
 
@@ -291,7 +290,7 @@ class BaseFunctions(ABC):
     @abstractmethod
     def skew(series):
         pass
-    
+
     # import dask.dataframe as dd
     def mad(self, series, error=False, more=False, estimate=False):
 
@@ -569,7 +568,7 @@ class BaseFunctions(ABC):
         if is_list(replace_by) and is_list_of_list(search):
             for _s, _r in zip(search, replace_by):
                 series = series.replace(_s, _r, regex=regex)
-                
+
         else:
             series = series.replace(search, replace_by, regex=regex)
 
@@ -614,6 +613,7 @@ class BaseFunctions(ABC):
     def expand_contractions(self, series):
 
         pass
+
     # @staticmethod
     # def len(series):
     #     return series.str.len()
@@ -739,15 +739,15 @@ class BaseFunctions(ABC):
 
     def days_between(self, series, value=None, date_format=None):
         return self.td_between(series, value, date_format).dt.days
-    
+
     def hours_between(self, series, value=None, date_format=None):
         series = self.td_between(series, value, date_format)
         return series.dt.days * 24.0 + series.dt.seconds / 3600.0
-    
+
     def minutes_between(self, series, value=None, date_format=None):
         series = self.td_between(series, value, date_format)
         return series.dt.days * 1440.0 + series.dt.seconds / 60.0
-    
+
     def seconds_between(self, series, value=None, date_format=None):
         series = self.td_between(series, value, date_format)
         return series.dt.days * 86400 + series.dt.seconds
@@ -851,13 +851,13 @@ class BaseFunctions(ABC):
     
     def metaphone(self, series):
         return self.to_string(series).map(jellyfish.metaphone, na_action='ignore')
-    
+
     def double_metaphone(self, series):
         return self.to_string(series).map(doublemetaphone, na_action='ignore')
 
     def nysiis(self, series):
         return self.to_string(series).map(jellyfish.nysiis, na_action='ignore')
-    
+
     def match_rating_codex(self, series):
         return self.to_string(series).map(jellyfish.match_rating_codex, na_action='ignore')
 
@@ -873,5 +873,5 @@ class BaseFunctions(ABC):
             dfd = self.to_string(series).to_frame()
             dfd[other_name] = self.to_string(other)
 
-            return dfd.apply(lambda d: jellyfish.levenshtein_distance(d[col_name], d[other_name]), axis=1).rename(col_name)
-            
+            return dfd.apply(lambda d: jellyfish.levenshtein_distance(d[col_name], d[other_name]), axis=1).rename(
+                col_name)
