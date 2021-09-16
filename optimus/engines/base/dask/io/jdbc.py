@@ -221,11 +221,8 @@ class DaskBaseJDBC:
         if meta is None:
             # derive metadata from first few rows
             # q = sql.select(columns).limit(head_rows).select_from(table)
-            print(query)
             head = pd.read_sql(query, engine, **kwargs)
-            print("head")
-            print(head)
-            # print("META", head.iloc[:0])
+
             if head.empty:
                 # no results at all
                 # name = table_name.name
