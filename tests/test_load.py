@@ -22,7 +22,7 @@ class TestLoadPandas(TestBase):
         self.assertEqual(self.config.get("n_partitions", 1), df.partitions())
 
     def test_json_multiline(self):
-        df = self.load_dataframe("../../examples/data/foo.json", type="json", multiline=True)
+        df = self.load_dataframe("../../examples/data/foo.json", type="json", multiline=False)
         self.assertEqual(df.rows.count(), 19)
         self.assertEqual(df.cols.names(), ["id", "firstName", "lastName", "billingId", "product", "price", "birth", "dummyCol"])
         self.assertEqual(self.config.get("n_partitions", 1), df.partitions())
