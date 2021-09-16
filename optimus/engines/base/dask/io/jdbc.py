@@ -110,7 +110,7 @@ class DaskBaseJDBC:
         """
         return Table(self)
 
-    def table_to_df(self, table_name: str, columns="*", limit=None, n_partitions=1):
+    def table_to_df(self, table_name: str, columns="*", partition_column =None,limit=None, n_partitions=1):
         """
         Return cols as Spark data frames from a specific table
         :type table_name: object
