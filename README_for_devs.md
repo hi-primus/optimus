@@ -103,14 +103,7 @@ twine upload dist/*
 ```
 pip install --upgrade --no-deps --force-reinstall git+https://github.com/hi-primus/optimus.git@develop-21.9
 ```
-Install infer date format library
-```
-pip install git+https://github.com/hi-primus/dateinfer.git
-```
-Install infer url_parser library
-```
-pip install git+https://github.com/hi-primus/url_parser.git
-```
+
 ### Compiling redis .jar file
 This file can not be found to download and must be compiled.
 
@@ -343,9 +336,6 @@ If you want to upgrade a RAPIDS use `conda install` and remove the create channe
 ### Remove conda environment
 `conda env remove --name project-env`
  
-###
-python -m pip install git+https://github.com/hi-primus/url_parser
-
 ## About apply
 
 Process 
