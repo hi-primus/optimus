@@ -41,6 +41,13 @@ def create():
     t.create(method="rows.append", variant="multiple_some_cols", dfs=[df2,df3], names_map={"First":["last position seen","product","ip_test"],"Second":["date arrival","firstName","object_test"],"Third":["names","lastName","email_test"]})
     t.create(method="rows.append", variant="multiple_one_col", dfs=[df2,df3], names_map={"Only":["attributes","dummyCol","object_test"]})
 
+    t.create(method="rows.select", variant="mask", expr=df.mask.none("last position seen"))
+    t.create(method="rows.select", variant="expression", expr=df["height(ft)"]>15)
+    t.create(method="rows.select", variant="col_name_all", expr="*", contains="a")
+    t.create(method="rows.select", variant="col_name_numeric", expr=["height(ft)"], contains="0", flags=0, na=True, regex=False)
+    t.create(method="rows.select", variant="col_name_string", expr=["function"], contains="Le.", case=True, flags=3, na=False, regex=True)
+    t.create(method="rows.select", variant="col_name_multiple", expr=["NullType", "weight(t)", "Cybertronian"], contains="T|N", case=True, flags=1, na=True, regex=True)
+
     t.create(method="rows.count")
 
     t.create(method="rows.to_list", variant="all", input_cols="*")

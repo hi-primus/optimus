@@ -2197,6 +2197,64 @@ somename@hotmail.com   192.168.136.52
         expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [[91.44, None], [None, 5700.0], [3.9624, 1800.0], [7.9248, 4000.0], [5.334, 2000.0], [8.5344, 4300.0]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Battle Station'), bytearray(b'None'), bytearray(b'First Lieutenant'), bytearray(b'Security'), bytearray(b'Espionage'), bytearray(b'Leader')], ('height(ft)', 'float64'): [300.0, nan, 13.0, 26.0, 17.0, -28.0], ('japanese name', 'object'): [['Metroflex'], ['Megatron'], ['Meister'], ['Roadbuster'], ['Bumble', 'Goldback'], ['Inochi', 'Convoy']], ('last date seen', 'object'): ['2011/04/10', '2012/05/10', '2013/06/10', '2014/07/10', '2015/08/10', '2016/09/10'], ('last position seen', 'object'): [None, None, '33.670666,-117.841553', '37.789563,-122.400356', '10.642707,-71.612534', '19.442735,-99.201111'], ('rank', 'int64'): [8, 10, 8, 7, 7, 10], ('Cybertronian', 'bool'): [False, True, True, True, True, True], ('Date Type', 'datetime64[ns]'): [Timestamp('2011-04-10 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2016-09-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Battle Station', 'None', 'First Lieutenant', 'Security', 'Espionage', 'Leader'], ('names', 'object'): ['Metroplex_)^$', 'Megatron', 'Jazz', 'ironhide&', 'bumbl#ebéé  ', 'Optimus'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [nan, 5.7, 1.8, 4.0, 2.0, 4.3]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
+    def test_rows_select_col_name_all(self):
+        df = self.df
+        result = df.rows.select(expr='*', contains='a')
+        # The following value does not represent a correct output of the operation
+        expected = self.dict
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
+    def test_rows_select_col_name_multiple(self):
+        df = self.df
+        result = df.rows.select(expr=['NullType', 'weight(t)', 'Cybertronian'], contains='T|N', case=True, flags=1, na=True, regex=True)
+        # The following value does not represent a correct output of the operation
+        expected = self.dict
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
+    def test_rows_select_col_name_numeric(self):
+        df = self.df
+        result = df.rows.select(expr=['height(ft)'], contains='0', flags=0, na=True, regex=False)
+        # The following value does not represent a correct output of the operation
+        expected = self.dict
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
+    def test_rows_select_col_name_string(self):
+        df = self.df
+        result = df.rows.select(expr=['function'], contains='Le.', case=True, flags=3, na=False, regex=True)
+        # The following value does not represent a correct output of the operation
+        expected = self.dict
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
+    def test_rows_select_expression(self):
+        df = self.df
+        result = df.rows.select(expr=  height(ft)
+      (bool)
+------------
+           0
+           1
+           1
+           0
+           0
+           1
+)
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None, None], ('attributes', 'object'): [[5.334, 2000.0], [7.9248, 4000.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [17.0, 26.0, 300.0], ('japanese name', 'object'): [['Bumble', 'Goldback'], ['Roadbuster'], ['Metroflex']], ('last date seen', 'object'): ['2015/08/10', '2014/07/10', '2011/04/10'], ('last position seen', 'object'): ['10.642707,-71.612534', '37.789563,-122.400356', None], ('rank', 'int64'): [7, 7, 8], ('Cybertronian', 'bool'): [True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000], ('function', 'object'): ['Espionage', 'Security', 'Battle Station'], ('names', 'object'): ['bumbl#ebéé  ', 'ironhide&', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [2.0, 4.0, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
+    def test_rows_select_mask(self):
+        df = self.df
+        result = df.rows.select(expr=  last position seen
+              (bool)
+--------------------
+                   0
+                   0
+                   0
+                   0
+                   1
+                   1
+)
+        expected = self.create_dataframe(dict={('NullType', 'object'): [None, None], ('attributes', 'object'): [[None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [nan, 300.0], ('japanese name', 'object'): [['Megatron'], ['Metroflex']], ('last date seen', 'object'): ['2012/05/10', '2011/04/10'], ('last position seen', 'object'): [None, None], ('rank', 'int64'): [10, 8], ('Cybertronian', 'bool'): [True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000], ('function', 'object'): ['None', 'Battle Station'], ('names', 'object'): ['Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [5.7, nan]}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
     def test_rows_social_security_number(self):
         df = self.create_dataframe(dict={('NullType', 'object'): [None, None, None, None, None, None], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('social_security_number_test', 'object'): [372847278, '551-83-1284', '525 93 1941', '230 89-6721', '121-069 2062', '371847288']}, force_data_types=True)
         result = df.rows.social_security_number(cols=['social_security_number_test'], drop=False, how='any')
