@@ -87,7 +87,7 @@ class BaseRows(ABC):
         dfd = df.data
 
         if is_str(expr) or is_list_of_str(expr):
-            if expr in df.cols.names() or is_list_of_str(expr):
+            if expr in df.cols.names() or is_list_of_str(expr) or expr == "*":
                 if contains is not None:
                     expr = df.mask.contains(expr, value=contains, case=case, flags=flags, na=na, regex=regex).mask.any()
                 else:
