@@ -1,5 +1,3 @@
-import url_parser
-
 from optimus.helpers.types import *
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
 from optimus.engines.spark.io.properties import DriverProperties
@@ -75,7 +73,8 @@ class S3(Connection):
         if endpoint_url is None:
             RaiseIt.value_error(endpoint_url, "")
 
-        schema = url_parser.parse_url(endpoint_url)["schema"]
+        import hiurlparser
+        schema = hiurlparser.parse_url(endpoint_url)["schema"]
 
         if schema is not None:
             endpoint_url = endpoint_url[len(schema + "://"):]  # removes schema from endpoint_url

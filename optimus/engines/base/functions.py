@@ -204,8 +204,8 @@ class BaseFunctions(ABC):
     def date_format(self, series):
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
-            import pydateinfer
-            result = pydateinfer.infer(self.compute(series).values)
+            import hidateinfer
+            result = hidateinfer.infer(self.compute(series).values)
             return result if is_valid_datetime_format(result) else False
         elif dtype in self.constants.DATETIME_TYPES:
             return True
@@ -753,44 +753,44 @@ class BaseFunctions(ABC):
         return series.dt.days * 86400 + series.dt.seconds
 
     def domain(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["domain"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["domain"], na_action=None)
 
     def top_domain(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["top_domain"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["top_domain"], na_action=None)
 
     def sub_domain(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["sub_domain"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["sub_domain"], na_action=None)
 
     def url_scheme(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["protocol"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["protocol"], na_action=None)
 
     def url_path(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["path"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["path"], na_action=None)
 
     def url_file(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["file"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["file"], na_action=None)
 
     def url_query(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["query"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["query"], na_action=None)
 
     def url_fragment(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["fragment"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["fragment"], na_action=None)
 
     def host(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["host"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["host"], na_action=None)
 
     def port(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["port"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["port"], na_action=None)
 
     def email_username(self, series):
         return self.to_string_accessor(series).split('@').str[0]
@@ -846,8 +846,8 @@ class BaseFunctions(ABC):
         return dtype
 
     def date_formats(self, series):
-        import pydateinfer
-        return series.map(lambda v: pydateinfer.infer([v]))
+        import hidateinfer
+        return series.map(lambda v: hidateinfer.infer([v]))
     
     def metaphone(self, series):
         return self.to_string(series).map(jellyfish.metaphone, na_action='ignore')
