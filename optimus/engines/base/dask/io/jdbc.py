@@ -157,45 +157,10 @@ class DaskBaseJDBC:
         :return:
         """
 
-        # play defensive with a select clause
-        # if self.db_driver == DriverProperties.ORACLE.value["name"]:
-        #     query = "(" + query + ") t"
-        # elif self.db_driver == DriverProperties.PRESTO.value["name"]:
-        #     query = "(" + query + ")"
-        # elif self.db_driver == DriverProperties.CASSANDRA.value["name"]:
-        #     query = query
-        # else:
-        #     query = "(" + query + ") AS t"
+        dfd = DaskBaseJDBC.read_sql_table(table_name=table_name, uri=self.uri, index_col=partition_column,
+                                          npartitions=n_partitions, query=query)
 
-        # df = dd.read_sql_table(table='test_data', uri=self.url, index_col='id')
-        # "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'optimus'"
-        df = DaskBaseJDBC.read_sql_table(table_name=table_name, uri=self.uri, index_col=partition_column,
-                                         npartitions=n_partitions, query=query)
-        # print(len(df))
-
-        # conf = Spark.instance.spark.read \
-        #     .format(
-        #     "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
-        #     DriverProperties.CASSANDRA.value["java_class"]) \
-        #     .option("url", self.url) \
-        #     .option("user", self.user) \
-        #     .option("dbtable", query)
-        #
-        # # Password
-        # if self.db_driver != DriverProperties.PRESTO.value["name"] and self.password is not None:
-        #     conf.option("password", self.password)
-        #
-        # # Driver
-        # if self.db_driver == DriverProperties.ORACLE.value["name"] \
-        #         or self.db_driver == DriverProperties.POSTGRESQL.value["name"] \
-        #         or self.db_driver == DriverProperties.PRESTO.value["name"]:
-        #     conf.option("driver", self.driver_option)
-        #
-        # if self.db_driver == DriverProperties.CASSANDRA.value["name"]:
-        #     conf.options(table=self.cassandra_table, keyspace=self.cassandra_keyspace)
-
-        # return self._limit(conf.load(), limit)
-        return df
+        return self.op.create.dataframe(self.op.F.dask_to_compatible(dfd))
 
     @staticmethod
     def read_sql_table(
