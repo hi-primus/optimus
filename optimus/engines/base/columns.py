@@ -562,7 +562,7 @@ class BaseColumns(ABC):
             columns[k] = result_default
         return columns
 
-    def types(self, cols="*"):
+    def types(self, cols="*", tidy=True):
         """
         Get the inferred data types from the meta data, if no type is found, uses a translated internal data type
         :param cols: "*", column name or list of column names to be processed.
@@ -572,15 +572,21 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols)
         result = {}
 
-        data_types = df.cols.data_types(cols, tidy=False)
+        data_types = df.cols.data_types(cols, names=True, tidy=False)["data_types"]
+        inferred_types = df.cols.inferred_types(cols, tidy=False)["inferred_types"]
 
         for col_name in cols:
-            data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
+
+            data_type = inferred_types[col_name]
+
             if data_type is None:
                 data_type = data_types[col_name]
-                data_type = df.constants.INTERNAL_TO_OPTIMUS.get(data_type, data_type)
+
             result.update({col_name: data_type})
-        return result
+        
+        result = {"types": result}
+
+        return format_dict(result, tidy=tidy)
 
     def inferred_types(self, cols="*", tidy=True):
         """
@@ -594,9 +600,12 @@ class BaseColumns(ABC):
         result = {}
 
         for col_name in cols:
-            column_meta = Meta.get(
-                df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
-            result.update({col_name: column_meta})
+            data_type = Meta.get(df.meta, f"columns_data_types.{col_name}.data_type")
+            if data_type is None:
+                data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
+            result.update({col_name: data_type})
+
+        result = {"inferred_types": result}
         
         return format_dict(result, tidy)
 
@@ -1157,16 +1166,21 @@ class BaseColumns(ABC):
 
         return df.cols.select(cols)
 
-    def data_types(self, cols="*", tidy=True) -> dict:
+    def data_types(self, cols="*", names=False, tidy=True) -> dict:
         """
         Return the column(s) data type as string
         :param columns: Columns to be processed
+        :param names: Returns aliases for every type instead of its internal name
         :return: {col_name: data_type}
         """
         df = self.root
         cols = parse_columns(df, cols)
-        data_types = ({k: str(v) for k, v in dict(df.data.dtypes).items()})
-        return format_dict({col_name: data_types[col_name] for col_name in cols}, tidy=tidy)
+        data_types = {k: str(v) for k, v in dict(df.data.dtypes).items()}
+        _DICT = df.constants.INTERNAL_TO_OPTIMUS
+        if names:
+            data_types = {k: _DICT.get(d, d) for k, d in data_types.items()}
+                
+        return format_dict({"data_types": {col_name: data_types[col_name] for col_name in cols}}, tidy=tidy)
 
     def schema_data_type(self, cols="*", tidy=True):
         """
@@ -1179,11 +1193,8 @@ class BaseColumns(ABC):
         dfd = df.data
         result = {}
         for col_name in cols:
-            if dfd[col_name].dtype.name == "category":
-                result[col_name] = "category"
-            else:
-                result[col_name] = dfd[col_name].dtype.name
-        return format_dict(result, tidy=tidy)
+            result[col_name] = dfd[col_name].dtype.name
+        return format_dict({"schema_data_type": result}, tidy=tidy)
 
     def agg_exprs(self, cols="*", funcs=None, *args, compute=True, tidy=True, parallel=False):
         """
@@ -1283,7 +1294,7 @@ class BaseColumns(ABC):
 
         if numeric is None:
             cols = parse_columns(df, cols)
-            types = df.cols.types(cols)
+            types = df.cols.types(cols, tidy=False)['types']
             numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
 
         return df.cols.agg_exprs(cols, self.F.min, numeric, compute=compute, tidy=tidy, parallel=False)
@@ -1301,7 +1312,7 @@ class BaseColumns(ABC):
 
         if numeric is None:
             cols = parse_columns(df, cols)
-            types = df.cols.types(cols)
+            types = df.cols.types(cols, tidy=False)['types']
             numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
 
         return df.cols.agg_exprs(cols, self.F.max, numeric, compute=compute, tidy=tidy, parallel=False)
@@ -2604,11 +2615,19 @@ class BaseColumns(ABC):
 
         return self.apply(cols, stemmer_text, output_cols=output_cols, mode="map")
 
-    def impute(self, cols="*", data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
+    def impute(self, cols="*", data_type="auto", strategy="auto", fill_value=None, output_cols=None):
         """
         :param cols: "*", column name or list of column names to be processed.
         :param data_type:
+        # - If "auto", detect if it's continuous or categorical using the data
+        #   type of the column.
+        # - If "continuous", sets the data as continuous and if no 'strategy' is
+        #   passed then the mean is used.
+        # - If "categorical", sets the data as categorical and if no 'strategy'
+        #   is passed then the most frequent value is used.
         :param strategy:
+        # - If "auto", automatically selects a strategy depending on the data
+        #   type passed or inferred on 'data_type'.
         # - If "mean", then replace missing values using the mean along
         #   each column. Can only be used with numeric data.
         # - If "median", then replace missing values using the median along
@@ -2622,13 +2641,31 @@ class BaseColumns(ABC):
         :return:
         """
         df = self.root
+        cols = parse_columns(df, cols)
 
-        if strategy != "most_frequent":
-            df = df.cols.to_float(cols)
+        if strategy == "auto":
+            if data_type == "auto" and fill_value is None:
+                types = df.cols.types(cols, tidy=False)["types"]
+                strategy = ["mean" if dt in df.constants.NUMERIC_INTERNAL_TYPES else "most_frequent" for dt in types.values()]
+            elif data_type == "auto" and fill_value is not None:
+                strategy = "constant"
+            elif data_type == "categorical":
+                strategy = "most_frequent"
+            elif data_type == "continuous":
+                strategy = "mean"
 
-        return df.cols.apply(cols, self.F.impute, output_cols=output_cols, args=(strategy, fill_value),
-                             meta_action=Actions.IMPUTE.value,
-                             mode="vectorized")
+        strategy, fill_value = prepare_columns_arguments(cols, strategy, fill_value)
+        output_cols = get_output_cols(cols, output_cols)
+
+        for col_name, output_col, _strategy, _fill_vale in zip(cols, output_cols, strategy, fill_value):
+
+            if _strategy != "most_frequent" and (_strategy != "constant" or data_type == "numeric"):
+                df = df.cols.to_float(col_name)
+
+            df = df.cols.apply(col_name, self.F.impute, output_cols=output_col, args=(_strategy, _fill_vale),
+                                meta_action=Actions.IMPUTE.value, mode="vectorized")
+
+        return df
 
     def fill_na(self, cols="*", value=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2807,7 +2844,7 @@ class BaseColumns(ABC):
 
                 iqr_result[col_name] = result
 
-        return format_dict(iqr_result)
+        return format_dict({"irq": iqr_result})
 
     @staticmethod
     @abstractmethod
@@ -3009,7 +3046,7 @@ class BaseColumns(ABC):
         if is_dict(cols):
             cols_types = cols
         else:
-            cols_types = self.root.cols.infer_types(cols, tidy=False)
+            cols_types = self.root.cols.infer_types(cols, tidy=False)["infer_types"]
 
         result = {}
         profiler_to_mask_func = {
@@ -3152,7 +3189,9 @@ class BaseColumns(ABC):
             self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type",
                                       cols_and_inferred_dtype[col])
 
-        return format_dict(cols_and_inferred_dtype, tidy=tidy)
+        result = {"infer_types": cols_and_inferred_dtype}
+
+        return format_dict(result, tidy=tidy)
 
     def infer_date_formats(self, cols="*", sample=INFER_PROFILER_ROWS, tidy=True) -> dict:
         """

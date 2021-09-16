@@ -193,11 +193,14 @@ class BaseFunctions(ABC):
     def duplicated(dfd, keep, subset):
         return dfd.duplicated(keep=keep, subset=subset)
 
-    @staticmethod
-    def impute(series, strategy, fill_value):
-        from dask_ml.impute import SimpleImputer
+    def impute(self, series, strategy, fill_value):
+        from sklearn.impute import SimpleImputer
         imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
-        return imputer.fit_transform(series.values.reshape(-1, 1))
+        series_fit = series.dropna()
+        if str(series.dtype) in self.constants.OBJECT_TYPES:
+            series_fit = series_fit.astype(str)
+        imputer.fit(series_fit.values.reshape(-1, 1))
+        return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
 
     # Aggregation
     def date_format(self, series):

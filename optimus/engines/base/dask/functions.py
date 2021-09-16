@@ -1,6 +1,7 @@
 import functools
 from abc import abstractmethod
 import re
+import numpy as np
 import dask
 import dask.dataframe as dd
 from dask.delayed import delayed
@@ -90,6 +91,15 @@ class DaskBaseFunctions(DistributedBaseFunctions):
 
     def duplicated(self, dfd, keep, subset):
         return self.from_dataframe(self.to_dataframe(dfd).duplicated(keep=keep, subset=subset))
+
+    def impute(self, series, strategy, fill_value):
+        from dask_ml.impute import SimpleImputer
+        imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
+        series_fit = series.dropna()
+        if str(series.dtype) in self.constants.OBJECT_TYPES:
+            series_fit = series_fit.astype(str)
+        imputer.fit(series_fit.values.reshape(-1, 1))
+        return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
 
     @staticmethod
     def delayed(func):
