@@ -1,6 +1,6 @@
 from optimus.helpers.types import *
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
-from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.base.io.properties import DriverProperties
 from optimus.helpers.constants import Schemas
 from optimus.helpers.raiseit import RaiseIt
 
@@ -177,7 +177,7 @@ class Connect:
                             schema=schema, op=self.op)
 
     def mssql(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
-        return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.MSSQL.value["name"],
+        return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.SQLSERVER.value["name"],
                             schema=schema, op=self.op)
 
     def redshift(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':

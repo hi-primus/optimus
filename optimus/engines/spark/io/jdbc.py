@@ -1,7 +1,7 @@
 from optimus.engines.base.constants import LIMIT_TABLE, NUM_PARTITIONS
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
-from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.base.io.properties import DriverProperties
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import collect_as_list

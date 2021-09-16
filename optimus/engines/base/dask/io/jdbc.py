@@ -12,10 +12,9 @@ from sqlalchemy.sql import elements
 from optimus.engines.base.constants import NUM_PARTITIONS, LIMIT_TABLE
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
-from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.base.io.properties import DriverProperties
 from optimus.helpers.core import val_to_list
 from optimus.helpers.logger import logger
-from optimus.helpers.raiseit import RaiseIt
 
 
 class DaskBaseJDBC:

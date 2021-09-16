@@ -1,7 +1,7 @@
 from enum import Enum
 
 from optimus.engines.base.io.drivers.abstract_driver import AbstractDriver
-from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.base.io.properties import DriverProperties
 from optimus.helpers.functions import singleton
 
 

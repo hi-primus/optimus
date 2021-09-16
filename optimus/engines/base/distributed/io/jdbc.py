@@ -6,17 +6,15 @@ from dask.delayed import delayed
 from sqlalchemy import create_engine
 from sqlalchemy import sql
 from sqlalchemy.sql import elements
-from sqlalchemy.sql.operators import op
 
 # Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
 from optimus.engines.base.constants import NUM_PARTITIONS, LIMIT_TABLE
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
-from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.base.io.properties import DriverProperties
 from optimus.helpers.core import val_to_list
 from optimus.helpers.logger import logger
-from optimus.helpers.raiseit import RaiseIt
 
 
 class DaskBaseJDBC:

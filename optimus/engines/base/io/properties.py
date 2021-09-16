@@ -8,32 +8,27 @@ class DriverProperties(Enum):
     REDIS = {
         "name": "redis",
         "port": 6379,
-        "java_class": "org.apache.spark.sql.redis",
         "table_name": ""
     }
 
     CASSANDRA = {
         "name": "cassandra",
         "port": 9042,
-        "java_class": "org.apache.spark.sql.cassandra",
         "table_name": ""
     }
     MYSQL = {
         "name": "mysql",
         "port": 3306,
-        "java_class": "",
         "table_name": "table_name"
     }
     ORACLE = {
         "name": "oracle",
         "port": 1521,
-        "java_class": "oracle.jdbc.OracleDriver",
         "table_name": "table_name"
     }
     POSTGRESQL = {
         "name": "postgresql",
         "port": 5432,
-        "java_class": "org.postgresql.Driver",
         "table_name": "table_name"
     }
     SQLSERVER = {
@@ -44,31 +39,26 @@ class DriverProperties(Enum):
     SQLITE = {
         "name": "sqlite",
         "port": 0,
-        "java_class": "org.sqlite.JDBC",
         "table_name": "name"
     }
     PRESTO = {
         "name": "presto",
         "port": 8080,
-        "java_class": "com.facebook.presto.jdbc.PrestoDriver",
         "table_name": ""
     }
     REDSHIFT = {
         "name": "redshift",
         "port": 5439,
-        "java_class": "",
         "table_name": "table_name"
     }
     BIGQUERY = {
         "name": "bigquery",
         "port": 5439,
-        "java_class": "",
         "table_name": "table_name"
     }
     IMPALA = {
         "name": "impala",
         "port": 10000,
-        "java_class": "",
         "table_name": "table_name"
     }
 
