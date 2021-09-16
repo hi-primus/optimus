@@ -2617,6 +2617,7 @@ class BaseColumns(ABC):
         #   value along each column. Can be used with strings or numeric data.
         # - If "constant", then replace missing values with fill_value. Can be
         #   used with strings or numeric data.
+        :param fill_value: constant to be used to fill null values
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
@@ -2625,7 +2626,7 @@ class BaseColumns(ABC):
         if strategy != "most_frequent":
             df = df.cols.to_float(cols)
 
-        return df.cols.apply(cols, "impute", output_cols=output_cols, args=(strategy, fill_value),
+        return df.cols.apply(cols, self.F.impute, output_cols=output_cols, args=(strategy, fill_value),
                              meta_action=Actions.IMPUTE.value,
                              mode="vectorized")
 
