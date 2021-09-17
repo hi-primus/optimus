@@ -838,18 +838,44 @@ class BaseColumns(ABC):
 
         return df.cols.assign(kw_columns)
 
-    def assign(self, kw_columns):
-        """
-        TODO: ?
-        :param kw_columns:
-        :return:
+    def assign(self, cols: Union[str, list, dict]=None, values=None, **kwargs):
+        """Assign new columns to a Dataframe.
+
+        Returns a DataFrame with all original columns in addition to new ones.
+        Existing columns that are re-assigned will be overwritten.
+
+        :param cols: A dict with the form {"col_name": "value"}, a list of
+            columns or a single column
+        :param values: When no dict is passed to 'cols', uses this parameter to
+            get the values.
+        :param **kwargs: Passed as 'cols'.
+        :return: DataFrame
         """
 
         df = self.root
 
+        kw_columns = {}
+
+        if values is None and not is_list(cols) and cols is not None:
+            kw_columns = cols
+        elif values is not None:
+            if cols is None:
+                cols = "values"
+
+            cols = parse_columns(df, cols, accepts_missing_cols=True)
+            if (is_list(values) and len(values) != len(cols)) or not is_list(values):
+                values = [values] * len(cols)
+
+            kw_columns = {col: value for col, value in zip(cols, values)}
+
+        if len(kwargs):
+            if is_dict(kw_columns):
+                kw_columns.update(kwargs)
+            else:
+                kw_columns = kwargs
+
         if kw_columns.__class__ == df.__class__:
-            kw_columns = {name: kw_columns.data[name]
-                          for name in kw_columns.cols.names()}
+            kw_columns = {name: kw_columns.data[name] for name in kw_columns.cols.names()}
 
         for key in kw_columns:
             if kw_columns[key].__class__ == df.__class__:
