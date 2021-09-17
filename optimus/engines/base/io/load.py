@@ -193,7 +193,7 @@ class BaseLoad:
 
         return df
 
-    def excel(self, filepath_or_buffer, sheet_name=0, merge_sheets=False, skiprows=1, n_rows=None, storage_options=None,
+    def excel(self, filepath_or_buffer, header=0, sheet_name=0, merge_sheets=False, skiprows=0, n_rows=None, storage_options=None,
               conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a excel file.
@@ -213,12 +213,9 @@ class BaseLoad:
             storage_options = conn.storage_options
 
         file, file_name = prepare_path(filepath_or_buffer, "xls")[0]
-        header = None
+
         if merge_sheets is True:
             skiprows = -1
-        else:
-            header = 0
-            skiprows = 0
 
         df, sheet_names = self._excel(file, sheet_name=sheet_name, skiprows=skiprows, header=header, nrows=n_rows,
                                       storage_options=storage_options, n_partitions=n_partitions, *args, **kwargs)
