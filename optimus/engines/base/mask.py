@@ -435,7 +435,9 @@ class Mask(ABC):
             date_formats = df.cols.date_format(non_datetime_cols, tidy=False)["date_format"]
 
             for col_name, date_format in date_formats.items():
-                if date_format:
+                if date_format is True:
+                    df = df.cols.assign({col_name: True})
+                elif date_format:
                     regex = match_date(date_format)
                     df = df.mask.match_regex(col_name, regex)
                 else:
