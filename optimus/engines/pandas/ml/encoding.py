@@ -30,18 +30,22 @@ class Encoding(BaseEncoding):
         :param prefix: Prefix of the columns where the output is going to be saved.
         :return: Dataframe with encoded columns.
         """
-        dfd = self.root.data
         df = self.root
 
         all_cols = parse_columns(df, cols)
-        cols = parse_columns(df, cols, filter_by_column_types=self.root.constants.OBJECT_TYPES)
+        types = list(set(self.root.constants.OBJECT_TYPES + self.root.constants.STRING_TYPES))
+        cols = parse_columns(df, cols, filter_by_column_types=types) or []
 
         excluded_cols = list(set(all_cols) - set(cols))
+
+        if len(cols) == 0:
+            raise ValueError("No columns can be encoded using 'one_hot_encoder'"
+                             f", received{RaiseIt._and(cols)}.")
 
         if len(excluded_cols):
             logger.warn(f"{RaiseIt._and(excluded_cols)} cannot be encoded using 'one_hot_encoder'")
 
-        return self.root.new(pd.concat([dfd, pd.get_dummies(dfd[cols], prefix=prefix)], axis=1))
+        return self.root.new(pd.concat([df.data, pd.get_dummies(df[cols].cols.to_string().data, prefix=prefix)], axis=1))
 
     # TODO: Must we use the pipeline version?
     def vector_assembler(self, input_cols, output_col=None):
