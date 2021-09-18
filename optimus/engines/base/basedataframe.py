@@ -389,9 +389,23 @@ class BaseDataFrame(ABC):
 
     def to_json(self, cols="*", n="all", orient="list") -> str:
         """
-        Return a json from a Dataframe
+
+        :param cols:
+        :param n:
+        :param orient:
+        The format of the JSON string:
+
+        ‘split’ : dict like {‘index’ -> [index], ‘columns’ -> [columns], ‘data’ -> [values]}
+        ‘records’ : list like [{column -> value}, … , {column -> value}]
+        ‘index’ : dict like {index -> {column -> value}}
+        ‘columns’ : dict like {column -> {index -> value}}
+        ‘values’ : just the values array
+        ‘table’ : dict like {‘schema’: {schema}, ‘data’: {data}}
+
+        Describing the data, where data component is like orient='records'.
         :return:
         """
+
 
         return json.dumps(self.to_dict(cols, n, orient), ensure_ascii=False, default=json_converter)
 

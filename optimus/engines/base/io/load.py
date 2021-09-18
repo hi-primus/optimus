@@ -231,7 +231,7 @@ class BaseLoad:
              *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a avro file.
-        :param path: path or location of the file. Must be string dataType
+        :param filepath_or_buffer: path or location of the file. Must be string dataType
         :param n_rows:
         :param storage_options:
         :param conn:
@@ -267,7 +267,7 @@ class BaseLoad:
                 *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a parquet file.
-        :param path: path or location of the file. Must be string dataType
+        :param filepath_or_buffer: path or location of the file. Must be string dataType
         :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
         :param storage_options:
         :param conn:
