@@ -9,7 +9,7 @@ from dask.dataframe.core import map_partitions
 from sklearn.preprocessing import MaxAbsScaler
 from dask_ml.preprocessing import MinMaxScaler, StandardScaler
 
-from optimus.helpers.core import one_tuple_to_val, val_to_list
+from dask_ml.impute import SimpleImputer
 
 from optimus.engines.base.distributed.functions import DistributedBaseFunctions
 
@@ -92,7 +92,7 @@ class DaskBaseFunctions(DistributedBaseFunctions):
         return self.from_dataframe(self.to_dataframe(dfd).duplicated(keep=keep, subset=subset))
 
     def impute(self, series, strategy, fill_value):
-        from dask_ml.impute import SimpleImputer
+
         imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
         series_fit = series.dropna()
         if str(series.dtype) in self.constants.OBJECT_TYPES:
