@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC
 import numpy as np
 
 from optimus.engines.base.commons.functions import word_tokenize
@@ -7,7 +7,7 @@ from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 from optimus.engines.base.functions import BaseFunctions
 
 
-class DataFrameBaseFunctions(BaseFunctions):
+class DataFrameBaseFunctions(BaseFunctions, ABC):
 
     @staticmethod
     def map_partitions(dfd_or_series, func, *args, **kwargs):
