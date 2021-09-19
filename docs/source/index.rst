@@ -6,8 +6,26 @@
 Welcome to Optimus's documentation!
 ===================================
 
+Load
+
 .. autoclass:: optimus.engines.base.columns::BaseColumns
     :members:
+
+Save
+
+.. autoclass:: optimus.engines.base.columns::BaseColumns
+    :members:
+
+Columns
+
+.. autoclass:: optimus.engines.base.columns::BaseColumns
+    :members:
+
+Rows
+
+.. autoclass:: optimus.engines.base.columns::BaseRows
+    :members:
+
 
 .. toctree::
     :maxdepth: 2
