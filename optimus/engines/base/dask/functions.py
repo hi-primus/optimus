@@ -1,18 +1,15 @@
-import functools
 from abc import abstractmethod
-import re
-import numpy as np
+
 import dask
 import dask.dataframe as dd
 import hiurlparser
+import numpy as np
 from dask.delayed import delayed
-from dask.dataframe.core import map_partitions
-from sklearn.preprocessing import MaxAbsScaler
 from dask_ml.preprocessing import MinMaxScaler, StandardScaler
-
+from sklearn.preprocessing import MaxAbsScaler
 from dask_ml.impute import SimpleImputer
-
 from optimus.engines.base.distributed.functions import DistributedBaseFunctions
+from optimus.helpers.core import one_tuple_to_val
 
 
 class DaskBaseFunctions(DistributedBaseFunctions):
@@ -123,6 +120,7 @@ class DaskBaseFunctions(DistributedBaseFunctions):
             # _max = dfd[0].max(skipna=True)
             # return dfd[dfd[0] == _max]['index'].rename(series.name)
             return series.mode()
+
         return compute_mode(series)
 
     def count_zeros(self, series):
@@ -133,7 +131,7 @@ class DaskBaseFunctions(DistributedBaseFunctions):
         return dfd[dfd.columns[0]]
 
     def max_abs_scaler(self, series):
-        return MaxAbsScaler().fit_transform(self.compute(self.to_float(series)).values.reshape(-1,1))
+        return MaxAbsScaler().fit_transform(self.compute(self.to_float(series)).values.reshape(-1, 1))
 
     def min_max_scaler(self, series):
         dfd = MinMaxScaler().fit_transform(self.to_float(series).to_frame())
