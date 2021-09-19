@@ -30,7 +30,8 @@ release = '21.9'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx_rtd_theme'
+    'sphinx_rtd_theme',
+    'myst_parse'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
