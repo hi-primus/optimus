@@ -1,5 +1,0 @@
-name: optimus
-channels:
-  - conda-forge
-dependencies:
-- python==3.8
