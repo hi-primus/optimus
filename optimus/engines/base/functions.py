@@ -1,6 +1,7 @@
 import re
 from abc import abstractmethod, ABC
 
+import hidateinfer
 import jellyfish
 import numpy as np
 import pandas as pd
@@ -206,7 +207,7 @@ class BaseFunctions(ABC):
     def date_format(self, series):
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
-            import hidateinfer
+
             result = hidateinfer.infer(self.compute(series).values)
             return result if is_valid_datetime_format(result) else False
         elif dtype in self.constants.DATETIME_TYPES:
@@ -849,9 +850,8 @@ class BaseFunctions(ABC):
         return dtype
 
     def date_formats(self, series):
-        import hidateinfer
         return series.map(lambda v: hidateinfer.infer([v]))
-    
+
     def metaphone(self, series):
         return self.to_string(series).map(jellyfish.metaphone, na_action='ignore')
 
