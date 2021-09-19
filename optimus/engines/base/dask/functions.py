@@ -15,12 +15,11 @@ from optimus.engines.base.distributed.functions import DistributedBaseFunctions
 
 
 class DaskBaseFunctions(DistributedBaseFunctions):
-
     _engine = dask
 
     @staticmethod
     @property
-    def _functions():
+    def _functions(self):
         return dd
 
     @staticmethod
