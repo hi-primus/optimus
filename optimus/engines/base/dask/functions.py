@@ -4,6 +4,7 @@ import re
 import numpy as np
 import dask
 import dask.dataframe as dd
+import hiurlparser
 from dask.delayed import delayed
 from dask.dataframe.core import map_partitions
 from sklearn.preprocessing import MaxAbsScaler
@@ -144,41 +145,42 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     #     return counts, edges[0], edges[1]
 
     def domain(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["domain"], na_action=None, meta=(series.name, "str")) 
+
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["domain"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def top_domain(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["top_domain"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["top_domain"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def sub_domain(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["sub_domain"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["sub_domain"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_scheme(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["protocol"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["protocol"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_path(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["path"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["path"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_file(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["file"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["file"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_query(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["query"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["query"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_fragment(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["fragment"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["fragment"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def host(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["host"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["host"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def port(self, series):
-        import hiurlparser
-        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["port"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["port"], na_action=None,
+                                          meta=(series.name, "str"))
