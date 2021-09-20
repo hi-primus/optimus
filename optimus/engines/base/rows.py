@@ -162,13 +162,13 @@ class BaseRows(ABC):
         order = [_set_order(o) for o in order]
 
         if cast:
-            sort_cols = [f"{col}_sort" for col in cols]
+            sort_cols = [f"__{col}_sort__" for col in cols]
             types = df.cols.types(cols, tidy=False)["types"]
             casts = {}
 
             for col_name, data_type in types.items():
-                cast = "float" if data_type in df.constants.NUMERIC_INTERNAL_TYPES else "str"
-                casts.update({col_name: cast})
+                _cast = "float" if data_type in df.constants.NUMERIC_INTERNAL_TYPES else "str"
+                casts.update({col_name: _cast})
 
             df = df.cols.cast(casts, output_cols=sort_cols)
         else:

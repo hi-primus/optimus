@@ -27,7 +27,7 @@ from optimus.helpers.columns import parse_columns, check_column_numbers, prepare
 from optimus.helpers.constants import Actions, CONTRACTIONS, PROFILER_CATEGORICAL_DTYPES, ProfilerDataTypes, \
     RELATIVE_ERROR
 from optimus.helpers.converter import convert_numpy, format_dict
-from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.core import unzip, val_to_list, one_list_to_val
 from optimus.helpers.functions import transform_date_format
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
@@ -724,7 +724,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def cast(self, cols=None, data_type=None, output_cols=None) -> 'DataFrameType':
+    def cast(self, cols=None, data_type=None, output_cols=None, *args, **kwargs) -> 'DataFrameType':
         """
         NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
         transformation like string to number in which should output nan.
@@ -739,6 +739,8 @@ class BaseColumns(ABC):
                      the transformation is made.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param data_type: final data type
+        :param args: passed to cast function (df.cols.to_integer(..., -1)).
+        :param kwargs: passed to cast function (df.cols.to_integer(..., default=-1)).
         :return: Return the casted columns.
         """
 
@@ -750,10 +752,10 @@ class BaseColumns(ABC):
             cols = list(cols.items())
 
         if is_list_of_tuples(cols):
-            cols, data_type = list(zip(*cols))
+            cols, data_type = unzip(cols)
 
+        cols = parse_columns(df, cols)
         data_type = prepare_columns_arguments(cols, data_type)
-
         output_cols = get_output_cols(cols, output_cols)
 
         func_map = {
@@ -771,7 +773,7 @@ class BaseColumns(ABC):
             func = getattr(df.cols, func_name, None)
 
             if func:
-                df = func(input_col, output_col)
+                df = func(input_col, output_cols=output_col, *args, **kwargs)
             else:
                 RaiseIt.value_error(_data_type)
 
