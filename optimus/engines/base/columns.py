@@ -2529,7 +2529,7 @@ class BaseColumns(ABC):
         """
         return self._date_format(cols, format, output_cols, self.F.weekday, meta_action=Actions.WEEKDAY.value)
 
-    def td_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None,
+    def time_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None,
                    func=None) -> 'DataFrameType':
         """
         Returns a TimeDelta of the units between two datetimes.
@@ -2567,7 +2567,7 @@ class BaseColumns(ABC):
         date_format = prepare_columns_arguments(cols, date_format)
 
         if func is None:
-            func = self.F.td_between
+            func = self.F.time_between
 
         for col_name, v, _date_format, output_col in zip(cols, value, date_format, output_cols):
             if _date_format is None:
@@ -2598,7 +2598,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.td_between(cols=cols, func=self.F.years_between, value=value, date_format=date_format, round=round,
+        return self.time_between(cols=cols, func=self.F.years_between, value=value, date_format=date_format, round=round,
                                output_cols=output_cols)
 
     def months_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
@@ -2612,7 +2612,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.td_between(cols=cols, func=self.F.months_between, value=value, date_format=date_format, round=round,
+        return self.time_between(cols=cols, func=self.F.months_between, value=value, date_format=date_format, round=round,
                                output_cols=output_cols)
 
     def days_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
@@ -2626,7 +2626,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.td_between(cols=cols, func=self.F.days_between, value=value, date_format=date_format, round=round,
+        return self.time_between(cols=cols, func=self.F.days_between, value=value, date_format=date_format, round=round,
                                output_cols=output_cols)
 
     def hours_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
@@ -2640,7 +2640,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.td_between(cols=cols, func=self.F.hours_between, value=value, date_format=date_format, round=round,
+        return self.time_between(cols=cols, func=self.F.hours_between, value=value, date_format=date_format, round=round,
                                output_cols=output_cols)
 
     def minutes_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
@@ -2654,7 +2654,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.td_between(cols=cols, func=self.F.minutes_between, value=value, date_format=date_format,
+        return self.time_between(cols=cols, func=self.F.minutes_between, value=value, date_format=date_format,
                                round=round, output_cols=output_cols)
 
     def seconds_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
@@ -2668,7 +2668,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.td_between(cols=cols, func=self.F.seconds_between, value=value, date_format=date_format,
+        return self.time_between(cols=cols, func=self.F.seconds_between, value=value, date_format=date_format,
                                round=round, output_cols=output_cols)
 
     def replace(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,

@@ -778,28 +778,28 @@ class BaseFunctions(ABC):
 
     @staticmethod
     @abstractmethod
-    def td_between(self, value=None, date_format=None):
+    def time_between(self, value=None, date_format=None):
         pass
 
     def years_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.days / 365.25
+        return self.time_between(series, value, date_format).dt.days / 365.25
 
     def months_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.days / 30.436875
+        return self.time_between(series, value, date_format).dt.days / 30.436875
 
     def days_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.days
+        return self.time_between(series, value, date_format).dt.days
 
     def hours_between(self, series, value=None, date_format=None):
-        series = self.td_between(series, value, date_format)
+        series = self.time_between(series, value, date_format)
         return series.dt.days * 24.0 + series.dt.seconds / 3600.0
 
     def minutes_between(self, series, value=None, date_format=None):
-        series = self.td_between(series, value, date_format)
+        series = self.time_between(series, value, date_format)
         return series.dt.days * 1440.0 + series.dt.seconds / 60.0
 
     def seconds_between(self, series, value=None, date_format=None):
-        series = self.td_between(series, value, date_format)
+        series = self.time_between(series, value, date_format)
         return series.dt.days * 86400 + series.dt.seconds
 
     def domain(self, series):

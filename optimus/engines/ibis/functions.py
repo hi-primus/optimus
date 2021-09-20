@@ -1,13 +1,12 @@
 # DataFrame = pd.DataFrame
-import ibis
-import re
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
+import ibis
 
 from optimus.engines.base.functions import BaseFunctions
-from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.core import val_to_list
 
 
 class IbisFunctions(BaseFunctions):
@@ -140,7 +139,7 @@ class IbisFunctions(BaseFunctions):
         series = self.series
         return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
-    def td_between(self, date_format=None):
+    def time_between(self, date_format=None):
         series = self.series
         return (pd.to_datetime(series, format=date_format,
                                errors="coerce").dt.date - datetime.now().date())
