@@ -744,13 +744,15 @@ class BaseColumns(ABC):
 
         df = self.root
 
-        if is_dict(cols):
+        if is_str(cols) or is_list_of_str(cols):
+            cols = parse_columns(df, cols)
+        elif is_dict(cols):
             cols = list(cols.items())
 
         if is_list_of_tuples(cols):
-            cols, data_type = zip(*cols)
-        else:
-            cols = prepare_columns(df, cols)
+            cols, data_type = list(zip(*cols))
+
+        data_type = prepare_columns_arguments(cols, data_type)
 
         output_cols = get_output_cols(cols, output_cols)
 
