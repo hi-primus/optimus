@@ -53,10 +53,12 @@ class TestCreator:
         # Imports
         _imports = [
             "import datetime",
+            "import numpy as np",
             "from optimus.tests.base import TestBase",
             "from optimus.helpers.json import json_encoding",
             "from optimus.helpers.functions import deep_sort, df_dicts_equal, results_equal",
             "\n\ndef Timestamp(t):\n    return datetime.datetime.strptime(t, \"%Y-%m-%d %H:%M:%S\")\n\n",
+            "NaT = np.datetime64('NaT')",
             "nan = float(\"nan\")",
             "inf = float(\"inf\")",
         ]
@@ -80,7 +82,7 @@ class TestCreator:
 
         # First Config
         test_file.write("    config = " +
-                        pformat(list(classes.values())[0]) + "\n")
+                        pformat(list(classes.values())[0], compact=True) + "\n")
 
         # Global Dataframe
         if self.df is not None:
@@ -103,10 +105,6 @@ class TestCreator:
                         except UnsupportedOperation:
                             print("file seems to be empty")
 
-        # test_file.write("\nif __name__ == '__main__': unittest.main()")
-
-
-
         for name, config in list(classes.items())[1:]:
 
             class_config = config.copy()
@@ -127,7 +125,7 @@ class TestCreator:
                 
 
             test_file.write(f"{extra_tab}class Test{name}({base_class}):\n")
-            test_file.write(f"{extra_tab}    config = {pformat(class_config)}\n")
+            test_file.write(f"{extra_tab}    config = {pformat(class_config, compact=True)}\n")
 
         test_file.close()
 
@@ -202,17 +200,17 @@ class TestCreator:
                 add_buffer(
                     f"df = self.df.cols.select({pformat(select_cols, compact=True)})\n", 2)
             else:
-                add_buffer(f"df = self.df\n", 2)
+                add_buffer("df = self.df\n", 2)
             df_func = df
         elif isinstance(df, (BaseDataFrame,)):
             if select_cols:
                 df = df.cols.select(select_cols)
-            add_buffer("df = self.create_dataframe(dict=" + df.export(data_types="internal") + ", force_data_types=True)\n", 2)
+            add_buffer("df = self.create_dataframe(data=" + df.export(data_types="internal") + ", force_data_types=True)\n", 2)
             df_func = df
         else:
             if select_cols:
                 df = [df[col] for col in df if df in select_cols] if select_cols != "*" else df
-            add_buffer("df = self.create_dataframe(dict=" + pformat(df, compact=True, sort_dicts=False) +
+            add_buffer("df = self.create_dataframe(data=" + pformat(df, compact=True, sort_dicts=False) +
                        ", force_data_types=True)\n", 2)
             df_func = df
 
@@ -222,10 +220,14 @@ class TestCreator:
             if is_function(v):
                 _args.append(v.__qualname__)
             elif isinstance(v, (BaseDataFrame,)):
-                _df = "self.create_dataframe(dict=" + v.export(data_types="internal") + ", force_data_types=True)"
+                _df = "self.create_dataframe(data=" + v.export(data_types="internal") + ", force_data_types=True)"
                 _args.append(_df)
+            elif isinstance(v, list) and isinstance(v[0], (BaseDataFrame,)):
+                _dfs = ["self.create_dataframe(data=" + dv.export(data_types="internal") + ", force_data_types=True)" for dv in v]
+                _dfs = "[" + ", ".join(_dfs) + "]"
+                _args.append(_dfs)
             elif isinstance(v, (str, bool, dict, list)):
-                _args.append(pformat(v, compact=True, sort_dicts=False))
+                _args.append(pformat(v, compact=True, sort_dicts=False, width=800))
             else:
                 _args.append(str(v))
 
@@ -234,8 +236,19 @@ class TestCreator:
 
         # Process keywords arguments
         for k, v in kwargs.items():
-            _kwargs.append(
-                k + "=" + pformat(v, compact=True, sort_dicts=False))
+            if is_function(v):
+                _kwargs.append(k + "=" + v.__qualname__)
+            elif isinstance(v, (BaseDataFrame,)):
+                _df = "self.create_dataframe(data=" + v.export(data_types="internal") + ", force_data_types=True)"
+                _kwargs.append(k + "=" + _df)
+            elif isinstance(v, list) and isinstance(v[0], (BaseDataFrame,)):
+                _dfs = ["self.create_dataframe(data=" + dv.export(data_types="internal") + ", force_data_types=True)" for dv in v]
+                _dfs = "[" + ", ".join(_dfs) + "]"
+                _kwargs.append(k + "=" + _dfs)
+            elif isinstance(v, (str, bool, dict, list)):
+                _kwargs.append(k + "=" + pformat(v, compact=True, sort_dicts=False, width=800))
+            else:
+                _kwargs.append(k + "=" + str(v))
 
         # Separator if we have positional and keyword arguments
         separator = ""
@@ -294,13 +307,13 @@ class TestCreator:
         elif compare_by == "df":
             if expected_is_df:
                 expected_df = expected_df.export(data_types="internal")
-            add_buffer(f"expected = self.create_dataframe(dict={expected_df}, force_data_types=True)\n", 2)
+            add_buffer(f"expected = self.create_dataframe(data={expected_df}, force_data_types=True)\n", 2)
         else:
             if expected_is_df:
                 expected_df = expected_df.export(data_types=False)
                 add_buffer(f"expected = {expected_df}\n", 2)
             elif is_str(expected_df):
-                add_buffer(f"expected = {pformat(expected_df)}\n", 2)
+                add_buffer(f"expected = {pformat(expected_df, compact=True, sort_dicts=False)}\n", 2)
             else:
                 add_buffer(f"expected = {expected_df}\n", 2)
 
