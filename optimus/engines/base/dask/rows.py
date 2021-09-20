@@ -29,7 +29,7 @@ class DaskBaseRows(DistributedBaseRows):
         # not supported arguments on dask
         if how == "all" and keep == "first":
             return self._drop_duplicated_builtin(cols, keep)
-        return self._mask(cols, method="duplicated", drop=True, keep=keep, how=how)
+        return self._mask(cols, func=self.root.mask.duplicated, drop=True, keep=keep, how=how)
 
     def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
                 bounds=None):
