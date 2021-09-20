@@ -724,7 +724,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def cast(self, cols=None, data_type=None, output_cols=None, columns=None) -> 'DataFrameType':
+    def cast(self, cols=None, data_type=None, output_cols=None) -> 'DataFrameType':
         """
         NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
         transformation like string to number in which should output nan.
@@ -732,21 +732,27 @@ class BaseColumns(ABC):
         Cast the elements inside a column or a list of columns to a specific data type.
         Unlike 'cast' this not change the columns data type
 
-        :param cols: Columns names to be casted
+        :param cols: Columns names to be casted or, dictionary or list of tuples of column names
+                     and types to be casted with the following structure:
+                     cols = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
+                     The first parameter in each tuple is the column name, the second is the final datatype of column after
+                     the transformation is made.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param data_type: final data type
-        :param columns: List of tuples of column names and types to be casted. This variable should have the
-                following structure:
-                colsAndTypes = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
-                The first parameter in each tuple is the column name, the second is the final datatype of column after
-                the transformation is made.
         :return: Return the casted columns.
         """
 
         df = self.root
 
-        if columns is None:
-            columns = prepare_columns(df, cols, output_cols, args=data_type)
+        if is_dict(cols):
+            cols = list(cols.items())
+
+        if is_list_of_tuples(cols):
+            cols, data_type = zip(*cols)
+        else:
+            cols = prepare_columns(df, cols)
+
+        output_cols = get_output_cols(cols, output_cols)
 
         func_map = {
             "int": "to_integer",
@@ -756,24 +762,16 @@ class BaseColumns(ABC):
             "str": "to_string"
         }
 
-        for item in columns:
+        for input_col, output_col, _data_type in zip(cols, output_cols, data_type):
 
-            if len(item) == 3:
-                input_col, output_col, arg = item
-            elif len(item) == 2:
-                input_col, arg = item
-                output_col = input_col
-            else:
-                RaiseIt.value_error(columns, ["list of tuples"])
-
-            func_name = func_map.get(arg, f"to_{arg}")
+            func_name = func_map.get(_data_type, f"to_{_data_type}")
 
             func = getattr(df.cols, func_name, None)
 
             if func:
                 df = func(input_col, output_col)
             else:
-                RaiseIt.value_error(arg)
+                RaiseIt.value_error(_data_type)
 
         return df
 
