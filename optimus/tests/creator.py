@@ -7,7 +7,7 @@ from pprint import pformat
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 
-from optimus.infer import is_function, is_list_empty
+from optimus.infer import is_str, is_function, is_list_empty
 from optimus.helpers.logger import logger
 
 
@@ -298,7 +298,11 @@ class TestCreator:
         else:
             if expected_is_df:
                 expected_df = expected_df.export(data_types=False)
-            add_buffer(f"expected = {expected_df}\n", 2)
+                add_buffer(f"expected = {expected_df}\n", 2)
+            elif is_str(expected_df):
+                add_buffer(f"expected = {pformat(expected_df)}\n", 2)
+            else:
+                add_buffer(f"expected = {expected_df}\n", 2)
 
         # Output
         if compare_by == "df":

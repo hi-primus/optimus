@@ -2240,6 +2240,7 @@ class BaseColumns(ABC):
             formats = [current_format for col in cols]
 
         for col, col_format in zip(cols, formats):
+            col_format = col_format if is_str(col_format) else None
             df = df.cols.apply(col, self.F.format_date, args=(col_format, output_format), func_return_type=str,
                                output_cols=output_cols, meta_action=Actions.FORMAT_DATE.value, mode="vectorized",
                                set_index=False)

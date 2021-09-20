@@ -12,9 +12,9 @@ from metaphone import doublemetaphone
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_valid_datetime_format, is_object_value, is_ip, \
-    is_url, is_missing, \
-    is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number, is_int_like
+    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_valid_datetime_format, \
+    is_object_value, is_ip, is_url, is_missing, is_gender, is_list_of_int, is_list_of_str, \
+    is_str, is_phone_number, is_int_like
 
 
 # ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
@@ -247,9 +247,15 @@ class BaseFunctions(ABC):
     def date_format(self, series):
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
-
             result = hidateinfer.infer(self.compute(series).values)
-            return result if is_valid_datetime_format(result) else False
+            if not is_valid_datetime_format(result) or True:
+                result_series = self.date_formats(series)
+                result = result_series.mode().head(1)[0]
+
+                if not is_valid_datetime_format(result):
+                    return False
+
+            return result
         elif dtype in self.constants.DATETIME_TYPES:
             return True
 
