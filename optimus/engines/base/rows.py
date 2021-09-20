@@ -1,16 +1,12 @@
-from abc import abstractmethod, ABC
-from typing import Tuple
+from abc import ABC
+from typing import Callable
 from optimus.helpers.types import *
 
-from multipledispatch import dispatch
-
 from optimus.engines.base.meta import Meta
-# This implementation works for Spark, Dask, dask_cudf
 from optimus.helpers.columns import parse_columns, prepare_columns_arguments
 from optimus.helpers.constants import Actions
-from optimus.helpers.core import one_list_to_val, val_to_list
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_bool, is_dict, is_list_of_str, is_list_of_tuples, is_list_value, is_str, is_list_of_str_or_int
+from optimus.infer import is_dict, is_list_of_str, is_list_of_tuples, is_list_value, is_str
 
 
 class BaseRows(ABC):
@@ -98,10 +94,8 @@ class BaseRows(ABC):
         if not hasattr(expr, "get_series"):
             raise ValueError(f"Invalid value for 'expr': {expr}")
                 
-            dfd = dfd.reset_index(drop=True)[cols_or_exprs.get_series().reset_index(drop=True)]
+        dfd = dfd.reset_index(drop=True)[expr.get_series().reset_index(drop=True)]
 
-        # if contains:
-        #     df.rows.contains(expr, contains)
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 
         df = self.root.new(dfd, meta=meta)
@@ -190,7 +184,7 @@ class BaseRows(ABC):
                 where = df[where]
             else:
                 where = eval(where)
-        dfd = dfd.reset_index(drop=True)[where.get_series().reset_index(drop=True)==0]
+        dfd = dfd.reset_index(drop=True)[where.get_series().reset_index(drop=True) == 0]
         meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 
