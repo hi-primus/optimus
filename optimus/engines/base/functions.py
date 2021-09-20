@@ -9,6 +9,7 @@ from fastnumbers import fast_float, fast_int
 from jsonschema._format import is_email
 from metaphone import doublemetaphone
 
+from optimus.helpers.logger import logger
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
@@ -240,8 +241,13 @@ class BaseFunctions(ABC):
         series_fit = series.dropna()
         if str(series.dtype) in self.constants.OBJECT_TYPES:
             series_fit = series_fit.astype(str)
-        imputer.fit(series_fit.values.reshape(-1, 1))
-        return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
+        values = series_fit.values.reshape(-1, 1)
+        if len(values):
+            imputer.fit(values)
+            return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
+        else:
+            logger.warn("list to fit imputer is empty, try cols.fill_na instead.")
+            return series
 
     # Aggregation
     def date_format(self, series):

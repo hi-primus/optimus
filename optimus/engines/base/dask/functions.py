@@ -95,8 +95,13 @@ class DaskBaseFunctions(DistributedBaseFunctions):
         series_fit = series.dropna()
         if str(series.dtype) in self.constants.OBJECT_TYPES:
             series_fit = series_fit.astype(str)
-        imputer.fit(series_fit.values.reshape(-1, 1))
-        return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
+        values = series_fit.values.reshape(-1, 1)
+        if len(values):
+            imputer.fit(values)
+            return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
+        else:
+            logger.warn("list to fit imputer is empty, try cols.fill_na instead.")
+            return series
 
     @staticmethod
     def delayed(func):
