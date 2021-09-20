@@ -48,6 +48,13 @@ class BaseFunctions(ABC):
         raise NotImplementedError(f"\"{name}\" is not available" + type_msg)
 
     @property
+    def _functions(self):
+        """
+        Gets the set of functions available in the engine
+        """
+        return self._partition_engine
+
+    @property
     def n_partitions(self):
         if self.root is None:
             return 1
@@ -55,15 +62,38 @@ class BaseFunctions(ABC):
 
     @staticmethod
     def delayed(func):
+        """
+
+        :param func:
+        :return:
+        """
         return func
 
     def from_delayed(self, delayed):
+        """
+
+        :param delayed:
+        :return:
+        """
         return delayed[0]
 
     def to_delayed(self, delayed):
+        """
+
+        :param delayed:
+        :return:
+        """
         return [delayed]
 
     def apply_delayed(self, series, func, *args, **kwargs):
+        """
+
+        :param series:
+        :param func:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         result = self.to_delayed(series)
         result = [partition.apply(func, *args, **kwargs) for partition in result]
         result = self.from_delayed(result)
@@ -71,6 +101,14 @@ class BaseFunctions(ABC):
         return result
 
     def map_delayed(self, series, func, *args, **kwargs):
+        """
+
+        :param series:
+        :param func:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         result = self.to_delayed(series)
         result = [partition.map(func, *args, **kwargs) for partition in result]
         result = self.from_delayed(result)
@@ -79,20 +117,22 @@ class BaseFunctions(ABC):
 
     @property
     def constants(self):
+        """
+
+        :return:
+        """
         from optimus.engines.base.constants import BaseConstants
         return BaseConstants()
-
-    @property
-    def _functions(self):
-        """
-        Gets the set of functions available in the engine
-        """
-        return self._partition_engine
 
     @staticmethod
     def sort_df(dfd, cols, ascending):
         """
-        Sort rows taking into account one column
+        Sort rows taking into account one column.
+
+        :param dfd:
+        :param cols:
+        :param ascending:
+        :return:
         """
         return dfd.sort_values(cols, ascending=ascending)
 

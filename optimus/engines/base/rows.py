@@ -98,7 +98,10 @@ class BaseRows(ABC):
         if not hasattr(expr, "get_series"):
             raise ValueError(f"Invalid value for 'expr': {expr}")
                 
-        dfd = dfd.reset_index(drop=True)[expr.get_series().reset_index(drop=True)]
+            dfd = dfd.reset_index(drop=True)[cols_or_exprs.get_series().reset_index(drop=True)]
+
+        # if contains:
+        #     df.rows.contains(expr, contains)
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 
         df = self.root.new(dfd, meta=meta)

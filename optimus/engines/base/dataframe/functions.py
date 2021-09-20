@@ -1,9 +1,9 @@
 from abc import ABC
-import numpy as np
 
-from optimus.engines.base.commons.functions import word_tokenize
+import numpy as np
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
+from optimus.engines.base.commons.functions import word_tokenize
 from optimus.engines.base.functions import BaseFunctions
 
 
@@ -34,7 +34,7 @@ class DataFrameBaseFunctions(BaseFunctions, ABC):
     @staticmethod
     def any(series):
         return series.any()
-    
+
     @staticmethod
     def not_any(series):
         return not series.any()
