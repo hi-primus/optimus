@@ -134,11 +134,12 @@ class BaseRows(ABC):
 
         return value
 
-    def sort(self, cols="*", order="desc") -> 'DataFrameType':
+    def sort(self, cols="*", order="desc", cast=True) -> 'DataFrameType':
         """
         Sort rows taking into account multiple columns
         :param cols:
         :param order:
+        :param cast: cast rows before sorting them.
         """
         df = self.root
 
@@ -151,16 +152,37 @@ class BaseRows(ABC):
         cols = parse_columns(df, cols)
         order = prepare_columns_arguments(cols, order)
 
-        for _order in order:
-            if is_str(_order):
-                if _order != "asc" and _order != "desc":
-                    RaiseIt.value_error(_order, ["asc", "desc"])
-                _order = True if _order == "asc" else False
+        def _set_order(o):
+            if is_str(o):
+                if o not in ["asc", "desc"]:
+                    RaiseIt.value_error(o, ["asc", "desc"])
+                o = True if o == "asc" else False
+            return o
 
-        dfd = self.root.functions.sort_df(self.root.data, cols, order)
+        order = [_set_order(o) for o in order]
+
+        if cast:
+            sort_cols = [f"{col}_sort" for col in cols]
+            types = df.cols.types(cols, tidy=False)["types"]
+            casts = {}
+
+            for col_name, data_type in types.items():
+                cast = "float" if data_type in df.constants.NUMERIC_INTERNAL_TYPES else "str"
+                casts.update({col_name: cast})
+
+            df = df.cols.cast(casts, output_cols=sort_cols)
+        else:
+            sort_cols = cols
+
+        dfd = df.functions.sort_df(df.data, sort_cols, order)
         meta = Meta.action(self.root.meta, Actions.SORT_ROW.value, cols)
 
-        return self.root.new(dfd, meta=meta)
+        df = self.root.new(dfd, meta=meta)
+
+        if cast:
+            df = df.cols.drop(sort_cols)
+
+        return df
 
     def reverse(self) -> 'DataFrameType':
         """
