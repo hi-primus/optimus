@@ -504,7 +504,7 @@ def weekday_names(directive="%B"):
     return [datetime.datetime.strptime(str(n + 1), '%m').strftime(directive) for n in range(7)]
 
 
-def match_date(value):
+def match_date(value, error=False):
     """
     Create a regex from a string with a date format like
     `dd/MM/yyyy hh:mm:ss-sss mi` or `%d/%m/%Y`.
@@ -513,7 +513,7 @@ def match_date(value):
     """
     formats = ["d", "dd", "M", "MM", "MMM", "MMMM", "MMMMM", "yy", "yyyy", "w",
                "ww", "www", "wwww", "wwwww", "h", "hh", "H", "HH", "kk", "k",
-               "m", "mm", "s", "ss", "sss", "/", ":", "-", " ", "+", "|", "a",
+               "m", "mm", "s", "ss", "sss", "xxx", "/", ":", "-", " ", "+", "|", "a",
                "mi"]
     formats.sort(key=len, reverse=True)
 
@@ -539,7 +539,12 @@ def match_date(value):
                 found = True
                 break
         if found is False:
-            raise ValueError(f"{value[start]} is not a valid date format. ({value})")
+            error_str = f"{value[start]} is not a valid date format. ({value})"
+            if error:
+                raise ValueError(error_str)
+            else:
+                logger.warn(error_str)
+                return False
 
     exprs = []
     for f in result:

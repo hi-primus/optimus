@@ -266,7 +266,7 @@ class Mask(ABC):
                 where = eval(where)
 
         if isinstance(where, (df.__class__,)):
-            return where
+            return where.cols.to_boolean()
 
         RaiseIt.type_error(where, ["Dataframe", "Expression", "Column name"])
 
@@ -439,7 +439,10 @@ class Mask(ABC):
                     df = df.cols.assign({col_name: True})
                 elif date_format:
                     regex = match_date(date_format)
-                    df = df.mask.match_regex(col_name, regex)
+                    if not regex:
+                        df = df.cols.assign({col_name: False})
+                    else:
+                        df[col_name] = df.mask.match_regex(col_name, regex)
                 else:
                     df = df.cols.assign({col_name: False})
 

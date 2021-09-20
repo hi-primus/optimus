@@ -247,6 +247,7 @@ class BaseFunctions(ABC):
     def date_format(self, series):
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
+            series = series.astype(str)
             result = hidateinfer.infer(self.compute(series).values)
             if not is_valid_datetime_format(result) or True:
                 result_series = self.date_formats(series)
@@ -256,7 +257,7 @@ class BaseFunctions(ABC):
                     return False
 
             return result
-        elif dtype in self.constants.DATETIME_TYPES:
+        elif dtype in self.constants.DATETIME_INTERNAL_TYPES:
             return True
 
         return False
