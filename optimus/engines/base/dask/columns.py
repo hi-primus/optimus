@@ -91,7 +91,7 @@ class DaskBaseColumns(DistributedBaseColumns):
 
         return result
 
-    def nest(self, cols="*", separator="", output_col=None, drop=False, shape="string"):
+    def nest(self, cols="*", separator="", output_col=None, drop=True, shape="string"):
         """
         Merge multiple columns with the format specified
         :param cols: columns to be nested

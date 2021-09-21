@@ -3174,7 +3174,7 @@ class BaseColumns(ABC):
 
     @staticmethod
     @abstractmethod
-    def nest(cols, separator="", output_col=None, drop=False, shape="string") -> 'DataFrameType':
+    def nest(cols, separator="", output_col=None, drop=True, shape="string") -> 'DataFrameType':
         """
         Concatenate two or more columns into one.
 

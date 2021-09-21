@@ -941,7 +941,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
     @staticmethod
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
-    def nest(input_cols, separator="", output_col=None, drop=False, shape="string"):
+    def nest(input_cols, separator="", output_col=None, drop=True, shape="string"):
         """
         Concat multiple columns to one with the format specified
         :param input_cols: columns to be nested
