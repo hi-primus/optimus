@@ -23,7 +23,7 @@ class Encoding(BaseEncoding):
 
         pass
 
-    def one_hot_encoder(self, cols="*", prefix=None, **kwargs):
+    def one_hot_encoder(self, cols="*", prefix=None, drop=True, **kwargs):
         """
         Maps a column of label indices to a column of binary vectors, with at most a single one-value.
         :param cols: Columns to be encoded.
@@ -45,7 +45,12 @@ class Encoding(BaseEncoding):
         if len(excluded_cols):
             logger.warn(f"{RaiseIt._and(excluded_cols)} cannot be encoded using 'one_hot_encoder'")
 
-        return self.root.new(pd.concat([df.data, pd.get_dummies(df[cols].cols.to_string().data, prefix=prefix)], axis=1))
+        df = self.root.new(pd.concat([df.data, pd.get_dummies(df[cols].cols.to_string().data, prefix=prefix)], axis=1))
+
+        if drop:
+            df = df.cols.drop(cols)
+
+        return df
 
     # TODO: Must we use the pipeline version?
     def vector_assembler(self, input_cols, output_col=None):
