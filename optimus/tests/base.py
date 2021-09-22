@@ -30,11 +30,11 @@ class TestBase(unittest.TestCase):
         cls.post_create()
 
     @classmethod
-    def create_dataframe(cls, dict=None, **kwargs):
+    def create_dataframe(cls, data=None, **kwargs):
         if not "n_partitions" in kwargs and "n_partitions" in cls.config:
             kwargs["n_partitions"] = cls.config["n_partitions"]
 
-        return cls.op.create.dataframe(dict, **kwargs)
+        return cls.op.create.dataframe(data, **kwargs)
 
     @classmethod
     def load_dataframe(cls, path=None, type='file', **kwargs):

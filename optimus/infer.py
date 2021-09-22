@@ -700,7 +700,7 @@ def is_datetime(value):
 
 def is_valid_datetime_format(value):
     try:
-        now = datetime.datetime.strftime(datetime.datetime.now(), value)
+        now = datetime.datetime.strftime(datetime.datetime.now(tz=datetime.timezone.utc), value)
         datetime.datetime.strptime(now, value)
     except ValueError:
         return False

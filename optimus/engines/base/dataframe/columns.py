@@ -68,7 +68,7 @@ class DataFrameBaseColumns(BaseColumns):
     def to_timestamp(cols, date_format=None, output_cols=None):
         pass
 
-    def nest(self, cols="*", separator="", output_col=None, shape="string", drop=False):
+    def nest(self, cols="*", separator="", output_col=None, shape="string", drop=True):
         df = self.root
 
         dfd = df.data

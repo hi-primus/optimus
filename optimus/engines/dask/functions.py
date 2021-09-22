@@ -1,14 +1,9 @@
-# This functions must handle one or multiple columns
-# Must return None if the data type can not be handle
-
-
-from optimus.infer import is_list_or_tuple
-
 import dask
 import dask.dataframe as dd
 import dask.array as da
 import pandas as pd
 
+from optimus.infer import is_list_or_tuple
 from optimus.engines.base.pandas.functions import PandasBaseFunctions
 from optimus.engines.base.dask.functions import DaskBaseFunctions
 
@@ -106,7 +101,7 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
     def format_date(self, series, current_format=None, output_format=None):
         return dd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
-    def td_between(self, series, value=None, date_format=None):
+    def time_between(self, series, value=None, date_format=None):
 
         name = series.name
 
@@ -119,7 +114,7 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
             value, value_date_format = value
 
         series = dd.to_datetime(series, format=date_format, errors="coerce", unit='ns', utc=True)
-        
+
         if isinstance(value, dd.Series):
             value = dd.to_datetime(value, format=value_date_format, errors="coerce", unit='ns', utc=True)
         else:
