@@ -1,4 +1,5 @@
 import glob
+from optimus.infer import is_url
 import uuid
 import zipfile
 from pathlib import Path
@@ -28,8 +29,11 @@ class Load(BaseLoad):
     @staticmethod
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        s = requests.get(filepath_or_buffer).text
-        df = pd.read_csv(StringIO(s), *args, **kwargs)
+        if is_url(filepath_or_buffer):
+            s = requests.get(filepath_or_buffer).text
+            df = pd.read_csv(StringIO(s), *args, **kwargs)
+        else:
+            df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
         if isinstance(df, pd.io.parsers.TextFileReader):
             df = df.get_chunk()
         return df
@@ -75,9 +79,13 @@ class Load(BaseLoad):
     @staticmethod
     def _excel(filepath_or_buffer, nrows=None, storage_options=None, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        s = requests.get(filepath_or_buffer).text
-        dfs = pd.read_excel(StringIO(s), nrows=nrows, storage_options=storage_options, *args, **kwargs)
-        sheet_names = list(pd.read_excel(StringIO(s), None, storage_options=storage_options).keys())
+
+        if is_url(filepath_or_buffer):
+            s = requests.get(filepath_or_buffer).text
+            filepath_or_buffer = StringIO(s)
+
+        dfs = pd.read_excel(filepath_or_buffer, nrows=nrows, storage_options=storage_options, *args, **kwargs)
+        sheet_names = list(pd.read_excel(filepath_or_buffer, None, storage_options=storage_options).keys())
         df = pd.concat(val_to_list(dfs), axis=0).reset_index(drop=True)
 
         return df, sheet_names    
