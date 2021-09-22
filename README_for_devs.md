@@ -355,3 +355,12 @@ https://rapidsai.github.io/projects/cudf/en/0.10.0/guide-to-udfs.html
 Spark
 https://spark.apache.org/docs/latest/sql-pyspark-pandas-with-arrow.html
 
+## Creating docs
+
+Install sphynx
+`pip install sphynx`
+
+Install the read the docs theme
+`pip install sphinx_rtd_theme`
+
+go to `docs/` in the package and run `make html`
