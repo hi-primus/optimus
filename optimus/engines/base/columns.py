@@ -1124,7 +1124,7 @@ class BaseColumns(ABC):
         :param agg: List of tuples with the form [("agg", "col")]
         :return:
         """
-        df = self.root.data
+        df = self.root
         compact = {}
 
         agg_names = None
@@ -1137,15 +1137,20 @@ class BaseColumns(ABC):
 
         for col_agg in agg:
             if is_dict(col_agg):
-                col_agg = list(col_agg.items())[::-1]
+                col_agg = list(col_agg.items())[0][::-1]
             _agg, _col = col_agg
             compact.setdefault(_col, []).append(_agg)
 
-        df = df.groupby(by=by).agg(compact).reset_index()
+        # TODO cast to float on certain aggregations
+        df = df.cols.to_float(list(compact.keys()))
+
+        dfd = df.data
+
+        dfd = dfd.groupby(by=by).agg(compact).reset_index()
         agg_names = agg_names or [a[0] + "_" + a[1] for a in agg]
-        df.columns = (val_to_list(by) + agg_names)
-        df.columns = [str(c) for c in df.columns]
-        return self.root.new(df)
+        dfd.columns = (val_to_list(by) + agg_names)
+        dfd.columns = [str(c) for c in dfd.columns]
+        return self.root.new(dfd)
 
     def move(self, column, position, ref_col=None) -> 'DataFrameType':
         """
