@@ -170,7 +170,7 @@ class Connect:
 
     def mysql(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.MYSQL.value["name"],
-                            schema=schema, op=self.op)
+                            schema=schema, op=self.op, sso=sso)
 
     def postgres(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.POSTGRESQL.value["name"],

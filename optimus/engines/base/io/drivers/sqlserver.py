@@ -13,7 +13,10 @@ class SQLServerDriver(AbstractDriver):
         return DriverProperties.SQLSERVER
 
     def uri(self, *args, **kwargs) -> str:
-        return f"""{kwargs["driver"]}://{kwargs["user"]}:{kwargs["password"]}@{kwargs["host"]}:{kwargs["port"]}/{kwargs["database"]}?driver=ODBC+Driver+17+for+SQL+Server"""
+        if kwargs["sso"]:
+            return f"""{kwargs["driver"]}://{kwargs["host"]}:{kwargs["port"]}/{kwargs["database"]}?driver=ODBC+Driver+17+for+SQL+Server&Trusted_Connection=yes"""
+        else:
+            return f"""{kwargs["driver"]}://{kwargs["user"]}:{kwargs["password"]}@{kwargs["host"]}:{kwargs["port"]}/{kwargs["database"]}?driver=ODBC+Driver+17+for+SQL+Server"""
 
     def url(self, *args, **kwargs) -> str:
         return f"""jdbc:{kwargs["driver"]}://{kwargs["host"]}:{kwargs["port"]};databaseName={kwargs["database"]}"""

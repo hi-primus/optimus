@@ -24,7 +24,7 @@ class DaskBaseJDBC:
 
     def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
                  oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
-                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, op=None):
+                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, op=None, sso=False):
 
         """
         Create the JDBC connection object
@@ -73,7 +73,8 @@ class DaskBaseJDBC:
             oracle_service_name=oracle_service_name,
             presto_catalog=presto_catalog,
             bigquery_project=bigquery_project,
-            bigquery_dataset=bigquery_dataset
+            bigquery_dataset=bigquery_dataset,
+            sso=sso
         )
 
         self.database = database
@@ -82,7 +83,7 @@ class DaskBaseJDBC:
         self.schema = schema
         print(self.uri)
         logger.print(self.uri)
-    
+
     def tables(self, schema=None, database=None, limit=None):
         """
         Return all the tables in a database

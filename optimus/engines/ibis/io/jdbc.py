@@ -40,7 +40,8 @@ class JDBC:
             oracle_service_name=oracle_service_name,
             presto_catalog=presto_catalog,
             bigquery_project=bigquery_project,
-            bigquery_dataset=bigquery_dataset
+            bigquery_dataset=bigquery_dataset,
+            sso=sso
         )
         self.host = host
         self.database = database
