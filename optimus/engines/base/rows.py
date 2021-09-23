@@ -3,6 +3,7 @@ from typing import Callable
 from optimus.helpers.types import *
 
 from optimus.engines.base.meta import Meta
+from optimus.helpers.core import val_to_list
 from optimus.helpers.columns import parse_columns, prepare_columns_arguments
 from optimus.helpers.constants import Actions
 from optimus.helpers.raiseit import RaiseIt
@@ -49,21 +50,32 @@ class BaseRows(ABC):
 
         return df.new(df.data.reset_index(drop=True))
 
-    def apply(self, func, args=None, output_cols=None) -> 'DataFrameType':
+    def apply(self, func, args=None, output_cols=None, mode="vectorized") -> 'DataFrameType':
         """
         This will aimed to handle vectorized and not vectorized operations
         :param func:
         :param args:
         :param output_cols:
+        :param mode:
         :return:
         """
         df = self.root
         dfd = self.root.data
         kw_columns = {}
 
-        for output_col in output_cols:
-            result = func(dfd, *args)
-            kw_columns = {output_col: result}
+        output_cols = val_to_list(output_cols)
+        func = prepare_columns_arguments(output_cols, func)
+
+        if mode == "vectorized":
+            for output_col, _func in zip(output_cols, func):
+                result = _func(dfd, *(args or []))
+                kw_columns = {output_col: result}
+        elif mode == "map":
+            for output_col, _func in zip(output_cols, func):
+                result = dfd.apply(_func, axis=1)
+                kw_columns = {output_col: result}
+        else:
+            RaiseIt.value_error(mode, ["map", "vectorized"])
 
         return df.cols.assign(kw_columns)
 
