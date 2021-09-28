@@ -102,7 +102,7 @@ class BaseDataFrame(ABC):
         df = self.__class__(dfd, op=self.op)
         if meta is not None:
             df.meta = meta
-            df.le = self.le
+        df.le = self.le
         return df
 
     @staticmethod
