@@ -4,20 +4,19 @@ import dask
 import dask.array as da
 import dask.dataframe as dd
 import humanize
-from dask.distributed import Variable
-from dask.utils import parse_bytes
 import numpy as np
 import pandas as pd
+from dask.distributed import Variable
+from dask.utils import parse_bytes
 
 from optimus.engines.base.basedataframe import BaseDataFrame
-from optimus.helpers.types import *
+from optimus.engines.base.distributed.dataframe import DistributedBaseDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.types import *
 from optimus.infer import is_int
-
-from optimus.engines.base.distributed.dataframe import DistributedBaseDataFrame
-from optimus.engines.pandas.dataframe import PandasDataFrame
 
 
 class DaskBaseDataFrame(DistributedBaseDataFrame):
@@ -92,7 +91,8 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         def func(value):
             return value[lower_bound:upper_bound]
 
-        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute(), op=self.op, label_encoder=self.le)
+        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute(), op=self.op,
+                               label_encoder=self.le)
 
     def graph(self) -> dict:
         """
@@ -158,8 +158,8 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         df = self.root
 
         if values is not None:
-            agg=("first", values)
-        
+            agg = ("first", values)
+
         groupby = val_to_list(groupby)
         by = groupby + [col]
         if agg is None:
@@ -262,11 +262,11 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         :return:
         """
 
-        if n=="all":
+        if n == "all":
             series = self.cols.select(cols).to_pandas()
         else:
             series = self.buffer_window(cols, 0, n).data
-            
+
         return series.to_dict(orient)
 
     def to_pandas(self):
