@@ -5,5 +5,10 @@
     load
     save
     columns
+    math
+    trigonometric
+    statistical
     rows
+    dates
+    quality
 
