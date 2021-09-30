@@ -16,6 +16,11 @@ class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
     _engine = ks
 
     @staticmethod
+    def dask_to_compatible(dfd):
+        from optimus.helpers.converter import dask_dataframe_to_pandas
+        return ks.from_pandas(dask_dataframe_to_pandas(dfd))
+
+    @staticmethod
     def df_concat(df_list):
         return ks.concat(df_list, axis=0, ignore_index=True)
 
@@ -98,10 +103,10 @@ class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
 
     def format_date(self, series, current_format=None, output_format=None):
-        return pd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format).reset_index(
-            drop=True)
+        return ks.to_datetime(series, format=current_format,
+                              errors="coerce").dt.strftime(output_format).reset_index(drop=True)
 
-    def td_between(self, series, value=None, date_format=None):
+    def time_between(self, series, value=None, date_format=None):
 
         value_date_format = date_format
 
@@ -113,5 +118,5 @@ class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
 
         date = pd.to_datetime(series, format=date_format, errors="coerce")
         value = pd.Timestamp.now() if value is None else pd.to_datetime(value, format=value_date_format, errors="coerce")
-        
+
         return (value - date)

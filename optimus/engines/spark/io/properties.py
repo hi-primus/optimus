@@ -37,9 +37,8 @@ class DriverProperties(Enum):
         "table_name": "table_name"
     }
     SQLSERVER = {
-        "name": "sqlserver",
+        "name": "mssql+pyodbc",
         "port": 1433,
-        "java_class": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
         "table_name": "TABLE_NAME"
     }
     SQLITE = {

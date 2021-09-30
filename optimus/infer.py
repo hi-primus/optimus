@@ -10,7 +10,7 @@ from ast import literal_eval
 import fastnumbers
 import pandas as pd
 import pendulum
-import pydateinfer
+import hidateinfer
 
 
 
@@ -20,7 +20,7 @@ from optimus.helpers.constants import CURRENCIES
 
 def is_datetime_str(_value: str):
     try:
-        pdi = pydateinfer.infer([_value])
+        pdi = hidateinfer.infer([_value])
         code_count = pdi.count('%')
         value_code_count = _value.count('%')
         return code_count >= 2 and value_code_count < code_count and code_count >= len(_value) / 7 and any(
@@ -696,6 +696,18 @@ def is_datetime(value):
     #     result = is_datetime_str(str(value))
 
     return result
+
+
+def is_valid_datetime_format(value):
+    try:
+        now = datetime.datetime.strftime(datetime.datetime.now(tz=datetime.timezone.utc), value)
+        datetime.datetime.strptime(now, value)
+    except ValueError:
+        return False
+    except re.error:
+        return False
+
+    return True
 
 
 def is_binary(value):

@@ -1,5 +1,5 @@
-dask[complete]==2021.5.0
-distributed==2021.5.0
+dask[complete]==2021.9.0
+distributed==2021.9.0
 dask-ml>=1.9.0
 pyarrow==1.0.1
 coiled>=0.0.30

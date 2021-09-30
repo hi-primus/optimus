@@ -79,12 +79,5 @@ def parse_data_types(df, value):
     """
 
     value = val_to_list(value)
-
-    data_type = []
-
-    for v in value:
-        v = df.constants.INTERNAL_TO_OPTIMUS.get(v, v)
-        data_type.append(v)
-
+    data_type = [df.constants.INTERNAL_TO_OPTIMUS.get(v, v) for v in value]
     return one_list_to_val(data_type)
-

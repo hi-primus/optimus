@@ -1,8 +1,7 @@
-from optimus.engines.cudf.io.save import Save
-from optimus.engines.pandas.dataframe import PandasDataFrame
-
 from optimus.engines.base.cudf.dataframe import CUDFBaseDataFrame
 from optimus.engines.base.dataframe.dataframe import DataFrameBaseDataFrame
+from optimus.engines.cudf.io.save import Save
+from optimus.engines.pandas.dataframe import PandasDataFrame
 
 
 class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
@@ -43,7 +42,7 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         return Constants()
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas(), op=self.op)
+        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas(), op=self.op, label_encoder=self.le)
 
     def get_buffer(self):
         return self
@@ -54,17 +53,18 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
     def to_dict(self, cols="*", n=10, orient="list"):
         """
         Create a dict
-        :param n:
+        :param cols:
+        :param n: number of rows
         :param orient:
         :return:
         """
 
-        if n=="all":
+        if n == "all":
             series = self.cols.select(cols).to_pandas()
         else:
-            series = self.buffer_window(cols, 0, n).data
-            
-        return series.to_pandas().to_dict(orient)
+            series = self.buffer_window(cols, 0, n).to_pandas()
+
+        return series.to_dict(orient)
 
     def repartition(self, n=None, *args, **kwargs):
         return self.root

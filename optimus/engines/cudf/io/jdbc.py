@@ -13,5 +13,3 @@ class JDBC(DaskBaseJDBC):
                          cassandra_keyspace=cassandra_keyspace,
                          cassandra_table=cassandra_table)
 
-    def _dask_to_compatible(self, dfd):
-        return dask_dataframe_to_cudf(dfd)

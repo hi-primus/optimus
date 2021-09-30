@@ -6,17 +6,15 @@ from dask.delayed import delayed
 from sqlalchemy import create_engine
 from sqlalchemy import sql
 from sqlalchemy.sql import elements
-from sqlalchemy.sql.operators import op
 
 # Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
 from optimus.engines.base.constants import NUM_PARTITIONS, LIMIT_TABLE
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
-from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.base.io.properties import DriverProperties
 from optimus.helpers.core import val_to_list
 from optimus.helpers.logger import logger
-from optimus.helpers.raiseit import RaiseIt
 
 
 class DaskBaseJDBC:
@@ -26,7 +24,7 @@ class DaskBaseJDBC:
 
     def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
                  oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
-                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, op=None):
+                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, op=None, sso=False):
 
         """
         Create the JDBC connection object
@@ -74,19 +72,16 @@ class DaskBaseJDBC:
             oracle_service_name=oracle_service_name,
             presto_catalog=presto_catalog,
             bigquery_project=bigquery_project,
-            bigquery_dataset=bigquery_dataset
+            bigquery_dataset=bigquery_dataset,
+            sso=sso
         )
 
         self.database = database
         self.user = user
         self.password = password
         self.schema = schema
-        print(self.uri)
         logger.print(self.uri)
-
-    def _dask_to_compatible(self, dfd):
-        return dfd
-    
+   
     def tables(self, schema=None, database=None, limit=None):
         """
         Return all the tables in a database
@@ -145,8 +140,7 @@ class DaskBaseJDBC:
         # retrieved from the remote server
         # dfd = dfd.run()
         # dfd = dask_pandas_to_dask_cudf(dfd)
-        from optimus.engines.dask.dataframe import DaskDataFrame
-        return DaskDataFrame(self._dask_to_compatible(dfd), op=self.op)
+        return self.op.create.dataframe(self.op.F.dask_to_compatible(dfd))
 
     def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
                 table_name=None):

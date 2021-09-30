@@ -1,11 +1,11 @@
+import databricks.koalas as ks
+import pandas as pd
+
 from optimus.engines.base.create import BaseCreate
 from optimus.helpers.types import *
 
 from optimus.engines.spark.dataframe import SparkDataFrame
-from optimus.helpers.converter import pandas_to_spark_dataframe
 
-import databricks.koalas as ks
-import pandas as pd
 
 class Create(BaseCreate):
 

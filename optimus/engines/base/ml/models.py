@@ -1,5 +1,6 @@
 from optimus.helpers.types import *
 
+
 class BaseML:
     def __init__(self, root: 'DataFrameType'):
         self.root = root
@@ -45,7 +46,6 @@ class BaseML:
 
     def pca(self, features, target, *args, **kwargs):
         raise NotImplementedError(f"\"pca\" is not available using {type(self.root).__name__}")
-
 
     def random_forest(self, features, target, *args, **kwargs) -> 'ModelType':
         """

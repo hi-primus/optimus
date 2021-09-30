@@ -1,25 +1,23 @@
-import functools
 from abc import abstractmethod
-import re
+
 import dask
 import dask.dataframe as dd
+import hiurlparser
+import numpy as np
 from dask.delayed import delayed
-from dask.dataframe.core import map_partitions
-from sklearn.preprocessing import MaxAbsScaler
 from dask_ml.preprocessing import MinMaxScaler, StandardScaler
-
-from optimus.helpers.core import one_tuple_to_val, val_to_list
-
+from sklearn.preprocessing import MaxAbsScaler
+from dask_ml.impute import SimpleImputer
 from optimus.engines.base.distributed.functions import DistributedBaseFunctions
+from optimus.helpers.core import one_tuple_to_val
 
 
 class DaskBaseFunctions(DistributedBaseFunctions):
-
     _engine = dask
 
     @staticmethod
     @property
-    def _functions():
+    def _functions(self):
         return dd
 
     @staticmethod
@@ -49,6 +47,10 @@ class DaskBaseFunctions(DistributedBaseFunctions):
         if len(args) < 4 and all([k not in kwargs for k in ['dsk', 'name', 'meta', 'divisions']]):
             return self.from_dataframe(self._partition_engine.DataFrame(*args, **kwargs))
         return dd.DataFrame(*args, **kwargs)
+
+    @staticmethod
+    def dask_to_compatible(dfd):
+        return dfd
 
     def sort_df(self, dfd, cols, ascending):
         for c, a in list(zip(cols, ascending))[::-1]:
@@ -87,6 +89,20 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     def duplicated(self, dfd, keep, subset):
         return self.from_dataframe(self.to_dataframe(dfd).duplicated(keep=keep, subset=subset))
 
+    def impute(self, series, strategy, fill_value):
+
+        imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
+        series_fit = series.dropna()
+        if str(series.dtype) in self.constants.OBJECT_TYPES:
+            series_fit = series_fit.astype(str)
+        values = series_fit.values.reshape(-1, 1)
+        if len(values):
+            imputer.fit(values)
+            return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
+        else:
+            logger.warn("list to fit imputer is empty, try cols.fill_na instead.")
+            return series
+
     @staticmethod
     def delayed(func):
         def wrapper(*args, **kwargs):
@@ -109,6 +125,7 @@ class DaskBaseFunctions(DistributedBaseFunctions):
             # _max = dfd[0].max(skipna=True)
             # return dfd[dfd[0] == _max]['index'].rename(series.name)
             return series.mode()
+
         return compute_mode(series)
 
     def count_zeros(self, series):
@@ -119,7 +136,7 @@ class DaskBaseFunctions(DistributedBaseFunctions):
         return dfd[dfd.columns[0]]
 
     def max_abs_scaler(self, series):
-        return MaxAbsScaler().fit_transform(self.compute(self.to_float(series)).values.reshape(-1,1))
+        return MaxAbsScaler().fit_transform(self.compute(self.to_float(series)).values.reshape(-1, 1))
 
     def min_max_scaler(self, series):
         dfd = MinMaxScaler().fit_transform(self.to_float(series).to_frame())
@@ -131,41 +148,42 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     #     return counts, edges[0], edges[1]
 
     def domain(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["domain"], na_action=None, meta=(series.name, "str")) 
+
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["domain"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def top_domain(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["top_domain"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["top_domain"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def sub_domain(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["sub_domain"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["sub_domain"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_scheme(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["protocol"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["protocol"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_path(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["path"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["path"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_file(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["file"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["file"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_query(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["query"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["query"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def url_fragment(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["fragment"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["fragment"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def host(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["host"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["host"], na_action=None,
+                                          meta=(series.name, "str"))
 
     def port(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["port"], na_action=None, meta=(series.name, "str")) 
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["port"], na_action=None,
+                                          meta=(series.name, "str"))

@@ -10,7 +10,6 @@ RUN conda install libmagic && \
     conda clean -afy
 
 RUN pip install aiohttp --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/dateinfer.git --no-cache-dir && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-21.9 --no-cache-dir
 
 

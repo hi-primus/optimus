@@ -1,7 +1,8 @@
 # from dask_ml.preprocessing import DummyEncoder
 
-from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.logger import logger
+from optimus.helpers.columns import parse_columns, name_col
 from optimus.infer import is_, is_str
 import pandas as pd
 
@@ -10,8 +11,6 @@ from optimus.engines.base.ml.encoding import BaseEncoding
 
 
 class Encoding(BaseEncoding):
-    def __init__(self, root: 'DataFrameType'):
-        self.root = root
 
     def n_gram(self, input_col, n=2):
         """
@@ -24,19 +23,34 @@ class Encoding(BaseEncoding):
 
         pass
 
-    def one_hot_encoder(self, input_cols, prefix=None, **kargs):
+    def one_hot_encoder(self, cols="*", prefix=None, drop=True, **kwargs):
         """
         Maps a column of label indices to a column of binary vectors, with at most a single one-value.
-        :param df: Dataframe to be transformed.
-        :param input_cols: Columns to be encoded.
-        :param output_col: Column where the output is going to be saved.
+        :param cols: Columns to be encoded.
+        :param prefix: Prefix of the columns where the output is going to be saved.
         :return: Dataframe with encoded columns.
         """
-        dfd = self.root.data
         df = self.root
-        input_cols = parse_columns(df, input_cols)
 
-        return self.root.new(pd.concat([dfd, pd.get_dummies(dfd[input_cols], prefix=prefix)], axis=1))
+        all_cols = parse_columns(df, cols)
+        types = list(set(self.root.constants.OBJECT_TYPES + self.root.constants.STRING_TYPES))
+        cols = parse_columns(df, cols, filter_by_column_types=types) or []
+
+        excluded_cols = list(set(all_cols) - set(cols))
+
+        if len(cols) == 0:
+            raise ValueError("No columns can be encoded using 'one_hot_encoder'"
+                             f", received{RaiseIt._and(cols)}.")
+
+        if len(excluded_cols):
+            logger.warn(f"{RaiseIt._and(excluded_cols)} cannot be encoded using 'one_hot_encoder'")
+
+        df = self.root.new(pd.concat([df.data, pd.get_dummies(df[cols].cols.to_string().data, prefix=prefix)], axis=1))
+
+        if drop:
+            df = df.cols.drop(cols)
+
+        return df
 
     # TODO: Must we use the pipeline version?
     def vector_assembler(self, input_cols, output_col=None):

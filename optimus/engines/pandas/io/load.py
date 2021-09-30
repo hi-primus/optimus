@@ -1,10 +1,15 @@
 import glob
+from optimus.infer import is_url
 import uuid
 import zipfile
 from pathlib import Path
 
+from io import StringIO
+import requests
+
 import pandas as pd
 import pandavro as pdx
+
 
 from optimus.optimus import EnginePretty
 from optimus.engines.base.io.load import BaseLoad
@@ -13,7 +18,6 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_str, is_list, is_url
 
 
 class Load(BaseLoad):
@@ -25,7 +29,11 @@ class Load(BaseLoad):
     @staticmethod
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
+        if is_url(filepath_or_buffer):
+            s = requests.get(filepath_or_buffer).text
+            df = pd.read_csv(StringIO(s), *args, **kwargs)
+        else:
+            df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
         if isinstance(df, pd.io.parsers.TextFileReader):
             df = df.get_chunk()
         return df
@@ -33,12 +41,14 @@ class Load(BaseLoad):
     @staticmethod
     def _json(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        return pd.read_json(filepath_or_buffer, *args, **kwargs)
+        s = requests.get(filepath_or_buffer).text
+        return pd.read_json(StringIO(s), *args, **kwargs)
 
     @staticmethod
     def _avro(filepath_or_buffer, nrows=None, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        df = pdx.read_avro(filepath_or_buffer, *args, **kwargs)
+        s = requests.get(filepath_or_buffer).text
+        df = pdx.read_avro(StringIO(s), *args, **kwargs)
         if nrows:
             logger.warn(f"'load.avro' on {EnginePretty.PANDAS.value} loads the whole dataset and then truncates it")
             df = df[:nrows]
@@ -47,7 +57,8 @@ class Load(BaseLoad):
     @staticmethod
     def _parquet(filepath_or_buffer, nrows=None, engine="pyarrow", *args, **kwargs):
         kwargs.pop("n_partitions", None)        
-        df = pd.read_parquet(filepath_or_buffer, engine=engine, *args, **kwargs)
+        s = requests.get(filepath_or_buffer).text
+        df = pd.StringIO(s)(filepath_or_buffer, engine=engine, *args, **kwargs)
         if nrows:
             logger.warn(f"'load.parquet' on {EnginePretty.PANDAS.value} loads the whole dataset and then truncates it")
             df = df[:nrows]
@@ -57,7 +68,8 @@ class Load(BaseLoad):
     @staticmethod
     def _xml(filepath_or_buffer, nrows=None, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        df = pd.read_xml(filepath_or_buffer, *args, **kwargs)
+        s = requests.get(filepath_or_buffer).text
+        df = pd.read_xml(StringIO(s), *args, **kwargs)
         if nrows:
             logger.warn(f"'load.xml' on {EnginePretty.PANDAS.value} loads the whole dataset and then truncates it")
             df = df[:nrows]
@@ -65,10 +77,15 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def _excel(path, nrows=None, storage_options=None, *args, **kwargs):
+    def _excel(filepath_or_buffer, nrows=None, storage_options=None, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        dfs = pd.read_excel(path, nrows=nrows, storage_options=storage_options, *args, **kwargs)
-        sheet_names = list(pd.read_excel(path, None, storage_options=storage_options).keys())
+
+        if is_url(filepath_or_buffer):
+            s = requests.get(filepath_or_buffer).text
+            filepath_or_buffer = StringIO(s)
+
+        dfs = pd.read_excel(filepath_or_buffer, nrows=nrows, storage_options=storage_options, *args, **kwargs)
+        sheet_names = list(pd.read_excel(filepath_or_buffer, None, storage_options=storage_options).keys())
         df = pd.concat(val_to_list(dfs), axis=0).reset_index(drop=True)
 
         return df, sheet_names    

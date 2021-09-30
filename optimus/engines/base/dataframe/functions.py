@@ -1,18 +1,27 @@
-import numpy as np
+from abc import ABC
 
-from optimus.engines.base.commons.functions import word_tokenize
+import numpy as np
 from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
+from optimus.engines.base.commons.functions import word_tokenize
 from optimus.engines.base.functions import BaseFunctions
 
 
-class DataFrameBaseFunctions(BaseFunctions):
+class DataFrameBaseFunctions(BaseFunctions, ABC):
 
     @staticmethod
     def map_partitions(dfd_or_series, func, *args, **kwargs):
         result = dfd_or_series.map_partitions(func, *args, **kwargs)
         result.index = dfd_or_series.index
         return result
+
+    @staticmethod
+    def dask_to_compatible(dfd):
+        """Convert a Dask DataFrame to a compatible type of DataFrame
+        Args:
+            dfd (dd.DataFrame)
+        """
+        return dfd
 
     @staticmethod
     def all(series):
@@ -25,7 +34,7 @@ class DataFrameBaseFunctions(BaseFunctions):
     @staticmethod
     def any(series):
         return series.any()
-    
+
     @staticmethod
     def not_any(series):
         return not series.any()

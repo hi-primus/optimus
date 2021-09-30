@@ -12,10 +12,9 @@ from sqlalchemy.sql import elements
 from optimus.engines.base.constants import NUM_PARTITIONS, LIMIT_TABLE
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
-from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.base.io.properties import DriverProperties
 from optimus.helpers.core import val_to_list
 from optimus.helpers.logger import logger
-from optimus.helpers.raiseit import RaiseIt
 
 
 class DaskBaseJDBC:
@@ -25,7 +24,7 @@ class DaskBaseJDBC:
 
     def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
                  oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
-                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, op=None):
+                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, op=None, sso=False):
 
         """
         Create the JDBC connection object
@@ -74,7 +73,8 @@ class DaskBaseJDBC:
             oracle_service_name=oracle_service_name,
             presto_catalog=presto_catalog,
             bigquery_project=bigquery_project,
-            bigquery_dataset=bigquery_dataset
+            bigquery_dataset=bigquery_dataset,
+            sso=sso
         )
 
         self.database = database
@@ -84,9 +84,6 @@ class DaskBaseJDBC:
         print(self.uri)
         logger.print(self.uri)
 
-    def _dask_to_compatible(self, dfd):
-        return dfd
-    
     def tables(self, schema=None, database=None, limit=None):
         """
         Return all the tables in a database
@@ -114,7 +111,7 @@ class DaskBaseJDBC:
         """
         return Table(self)
 
-    def table_to_df(self, table_name: str, columns="*", limit=None):
+    def table_to_df(self, table_name: str, columns="*", partition_column =None,limit=None, n_partitions=1):
         """
         Return cols as Spark data frames from a specific table
         :type table_name: object
@@ -140,65 +137,31 @@ class DaskBaseJDBC:
 
         logger.print(query)
 
-        dfd = self.execute(query, limit)
+        dfd = self.execute(query, limit, n_partitions=n_partitions)
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
         # dfd = dfd.run()
         # dfd = dask_pandas_to_dask_cudf(dfd)
-        from optimus.engines.dask.dataframe import DaskDataFrame
-        return DaskDataFrame(self._dask_to_compatible(dfd), op=self.op)
+        # print(dfd)
+        # print(self.op.F.dask_to_compatible(dfd).head())
+        return self.op.create.dataframe(self.op.F.dask_to_compatible(dfd))
 
-    def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
+    def execute(self, query, limit=None, n_partitions: int = NUM_PARTITIONS, partition_column: str = None,
                 table_name=None):
         """
         Execute a SQL query
         :param limit: default limit the whole query. We play defensive here in case the result is a big chunk of data
-        :param num_partitions:
+        :param n_partitions:
         :param partition_column:
         :param query: SQL query string
         :param table_name:
         :return:
         """
 
-        # play defensive with a select clause
-        # if self.db_driver == DriverProperties.ORACLE.value["name"]:
-        #     query = "(" + query + ") t"
-        # elif self.db_driver == DriverProperties.PRESTO.value["name"]:
-        #     query = "(" + query + ")"
-        # elif self.db_driver == DriverProperties.CASSANDRA.value["name"]:
-        #     query = query
-        # else:
-        #     query = "(" + query + ") AS t"
+        dfd = DaskBaseJDBC.read_sql_table(table_name=table_name, uri=self.uri, index_col=partition_column,
+                                          npartitions=n_partitions, query=query)
 
-        # df = dd.read_sql_table(table='test_data', uri=self.url, index_col='id')
-        # "SELECT table_name, table_rows FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'optimus'"
-        df = DaskBaseJDBC.read_sql_table(table_name=table_name, uri=self.uri, index_col=partition_column,
-                                         npartitions=num_partitions, query=query)
-        # print(len(df))
-
-        # conf = Spark.instance.spark.read \
-        #     .format(
-        #     "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
-        #     DriverProperties.CASSANDRA.value["java_class"]) \
-        #     .option("url", self.url) \
-        #     .option("user", self.user) \
-        #     .option("dbtable", query)
-        #
-        # # Password
-        # if self.db_driver != DriverProperties.PRESTO.value["name"] and self.password is not None:
-        #     conf.option("password", self.password)
-        #
-        # # Driver
-        # if self.db_driver == DriverProperties.ORACLE.value["name"] \
-        #         or self.db_driver == DriverProperties.POSTGRESQL.value["name"] \
-        #         or self.db_driver == DriverProperties.PRESTO.value["name"]:
-        #     conf.option("driver", self.driver_option)
-        #
-        # if self.db_driver == DriverProperties.CASSANDRA.value["name"]:
-        #     conf.options(table=self.cassandra_table, keyspace=self.cassandra_keyspace)
-
-        # return self._limit(conf.load(), limit)
-        return df
+        return self.op.create.dataframe(self.op.F.dask_to_compatible(dfd))
 
     @staticmethod
     def read_sql_table(
@@ -260,8 +223,7 @@ class DaskBaseJDBC:
             # derive metadata from first few rows
             # q = sql.select(columns).limit(head_rows).select_from(table)
             head = pd.read_sql(query, engine, **kwargs)
-            # print("head", head)
-            # print("META", head.iloc[:0])
+
             if head.empty:
                 # no results at all
                 # name = table_name.name

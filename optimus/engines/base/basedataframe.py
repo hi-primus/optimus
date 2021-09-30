@@ -44,13 +44,13 @@ class BaseDataFrame(ABC):
     Optimus DataFrame
     """
 
-    def __init__(self, data: 'InternalDataFrameType', op: 'EngineType'):
+    def __init__(self, data: 'InternalDataFrameType', op: 'EngineType', label_encoder=None):
         data = self._compatible_data(data)
         self.data = data
         self.buffer = None
         self.updated = None
         self.meta = {}
-        self.le = None
+        self.le = label_encoder
         self.op = op
 
         # .profile and .set are properties to support docstrings
@@ -102,7 +102,7 @@ class BaseDataFrame(ABC):
         df = self.__class__(dfd, op=self.op)
         if meta is not None:
             df.meta = meta
-            df.le = self.le
+        df.le = self.le
         return df
 
     @staticmethod
@@ -389,15 +389,30 @@ class BaseDataFrame(ABC):
 
     def to_json(self, cols="*", n="all", orient="list") -> str:
         """
-        Return a json from a Dataframe
+
+        :param cols:
+        :param n:
+        :param orient:
+        The format of the JSON string:
+
+        ‘split’ : dict like {‘index’ -> [index], ‘columns’ -> [columns], ‘data’ -> [values]}
+        ‘records’ : list like [{column -> value}, … , {column -> value}]
+        ‘index’ : dict like {index -> {column -> value}}
+        ‘columns’ : dict like {column -> {index -> value}}
+        ‘values’ : just the values array
+        ‘table’ : dict like {‘schema’: {schema}, ‘data’: {data}}
+
+        Describing the data, where data component is like orient='records'.
         :return:
         """
+
 
         return json.dumps(self.to_dict(cols, n, orient), ensure_ascii=False, default=json_converter)
 
     def to_dict(self, cols="*", n=10, orient="list") -> dict:
         """
             Return a dict from a Collect result
+            :param cols:
             :param n:
             :param orient:
             :return:
@@ -624,7 +639,7 @@ class BaseDataFrame(ABC):
     def table_html(self, limit=10, cols=None, title=None, full=False, truncate=True, count=True, highlight=[]):
         """
         Return a HTML table with the spark cols, data types and values
-        :param columns: Columns to be printed
+        :param cols: Columns to be printed
         :param limit: How many rows will be printed
         :param title: Table title
         :param full: Include html header and footer
@@ -657,7 +672,7 @@ class BaseDataFrame(ABC):
         template = template_env.get_template("table.html")
 
         # Filter only the columns and data type info need it
-        data_types = [(k, v) for k, v in df.cols.data_types(tidy=False).items()]
+        data_types = [(k, v) for k, v in df.cols.data_types(tidy=False)["data_types"].items()]
 
         # Remove not selected columns
         final_columns = []
@@ -679,8 +694,19 @@ class BaseDataFrame(ABC):
             output = HEADER + output + FOOTER
         return output
 
-    def display(self, limit=10, cols=None, title=None, truncate=True, plain_text=False, highlight=[]):
-        # TODO: limit, columns, title, truncate
+    def display(self, limit=10, cols=None, title=None, truncate=True, plain_text=False, highlight=None):
+        """
+
+        :param limit:
+        :param cols:
+        :param title:
+        :param truncate:
+        :param plain_text:
+        :param highlight:
+        :return:
+        """
+        if highlight is None:
+            highlight = []
         df = self
 
         if is_notebook() and not plain_text:
@@ -692,7 +718,18 @@ class BaseDataFrame(ABC):
     def print(self, limit=10, cols=None):
         print(self.ascii(limit, cols))
 
-    def table(self, limit=None, cols=None, title=None, truncate=True, highlight=[]):
+    def table(self, limit=None, cols=None, title=None, truncate=True, highlight=None):
+        """
+        Print a dataframe in html format
+        :param limit: The number of files that will be printed
+        :param cols: Select the columns to be printed
+        :param title:
+        :param truncate:
+        :param highlight:
+        :return:
+        """
+        if highlight is None:
+            highlight = []
         df = self
         try:
             if is_notebook():
@@ -705,6 +742,12 @@ class BaseDataFrame(ABC):
         return df.ascii(limit, cols)
 
     def ascii(self, limit=10, cols=None):
+        """
+        Print a dataframe in ascii format
+        :param limit:
+        :param cols:
+        :return:
+        """
         df = self
         if not cols:
             cols = "*"
@@ -712,9 +755,9 @@ class BaseDataFrame(ABC):
         limit = min(limit, df.rows.approx_count())
         return tabulate(df.rows.limit(limit + 1).cols.select(cols).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i,
-                                 j in df.cols.data_types(tidy=False).items()],
+                                 j in df.cols.data_types(tidy=False)["data_types"].items()],
                         tablefmt="simple",
-                        showindex="never")+"\n"
+                        showindex="never") + "\n"
 
     def export(self, n="all", data_types="inferred"):
         """
@@ -728,10 +771,10 @@ class BaseDataFrame(ABC):
                               width=800, compact=True)
         else:
             if data_types == "internal":
-                df_dtypes = self.cols.data_types(tidy=False)
+                df_dtypes = self.cols.data_types(tidy=False)["data_types"]
             else:
-                df_dtypes = self.cols.infer_types(tidy=False)
-                df_dtypes = { col: df_dtypes[col]["data_type"] for col in df_dtypes }
+                df_dtypes = self.cols.infer_types(tidy=False)["infer_types"]
+                df_dtypes = {col: df_dtypes[col]["data_type"] for col in df_dtypes}
             df_data = []
             for col_name in df_dict.keys():
                 value = pformat((col_name, df_dtypes[col_name]))
@@ -792,9 +835,10 @@ class BaseDataFrame(ABC):
         profiler_time["beginning"] = {"elapsed_time": time.process_time() - _t}
 
         if cols_to_profile or not is_cached or flush:
-            # Reset profiler metadata
-            meta = Meta.set(meta, "profile", {})
-            df.meta = meta
+
+            if flush:
+                meta = Meta.set(meta, "profile", {})
+                df.meta = meta
 
             hist_cols = []
             freq_cols = []
@@ -811,7 +855,7 @@ class BaseDataFrame(ABC):
                         cols_to_infer.remove(col_name)
 
             if cols_to_infer:
-                cols_data_types = {**cols_data_types, **df.cols.infer_types(cols_to_infer, tidy=False)}
+                cols_data_types = {**cols_data_types, **df.cols.infer_types(cols_to_infer, tidy=False)["infer_types"]}
                 cols_data_types = {col: cols_data_types[col] for col in cols_to_profile}
 
             _t = time.process_time()
@@ -897,7 +941,7 @@ class BaseDataFrame(ABC):
             # Nulls
             total_count_na = 0
 
-            data_types = df.cols.data_types("*", tidy=False)
+            data_types = df.cols.data_types("*", tidy=False)["data_types"]
 
             hist, freq, sliced_freq, mismatch = self.functions.compute(
                 hist, freq, sliced_freq, mismatch)
@@ -924,7 +968,7 @@ class BaseDataFrame(ABC):
                 data_set_info.update({'size': df.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
-            data_types_list = list(set(df.cols.data_types("*", tidy=False).values()))
+            data_types_list = list(set(df.cols.data_types("*", tidy=False)["data_types"].values()))
             assign(profiler_data, "summary.data_types_list", data_types_list, dict)
             assign(profiler_data, "summary.total_count_data_types",
                    len(set([i for i in data_types.values()])), dict)
@@ -946,7 +990,7 @@ class BaseDataFrame(ABC):
 
         if cols_data_types is not None:
             df.meta = meta
-            df = df.cols.set_data_type(cols_data_types, True)
+            df = df.cols.set_data_type(cols_data_types, inferred=True)
             meta = df.meta
 
         # Reset Actions
@@ -1021,7 +1065,7 @@ class BaseDataFrame(ABC):
 
         return df
 
-    def string_clustering(self, cols="*", algorithm="fingerprint", *args, **kwargs):
+    def string_clustering(self, cols="*", algorithm="fingerrint", *args, **kwargs):
         from optimus.engines.base.stringclustering import string_clustering
         return string_clustering(self, cols, algorithm, *args, **kwargs)
         # return clusters

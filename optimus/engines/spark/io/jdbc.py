@@ -1,12 +1,12 @@
 from optimus.engines.base.constants import LIMIT_TABLE, NUM_PARTITIONS
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
-from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.base.io.properties import DriverProperties
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import collect_as_list
 from optimus.helpers.logger import logger
-
+from optimus.engines.spark.dataframe import SparkDataFrame
 
 # Optimus play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
@@ -122,7 +122,7 @@ class JDBC:
         # Bring the data to local machine if not every time we call an action is going to be
         # retrieved from the remote server
         df = df.run()
-        return df
+        return SparkDataFrame(df, op=self.op)
 
     def _build_conf(self, query=None, limit=None):
         """

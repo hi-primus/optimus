@@ -25,11 +25,25 @@ class DaskBaseRows(DistributedBaseRows):
 
         return self.root.new(self.root._base_to_dfd(df.cols.select("*").data.head(count), partitions))
 
+    def _drop_duplicated_builtin(self, cols):
+
+        df = self.root
+        dfd = df.data
+
+        dfd = dfd.drop_duplicates(subset=cols).reset_index(drop=True)
+
+        meta = self.root.meta
+        meta = Meta.action(meta, Actions.DROP_ROW.value, df.cols.names())
+
+        return self.root.new(dfd, meta=meta)
+                
     def drop_duplicated(self, cols="*", keep="first", how="any"):
         # not supported arguments on dask
         if how == "all" and keep == "first":
-            return self._drop_duplicated_builtin(cols, keep)
-        return self._mask(cols, method="duplicated", drop=True, keep=keep, how=how)
+            df = self.root
+            cols = parse_columns(df, cols)
+            return self._drop_duplicated_builtin(cols)
+        return self._mask(cols, func=self.root.mask.duplicated, drop=True, keep=keep, how=how)
 
     def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
                 bounds=None):
@@ -92,3 +106,31 @@ class DaskBaseRows(DistributedBaseRows):
         """
         df = self.root
         return df.rows.count()
+
+    def between_index(self, lower_bound=None, upper_bound=None, cols="*"):
+        """
+
+        :param columns:
+        :param lower_bound:
+        :param upper_bound:
+        :return:
+        """
+        df = self.root
+        dfd = df.data
+
+        if lower_bound is not None:
+            length = len(dfd)
+            dfd = dfd.tail(length - lower_bound, compute=False)
+
+            if upper_bound is not None:
+                upper_bound -= lower_bound
+
+        if upper_bound is not None:
+            dfd = dfd.head(upper_bound, compute=False)
+        
+        if lower_bound is not None or upper_bound is not None:
+            dfd = dfd.reset_index(drop=True)
+
+        cols = parse_columns(df, cols)
+
+        return self.root.new(dfd[cols])

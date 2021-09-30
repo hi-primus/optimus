@@ -1,8 +1,6 @@
-import url_parser
-
 from optimus.helpers.types import *
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
-from optimus.engines.spark.io.properties import DriverProperties
+from optimus.engines.base.io.properties import DriverProperties
 from optimus.helpers.constants import Schemas
 from optimus.helpers.raiseit import RaiseIt
 
@@ -75,7 +73,8 @@ class S3(Connection):
         if endpoint_url is None:
             RaiseIt.value_error(endpoint_url, "")
 
-        schema = url_parser.parse_url(endpoint_url)["schema"]
+        import hiurlparser
+        schema = hiurlparser.parse_url(endpoint_url)["schema"]
 
         if schema is not None:
             endpoint_url = endpoint_url[len(schema + "://"):]  # removes schema from endpoint_url
@@ -171,14 +170,14 @@ class Connect:
 
     def mysql(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.MYSQL.value["name"],
-                            schema=schema, op=self.op)
+                            schema=schema, op=self.op, sso=sso)
 
     def postgres(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.POSTGRESQL.value["name"],
                             schema=schema, op=self.op)
 
     def mssql(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
-        return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.MSSQL.value["name"],
+        return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.SQLSERVER.value["name"],
                             schema=schema, op=self.op)
 
     def redshift(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':

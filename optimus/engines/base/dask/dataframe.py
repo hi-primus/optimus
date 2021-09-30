@@ -4,20 +4,19 @@ import dask
 import dask.array as da
 import dask.dataframe as dd
 import humanize
-from dask.distributed import Variable
-from dask.utils import parse_bytes
 import numpy as np
 import pandas as pd
+from dask.distributed import Variable
+from dask.utils import parse_bytes
 
 from optimus.engines.base.basedataframe import BaseDataFrame
-from optimus.helpers.types import *
+from optimus.engines.base.distributed.dataframe import DistributedBaseDataFrame
+from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.types import *
 from optimus.infer import is_int
-
-from optimus.engines.base.distributed.dataframe import DistributedBaseDataFrame
-from optimus.engines.pandas.dataframe import PandasDataFrame
 
 
 class DaskBaseDataFrame(DistributedBaseDataFrame):
@@ -26,11 +25,9 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
 
         dfd = self.root.data
 
-        fix_indices = False
-
         for key in kw_columns:
             kw_column = kw_columns[key]
-            
+
             if isinstance(kw_column, (list,)):
                 kw_column = pd.Series(kw_column)
 
@@ -42,16 +39,8 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
                 kw_column = dd.from_array(kw_column)
 
             if isinstance(kw_column, (dd.Series, dd.DataFrame)):
-            
-                if dfd.known_divisions and not kw_column.known_divisions:
-                    kw_column = kw_column.reset_index(drop=True)
-                elif not dfd.known_divisions and kw_column.known_divisions:
-                    dfd = dfd.reset_index(drop=True)
-                    fix_indices = True
 
-                # print("kw_column.compute()")
-                # print(kw_column.to_frame().reset_index(drop=False).compute())
-                # print(dfd.reset_index(drop=False).compute())
+                kw_column.index = dfd.index
 
                 if isinstance(kw_column, dd.DataFrame):
                     if key in kw_column:
@@ -64,12 +53,6 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
                     kw_column.name = key
 
             kw_columns[key] = kw_column
-
-        if fix_indices:
-            for key in kw_columns:
-                kw_column = kw_columns[key]
-                if isinstance(kw_column, dd.Series) and not kw_column.known_divisions:
-                    kw_columns[key] = kw_column.reset_index(drop=True)
 
         kw_columns = {str(key): kw_column for key, kw_column in kw_columns.items()}
         return dfd.assign(**kw_columns)
@@ -108,7 +91,8 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         def func(value):
             return value[lower_bound:upper_bound]
 
-        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute(), op=self.op)
+        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute(), op=self.op,
+                               label_encoder=self.le)
 
     def graph(self) -> dict:
         """
@@ -174,8 +158,8 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         df = self.root
 
         if values is not None:
-            agg=("first", values)
-        
+            agg = ("first", values)
+
         groupby = val_to_list(groupby)
         by = groupby + [col]
         if agg is None:
@@ -278,11 +262,11 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         :return:
         """
 
-        if n=="all":
+        if n == "all":
             series = self.cols.select(cols).to_pandas()
         else:
             series = self.buffer_window(cols, 0, n).data
-            
+
         return series.to_dict(orient)
 
     def to_pandas(self):

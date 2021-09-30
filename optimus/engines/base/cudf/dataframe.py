@@ -1,2 +1,2 @@
-class CUDFBaseDataFrame():
+class CUDFBaseDataFrame:
     pass

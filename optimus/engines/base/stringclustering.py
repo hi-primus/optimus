@@ -55,13 +55,14 @@ class Clusters:
             if not is_list(clusters):
                 clusters = list(clusters.values())
                 
-            for i, cluster in enumerate(clusters[0:limit_clusters]):
-                cluster_name = cluster["suggestion"]
+            for cluster in clusters[0:limit_clusters]:
                 if verbose:
+                    cluster_name = cluster["cluster"]
                     _cluster = copy.deepcopy(cluster)
-                    del _cluster["suggestion"]
-                    result[column][(cluster_name, i)] = _cluster
+                    del _cluster["cluster"]
+                    result[column][cluster_name] = _cluster
                 else:
+                    cluster_name = cluster["suggestion"]
                     result[column][cluster_name] = result[column].get(cluster_name, [])
                     result[column][cluster_name] += cluster["suggestions"][0:limit_suggestions]
 
@@ -137,9 +138,9 @@ def string_clustering(df, cols="*", algorithm=None, *args, **kwargs) -> 'Cluster
 
             # sets the original values as indices: {"VALUE": "value", "Value": "value"}
 
-            _dfd = df.cols.select([input_col, cluster_col]).data.set_index(input_col)
+            _dfd = df.cols.select([input_col, cluster_col]).cols.to_string().data.set_index(input_col)
             _df = df.new(_dfd)
-            values = _df.to_pandas().to_dict()[cluster_col]
+            values = _df[cluster_col].to_pandas().to_dict()[cluster_col]
 
             suggestions_items = {}
             for k, v in values.items():

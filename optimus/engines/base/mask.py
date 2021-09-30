@@ -1,4 +1,6 @@
 from abc import ABC
+from optimus.helpers.functions import match_date
+from optimus.engines.base.meta import Meta
 from optimus.helpers.types import *
 
 from optimus.helpers.columns import parse_columns
@@ -218,11 +220,25 @@ class Mask(ABC):
         return df.new(self._to_frame(mask))
 
     def contains(self, cols="*", value=None, case=True, flags=0, na=False, regex=False) -> 'MaskDataFrameType':
+        """
+
+        :param cols:
+        :param value:
+        :param case:
+        :param flags:
+        :param na:
+        :param regex:
+        :return:
+        """
                 
         df = self.root
         cols = val_to_list(parse_columns(df, cols))
 
         mask = None
+
+        if is_list(value):
+            value = "|".join(value)
+            regex = True
 
         for col in cols:
             series = df.functions.to_string_accessor(df.data[col]).contains(value, case=case, flags=flags, na=na, regex=regex)
@@ -231,17 +247,13 @@ class Mask(ABC):
             else:
                 mask[col] = series
 
-        if is_list(value):
-            value = "|".join(value)
-            regex = True
-
         return df.new(self._to_frame(mask))
 
     def expression(self, where=None, cols="*") -> 'MaskDataFrameType':
         """
         Find rows and appends resulting mask to the dataset
         :param where: Mask, expression or name of the column to be taken as mask
-        :param output_col:
+        :param cols:
         :return: Optimus Dataframe
         """
 
@@ -254,7 +266,7 @@ class Mask(ABC):
                 where = eval(where)
 
         if isinstance(where, (df.__class__,)):
-            return where
+            return where.cols.to_boolean()
 
         RaiseIt.type_error(where, ["Dataframe", "Expression", "Column name"])
 
@@ -410,10 +422,31 @@ class Mask(ABC):
         return self.match_regex(cols, regex_credit_card_number)
 
     def datetime(self, cols="*") -> 'MaskDataFrameType':
-        # df = self.root
-        # if df[cols].cols.data_type  == df.constants.
-        return self.root[cols].cols.apply(cols, is_datetime)
-        # return self.match_regex(cols, regex_date)
+        df = self.root
+        dtypes = list(set(df.constants.DATETIME_TYPES) - set(df.constants.ANY_TYPES))
+        datetime_cols = parse_columns(df, cols, filter_by_column_types=dtypes)
+        cols = parse_columns(df, cols)
+        non_datetime_cols = list(set(cols) - set(datetime_cols)) if datetime_cols else cols
+        df = df[cols]
+        if datetime_cols and len(datetime_cols):
+            df = df.cols.apply(datetime_cols, is_datetime)
+        if non_datetime_cols and len(non_datetime_cols):
+
+            date_formats = df.cols.date_format(non_datetime_cols, tidy=False)["date_format"]
+
+            for col_name, date_format in date_formats.items():
+                if date_format is True:
+                    df = df.cols.assign({col_name: True})
+                elif date_format:
+                    regex = match_date(date_format)
+                    if not regex:
+                        df = df.cols.assign({col_name: False})
+                    else:
+                        df[col_name] = df.mask.match_regex(col_name, regex)
+                else:
+                    df = df.cols.assign({col_name: False})
+
+        return df
 
     def object(self, cols="*") -> 'MaskDataFrameType':
         return self.root[cols].cols.apply(cols, is_object)

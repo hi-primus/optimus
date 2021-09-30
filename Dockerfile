@@ -24,11 +24,9 @@ RUN sudo chown -R root ~/anaconda3/bin && \
     conda install -c conda-forge jupyter_kernel_gateway && \
     conda clean -afy
 
-RUN echo "Version 21.9.0-beta1"
+RUN echo "Version 21.9.0-beta3"
 
 RUN pip install cytoolz && \
-    pip install git+https://github.com/hi-primus/dateinfer.git && \
-    pip install git+https://github.com/hi-primus/url_parser.git && \
     pip install llvmlite --ignore-installed && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[pandas] && \
     pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[dask]

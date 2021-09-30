@@ -1,4 +1,7 @@
+import re
+
 import ntpath
+from optimus.helpers.raiseit import RaiseIt
 
 import dask.bag as dask_bag
 import pandas as pd
@@ -6,7 +9,6 @@ from dask import dataframe as dd
 
 import optimus.helpers.functions_spark
 from optimus.optimus import EnginePretty
-from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.dask.dataframe import DaskDataFrame
@@ -27,27 +29,63 @@ class Load(BaseLoad):
         
         na_filter = na_filter if na_values else False
 
-        if engine == "python":
-            on_bad_lines = 'warn'
-            df = dd.read_csv(filepath_or_buffer, keep_default_na=True,
-                             na_values=None, engine=engine, on_bad_lines=on_bad_lines, *args, **kwargs)
+        new_dtype = None
+        tries = 0
 
-        elif engine == "c":
-            df = dd.read_csv(filepath_or_buffer, keep_default_na=True,
-                             engine=engine, na_filter=na_filter, na_values=val_to_list(na_values),
-                             low_memory=False, on_bad_lines=on_bad_lines, *args, **kwargs)
+        while tries < 3:
 
-        if index_col:
-            df = df.set_index(index_col)
+            tries += 1
 
-        if nrows:
-            logger.warn(f"'load.avro' on {EnginePretty.DASK.value} loads the whole dataset and then truncates it")
-            df = df.head(n=nrows, compute=False)
+            if new_dtype is not None:
+                logger.warn(f"Load failed, retrying using dtype={new_dtype}")
+                if "dtype" in kwargs:
+                    kwargs["dtype"].update(new_dtype)
+                else:
+                    kwargs.update({"dtype": new_dtype})
 
-        if n_partitions is not None:
-            df = df.repartition(npartitions=n_partitions)
+            if engine == "python":
+                on_bad_lines = 'warn'
+                df = dd.read_csv(filepath_or_buffer, keep_default_na=True,
+                                 na_values=None, engine=engine, on_bad_lines=on_bad_lines, *args, **kwargs)
 
-        df = df.persist()
+            elif engine == "c":
+                df = dd.read_csv(filepath_or_buffer, keep_default_na=True,
+                                 engine=engine, na_filter=na_filter, na_values=val_to_list(na_values),
+                                 low_memory=False, on_bad_lines=on_bad_lines, *args, **kwargs)
+            
+            else:
+                RaiseIt.value_error(engine, ["python", "c"])
+
+            try:
+                if index_col:
+                    df = df.set_index(index_col)
+
+                if nrows:
+                    logger.warn(f"'load.csv' on {EnginePretty.DASK.value} loads the whole dataset and then truncates it")
+                    df = df.head(n=nrows, compute=False)
+
+                if n_partitions is not None:
+                    df = df.repartition(npartitions=n_partitions)
+
+                df = df.persist()
+
+                # TODO use 'check' parameter
+                dtypes = df.compute().dtypes
+            except ValueError as e:
+
+                if tries >= 3:
+                    raise e
+
+                # TODO retry without parsing error message
+                e_str = " ".join(str(e).split("\n"))
+                found = re.findall(r"dtype=({.*})", e_str)
+
+                if len(found) > 0:
+                    new_dtype = eval(found[0])
+                else:
+                    raise e
+            else:
+                break
 
         return df
 

@@ -1,18 +1,21 @@
 import re
 from abc import abstractmethod, ABC
 
+import hidateinfer
 import jellyfish
-from metaphone import doublemetaphone
 import numpy as np
 import pandas as pd
-from jsonschema._format import is_email
 from fastnumbers import fast_float, fast_int
+from jsonschema._format import is_email
+from metaphone import doublemetaphone
 
+from optimus.helpers.logger import logger
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_object_value, is_ip, is_url, is_missing, \
-    is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number, is_int_like
+    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_valid_datetime_format, \
+    is_object_value, is_ip, is_url, is_missing, is_gender, is_list_of_int, is_list_of_str, \
+    is_str, is_phone_number, is_int_like
 
 
 # ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
@@ -27,7 +30,7 @@ class BaseFunctions(ABC):
     _partition_engine = None
 
     def __init_subclass__(cls):
-            
+
         if cls._partition_engine is None:
             cls._partition_engine = cls._engine
 
@@ -46,6 +49,13 @@ class BaseFunctions(ABC):
         raise NotImplementedError(f"\"{name}\" is not available" + type_msg)
 
     @property
+    def _functions(self):
+        """
+        Gets the set of functions available in the engine
+        """
+        return self._partition_engine
+
+    @property
     def n_partitions(self):
         if self.root is None:
             return 1
@@ -53,15 +63,38 @@ class BaseFunctions(ABC):
 
     @staticmethod
     def delayed(func):
+        """
+
+        :param func:
+        :return:
+        """
         return func
 
     def from_delayed(self, delayed):
+        """
+
+        :param delayed:
+        :return:
+        """
         return delayed[0]
 
     def to_delayed(self, delayed):
+        """
+
+        :param delayed:
+        :return:
+        """
         return [delayed]
 
     def apply_delayed(self, series, func, *args, **kwargs):
+        """
+
+        :param series:
+        :param func:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         result = self.to_delayed(series)
         result = [partition.apply(func, *args, **kwargs) for partition in result]
         result = self.from_delayed(result)
@@ -69,28 +102,38 @@ class BaseFunctions(ABC):
         return result
 
     def map_delayed(self, series, func, *args, **kwargs):
+        """
+
+        :param series:
+        :param func:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         result = self.to_delayed(series)
         result = [partition.map(func, *args, **kwargs) for partition in result]
         result = self.from_delayed(result)
         result.index = series.index
         return result
-    
-    @property
-    def constants(self):
-        from optimus.engines.base.constants import BaseConstants
-        return BaseConstants()
 
     @property
-    def _functions(self):
+    def constants(self):
         """
-        Gets the set of functions available in the engine
+
+        :return:
         """
-        return self._partition_engine
+        from optimus.engines.base.constants import BaseConstants
+        return BaseConstants()
 
     @staticmethod
     def sort_df(dfd, cols, ascending):
         """
-        Sort rows taking into account one column
+        Sort rows taking into account one column.
+
+        :param dfd:
+        :param cols:
+        :param ascending:
+        :return:
         """
         return dfd.sort_values(cols, ascending=ascending)
 
@@ -107,7 +150,7 @@ class BaseFunctions(ABC):
         Append two dataframes
         """
         return dfd.append(dfd2)
-    
+
     def _new_series(self, *args, **kwargs):
         """
         Creates a new series (also known as column)
@@ -140,7 +183,7 @@ class BaseFunctions(ABC):
 
     def to_boolean(self, series):
         return self._to_boolean(series)
-    
+
     def _to_boolean_none(self, series):
         """
         Converts series to boolean
@@ -176,7 +219,7 @@ class BaseFunctions(ABC):
 
     def _to_datetime(self, series, format):
         return series
-    
+
     def to_datetime(self, series, format):
         return self._to_datetime(series, format)
 
@@ -188,40 +231,54 @@ class BaseFunctions(ABC):
     def to_string_accessor(series):
         return series.astype(str).str
 
-
     @staticmethod
     def duplicated(dfd, keep, subset):
         return dfd.duplicated(keep=keep, subset=subset)
 
-    @staticmethod
-    def impute(series, strategy, fill_value):
-        from dask_ml.impute import SimpleImputer
+    def impute(self, series, strategy, fill_value):
+        from sklearn.impute import SimpleImputer
         imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
-        return imputer.fit_transform(series.values.reshape(-1, 1))
+        series_fit = series.dropna()
+        if str(series.dtype) in self.constants.OBJECT_TYPES:
+            series_fit = series_fit.astype(str)
+        values = series_fit.values.reshape(-1, 1)
+        if len(values):
+            imputer.fit(values)
+            return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
+        else:
+            logger.warn("list to fit imputer is empty, try cols.fill_na instead.")
+            return series
 
     # Aggregation
-
     def date_format(self, series):
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
-            import pydateinfer
-            return pydateinfer.infer(self.compute(series).values)
-        elif dtype in self.constants.DATETIME_TYPES:
+            series = series.astype(str)
+            result = hidateinfer.infer(self.compute(series).values)
+            if not is_valid_datetime_format(result) or True:
+                result_series = self.date_formats(series)
+                result = result_series.mode().head(1)[0]
+
+                if not is_valid_datetime_format(result):
+                    return False
+
+            return result
+        elif dtype in self.constants.DATETIME_INTERNAL_TYPES:
             return True
 
         return False
-        
+
     def min(self, series, numeric=False, string=False):
         if numeric:
             series = self.to_float(series)
-        
+
         if string or str(series.dtype) in self.constants.STRING_TYPES:
             return self.to_string(series.dropna()).min()
         else:
             return series.min()
 
     def max(self, series, numeric=False, string=False):
-        
+
         if numeric:
             series = self.to_float(series)
 
@@ -290,7 +347,7 @@ class BaseFunctions(ABC):
     @abstractmethod
     def skew(series):
         pass
-    
+
     # import dask.dataframe as dd
     def mad(self, series, error=False, more=False, estimate=False):
 
@@ -568,7 +625,7 @@ class BaseFunctions(ABC):
         if is_list(replace_by) and is_list_of_list(search):
             for _s, _r in zip(search, replace_by):
                 series = series.replace(_s, _r, regex=regex)
-                
+
         else:
             series = series.replace(search, replace_by, regex=regex)
 
@@ -613,6 +670,7 @@ class BaseFunctions(ABC):
     def expand_contractions(self, series):
 
         pass
+
     # @staticmethod
     # def len(series):
     #     return series.str.len()
@@ -727,69 +785,69 @@ class BaseFunctions(ABC):
 
     @staticmethod
     @abstractmethod
-    def td_between(self, value=None, date_format=None):
+    def time_between(self, value=None, date_format=None):
         pass
 
     def years_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.years
+        return self.time_between(series, value, date_format).dt.days / 365.25
 
     def months_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.months
-    
+        return self.time_between(series, value, date_format).dt.days / 30.436875
+
     def days_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.days
-    
+        return self.time_between(series, value, date_format).dt.days
+
     def hours_between(self, series, value=None, date_format=None):
-        series = self.td_between(series, value, date_format)
+        series = self.time_between(series, value, date_format)
         return series.dt.days * 24.0 + series.dt.seconds / 3600.0
-    
+
     def minutes_between(self, series, value=None, date_format=None):
-        series = self.td_between(series, value, date_format)
+        series = self.time_between(series, value, date_format)
         return series.dt.days * 1440.0 + series.dt.seconds / 60.0
-    
+
     def seconds_between(self, series, value=None, date_format=None):
-        series = self.td_between(series, value, date_format)
+        series = self.time_between(series, value, date_format)
         return series.dt.days * 86400 + series.dt.seconds
 
     def domain(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["domain"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["domain"], na_action=None)
 
     def top_domain(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["top_domain"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["top_domain"], na_action=None)
 
     def sub_domain(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["sub_domain"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["sub_domain"], na_action=None)
 
     def url_scheme(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["protocol"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["protocol"], na_action=None)
 
     def url_path(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["path"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["path"], na_action=None)
 
     def url_file(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["file"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["file"], na_action=None)
 
     def url_query(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["query"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["query"], na_action=None)
 
     def url_fragment(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["fragment"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["fragment"], na_action=None)
 
     def host(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["host"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["host"], na_action=None)
 
     def port(self, series):
-        import url_parser
-        return self.to_string(series).map(lambda v: url_parser.parse_url(v)["port"], na_action=None)
+        import hiurlparser
+        return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["port"], na_action=None)
 
     def email_username(self, series):
         return self.to_string_accessor(series).split('@').str[0]
@@ -845,18 +903,17 @@ class BaseFunctions(ABC):
         return dtype
 
     def date_formats(self, series):
-        import pydateinfer
-        return series.map(lambda v: pydateinfer.infer([v]))
-    
+        return series.map(lambda v: hidateinfer.infer([v]))
+
     def metaphone(self, series):
         return self.to_string(series).map(jellyfish.metaphone, na_action='ignore')
-    
+
     def double_metaphone(self, series):
         return self.to_string(series).map(doublemetaphone, na_action='ignore')
 
     def nysiis(self, series):
         return self.to_string(series).map(jellyfish.nysiis, na_action='ignore')
-    
+
     def match_rating_codex(self, series):
         return self.to_string(series).map(jellyfish.match_rating_codex, na_action='ignore')
 
@@ -872,5 +929,5 @@ class BaseFunctions(ABC):
             dfd = self.to_string(series).to_frame()
             dfd[other_name] = self.to_string(other)
 
-            return dfd.apply(lambda d: jellyfish.levenshtein_distance(d[col_name], d[other_name]), axis=1).rename(col_name)
-            
+            return dfd.apply(lambda d: jellyfish.levenshtein_distance(d[col_name], d[other_name]), axis=1).rename(
+                col_name)

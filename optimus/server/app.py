@@ -21,7 +21,7 @@ def post__code(session_key):
 @app.route('/<session_key>/init-engine', methods=['POST'])
 def post__init_engine(session_key):
     body = json.loads(request.data)
-    res = engine(session_key, body)
+    res = engine(session_key, body or {"engine": "pandas"})
     return json.dumps(res)
 
 @app.route('/<session_key>', methods=['GET'])
