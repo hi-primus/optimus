@@ -11,4 +11,5 @@
     rows
     dates
     quality
+    strings
 
