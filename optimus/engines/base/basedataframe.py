@@ -554,6 +554,10 @@ class BaseDataFrame(ABC):
         has_actions = actions is not None and len(actions) > 0
 
         profiler_columns = Meta.get(df.meta, "profile.columns")
+        if profiler_columns is not None:
+            profiler_columns = {
+                col_name: value for col_name, value in profiler_columns.items() if value.get("data_type", None)
+            }
 
         new_columns = parse_columns(df, columns)
 
@@ -867,7 +871,7 @@ class BaseDataFrame(ABC):
             cols_properties = cols_data_types.items()
             for col_name, properties in cols_properties:
                 if properties.get("data_type") in df.constants.NUMERIC_TYPES \
-                and not properties.get("categorical", False):
+                   and not properties.get("categorical", False):
                     hist_cols.append(col_name)
                 else:
                     freq_cols.append(col_name)
