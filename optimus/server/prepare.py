@@ -84,7 +84,7 @@ alias_map_list = [
     [["keepColumns", "keep"], "cols.keep"],
     [["renameColumns"], "cols.rename"],
     [["names", "columnNames", "columns"], "cols.names"],
-    [["datatypes", "dtypes", "data_types"], "cols.data_types"],
+    [["datatype", "dtype", "data_type", "datatypes", "dtypes", "data_types"], "cols.data_type"],
     [["patterCounts", "pattern_counts"], "cols.pattern_counts"],
     ["mad", "cols.mad"],
     ["min", "cols.min"],
@@ -110,7 +110,6 @@ alias_map_list = [
     ["heatmap", "cols.heatmap"],
     ["hist", "cols.hist"],
     [["countMismatch", "count_mismatch"], "cols.count_mismatch"],
-    [["countByDtypes", "count_by_data_types"], "cols.count_by_data_types"],
     ["quality", "cols.quality"],
     [
         ["inferProfilerDtypes", "infer_data_types"],

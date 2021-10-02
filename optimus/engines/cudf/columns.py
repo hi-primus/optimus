@@ -132,7 +132,7 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns):
         df = self.root
         cols = parse_columns(df, cols)
 
-        f = inferred_type_func(data_type)
+        f = inferred_data_type_func(data_type)
         if f is not None:
             for col_name in cols:
                 df = df[col_name].to_pandas().apply(f)
@@ -156,16 +156,6 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns):
                     for i in range(buckets)]
 
         return {"hist": result}
-
-    def count_by_data_types(self, cols="*", infer=False, str_funcs=None, int_funcs=None):
-        df = self.root
-        result = {}
-        df_len = len(df)
-        for col_name, na in df.cols.count_na(cols).items():
-            result[col_name] = {"match": df_len - na, "missing": na, "mismatches": 0}
-        return result
-
-        # return np.count_nonzero(df.isnull().values.ravel())
 
     def qcut(self, cols="*", quantiles=None, handle_invalid="skip"):
         raise NotImplementedError('Not implemented yet')

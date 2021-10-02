@@ -366,7 +366,7 @@ def names_by_data_types(df, data_type):
     result = []
     for col_name in df.cols.names():
         found_parsed_data_type = df.cols.schema_data_type(col_name)
-        found_data_type = df.cols.data_types(col_name)
+        found_data_type = df.cols.data_type(col_name)
         if any([dt in found_parsed_data_type for dt in parsed_data_type])\
         or any([dt in found_data_type for dt in data_type]):
             result.append(col_name)

@@ -151,12 +151,12 @@ class Mask(ABC):
         cols = one_list_to_val(parse_columns(df, cols))
 
         if data_type is None:
-            inferred_type = df.profile.data_types(cols)
-            if inferred_type is None:
+            inferred_data_type = df.profile.data_type(cols)
+            if inferred_data_type is None:
                 RaiseIt.value_error(data_type, ProfilerDataTypes.list(),
                                     "data_type not found in cache. Need to passed as data_type param")
             else:
-                data_type = inferred_type
+                data_type = inferred_data_type
 
         if is_list(data_type):
             mask_match = None

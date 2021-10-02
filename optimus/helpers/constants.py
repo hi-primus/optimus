@@ -23,7 +23,7 @@ class Actions(Enum):
     Actions that modify a columns/rows.
     """
     # COLUMNS
-    INFERRED_TYPE = "inferred_type"
+    INFERRED_DATA_TYPE = "inferred_data_type"
     MATCH = "match"
     LOWER = "lower"
     UPPER = "upper"

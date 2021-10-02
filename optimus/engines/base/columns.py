@@ -555,27 +555,6 @@ class BaseColumns(ABC):
 
         return self.root.new(dfd, meta=meta)
 
-    def parse_inferred_types(self, col_data_type):
-        """
-        Parse a data type to a profiler data type.
-
-        :param col_data_type:
-        :return:
-        """
-
-        df = self.root
-        columns = {}
-        for k, v in col_data_type.items():
-            # Initialize values to 0
-            result_default = {
-                data_type: 0 for data_type in df.constants.OPTIMUS_TO_INTERNAL.keys()}
-            for k1, v1 in v.items():
-                for k2, v2 in df.constants.OPTIMUS_TO_INTERNAL.items():
-                    if k1 in df.constants.OPTIMUS_TO_INTERNAL[k2]:
-                        result_default[k2] = result_default[k2] + v1
-            columns[k] = result_default
-        return columns
-
     def types(self, cols="*", tidy=True):
         """
         Get the inferred data types from the meta data, if no type is found, uses a translated internal data type.
@@ -590,12 +569,12 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols)
         result = {}
 
-        data_types = df.cols.data_types(cols, names=True, tidy=False)["data_types"]
-        inferred_types = df.cols.inferred_types(cols, tidy=False)["inferred_types"]
+        data_types = df.cols.data_type(cols, names=True, tidy=False)["data_type"]
+        inferred_data_type = df.cols.inferred_data_type(cols, tidy=False)["inferred_data_type"]
 
         for col_name in cols:
 
-            data_type = inferred_types[col_name]
+            data_type = inferred_data_type[col_name]
 
             if data_type is None:
                 data_type = data_types[col_name]
@@ -606,7 +585,7 @@ class BaseColumns(ABC):
 
         return format_dict(result, tidy=tidy)
 
-    def inferred_types(self, cols="*", tidy=True):
+    def inferred_data_type(self, cols="*", tidy=True):
         """
         Get the inferred data types from the meta data.
 
@@ -623,10 +602,10 @@ class BaseColumns(ABC):
         for col_name in cols:
             data_type = Meta.get(df.meta, f"columns_data_types.{col_name}.data_type")
             if data_type is None:
-                data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.data_type")
+                data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.data_type")
             result.update({col_name: data_type})
 
-        result = {"inferred_types": result}
+        result = {"inferred_data_type": result}
 
         return format_dict(result, tidy)
 
@@ -657,9 +636,9 @@ class BaseColumns(ABC):
                     df.meta = Meta.set(
                         df.meta, f"columns_data_types.{col_name}", props)
                 df.meta = Meta.set(
-                    df.meta, f"profile.columns.{col_name}.stats.inferred_type", props)
+                    df.meta, f"profile.columns.{col_name}.stats.inferred_data_type", props)
                 df.meta = Meta.action(
-                    df.meta, Actions.INFERRED_TYPE.value, col_name)
+                    df.meta, Actions.INFERRED_DATA_TYPE.value, col_name)
             else:
                 RaiseIt.value_error(data_type, ProfilerDataTypes.list())
 
@@ -681,7 +660,7 @@ class BaseColumns(ABC):
             if props is not None:
                 df.meta = Meta.reset(df.meta, f"columns_data_types.{col_name}")
                 df.meta = Meta.action(
-                    df.meta, Actions.INFERRED_TYPE.value, col_name)
+                    df.meta, Actions.INFERRED_DATA_TYPE.value, col_name)
 
         return df
 
@@ -720,7 +699,7 @@ class BaseColumns(ABC):
             if props is not None:
                 df.meta = Meta.reset(df.meta, f"columns_data_types.{col_name}.format")
                 df.meta = Meta.action(
-                    df.meta, Actions.INFERRED_TYPE.value, col_name)
+                    df.meta, Actions.INFERRED_DATA_TYPE.value, col_name)
 
         return df
 
@@ -1241,7 +1220,7 @@ class BaseColumns(ABC):
 
         return df.cols.select(cols)
 
-    def data_types(self, cols="*", names=False, tidy=True) -> dict:
+    def data_type(self, cols="*", names=False, tidy=True) -> dict:
         """
         Return the column(s) data type as string.
 
@@ -1256,7 +1235,7 @@ class BaseColumns(ABC):
         if names:
             data_types = {k: _DICT.get(d, d) for k, d in data_types.items()}
 
-        return format_dict({"data_types": {col_name: data_types[col_name] for col_name in cols}}, tidy=tidy)
+        return format_dict({"data_type": {col_name: data_types[col_name] for col_name in cols}}, tidy=tidy)
 
     def schema_data_type(self, cols="*", tidy=True):
         """
@@ -1632,7 +1611,7 @@ class BaseColumns(ABC):
                 date_format = Meta.get(df.meta, f"columns_data_types.{col_name}.format")
 
                 if date_format is None:
-                    date_format = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.format")
+                    date_format = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.format")
 
                 result[col_name] = date_format
 
@@ -2070,7 +2049,7 @@ class BaseColumns(ABC):
 
     def to_float(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-
+        Cast the elements inside a column or a list of columns to float.
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols:
         :return:
@@ -2080,7 +2059,7 @@ class BaseColumns(ABC):
 
     def to_integer(self, cols="*", default=0, output_cols=None) -> 'DataFrameType':
         """
-
+        Cast the elements inside a column or a list of columns to integer.
         :param cols: "*", column name or list of column names to be processed.
         :param default:
         :param output_cols:
@@ -2091,7 +2070,7 @@ class BaseColumns(ABC):
 
     def to_boolean(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-
+        Cast the elements inside a column or a list of columns to boolean.
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols:
         :return:
@@ -2101,7 +2080,7 @@ class BaseColumns(ABC):
 
     def to_string(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-
+        Cast the elements inside a column or a list of columns to string.
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols:
         :return:
@@ -2116,7 +2095,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        dtypes = self.root[cols].cols.data_types(tidy=False)
+        dtypes = self.root[cols].cols.data_type(tidy=False)
         return self.apply(cols, self.F.infer_data_types, args=(dtypes,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
@@ -2578,7 +2557,7 @@ class BaseColumns(ABC):
 
         for col_name, v, _date_format, output_col in zip(cols, value, date_format, output_cols):
             if _date_format is None:
-                _date_format = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_type.format")
+                _date_format = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.format")
 
             if _date_format is None:
                 logger.warn(f"date format for column '{col_name}' could not be found, using 'None' instead")
@@ -3387,12 +3366,12 @@ class BaseColumns(ABC):
     def quality(self, cols="*", flush=False, compute=True) -> dict:
         """
         Return the data quality in the format
-        {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'inferred_type': 'object'}}
+        {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'inferred_data_type': 'object'}}
 
         :param cols: "*", column name or list of column names to be processed.
         :param flush:
         :param compute:
-        :return: dict in the format {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'inferred_type': 'object'}}
+        :return: dict in the format {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'inferred_data_type': 'object'}}
         """
 
         df = self.root
@@ -3401,7 +3380,7 @@ class BaseColumns(ABC):
         if is_dict(cols):
             cols_types = cols
         else:
-            cols_types = self.root.cols.infer_types(cols, tidy=False)["infer_types"]
+            cols_types = self.root.cols.infer_type(cols, tidy=False)["infer_type"]
 
         result = {}
         profiler_to_mask_func = {
@@ -3449,7 +3428,7 @@ class BaseColumns(ABC):
                                 "missing": missing, "mismatch": mismatches}
 
         for col_name in cols_types.keys():
-            result[col_name].update({"inferred_type": cols_types[col_name]})
+            result[col_name].update({"inferred_data_type": cols_types[col_name]})
 
         for col in result:
             self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats", result[col])
@@ -3458,20 +3437,7 @@ class BaseColumns(ABC):
 
         return result
 
-    @staticmethod
-    @abstractmethod
-    def count_by_data_types(cols, infer=False, str_funcs=None, int_funcs=None) -> dict:
-        """
-        TODO:?
-        :param cols: "*", column name or list of column names to be processed.
-        :param infer: TODO?
-        :param str_funcs: Custom string functions.
-        :param int_funcs: Custom numeric functions.
-        :return:
-        """
-        pass
-
-    def infer_types(self, cols="*", sample=INFER_PROFILER_ROWS, tidy=True) -> dict:
+    def infer_type(self, cols="*", sample=INFER_PROFILER_ROWS, tidy=True) -> dict:
         """
         Infer data types in a dataframe from a sample. First it identify the data type of every value in every cell.
         After that it takes all ghe values apply som heuristic to try to better identify the datatype.
@@ -3553,10 +3519,10 @@ class BaseColumns(ABC):
                     cols_and_inferred_dtype[col_name].update({"format": _format})
 
         for col in cols_and_inferred_dtype:
-            self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_type",
+            self.root.meta = Meta.set(self.root.meta, f"profile.columns.{col}.stats.inferred_data_type",
                                       cols_and_inferred_dtype[col])
 
-        result = {"infer_types": cols_and_inferred_dtype}
+        result = {"infer_type": cols_and_inferred_dtype}
 
         return format_dict(result, tidy=tidy)
 
@@ -3580,7 +3546,7 @@ class BaseColumns(ABC):
             infer_value_counts = sample_formats["frequency"][col_name]["values"]
             # Common datatype in a column
             date_format = infer_value_counts[0]["value"]
-            self.root.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.inferred_type.format", date_format)
+            self.root.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.format", date_format)
             result.update({col_name: date_format})
 
         return format_dict(result, tidy)

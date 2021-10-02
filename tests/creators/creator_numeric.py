@@ -511,9 +511,9 @@ def create():
     t.create(method="cols.correlation", variant="multiple_spearman", args=[["id", "price"], "spearman"])
     t.create(method="cols.correlation", variant="multiple_kendall", args=[["id", "price"], "kendall"])
 
-    t.create(method="cols.infer_types", variant="all", cols="*")
-    t.create(method="cols.infer_types", variant="numeric", cols="price")
-    t.create(method="cols.infer_types", variant="multiple", cols=["id", "code", "discount"])
+    t.create(method="cols.infer_type", variant="all", cols="*")
+    t.create(method="cols.infer_type", variant="numeric", cols="price")
+    t.create(method="cols.infer_type", variant="multiple", cols=["id", "code", "discount"])
 
     t.create(method="cols.unique_values", variant="all", cols="*")
     t.create(method="cols.unique_values", variant="numeric", cols="price", estimate=True)

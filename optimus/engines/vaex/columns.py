@@ -20,10 +20,6 @@ class Cols(DataFrameBaseColumns):
         pass
 
     @staticmethod
-    def count_by_data_types(cols, infer=False, str_funcs=None, int_funcs=None):
-        pass
-
-    @staticmethod
     def string_to_index(cols=None, output_cols=None):
         pass
 
