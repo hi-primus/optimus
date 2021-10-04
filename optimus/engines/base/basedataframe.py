@@ -860,7 +860,7 @@ class BaseDataFrame(ABC):
 
             if cols_to_infer:
                 cols_data_types = {**cols_data_types, **df.cols.infer_type(cols_to_infer, tidy=False)["infer_type"]}
-                cols_data_types = {col: cols_data_types[col] for col in cols_to_profile}
+                cols_data_types = {col: cols_data_types[col] for col in cols_to_profile if col in cols_data_types}
 
             _t = time.process_time()
             mismatch = df.cols.quality(cols_data_types)
@@ -928,8 +928,8 @@ class BaseDataFrame(ABC):
 
                 for _col_name in _columns:
                     _c[_col_name] = {
-                        "stats": _mismatch[_col_name],
-                        "data_type": _data_types[_col_name]
+                        "stats": _mismatch.get(_col_name, None),
+                        "data_type": _data_types.get(_col_name, None)
                     }
                     if _col_name in _freq:
                         f = _freq[_col_name]
