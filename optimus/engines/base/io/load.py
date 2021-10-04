@@ -74,13 +74,17 @@ class BaseLoad:
         if is_empty_function(self._csv):
             raise NotImplementedError(f"'load.csv' is not implemented on '{self.op.engine_label}'")
 
+        unquoted_path = None
+        
         if not is_url(filepath_or_buffer):
-            filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
-            meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer[0])}
+            unquoted_path = glob.glob(unquote_path(filepath_or_buffer))
+        
+        if unquoted_path and len(unquoted_path):
+            meta = {"file_name": unquoted_path, "name": ntpath.basename(unquoted_path[0])}
         else:
             meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
-        filepath_or_buffer = one_list_to_val(filepath_or_buffer)
+        filepath_or_buffer = val_to_list(filepath_or_buffer)
 
         try:
 
@@ -89,7 +93,7 @@ class BaseLoad:
                 lineterminator = None
 
             if conn is not None:
-                filepath_or_buffer = conn.path(filepath_or_buffer)
+                filepath_or_buffer = [conn.path(fb) for fb in filepath_or_buffer]
                 storage_options = conn.storage_options
 
             if kwargs.get("chunk_size") == "auto":
