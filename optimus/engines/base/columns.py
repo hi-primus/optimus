@@ -393,7 +393,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def apply_by_data_types(self, cols="*", func=None, args=None, data_type=None):
+    def apply_by_data_types(self, cols="*", func=None, args=None, data_type=None) -> 'DataFrameType':
         """
         Apply a function using pandas udf or udf if apache arrow is not available.
 
@@ -411,16 +411,17 @@ class BaseColumns(ABC):
 
         return self.set(cols, value_func=func, args=args, where=mask)
 
-    def set(self, cols="*", value_func=None, where=None, args=None, default=None, eval_value=False):
+    def set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
+            eval_value: bool = False) -> 'DataFrameType':
         """
         Set a column value using a number, string or an expression.
 
-        :param cols: columns to set or create
-        :param value_func: expression, function or value
-        :param where: mask or expression
-        :param args: TODO:?
-        :param default: In case a value
-        :param eval_value:
+        :param cols: Columns to set or create.
+        :param value_func: expression, function or value.
+        :param where: When the condition in 'where' is True, replace with 'value_func'. Where False, replace with 'default' or keep the original value.
+        :param args: Argument when 'value_func' param is a function.
+        :param default: Entries where 'where' is False are replaced with corresponding value from other.
+        :param eval_value: Parse 'value_func' param in case a string is passed.
         :return:
         """
         if args is None:
@@ -509,7 +510,7 @@ class BaseColumns(ABC):
         :param names: string or list of strings with new names of columns. Ignored if a dictionary
             or list of tuples is passed to cols.
         :param func: can be lower, upper or any string transformation function.
-        :return: Dataframe with names changed
+        :return: Dataframe with columns names replaced.
         """
         df = self.root
 
@@ -555,15 +556,37 @@ class BaseColumns(ABC):
 
         return self.root.new(dfd, meta=meta)
 
-    def types(self, cols="*", tidy=True):
+
+    def parse_inferred_types(self, col_data_type):
+        """
+        Parse a engine column specific data type to a profiler data type.
+
+        :param col_data_type: Engine column specific data.
+        :return: Dict
+        """
+
+        df = self.root
+        columns = {}
+        for k, v in col_data_type.items():
+            # Initialize values to 0
+            result_default = {
+                data_type: 0 for data_type in df.constants.OPTIMUS_TO_INTERNAL.keys()}
+            for k1, v1 in v.items():
+                for k2, v2 in df.constants.OPTIMUS_TO_INTERNAL.items():
+                    if k1 in df.constants.OPTIMUS_TO_INTERNAL[k2]:
+                        result_default[k2] = result_default[k2] + v1
+            columns[k] = result_default
+        return columns
+
+    def _types(self, cols="*", tidy=True):
         """
         Get the inferred data types from the meta data, if no type is found, uses a translated internal data type.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param tidy: The result format. If True it will return a value if you
+        :param tidy: The output format. If 'True' it will return a value, if 'False' will return the column name an a value.
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
-        :return:
+        :return: Python Dictionary with column names and its data types.
         """
         df = self.root
         cols = parse_columns(df, cols)
@@ -590,10 +613,10 @@ class BaseColumns(ABC):
         Get the inferred data types from the meta data.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param tidy: The result format. If True it will return a value if you
+        :param tidy: The result format. If 'True' it will return a value if you 'False' will return the column name a value.
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
-        :return:
+        :return: Python Dictionary with column names and its data types.
         """
         df = self.root
         cols = parse_columns(df, cols)
@@ -614,10 +637,10 @@ class BaseColumns(ABC):
         """
         Set profiler data type.
 
-        :param cols: A dict with the form {"col_name": profiler datatype}, a list of columns or a single column
+        :param cols: A dict with the form {"col_name": profiler datatype}, a list of columns or a single column.
         :param data_types: If a string or a list passed to cols, uses this parameter to set the data types to those columns.
-        :param inferred: Whether it was inferred or not
-        :return:
+        :param inferred: Whether it was inferred or not.
+        :return: Dataframe with new data types in the meta data.
         """
         df = self.root
 
@@ -644,9 +667,10 @@ class BaseColumns(ABC):
 
         return df
 
+    # TODO: merge this function with set_data_type
     def unset_data_type(self, cols="*"):
         """
-        Unset user defined data type.
+        Unset user set data type.
 
         :param cols: '*', list of columns names or a single column name.
         :return:
@@ -1365,7 +1389,7 @@ class BaseColumns(ABC):
 
         if numeric is None:
             cols = parse_columns(df, cols)
-            types = df.cols.types(cols, tidy=False)['types']
+            types = df.cols._types(cols, tidy=False)['types']
             numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
 
         return df.cols.agg_exprs(cols, self.F.min, numeric, compute=compute, tidy=tidy, parallel=False)
@@ -1385,7 +1409,7 @@ class BaseColumns(ABC):
 
         if numeric is None:
             cols = parse_columns(df, cols)
-            types = df.cols.types(cols, tidy=False)['types']
+            types = df.cols._types(cols, tidy=False)['types']
             numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
 
         return df.cols.agg_exprs(cols, self.F.max, numeric, compute=compute, tidy=tidy, parallel=False)
@@ -1982,10 +2006,11 @@ class BaseColumns(ABC):
 
     def extract(self, cols="*", regex=None, output_cols=None) -> 'DataFrameType':
         """
+        Extract a string that match a regular expression.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param regex:
-        :param output_cols:
+        :param regex: Regular expression
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -1994,12 +2019,13 @@ class BaseColumns(ABC):
 
     def slice(self, cols="*", start=None, stop=None, step=None, output_cols=None) -> 'DataFrameType':
         """
+        Slice substrings from each element in a column.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param start:
-        :param stop:
-        :param step:
-        :param output_cols:
+        :param start: Start position for slice operation.
+        :param stop: Stop position for slice operation.
+        :param step: Step size for slice operation.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -2011,10 +2037,11 @@ class BaseColumns(ABC):
 
     def left(self, cols="*", n=None, output_cols=None) -> 'DataFrameType':
         """
+        Get the substring from the first character to the nth from right to left.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param n:
-        :param output_cols:
+        :param n: Number of character to get starting from 0.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 
@@ -2024,10 +2051,11 @@ class BaseColumns(ABC):
 
     def right(self, cols="*", n=None, output_cols=None) -> 'DataFrameType':
         """
+        Get the substring from the last character to n.
 
         :param cols: "*", column name or list of column names to be processed.
         :param n:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         df = self.apply(cols, self.F.right, args=(n,), func_return_type=str,
@@ -2036,11 +2064,12 @@ class BaseColumns(ABC):
 
     def mid(self, cols="*", start=0, n=1, output_cols=None) -> 'DataFrameType':
         """
+        Get the substring from
 
         :param cols: "*", column name or list of column names to be processed.
         :param start:
         :param n:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         df = self.apply(cols, self.F.mid, args=(start, n), func_return_type=str,
@@ -2051,7 +2080,7 @@ class BaseColumns(ABC):
         """
         Cast the elements inside a column or a list of columns to float.
         :param cols: "*", column name or list of column names to be processed.
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         return self.apply(cols, self.F.to_float, func_return_type=float,
@@ -2062,7 +2091,7 @@ class BaseColumns(ABC):
         Cast the elements inside a column or a list of columns to integer.
         :param cols: "*", column name or list of column names to be processed.
         :param default:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         return self.apply(cols, self.F.to_integer, args=(default,), func_return_type=int,
@@ -2438,7 +2467,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def year(self, cols="*", format:str=None, output_cols=None) -> 'DataFrameType':
+    def year(self, cols="*", format: str = None, output_cols=None) -> 'DataFrameType':
         """
         Get the Year from a date in a column.
 
@@ -2449,7 +2478,7 @@ class BaseColumns(ABC):
         """
         return self._date_format(cols, format, output_cols, self.F.year, meta_action=Actions.YEAR.value)
 
-    def month(self, cols="*", format:str=None, output_cols=None) -> 'DataFrameType':
+    def month(self, cols="*", format: str = None, output_cols=None) -> 'DataFrameType':
         """
         Get the month from a date in a column.
 
@@ -2460,7 +2489,7 @@ class BaseColumns(ABC):
         """
         return self._date_format(cols, format, output_cols, self.F.month, meta_action=Actions.MONTH.value)
 
-    def day(self, cols="*", format:str=None, output_cols=None) -> 'DataFrameType':
+    def day(self, cols="*", format: str = None, output_cols=None) -> 'DataFrameType':
         """
         Get the day from a date in a column.
 
@@ -2493,7 +2522,7 @@ class BaseColumns(ABC):
         """
         return self._date_format(cols, format, output_cols, self.F.minute, meta_action=Actions.MINUTE.value)
 
-    def second(self, cols="*", format:str=None, output_cols=None) -> 'DataFrameType':
+    def second(self, cols="*", format: str = None, output_cols=None) -> 'DataFrameType':
         """
         Get the seconds from a date in a column.
 
@@ -2504,7 +2533,7 @@ class BaseColumns(ABC):
         """
         return self._date_format(cols, format, output_cols, self.F.second, meta_action=Actions.SECOND.value)
 
-    def weekday(self, cols="*", format:str=None, output_cols=None) -> 'DataFrameType':
+    def weekday(self, cols="*", format: str = None, output_cols=None) -> 'DataFrameType':
         """
         Get the hour from a date in a column.
 
@@ -2516,7 +2545,7 @@ class BaseColumns(ABC):
         return self._date_format(cols, format, output_cols, self.F.weekday, meta_action=Actions.WEEKDAY.value)
 
     def time_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None,
-                   func=None) -> 'DataFrameType':
+                     func=None) -> 'DataFrameType':
         """
         Returns a TimeDelta of the units between two datetimes.
 
@@ -2584,8 +2613,9 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.time_between(cols=cols, func=self.F.years_between, value=value, date_format=date_format, round=round,
-                               output_cols=output_cols)
+        return self.time_between(cols=cols, func=self.F.years_between, value=value, date_format=date_format,
+                                 round=round,
+                                 output_cols=output_cols)
 
     def months_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2598,8 +2628,9 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.time_between(cols=cols, func=self.F.months_between, value=value, date_format=date_format, round=round,
-                               output_cols=output_cols)
+        return self.time_between(cols=cols, func=self.F.months_between, value=value, date_format=date_format,
+                                 round=round,
+                                 output_cols=output_cols)
 
     def days_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2613,7 +2644,7 @@ class BaseColumns(ABC):
         :return:
         """
         return self.time_between(cols=cols, func=self.F.days_between, value=value, date_format=date_format, round=round,
-                               output_cols=output_cols)
+                                 output_cols=output_cols)
 
     def hours_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2626,8 +2657,9 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        return self.time_between(cols=cols, func=self.F.hours_between, value=value, date_format=date_format, round=round,
-                               output_cols=output_cols)
+        return self.time_between(cols=cols, func=self.F.hours_between, value=value, date_format=date_format,
+                                 round=round,
+                                 output_cols=output_cols)
 
     def minutes_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2641,7 +2673,7 @@ class BaseColumns(ABC):
         :return:
         """
         return self.time_between(cols=cols, func=self.F.minutes_between, value=value, date_format=date_format,
-                               round=round, output_cols=output_cols)
+                                 round=round, output_cols=output_cols)
 
     def seconds_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
         """
@@ -2655,7 +2687,7 @@ class BaseColumns(ABC):
         :return:
         """
         return self.time_between(cols=cols, func=self.F.seconds_between, value=value, date_format=date_format,
-                               round=round, output_cols=output_cols)
+                                 round=round, output_cols=output_cols)
 
     def replace(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,
                 output_cols=None) -> 'DataFrameType':
@@ -2883,7 +2915,7 @@ class BaseColumns(ABC):
 
         if strategy == "auto":
             if data_type == "auto" and fill_value is None:
-                types = df.cols.types(cols, tidy=False)["types"]
+                types = df.cols._types(cols, tidy=False)["types"]
                 strategy = ["mean" if dt in df.constants.NUMERIC_INTERNAL_TYPES else "most_frequent" for dt in
                             types.values()]
             elif data_type == "auto" and fill_value is not None:
@@ -2943,7 +2975,7 @@ class BaseColumns(ABC):
 
         :param cols: '*', list of columns names or a single column name.
         :param estimate:
-		:param compute: Compute the result or return a delayed function.
+        :param compute: Compute the result or return a delayed function.
         :param tidy: The result format. If True it will return a value if you
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
@@ -3005,66 +3037,55 @@ class BaseColumns(ABC):
 
             return df.cols.assign(cols)
 
-    def add(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
+    def add(self, cols="*", output_col=None) -> 'DataFrameType':
         """
         Apply a plus operation to two or more columns.
 
-        :param cols: '*', list of columns names or a single column name
-        :param value: TODO
-        :param output_cols: Column name or list of column names where the transformed data will be saved.
-        :param output_col: Single output column in case no value is passed
-        :return:
+        :param cols: '*', list of columns names or a single column name.
+        :param output_col: Single output column in case no value is passed.
+        :return: Dataframe with the result of the arithmetic operation appended.
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: x + y, output_cols=output_cols,
-                          output_col=output_col, name="add", cast=True)
+        return self._math(cols=cols, operator=lambda x, y: x + y, output_col=output_col, name="add")
 
-    def sub(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
+    def sub(self, cols="*", output_col=None) -> 'DataFrameType':
         """
         Subtract two or more columns.
 
         :param cols: '*', list of columns names or a single column name
-        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param output_col: Single output column in case no value is passed
-        :return:
+        :return: Dataframe with the result of the arithmetic operation appended.
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: x - y, output_cols=output_cols,
-                          output_col=output_col, name="sub")
+        return self._math(cols=cols, operator=lambda x, y: x - y, output_col=output_col, name="sub", cast=True)
 
-    def mul(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
+    def mul(self, cols="*", output_col=None) -> 'DataFrameType':
         """
         Multiply two or more columns.
 
         :param cols: '*', list of columns names or a single column name
-        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param output_col: Single output column in case no value is passed
-        :return:
+        :return: Dataframe with the result of the arithmetic operation appended.
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: x * y, output_cols=output_cols,
-                          output_col=output_col, name="mul")
+        return self._math(cols=cols, operator=lambda x, y: x * y, output_col=output_col, name="mul", cast=True)
 
-    def div(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
+    def div(self, cols="*", output_col=None) -> 'DataFrameType':
         """
         Divide two or more columns.
 
         :param cols: '*', list of columns names or a single column name
-        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param output_col: Single output column in case no value is passed
-        :return:
+        :return: Dataframe with the result of the arithmetic operation appended.
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: x / y, output_cols=output_cols,
-                          output_col=output_col, name="div")
+        return self._math(cols=cols, operator=lambda x, y: x / y, output_col=output_col, name="div", cast=True)
 
-    def rdiv(self, cols="*", value=None, output_cols=None, output_col=None) -> 'DataFrameType':
+    def rdiv(self, cols="*", output_col=None) -> 'DataFrameType':
         """
         Divide two or more columns.
 
         :param cols: '*', list of columns names or a single column name
-        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param output_col: Single output column in case no value is passed
-        :return:
+        :return: Dataframe with the result of the arithmetic operation appended.
         """
-        return self._math(cols=cols, value=value, operator=lambda x, y: y / x, output_cols=output_cols,
-                          output_col=output_col, name="rdiv")
+        return self._math(cols=cols, operator=lambda x, y: y / x, output_col=output_col, name="rdiv", cast=True)
 
     def z_score(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
@@ -3072,7 +3093,7 @@ class BaseColumns(ABC):
 
         :param cols: '*', list of columns names or a single column name
         :param output_cols: Column name or list of column names where the transformed data will be saved.
-        :return: Returns the z-score of the given columns.
+        :return: Dataframe with the z-score of the given columns appended.
         """
         return self.root.cols.apply(cols, func=self.F.z_score, func_return_type=float, output_cols=output_cols,
                                     meta_action=Actions.Z_SCORE.value, mode="vectorized")
@@ -4021,20 +4042,33 @@ class BaseColumns(ABC):
 
     # Any mask
     def any_greater_than(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.greater_than, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        """
+
+        :param cols:
+        :param value:
+        :param inverse:
+        :param tidy:
+        :param compute:
+        :return:
+        """
+        return self._any_mask(cols, self.root.mask.greater_than, value=value, inverse=inverse, tidy=tidy,
+                              compute=compute)
 
     def any_greater_than_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.greater_than_equal, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, self.root.mask.greater_than_equal, value=value, inverse=inverse, tidy=tidy,
+                              compute=compute)
 
     def any_less_than(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         return self._any_mask(cols, self.root.mask.less_than, value=value, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_less_than_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.less_than_equal, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, self.root.mask.less_than_equal, value=value, inverse=inverse, tidy=tidy,
+                              compute=compute)
 
     def any_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, inverse=False,
                     tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.between, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal,
+        return self._any_mask(cols, self.root.mask.between, lower_bound=lower_bound, upper_bound=upper_bound,
+                              equal=equal,
                               bounds=bounds, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
@@ -4059,7 +4093,8 @@ class BaseColumns(ABC):
         return self._any_mask(cols, self.root.mask.empty, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_mismatch(self, cols="*", data_type=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.mismatch, data_type=data_type, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, self.root.mask.mismatch, data_type=data_type, inverse=inverse, tidy=tidy,
+                              compute=compute)
 
     def any_duplicated(self, cols="*", keep="first", inverse=False, tidy=True, compute=True):
         return self._any_mask(cols, self.root.mask.duplicated, keep=keep, inverse=inverse, tidy=tidy, compute=compute)
@@ -4072,13 +4107,16 @@ class BaseColumns(ABC):
                               compute=compute)
 
     def any_match_data_type(self, cols="*", data_type=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.match_data_type, data_type=data_type, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, self.root.mask.match_data_type, data_type=data_type, inverse=inverse, tidy=tidy,
+                              compute=compute)
 
     def any_match_regex(self, cols="*", regex=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.match_regex, regex=regex, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, self.root.mask.match_regex, regex=regex, inverse=inverse, tidy=tidy,
+                              compute=compute)
 
     def any_starting_with(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.starts_with, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, self.root.mask.starts_with, value=value, inverse=inverse, tidy=tidy,
+                              compute=compute)
 
     def any_ending_with(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         return self._any_mask(cols, self.root.mask.ends_with, value=value, inverse=inverse, tidy=tidy, compute=compute)
@@ -4090,7 +4128,8 @@ class BaseColumns(ABC):
         return self._any_mask(cols, self.root.mask.value_in, values=values, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_match_pattern(self, cols="*", pattern=None, inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.match_pattern, pattern=pattern, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, self.root.mask.match_pattern, pattern=pattern, inverse=inverse, tidy=tidy,
+                              compute=compute)
 
     def any_expression(self, value=None, inverse=False, tidy=True, compute=True):
         return self._any_mask("*", self.root.mask.expression, value=value, inverse=inverse, tidy=tidy, compute=compute)
@@ -4162,7 +4201,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.greater_than, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.greater_than, value=value, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_greater_than_equal(self, cols="*", value=None, inverse=False, compute=True, tidy=True):
         """
@@ -4177,7 +4217,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.greater_than_equal, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.greater_than_equal, value=value, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_less_than(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         """
@@ -4192,7 +4233,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.less_than, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.less_than, value=value, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_less_than_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         """
@@ -4207,7 +4249,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.less_than_equal, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.less_than_equal, value=value, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, inverse=False,
                       tidy=True,
@@ -4228,7 +4271,8 @@ class BaseColumns(ABC):
         :return: The number of elements that match the function.
         """
 
-        return self._count_mask(cols, self.root.mask.between, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal,
+        return self._count_mask(cols, self.root.mask.between, lower_bound=lower_bound, upper_bound=upper_bound,
+                                equal=equal,
                                 bounds=bounds, inverse=inverse, tidy=tidy, compute=compute)
 
     def count_equal(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
@@ -4259,7 +4303,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.not_equal, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.not_equal, value=value, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_missings(self, cols="*", inverse=False, tidy=True, compute=True):
         """
@@ -4344,7 +4389,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.mismatch, data_type=data_type, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.mismatch, data_type=data_type, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_duplicated(self, cols="*", keep="first", inverse=False, tidy=True, compute=True):
         """
@@ -4374,7 +4420,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.match, regex=regex, data_type=data_type, inverse=inverse, tidy=tidy,
+        return self._count_mask(cols, self.root.mask.match, regex=regex, data_type=data_type, inverse=inverse,
+                                tidy=tidy,
                                 compute=compute)
 
     def count_data_type(self, cols="*", data_type=None, inverse=False, tidy=True, compute=True):
@@ -4406,7 +4453,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.match_regex, regex=regex, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.match_regex, regex=regex, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_starting_with(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         """
@@ -4421,7 +4469,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.starts_with, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.starts_with, value=value, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_ending_with(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         """
@@ -4436,7 +4485,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.ends_with, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.ends_with, value=value, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_containing(self, cols="*", value=None, inverse=False, tidy=True, compute=True):
         """
@@ -4466,7 +4516,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, self.root.mask.value_in, values=values, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.value_in, values=values, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_match_pattern(self, cols="*", pattern=None, inverse=False, tidy=True, compute=True):
         """
@@ -4478,7 +4529,8 @@ class BaseColumns(ABC):
         :param compute:
         :return:
         """
-        return self._count_mask(cols, self.root.mask.match_pattern, pattern=pattern, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, self.root.mask.match_pattern, pattern=pattern, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     def count_expression(self, value=None, inverse=False, tidy=True, compute=True):
         """
@@ -4493,7 +4545,8 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask("*", self.root.mask.expression, value=value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask("*", self.root.mask.expression, value=value, inverse=inverse, tidy=tidy,
+                                compute=compute)
 
     # Count mask (data types)
     def count_str(self, cols="*", inverse=False, tidy=True, compute=True):
@@ -4743,7 +4796,8 @@ class BaseColumns(ABC):
                 drop=True) -> 'DataFrameType':
         value = str(bounds) if bounds else str((lower_bound, upper_bound))
         rename_func = False if drop else lambda n: f"{n}_between_{value}"
-        return self._mask(cols, self.root.mask.between, output_cols, rename_func, lower_bound=lower_bound, upper_bound=upper_bound,
+        return self._mask(cols, self.root.mask.between, output_cols, rename_func, lower_bound=lower_bound,
+                          upper_bound=upper_bound,
                           equal=equal, bounds=bounds)
 
     def equal(self, cols="*", value=None, output_cols=None, drop=True) -> 'DataFrameType':
@@ -4881,7 +4935,7 @@ class BaseColumns(ABC):
         Create the fingerprint for a column
 
         :param cols: '*', list of columns names or a single column name.
-		:param output_cols: Column name or list of column names where the transformed data will be saved.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
 

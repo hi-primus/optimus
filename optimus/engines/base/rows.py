@@ -175,7 +175,7 @@ class BaseRows(ABC):
 
         if cast:
             sort_cols = [f"__{col}_sort__" for col in cols]
-            types = df.cols.types(cols, tidy=False)["types"]
+            types = df.cols._types(cols, tidy=False)["types"]
             casts = {}
 
             for col_name, data_type in types.items():
