@@ -21,9 +21,11 @@ class DaskBaseRows(DistributedBaseRows):
         if count is None:
             return df
 
-        partitions = df.partitions()
-
-        return self.root.new(self.root._base_to_dfd(df.cols.select("*").data.head(count), partitions))
+        return self.root.new(
+            self.root._base_to_dfd(
+                df.cols.select("*").data.head(count, npartitions=-1), df.partitions() if count > 100 else 1
+            )
+        )
 
     def _drop_duplicated_builtin(self, cols):
 

@@ -489,6 +489,29 @@ def path_is_local(path):
     return True
 
 
+def prepare_url_schema(path: str, schema="https", force=False):
+    """
+    Prepare a url and include a schema if neccessary.
+    :param path: Url path to prepare.
+    :param schema: schema to include if none is found in 'path'.
+    :param force: forces the schema passed to 'schema'.
+    """
+
+    if not schema.endswith("://"):
+        schema += "://"
+
+    import hiurlparser
+    parsed_url = hiurlparser.parse_url(path)
+    found_schema = parsed_url["protocol"] if parsed_url else None
+
+    if found_schema is not None and not force:
+        return path
+    elif found_schema is None:
+        return schema + path
+    else:
+        return schema + path[len(found_schema + "://"):]
+
+
 def month_names(directive="%B"):
     """
     Gets an array with month names

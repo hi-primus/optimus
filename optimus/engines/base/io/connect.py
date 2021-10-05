@@ -1,3 +1,4 @@
+from optimus.helpers.functions import prepare_url_schema
 from optimus.helpers.types import *
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
 from optimus.engines.base.io.properties import DriverProperties
@@ -51,6 +52,8 @@ class S3(Connection):
         endpoint_url: http(s)://<...>
         bucket
         anon: Whether access should be anonymous (default False)
+        key: Key from configures Space Access Key
+        secret: Secret from Space Access Key
         key, secret: For user authentication
         token: If authentication has been done with some other S3 client
         use_ssl: Whether connections are encrypted and secure (default True)
@@ -73,33 +76,26 @@ class S3(Connection):
         if endpoint_url is None:
             RaiseIt.value_error(endpoint_url, "")
 
-        import hiurlparser
-        schema = hiurlparser.parse_url(endpoint_url)["schema"]
-
-        if schema is not None:
-            endpoint_url = endpoint_url[len(schema + "://"):]  # removes schema from endpoint_url
-        else:
-            schema = "https"
+        endpoint_url = prepare_url_schema(endpoint_url, Schemas.HTTPS.value, force=False)
 
         kwargs["client_kwargs"] = kwargs.get("client_kwargs", {})
-        kwargs["client_kwargs"]["endpoint_url"] = kwargs["client_kwargs"].get("endpoint_url",
-                                                                              schema + "://" + endpoint_url)
+        kwargs["client_kwargs"]["endpoint_url"] = kwargs["client_kwargs"].get("endpoint_url", endpoint_url)
 
         if not kwargs.get("base_url", False):
             if bucket:
-                kwargs["base_url"] = Schemas.S3.value + bucket
+                kwargs["base_url"] = prepare_url_schema(bucket, Schemas.S3.value, force=True)
             elif endpoint_url:
-                kwargs["base_url"] = Schemas.S3.value + endpoint_url
+                kwargs["base_url"] = prepare_url_schema(endpoint_url, Schemas.S3.value, force=True)
 
         super().__init__(config, **kwargs)
 
     @property
     def boto(self):
-        return {
-            # "region_name": S3_REGION,
-            "endpoint_url": self.options['endpoint_url'],
-            "aws_access_key_id": self.options.get("key"),
-            "aws_secret_access_key": self.options.get("secret")}
+        endpoint_url = prepare_url_schema(self.options['endpoint_url'], Schemas.HTTPS.value)
+        # "region_name": S3_REGION
+        return {"endpoint_url": endpoint_url,
+                "aws_access_key_id": self.options.get("key"),
+                "aws_secret_access_key": self.options.get("secret")}
 
 
 class Local(Connection):

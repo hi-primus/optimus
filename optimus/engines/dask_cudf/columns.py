@@ -35,26 +35,6 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
         df.le = df.le or preprocessing.LabelEncoder()
         return index_to_string(df, cols, output_cols, df.le)
 
-    def count_by_data_types(self, cols, infer=False, str_funcs=None, int_funcs=None, mismatch=None):
-        df = self.root
-        cols = parse_columns(df, cols)
-        dtypes = df.cols.data_types(tidy=False)
-
-        result = {}
-        for col_name in cols:
-            df_result = df[col_name].map_partitions(Infer.parse_dask, col_name, infer, dtypes, str_funcs,
-                                                    int_funcs, meta=str).compute()
-
-            result[col_name] = dict(df_result.value_counts())
-
-        if infer is True:
-            for k in result.keys():
-                result[k] = fill_missing_var_types(result[k])
-        else:
-            result = self.parse_inferred_types(result)
-
-        return result
-
     def hist(self, columns="*", buckets=20, compute=True):
 
         df = self.root

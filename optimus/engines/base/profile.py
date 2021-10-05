@@ -33,13 +33,13 @@ class BaseProfile(ABC):
 
         return one_list_to_val(cols)
 
-    def data_types(self, cols="*"):
+    def data_type(self, cols="*"):
 
         df = self.root
         cols = parse_columns(df, cols) if cols else []
 
         dtype = [Meta.get(
-            df.meta, f"profile.columns.{col}.stats.inferred_type.data_type") for col in cols]
+            df.meta, f"profile.columns.{col}.stats.inferred_data_type.data_type") for col in cols]
 
         return one_list_to_val(dtype)
 

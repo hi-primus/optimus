@@ -12,7 +12,7 @@ BIG_NUMBER = 100000
 
 class DaskCUDFEngine(BaseEngine):
     def __init__(self, session=None, address=None, n_workers=1, threads_per_worker=8, processes=False,
-                 memory_limit='4GB', verbose=False, coiled_token=None, *args, **kwargs):
+                 memory_limit=None, verbose=False, coiled_token=None, *args, **kwargs):
 
         """
 
@@ -42,16 +42,17 @@ class DaskCUDFEngine(BaseEngine):
 
             idle_timeout = kwargs.get("idle_timeout", None)
 
+            memory_limit = memory_limit or '16 GiB'
+
             cluster = coiled.Cluster(
                 name=kwargs.get("name"),
                 worker_options={
-                    **({"nthreads": threads_per_worker} if threads_per_worker else {}),
-                    **({"memory_limit": memory_limit} if memory_limit else {})
+                    **({"nthreads": threads_per_worker} if threads_per_worker else {})
                 },
                 worker_gpu=1,
                 worker_class='dask_cuda.CUDAWorker',
-                n_workers=n_workers,
-                worker_memory='15GiB',
+                n_workers=n_workers if n_workers else 4,
+                worker_memory=memory_limit,
                 backend_options={
                     "region": kwargs.get("backend_region", "us-east-1")
                 },
@@ -91,7 +92,8 @@ class DaskCUDFEngine(BaseEngine):
                                            device_memory_limit=memoryTotal * 0.8
                                            # Spill to RAM when 80% memory is full
                                            )
-                self.client = Client(cluster, *args, **kwargs)
+                memory_limit = memory_limit or '4GB'
+                self.client = Client(cluster, memory_limit=memory_limit, *args, **kwargs)
 
         if use_remote:
             self.remote = RemoteOptimusInterface(self.client, Engine.DASK_CUDF.value)
