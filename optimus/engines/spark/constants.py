@@ -75,7 +75,7 @@ class Constants(BaseConstants):
     STRING_TYPES = ["str"]
     ARRAY_TYPES = ["array"]
 
-    DTYPES_TO_INFERRED = {"int": ["smallint", "tinyint", "bigint", "int"], "decimal": ["float", "double"],
+    DTYPES_TO_INFERRED = {"int": ["smallint", "tinyint", "bigint", "int"], "float": ["float", "double"],
                           "string": ["string"], "date": ["date", "timestamp"], "boolean": ["boolean"],
                           "binary": ["binary"],
                           "array": ["array"], "object": ["object"], "null": ["null"], "missing": ["missing"]}

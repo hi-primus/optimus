@@ -3478,7 +3478,7 @@ class BaseColumns(ABC):
             dtype_i = 0
 
             if len(dtypes) > 1:
-                if dtypes[0] == ProfilerDataTypes.INT.value and dtypes[1] == ProfilerDataTypes.DECIMAL.value:
+                if dtypes[0] == ProfilerDataTypes.INT.value and dtypes[1] == ProfilerDataTypes.FLOAT.value:
                     dtype_i = 1
 
                 if dtypes[0] == ProfilerDataTypes.ZIP_CODE.value and dtypes[1] == ProfilerDataTypes.INT.value:

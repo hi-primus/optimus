@@ -158,7 +158,7 @@ def hist_agg(col_name, df, buckets, min_max=None, data_type=None):
 
     if data_type is not None:
         col_data_type = data_type[col_name]["data_type"]
-        if col_data_type == "int" or col_data_type == "decimal":
+        if col_data_type == "int" or col_data_type == "float":
             exprs = hist_numeric(min_max, buckets)
         elif col_data_type == "string":
             exprs = hist_string(buckets)

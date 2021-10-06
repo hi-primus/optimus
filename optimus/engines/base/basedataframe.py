@@ -1166,7 +1166,7 @@ class BaseDataFrame(ABC):
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
 
                 elif col["column_data_type"] == "int" or col["column_data_type"] == "string" or col[
-                        "column_data_type"] == "decimal":
+                        "column_data_type"] == "float":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
             if "frequency" in col:

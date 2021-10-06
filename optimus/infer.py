@@ -636,7 +636,7 @@ def is_dask_future(value):
     return isinstance(value, distributed.client.Future)
 
 
-def is_decimal(value):
+def is_float(value):
     return fastnumbers.isfloat(value, allow_nan=True)
 
 

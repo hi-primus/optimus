@@ -13,7 +13,7 @@ from optimus.helpers.logger import logger
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_valid_datetime_format, \
+    is_credit_card_number, is_zip_code, is_float, is_datetime, is_valid_datetime_format, \
     is_object_value, is_ip, is_url, is_missing, is_gender, is_list_of_int, is_list_of_str, \
     is_str, is_phone_number, is_int_like
 
@@ -876,8 +876,8 @@ class BaseFunctions(ABC):
             dtype = ProfilerDataTypes.ZIP_CODE.value
         elif is_int_like(value):
             dtype = ProfilerDataTypes.INT.value
-        elif is_decimal(value):
-            dtype = ProfilerDataTypes.DECIMAL.value
+        elif is_float(value):
+            dtype = ProfilerDataTypes.FLOAT.value
         elif is_datetime(value):
             dtype = ProfilerDataTypes.DATETIME.value
         elif is_missing(value):
