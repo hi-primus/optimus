@@ -481,11 +481,11 @@ class BaseColumns(ABC):
             if where is not None:
                 if isinstance(_value, self.root.__class__):
                     _value = _value.get_series()
-                else:
-                    # TO-DO: Create the value series
-                    dfd[temp_col_name] = _value
-                    value = dfd[temp_col_name]
-                    del dfd[temp_col_name]
+                # else:
+                #     # TO-DO: Create the value series
+                #     dfd[temp_col_name] = _value
+                #     _value = dfd[temp_col_name]
+                #     del dfd[temp_col_name]
 
                 _value = default.mask(where.get_series(), _value)
 
@@ -578,41 +578,12 @@ class BaseColumns(ABC):
             columns[k] = result_default
         return columns
 
-    def _types(self, cols="*", tidy=True):
-        """
-        Get the inferred data types from the meta data, if no type is found, uses a translated internal data type.
-
-        :param cols: "*", column name or list of column names to be processed.
-        :param tidy: The output format. If 'True' it will return a value, if 'False' will return the column name an a value.
-        process a column or column name and value if not. If False it will return the functions name, the column name
-        and the value.
-        :return: Python Dictionary with column names and its data types.
-        """
-        df = self.root
-        cols = parse_columns(df, cols)
-        result = {}
-
-        data_types = df.cols.data_type(cols, names=True, tidy=False)["data_type"]
-        inferred_data_type = df.cols.inferred_data_type(cols, tidy=False)["inferred_data_type"]
-
-        for col_name in cols:
-
-            data_type = inferred_data_type[col_name]
-
-            if data_type is None:
-                data_type = data_types[col_name]
-
-            result.update({col_name: data_type})
-
-        result = {"types": result}
-
-        return format_dict(result, tidy=tidy)
-
-    def inferred_data_type(self, cols="*", tidy=True):
+    def inferred_data_type(self, cols="*", use_internal=False, tidy=True):
         """
         Get the inferred data types from the meta data.
 
         :param cols: "*", column name or list of column names to be processed.
+        :param use_internal: If no inferred data type is found, return a translated internal data type instead of None.
         :param tidy: The result format. If 'True' it will return a value if you 'False' will return the column name a value.
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
@@ -620,12 +591,14 @@ class BaseColumns(ABC):
         """
         df = self.root
         cols = parse_columns(df, cols)
-        result = {}
+        result = df.cols.data_type(cols, names=True, tidy=False)["data_type"] if use_internal else {}
 
         for col_name in cols:
             data_type = Meta.get(df.meta, f"columns_data_types.{col_name}.data_type")
             if data_type is None:
                 data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.data_type")
+            if data_type is None:
+                data_type = result.get(col_name, None)
             result.update({col_name: data_type})
 
         result = {"inferred_data_type": result}
@@ -1389,7 +1362,7 @@ class BaseColumns(ABC):
 
         if numeric is None:
             cols = parse_columns(df, cols)
-            types = df.cols._types(cols, tidy=False)['types']
+            types = df.cols.inferred_data_type(cols, use_internal=True, tidy=False)['inferred_data_type']
             numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
 
         return df.cols.agg_exprs(cols, self.F.min, numeric, compute=compute, tidy=tidy, parallel=False)
@@ -1409,7 +1382,7 @@ class BaseColumns(ABC):
 
         if numeric is None:
             cols = parse_columns(df, cols)
-            types = df.cols._types(cols, tidy=False)['types']
+            types = df.cols.inferred_data_type(cols, use_internal=True, tidy=False)['inferred_data_type']
             numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
 
         return df.cols.agg_exprs(cols, self.F.max, numeric, compute=compute, tidy=tidy, parallel=False)
@@ -2915,7 +2888,7 @@ class BaseColumns(ABC):
 
         if strategy == "auto":
             if data_type == "auto" and fill_value is None:
-                types = df.cols._types(cols, tidy=False)["types"]
+                types = df.cols.inferred_data_type(cols, use_internal=True, tidy=False)["inferred_data_type"]
                 strategy = ["mean" if dt in df.constants.NUMERIC_INTERNAL_TYPES else "most_frequent" for dt in
                             types.values()]
             elif data_type == "auto" and fill_value is not None:
