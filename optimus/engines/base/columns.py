@@ -3377,9 +3377,6 @@ class BaseColumns(ABC):
             cols_types = self.root.cols.infer_type(cols, tidy=False)["infer_type"]
 
         result = {}
-        profiler_to_mask_func = {
-            "decimal": "float"
-        }
 
         quality_props = ["match", "missing", "mismatch"]
 
@@ -3400,8 +3397,6 @@ class BaseColumns(ABC):
             dtype = props["data_type"]
 
             dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
-
-            dtype = profiler_to_mask_func.get(dtype, dtype)
 
             matches_mismatches = getattr(df[col_name].mask, dtype)(
                 col_name).cols.frequency()
