@@ -657,6 +657,13 @@ def is_int_like(value):
     """
     return fastnumbers.isintlike(value)
 
+def is_float_like(value):
+    """
+    Check if a var is a float
+    :param value:
+    :return:
+    """
+    return fastnumbers.isfloat(value)
 
 def is_url(value):
     regex = re.compile(
