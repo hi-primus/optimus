@@ -578,7 +578,7 @@ class BaseColumns(ABC):
             columns[k] = result_default
         return columns
 
-    def inferred_data_type(self, cols="*", use_internal=False, tidy=True):
+    def inferred_data_type(self, cols="*", use_internal=False, calculate=False, tidy=True):
         """
         Get the inferred data types from the meta data.
 
@@ -595,10 +595,16 @@ class BaseColumns(ABC):
 
         for col_name in cols:
             data_type = Meta.get(df.meta, f"columns_data_types.{col_name}.data_type")
+
             if data_type is None:
                 data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.data_type")
+
             if data_type is None:
                 data_type = result.get(col_name, None)
+
+            if calculate and data_type is None:
+                data_type = df.cols.infer_type(col_name)
+
             result.update({col_name: data_type})
 
         result = {"inferred_data_type": result}
@@ -3374,7 +3380,7 @@ class BaseColumns(ABC):
         if is_dict(cols):
             cols_types = cols
         else:
-            cols_types = self.root.cols.infer_type(cols, tidy=False)["infer_type"]
+            cols_types = self.root.cols.inferred_data_type(cols, calculate=True, tidy=False)["inferred_data_type"]
 
         result = {}
 
@@ -3393,8 +3399,7 @@ class BaseColumns(ABC):
                                         "mismatch": cached_props.get("mismatch")}
                     continue
 
-            # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
-            dtype = props["data_type"]
+            dtype = props if is_str(props) else props["data_type"]
 
             dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
 

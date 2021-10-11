@@ -850,13 +850,12 @@ class BaseDataFrame(ABC):
             cols_data_types = {}
             cols_to_infer = [*cols_to_profile]
 
-            if not flush:
-                for col_name in cols_to_profile:
-                    _props = Meta.get(df.meta, f"columns_data_types.{col_name}")
+            for col_name in cols_to_profile:
+                col_data_type = Meta.get(df.meta, f"columns_data_types.{col_name}")
 
-                    if _props is not None:
-                        cols_data_types[col_name] = _props
-                        cols_to_infer.remove(col_name)
+                if col_data_type is not None:
+                    cols_data_types[col_name] = col_data_type
+                    cols_to_infer.remove(col_name)
 
             if cols_to_infer:
                 cols_data_types = {**cols_data_types, **df.cols.infer_type(cols_to_infer, tidy=False)["infer_type"]}
