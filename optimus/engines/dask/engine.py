@@ -1,5 +1,5 @@
 import dask
-from dask.distributed import Client, get_client
+from distributed import Client, get_client
 
 from optimus.engines.dask.create import Create
 from optimus.engines.base.engine import BaseEngine
@@ -164,4 +164,4 @@ class DaskEngine(BaseEngine):
         from optimus.engines.base.remote import RemoteDummyAttribute
         if isinstance(func, (RemoteDummyAttribute,)):
             return func(client_submit=True, *args, **kwargs)
-        return dask.distributed.get_client().submit(func, priority=priority, pure=pure, *args, **kwargs)
+        return distributed.get_client().submit(func, priority=priority, pure=pure, *args, **kwargs)

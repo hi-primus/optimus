@@ -112,7 +112,7 @@ class RemoteOptimusInterface:
         self.engine = engine
 
         def _init(_engine):
-            from dask.distributed import get_worker
+            from distributed import get_worker
             worker = get_worker()
             worker.actor = RemoteOptimus(_engine)
             return f"Created remote Optimus instance using \"{_engine}\""
@@ -121,7 +121,7 @@ class RemoteOptimusInterface:
 
     def submit(self, func, *args, priority=0, pure=False, **kwargs):
         def _remote(_func, *args, **kwargs):
-            from dask.distributed import get_worker
+            from distributed import get_worker
             actor = get_worker().actor
             return actor.submit(_func, priority=priority, pure=pure, *args, **kwargs)
 
@@ -140,7 +140,7 @@ class RemoteOptimusInterface:
 
     def list_vars(self, client_timeout=MAX_TIMEOUT):
         def _list_vars():
-            from dask.distributed import get_worker
+            from distributed import get_worker
             op = get_worker().actor.op
             return op.list_vars()
 
@@ -148,7 +148,7 @@ class RemoteOptimusInterface:
 
     def clear_vars(self, keep=[], client_timeout=MAX_TIMEOUT):
         def _clear_vars(keep=[]):
-            from dask.distributed import get_worker
+            from distributed import get_worker
             op = get_worker().actor.op
             return op.clear_vars(keep)
 
@@ -156,7 +156,7 @@ class RemoteOptimusInterface:
 
     def update_vars(self, values, client_timeout=MAX_TIMEOUT):
         def _update_vars(values):
-            from dask.distributed import get_worker
+            from distributed import get_worker
             op = get_worker().actor.op
             return op.update_vars(values)
 
@@ -164,7 +164,7 @@ class RemoteOptimusInterface:
 
     def del_var(self, name, client_timeout=MAX_TIMEOUT):
         def _del_var(name):
-            from dask.distributed import get_worker
+            from distributed import get_worker
             op = get_worker().actor.op
             return op.del_var(name)
 
@@ -172,7 +172,7 @@ class RemoteOptimusInterface:
 
     def set_var(self, name, value, client_timeout=MAX_TIMEOUT):
         def _set_var(name):
-            from dask.distributed import get_worker
+            from distributed import get_worker
             op = get_worker().actor.op
             return op.set_var(name, value)
 
@@ -180,7 +180,7 @@ class RemoteOptimusInterface:
 
     def get_var(self, name, client_timeout=MAX_TIMEOUT):
         def _get_var(name):
-            from dask.distributed import get_worker
+            from distributed import get_worker
             op = get_worker().actor.op
             return op.get_var(name)
 
