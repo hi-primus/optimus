@@ -135,7 +135,7 @@ class BaseFunctions(ABC):
         :param ascending:
         :return:
         """
-        return dfd.sort_values(cols, ascending=ascending)
+        return dfd.sort_values(cols, ascending=ascending).reset_index(drop=True)
 
     @staticmethod
     def reverse_df(dfd):
