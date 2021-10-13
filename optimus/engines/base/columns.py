@@ -196,7 +196,8 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols if regex is None else regex, is_regex=regex is not None,
                              filter_by_column_types=data_type, invert=invert,
                              accepts_missing_cols=accepts_missing_cols)
-        meta = Meta.select_columns(df.meta, cols)
+        meta = df.meta
+        meta = Meta.select_columns(meta, cols)
         dfd = df.data
         if cols is not None:
             dfd = dfd[cols]

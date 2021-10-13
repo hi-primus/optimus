@@ -77,7 +77,7 @@ class BaseProfile(ABC):
                         calculate = True
 
             if calculate:
-                df = df[cols].calculate_profile(cols, bins, flush, size)
+                df = df.calculate_profile(cols, bins, flush, size)
                 profile = Meta.get(df.meta, "profile")
                 self.root.meta = df.meta
             profile["columns"] = {key: profile["columns"][key] for key in cols}
