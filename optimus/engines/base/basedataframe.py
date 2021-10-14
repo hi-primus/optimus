@@ -1014,7 +1014,7 @@ class BaseDataFrame(ABC):
         """
         Join 2 dataframes SQL style
         :param df_right:
-        :param how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
+        :param how{‘left’, ‘right’, ‘outer’, ‘inner’, ‘exclusive’, ‘exclusive left’, ‘exclusive right’}, default ‘left’
         :param on:
         :param left_on:
         :param right_on:
@@ -1051,8 +1051,29 @@ class BaseDataFrame(ABC):
         left_names = df_left.cols.names()
         right_names = df_right.cols.names()
 
-        df = self.root.new(df_left.data.merge(df_right.data, how=how, left_on=left_on, right_on=right_on,
-                                              suffixes=(suffix_left, suffix_right)))
+
+        if how in ['exclusive', 'exclusive left', 'exclusive right']:
+            _how = 'outer'
+            indicator = True
+        else:
+            _how = how
+            indicator = False
+
+        dfd = df_left.data.merge(df_right.data, how=_how, left_on=left_on,
+                                 right_on=right_on, suffixes=(suffix_left, suffix_right),
+                                 indicator=indicator)
+
+        if how == 'exclusive':
+            dfd = dfd[(dfd["_merge"] == "left_only") | (dfd["_merge"] == "right_only")]
+        elif how == 'exclusive left':
+            dfd = dfd[dfd["_merge"] == "left_only"]
+        elif how == 'exclusive right':
+            dfd = dfd[dfd["_merge"] == "right_only"]
+
+        if indicator:
+            dfd = dfd.drop(["_merge"], axis=1)
+
+        df = self.root.new(dfd)
 
         # Reorder
         last_column_name = left_names[-1]
