@@ -29,47 +29,72 @@ class Load(BaseLoad):
     @staticmethod
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
+
         if is_url(filepath_or_buffer):
             s = requests.get(filepath_or_buffer).text
             df = pd.read_csv(StringIO(s), *args, **kwargs)
         else:
             df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
+
         if isinstance(df, pd.io.parsers.TextFileReader):
             df = df.get_chunk()
+
         return df
 
     @staticmethod
     def _json(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        s = requests.get(filepath_or_buffer).text
-        return pd.read_json(StringIO(s), *args, **kwargs)
+
+        if is_url(filepath_or_buffer):
+            s = requests.get(filepath_or_buffer).text
+            df = pd.read_json(StringIO(s), *args, **kwargs)
+        else:
+            df = pd.read_json(filepath_or_buffer, *args, **kwargs)
+
+        return df
 
     @staticmethod
     def _avro(filepath_or_buffer, nrows=None, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        s = requests.get(filepath_or_buffer).text
-        df = pdx.read_avro(StringIO(s), *args, **kwargs)
+
+        if is_url(filepath_or_buffer):
+            s = requests.get(filepath_or_buffer).text
+            df = pdx.read_avro(StringIO(s), *args, **kwargs)
+        else:
+            df = pdx.read_avro(filepath_or_buffer, *args, **kwargs)
+
         if nrows:
             logger.warn(f"'load.avro' on {EnginePretty.PANDAS.value} loads the whole dataset and then truncates it")
             df = df[:nrows]
+
         return df
 
     @staticmethod
     def _parquet(filepath_or_buffer, nrows=None, engine="pyarrow", *args, **kwargs):
-        kwargs.pop("n_partitions", None)        
-        s = requests.get(filepath_or_buffer).text
-        df = pd.StringIO(s)(filepath_or_buffer, engine=engine, *args, **kwargs)
+        kwargs.pop("n_partitions", None)
+
+        if is_url(filepath_or_buffer):
+            s = requests.get(filepath_or_buffer).text
+            df = pd.read_parquet(StringIO(s), engine=engine, *args, **kwargs)
+        else:
+            df = pd.read_parquet(filepath_or_buffer, engine=engine, *args, **kwargs)
+
         if nrows:
             logger.warn(f"'load.parquet' on {EnginePretty.PANDAS.value} loads the whole dataset and then truncates it")
             df = df[:nrows]
-        
+
         return df
 
     @staticmethod
     def _xml(filepath_or_buffer, nrows=None, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        s = requests.get(filepath_or_buffer).text
-        df = pd.read_xml(StringIO(s), *args, **kwargs)
+        
+        if is_url(filepath_or_buffer):
+            s = requests.get(filepath_or_buffer).text
+            df = pd.read_xml(StringIO(s), *args, **kwargs)
+        else:
+            df = pd.read_xml(filepath_or_buffer, *args, **kwargs)
+
         if nrows:
             logger.warn(f"'load.xml' on {EnginePretty.PANDAS.value} loads the whole dataset and then truncates it")
             df = df[:nrows]
