@@ -66,7 +66,7 @@ a = {'name': 0,
  'reclong': 7315,
  'GeoLocation': 7315}
 
-df.cols.data_types()
+df.cols.data_type()
 
 # +
 cols = ["id","mass (g)","reclat"]

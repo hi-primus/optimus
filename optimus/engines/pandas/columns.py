@@ -37,19 +37,6 @@ class Cols(PandasBaseColumns, DataFrameBaseColumns):
     def stem_words(self, input_col):
         raise NotImplementedError('Not implemented yet')
 
-    def count_by_data_types(self, cols="*", data_type=None):
-        df = self.root
-        result = {}
-        df_len = len(df.data)
-        for col_name, na_count in df.cols.count_na(cols, tidy=False)["count_na"].items():
-
-            mismatches_count = df.cols.match_data_type(
-                col_name, data_type).data.value_counts().to_dict().get(False)
-            mismatches_count = 0 if mismatches_count is None else mismatches_count
-            result[col_name] = {"match": df_len - na_count, "missing": na_count,
-                                "mismatch": mismatches_count - na_count}
-        return result
-
     def string_to_index(self, cols="*", output_cols=None):
         df = self.root
         df.le = df.le or preprocessing.LabelEncoder()

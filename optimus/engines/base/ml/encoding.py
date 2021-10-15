@@ -14,11 +14,12 @@ class BaseEncoding:
         """
         raise NotImplementedError('Not implemented yet')
 
-    def one_hot_encoder(self, cols, prefix=None, **kwargs):
+    def one_hot_encoder(self, cols, prefix=None, drop=True, **kwargs):
         """
         Maps a column of label indices to a column of binary vectors, with at most a single one-value.
         :param cols: Columns to be encoded.
-        :param output_col: Column where the output is going to be saved.
+        :param prefix: Column where the output is going to be saved.
+        :param drop:
         :return: Dataframe with encoded columns.
         """
         raise NotImplementedError('Not implemented yet')

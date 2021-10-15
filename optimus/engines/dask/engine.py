@@ -1,5 +1,5 @@
 import dask
-from dask.distributed import Client, get_client
+from distributed import Client, get_client
 
 from optimus.engines.dask.create import Create
 from optimus.engines.base.engine import BaseEngine
@@ -16,18 +16,15 @@ class DaskEngine(BaseEngine):
 
     # Using procces or threads https://stackoverflow.com/questions/51099685/best-practices-in-setting-number-of-dask-workers
     def __init__(self, session=None, address=None, n_workers=None, threads_per_worker=None, processes=False,
-                 memory_limit='4GB', verbose=False, coiled_token=None, *args, **kwargs):
+                 memory_limit=None, verbose=False, coiled_token=None, *args, **kwargs):
 
-        if n_workers is None:
+        if n_workers is None and not coiled_token:
             import psutil
             threads_per_worker = psutil.cpu_count() * 4
 
         self.verbose(verbose)
 
-        use_remote = kwargs.get("use_remote", coiled_token is not None)
-        
-        if kwargs.get("use_remote", None):
-            del kwargs["use_remote"]
+        use_remote = kwargs.pop("use_remote", False)
 
         if coiled_token:
             import coiled
@@ -39,14 +36,15 @@ class DaskEngine(BaseEngine):
 
             idle_timeout = kwargs.get("idle_timeout", None)
 
+            memory_limit = memory_limit or '16 GiB'
+
             cluster = coiled.Cluster(
                 name=kwargs.get("name"),
                 worker_options={
-                    **({"nthreads": threads_per_worker} if threads_per_worker else {}),
-                    **({"memory_limit": memory_limit} if memory_limit else {})
+                    **({"nthreads": threads_per_worker} if threads_per_worker else {})
                 },
-                n_workers=n_workers,
-                worker_memory='15GiB',
+                n_workers=n_workers if n_workers else 4,
+                worker_memory=memory_limit,
                 scheduler_options={
                     **({"idle_timeout": idle_timeout} if idle_timeout else {})
                 },
@@ -67,6 +65,7 @@ class DaskEngine(BaseEngine):
             try:
                 self.client = get_client()
             except ValueError:
+                memory_limit = memory_limit or '4GB'
                 self.client = Client(address=address, n_workers=n_workers, threads_per_worker=threads_per_worker,
                                      processes=processes, memory_limit=memory_limit, *args, **kwargs)
 
@@ -165,4 +164,4 @@ class DaskEngine(BaseEngine):
         from optimus.engines.base.remote import RemoteDummyAttribute
         if isinstance(func, (RemoteDummyAttribute,)):
             return func(client_submit=True, *args, **kwargs)
-        return dask.distributed.get_client().submit(func, priority=priority, pure=pure, *args, **kwargs)
+        return distributed.get_client().submit(func, priority=priority, pure=pure, *args, **kwargs)

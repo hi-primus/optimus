@@ -50,8 +50,7 @@ class BaseLoad:
             storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
-        params
-
+        params.
 
         :param encoding:
         :param storage_options:
@@ -75,13 +74,17 @@ class BaseLoad:
         if is_empty_function(self._csv):
             raise NotImplementedError(f"'load.csv' is not implemented on '{self.op.engine_label}'")
 
+        unquoted_path = None
+        
         if not is_url(filepath_or_buffer):
-            filepath_or_buffer = glob.glob(unquote_path(filepath_or_buffer))
-            meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer[0])}
+            unquoted_path = glob.glob(unquote_path(filepath_or_buffer))
+        
+        if unquoted_path and len(unquoted_path):
+            meta = {"file_name": unquoted_path, "name": ntpath.basename(unquoted_path[0])}
         else:
             meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
-        filepath_or_buffer = one_list_to_val(filepath_or_buffer)
+        filepath_or_buffer = val_to_list(filepath_or_buffer)
 
         try:
 
@@ -90,7 +93,7 @@ class BaseLoad:
                 lineterminator = None
 
             if conn is not None:
-                filepath_or_buffer = conn.path(filepath_or_buffer)
+                filepath_or_buffer = [conn.path(fb) for fb in filepath_or_buffer]
                 storage_options = conn.storage_options
 
             if kwargs.get("chunk_size") == "auto":
@@ -128,6 +131,17 @@ class BaseLoad:
         return df
 
     def xml(self, path, n_rows=None, storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
+        """
+        Loads a dataframe from a XML file.
+
+        :param path:
+        :param n_rows:
+        :param storage_options:
+        :param conn:
+        :param args:
+        :param kwargs:
+        :return:
+        """
 
         if is_empty_function(self._xml):
             raise NotImplementedError(f"'load.xml' is not implemented on '{self.op.engine_label}'")
@@ -154,9 +168,14 @@ class BaseLoad:
              conn=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a json file.
+
         :param filepath_or_buffer: path or location of the file.
         :param multiline:
-
+        :param n_rows:
+        :param storage_options:
+        :param conn:
+        :param args:
+        :param kwargs:
         :return:
         """
 
@@ -193,14 +212,23 @@ class BaseLoad:
 
         return df
 
-    def excel(self, filepath_or_buffer, header=0, sheet_name=0, merge_sheets=False, skiprows=0, n_rows=None, storage_options=None,
+    def excel(self, filepath_or_buffer, header=0, sheet_name=0, merge_sheets=False, skip_rows=0, n_rows=None, storage_options=None,
               conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a excel file.
-        :param path: Path or location of the file. Must be string dataType
+        
+        :param filepath_or_buffer: Path or location of the file. Must be string dataType
+        :param header: 
         :param sheet_name: excel sheet name
+        :param merge_sheets: 
+        :param skip_rows: 
+        :param n_rows: 
+        :param storage_options: 
+        :param conn: 
+        :param n_partitions: 
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
+        :return: 
         """
 
         if is_empty_function(self._excel):
@@ -215,9 +243,9 @@ class BaseLoad:
         file, file_name = prepare_path(filepath_or_buffer, "xls")[0]
 
         if merge_sheets is True:
-            skiprows = -1
+            skip_rows = -1
 
-        df, sheet_names = self._excel(file, sheet_name=sheet_name, skiprows=skiprows, header=header, nrows=n_rows,
+        df, sheet_names = self._excel(file, sheet_name=sheet_name, skiprows=skip_rows, header=header, nrows=n_rows,
                                       storage_options=storage_options, n_partitions=n_partitions, *args, **kwargs)
 
         df = self.df(df, op=self.op)
@@ -231,7 +259,8 @@ class BaseLoad:
              *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a avro file.
-        :param path: path or location of the file. Must be string dataType
+
+        :param filepath_or_buffer: path or location of the file. Must be string dataType
         :param n_rows:
         :param storage_options:
         :param conn:
@@ -267,7 +296,8 @@ class BaseLoad:
                 *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a parquet file.
-        :param path: path or location of the file. Must be string dataType
+
+        :param filepath_or_buffer: path or location of the file. Must be string dataType
         :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
         :param storage_options:
         :param conn:
@@ -300,12 +330,13 @@ class BaseLoad:
             **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a OCR file.
-        :param path: path or location of the file. Must be string dataType
+
+        :param path: path or location of the file. Must be string dataType.
         :param columns: Specific column names to be loaded from the file.
         :param storage_options:
         :param conn:
-        :param args: custom argument to be passed to the spark avro function
-        :param kwargs: custom keyword arguments to be passed to the spark avro function
+        :param args: custom argument to be passed to the spark avro function.
+        :param kwargs: custom keyword arguments to be passed to the spark avro function.
         """
         raise NotImplementedError('Not implemented yet')
 
@@ -314,17 +345,38 @@ class BaseLoad:
         pass
 
     def hdf5(self, path, columns=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+        """
+        Loads a dataframe from a HDF5 file.
+
+        :param path: path or location of the file. Must be string dataType.
+        :param columns: Specific column names to be loaded from the file.
+        :param n_partitions:
+        :param args: custom argument to be passed to the spark avro function.
+        :param kwargs: custom keyword arguments to be passed to the spark avro function.
+        :return:
+        """
         raise NotImplementedError('Not implemented yet')
 
     def tsv(self, filepath_or_buffer, header=True, infer_schema=True, *args, **kwargs):
+        """
+        Loads a dataframe from a tsv(Tabular separated values) file.
+
+        :param filepath_or_buffer: Path or location of the file. Must be string dataType
+        :param header:
+        :param infer_schema:
+        :param args: custom argument to be passed to the spark avro function.
+        :param kwargs: custom keyword arguments to be passed to the spark avro function.
+        :return:
+        """
         return self.csv(filepath_or_buffer, sep='\t', header=header, infer_schema=infer_schema, *args, **kwargs)
 
     def file(self, path, *args, **kwargs) -> 'DataFrameType':
         """
-        Try to  infer the file data format and encoding
+        Try to infer the file data format and encoding and load the data into a dataframe.
+
         :param path: Path to the file you want to load.
-        :param args:
-        :param kwargs:
+        :param args: custom argument to be passed to the spark avro function.
+        :param kwargs: custom keyword arguments to be passed to the spark avro function.
         :return:
         """
         conn = kwargs.get("conn")
@@ -427,7 +479,8 @@ class BaseLoad:
     @staticmethod
     def model(path):
         """
-        Load a machine learning model from a file
+        Load a machine learning model from a file.
+
         :param path: Path to the file we want to load.
         :return:
         """

@@ -1,6 +1,7 @@
 import re
 from abc import abstractmethod, ABC
 
+import hidateinfer
 import jellyfish
 import numpy as np
 import pandas as pd
@@ -8,12 +9,13 @@ from fastnumbers import fast_float, fast_int
 from jsonschema._format import is_email
 from metaphone import doublemetaphone
 
+from optimus.helpers.logger import logger
 from optimus.helpers.constants import ProfilerDataTypes
-from optimus.helpers.core import one_tuple_to_val, val_to_list
+from optimus.helpers.core import one_list_to_val, one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_valid_datetime_format, is_object_value, is_ip, \
-    is_url, is_missing, \
-    is_gender, is_list_of_int, is_list_of_str, is_str, is_phone_number, is_int_like
+    is_credit_card_number, is_zip_code, is_float_like, is_datetime, is_valid_datetime_format, \
+    is_object_value, is_ip, is_url, is_missing, is_gender, is_list_of_int, is_list_of_str, \
+    is_str, is_phone_number, is_int_like
 
 
 # ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
@@ -47,6 +49,34 @@ class BaseFunctions(ABC):
         raise NotImplementedError(f"\"{name}\" is not available" + type_msg)
 
     @property
+    def _functions(self):
+        """
+        Gets the set of functions available in the engine
+        """
+        return self._partition_engine
+
+    @staticmethod
+    def _format_to_dict(_s):
+        if hasattr(_s, "to_dict"):
+            return _s.to_dict()
+        else:
+            return _s
+
+    @staticmethod
+    def _format_to_list(_s):
+        if hasattr(_s, "tolist"):
+            return _s.tolist()
+        else:
+            return _s
+
+    @staticmethod
+    def _format_to_list_one(_s):
+        if hasattr(_s, "tolist"):
+            return one_list_to_val(_s.tolist())
+        else:
+            return _s
+
+    @property
     def n_partitions(self):
         if self.root is None:
             return 1
@@ -54,15 +84,38 @@ class BaseFunctions(ABC):
 
     @staticmethod
     def delayed(func):
+        """
+
+        :param func:
+        :return:
+        """
         return func
 
     def from_delayed(self, delayed):
+        """
+
+        :param delayed:
+        :return:
+        """
         return delayed[0]
 
     def to_delayed(self, delayed):
+        """
+
+        :param delayed:
+        :return:
+        """
         return [delayed]
 
     def apply_delayed(self, series, func, *args, **kwargs):
+        """
+
+        :param series:
+        :param func:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         result = self.to_delayed(series)
         result = [partition.apply(func, *args, **kwargs) for partition in result]
         result = self.from_delayed(result)
@@ -70,6 +123,14 @@ class BaseFunctions(ABC):
         return result
 
     def map_delayed(self, series, func, *args, **kwargs):
+        """
+
+        :param series:
+        :param func:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         result = self.to_delayed(series)
         result = [partition.map(func, *args, **kwargs) for partition in result]
         result = self.from_delayed(result)
@@ -78,22 +139,24 @@ class BaseFunctions(ABC):
 
     @property
     def constants(self):
+        """
+
+        :return:
+        """
         from optimus.engines.base.constants import BaseConstants
         return BaseConstants()
-
-    @property
-    def _functions(self):
-        """
-        Gets the set of functions available in the engine
-        """
-        return self._partition_engine
 
     @staticmethod
     def sort_df(dfd, cols, ascending):
         """
-        Sort rows taking into account one column
+        Sort rows taking into account one column.
+
+        :param dfd:
+        :param cols:
+        :param ascending:
+        :return:
         """
-        return dfd.sort_values(cols, ascending=ascending)
+        return dfd.sort_values(cols, ascending=ascending).reset_index(drop=True)
 
     @staticmethod
     def reverse_df(dfd):
@@ -199,17 +262,29 @@ class BaseFunctions(ABC):
         series_fit = series.dropna()
         if str(series.dtype) in self.constants.OBJECT_TYPES:
             series_fit = series_fit.astype(str)
-        imputer.fit(series_fit.values.reshape(-1, 1))
-        return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
+        values = series_fit.values.reshape(-1, 1)
+        if len(values):
+            imputer.fit(values)
+            return imputer.transform(series.fillna(np.nan).values.reshape(-1, 1))
+        else:
+            logger.warn("list to fit imputer is empty, try cols.fill_na instead.")
+            return series
 
     # Aggregation
     def date_format(self, series):
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
-            import hidateinfer
+            series = series.astype(str)
             result = hidateinfer.infer(self.compute(series).values)
-            return result if is_valid_datetime_format(result) else False
-        elif dtype in self.constants.DATETIME_TYPES:
+            if not is_valid_datetime_format(result) or True:
+                result_series = self.date_formats(series)
+                result = result_series.mode().head(1)[0]
+
+                if not is_valid_datetime_format(result):
+                    return False
+
+            return result
+        elif dtype in self.constants.DATETIME_INTERNAL_TYPES:
             return True
 
         return False
@@ -236,9 +311,12 @@ class BaseFunctions(ABC):
     def mean(self, series):
         return self.to_float(series).mean()
 
-    @staticmethod
-    def mode(series):
-        return series.mode()
+    def mode(self, series):
+
+        if str(series.dtype) not in self.constants.NUMERIC_INTERNAL_TYPES:
+            return self.delayed(self._format_to_list_one)(self.to_string(series.dropna()).mode())
+        else:
+            return self.delayed(self._format_to_list_one)(series.mode())
 
     @staticmethod
     def crosstab(series, other):
@@ -318,7 +396,7 @@ class BaseFunctions(ABC):
         series = self.to_float(series)
         return {"min": series.min(), "max": series.max()}
 
-    def percentile(self, series, values, error, estimate=False):
+    def percentile(self, series, values=0.5, error=False, estimate=False):
 
         _series = self.to_float(series).dropna()
 
@@ -328,14 +406,7 @@ class BaseFunctions(ABC):
         if not len(_series):
             return np.nan
         else:
-            @self.delayed
-            def format_percentile(_s):
-                if hasattr(_s, "to_dict"):
-                    return _s.to_dict()
-                else:
-                    return _s
-
-            return format_percentile(_series.quantile(values))
+            return self.delayed(self._format_to_dict)(_series.quantile(values))
 
     # def radians(series):
     #     return series.to_float().radians()
@@ -731,28 +802,28 @@ class BaseFunctions(ABC):
 
     @staticmethod
     @abstractmethod
-    def td_between(self, value=None, date_format=None):
+    def time_between(self, value=None, date_format=None):
         pass
 
     def years_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.days / 365.25
+        return self.time_between(series, value, date_format).dt.days / 365.25
 
     def months_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.days / 30.436875
+        return self.time_between(series, value, date_format).dt.days / 30.436875
 
     def days_between(self, series, value=None, date_format=None):
-        return self.td_between(series, value, date_format).dt.days
+        return self.time_between(series, value, date_format).dt.days
 
     def hours_between(self, series, value=None, date_format=None):
-        series = self.td_between(series, value, date_format)
+        series = self.time_between(series, value, date_format)
         return series.dt.days * 24.0 + series.dt.seconds / 3600.0
 
     def minutes_between(self, series, value=None, date_format=None):
-        series = self.td_between(series, value, date_format)
+        series = self.time_between(series, value, date_format)
         return series.dt.days * 1440.0 + series.dt.seconds / 60.0
 
     def seconds_between(self, series, value=None, date_format=None):
-        series = self.td_between(series, value, date_format)
+        series = self.time_between(series, value, date_format)
         return series.dt.days * 86400 + series.dt.seconds
 
     def domain(self, series):
@@ -822,8 +893,8 @@ class BaseFunctions(ABC):
             dtype = ProfilerDataTypes.ZIP_CODE.value
         elif is_int_like(value):
             dtype = ProfilerDataTypes.INT.value
-        elif is_decimal(value):
-            dtype = ProfilerDataTypes.DECIMAL.value
+        elif is_float_like(value):
+            dtype = ProfilerDataTypes.FLOAT.value
         elif is_datetime(value):
             dtype = ProfilerDataTypes.DATETIME.value
         elif is_missing(value):
@@ -849,9 +920,8 @@ class BaseFunctions(ABC):
         return dtype
 
     def date_formats(self, series):
-        import hidateinfer
         return series.map(lambda v: hidateinfer.infer([v]))
-    
+
     def metaphone(self, series):
         return self.to_string(series).map(jellyfish.metaphone, na_action='ignore')
 

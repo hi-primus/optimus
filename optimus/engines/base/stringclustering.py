@@ -138,9 +138,9 @@ def string_clustering(df, cols="*", algorithm=None, *args, **kwargs) -> 'Cluster
 
             # sets the original values as indices: {"VALUE": "value", "Value": "value"}
 
-            _dfd = df.cols.select([input_col, cluster_col]).data.set_index(input_col)
+            _dfd = df.cols.select([input_col, cluster_col]).cols.to_string().data.set_index(input_col)
             _df = df.new(_dfd)
-            values = _df.to_pandas().to_dict()[cluster_col]
+            values = _df[cluster_col].to_pandas().to_dict()[cluster_col]
 
             suggestions_items = {}
             for k, v in values.items():

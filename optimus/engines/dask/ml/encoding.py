@@ -13,11 +13,12 @@ from optimus.engines.base.ml.encoding import BaseEncoding
 
 class Encoding(BaseEncoding):
 
-    def one_hot_encoder(self, cols="*", prefix=None, **kwargs):
+    def one_hot_encoder(self, cols="*", prefix=None, drop=True, **kwargs):
         """
         Maps a column of label indices to a column of binary vectors, with at most a single one-value.
         :param cols: Columns to be encoded.
-        :param output_col: Column where the output is going to be saved.
+        :param prefix: Column where the output is going to be saved.
+        :param drop:
         :return: Dataframe with encoded columns.
         """
 
@@ -51,12 +52,17 @@ class Encoding(BaseEncoding):
 
                 dfd[new_col_name] = encoded_df[col_name]
 
-            return self.root.new(dfd)
+            df = self.root.new(dfd)
 
         except ModuleNotFoundError:
             
             # Use default encoder
-            return self.root.new(dd.concat([dfd, dd.get_dummies(dfd[cols].categorize(index=False), prefix=prefix)], axis=1))
+            df = self.root.new(dd.concat([dfd, dd.get_dummies(dfd[cols].categorize(index=False), prefix=prefix)], axis=1))
+
+        if drop:
+            df = df.cols.drop(cols)
+
+        return df
 
     def normalizer(df, input_cols, output_col=None, p=2.0):
         """

@@ -92,22 +92,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return self.root.new(dfd)
 
-    def parse_inferred_types(self, col_data_type):
-        """
-           Parse a spark data type to a profiler data type
-           :return:
-           """
-
-        columns = {}
-        for col_name, data_type_count in col_data_type.items():
-            columns[col_name] = {
-                data_type: 0 for data_type in ["null", "missing"]}
-            for data_type, count in data_type_count.items():
-                for profiler_data_type, spark_data_type in SPARK_DTYPES_TO_INFERRED.items():
-                    if data_type in SPARK_DTYPES_TO_INFERRED[profiler_data_type]:
-                        columns[col_name][profiler_data_type] = count
-        return columns
-
     @dispatch((list, pyspark.sql.dataframe.DataFrame))
     def append(self, cols_values=None):
         """
@@ -776,12 +760,12 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
                     new_value = F.array(*[F.lit(v) for v in value])
                 func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
             else:
-                if df.cols.data_types(input_col) == parse_python_dtypes(type(value).__name__):
+                if df.cols.data_type(input_col) == parse_python_dtypes(type(value).__name__):
 
                     new_value = value
                     func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
                 else:
-                    RaiseIt.type_error(value, [df.cols.data_types(input_col)])
+                    RaiseIt.type_error(value, [df.cols.data_type(input_col)])
 
             df = df.cols.apply(input_col, func=func, output_cols=output_col, meta_action=Actions.FILL_NA.value)
 
@@ -941,7 +925,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
     @staticmethod
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
-    def nest(input_cols, separator="", output_col=None, drop=False, shape="string"):
+    def nest(input_cols, separator="", output_col=None, drop=True, shape="string"):
         """
         Concat multiple columns to one with the format specified
         :param input_cols: columns to be nested
@@ -1175,42 +1159,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         #     print(Cols.agg_exprs(hist_agg, col_name, self, buckets))
         #     # print(df.agg(hist_agg(col_name, self, buckets)))
         # return result
-
-    def count_by_data_types(self, cols, infer=False, str_funcs=None, int_funcs=None):
-        """
-        Use rdd to count the inferred data type in a row
-        :param cols: Columns to be processed
-        :param str_funcs: list of tuples for create a custom string parsers
-        :param int_funcs: list of tuples for create a custom int parsers
-        :param infer: Infer data type
-        :return:
-        """
-
-        df = self.root
-
-        cols = parse_columns(df, cols)
-        columns_data_types = df.cols.data_types(tidy=False)
-
-        df_count = (df.select(cols).rdd
-                    .flatMap(lambda x: x.asDict().items())
-                    .map(lambda x: Infer.parse(x, infer, columns_data_types, str_funcs, int_funcs))
-                    .reduceByKey(lambda a, b: (a + b)))
-
-        result = {}
-        for c in df_count.collect():
-            result.setdefault(c[0][0], {})[c[0][1]] = c[1]
-
-        # Process mismatch
-        for col_name, result_dtypes in result.items():
-            for result_dtype, count in result_dtypes.items():
-                if is_tuple(count):
-                    result[col_name][result_dtype] = count[0]
-
-        if infer is True:
-            result = fill_missing_var_types(result, columns_data_types)
-        else:
-            result = self.parse_inferred_types(result)
-        return result
 
     def frequency(self, columns="*", n=10, percentage=False, total_rows=None, count_uniques=False, compute=True):
         """

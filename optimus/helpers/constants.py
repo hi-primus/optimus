@@ -23,7 +23,7 @@ class Actions(Enum):
     Actions that modify a columns/rows.
     """
     # COLUMNS
-    INFERRED_TYPE = "inferred_type"
+    INFERRED_DATA_TYPE = "inferred_data_type"
     MATCH = "match"
     LOWER = "lower"
     UPPER = "upper"
@@ -143,7 +143,7 @@ class ProfilerDataTypesQuality(Enum):
 
 class ProfilerDataTypes(Enum):
     INT = "int"
-    DECIMAL = "decimal"
+    FLOAT = "float"
     STRING = "str"
     BOOL = "bool"
     BOOLEAN = "boolean"
@@ -186,7 +186,7 @@ class Schemas(Enum):
         return list(map(lambda c: c.value, Schemas))
 
 
-PROFILER_NUMERIC_DTYPES = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
+PROFILER_NUMERIC_DTYPES = [ProfilerDataTypes.INT.value, ProfilerDataTypes.FLOAT.value]
 PROFILER_STRING_DTYPES = [ProfilerDataTypes.STRING.value, ProfilerDataTypes.BOOLEAN.value,
                           ProfilerDataTypes.DATETIME.value, ProfilerDataTypes.ARRAY.value,
                           ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.GENDER.value,
@@ -405,7 +405,7 @@ PYTHON_SHORT_TYPES = {"string": "string",
 PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
 PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "float": "numeric",
-                      "decimal": "numeric", "date": "date", "array": "array", "binary": "binary", "null": "null"}
+                      "float": "numeric", "date": "date", "array": "array", "binary": "binary", "null": "null"}
 
 PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOL.value,
                                ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value,
@@ -471,42 +471,42 @@ DATE_FORMAT_ITEMS = [("YYYY", "%Y"),
                      ('XXX', '%z')]
 
 DATE_FORMAT_ITEMS_MONTH = [("YYYY", "%Y"),
-                          ("YYY", "%y"),
-                          ("YY", "%y"),
-                          ("Y", "%Y"),
-                          ("yyyy", "%Y"),
-                          ("yyy", "%y"),
-                          ("yy", "%y"),
-                          ("y", "%y"),
-                          ("MMMMM", "%B"),
-                          ("MMMM", "%B"),
-                          ("MMM", "%b"),
-                          ("MM", "%m"),
-                          ("M", "%m"),
-                          ("mmmm", "%B"),
-                          ("mmm", "%b"),
-                          ("mm", "%m"),
-                          ("m", "%m"),
-                          ('DD', '%d'),
-                          ('dd', '%d'),
-                          ('D', '%d'),
-                          ('d', '%d'),
-                          ('HH', '%H'),
-                          ('hh', '%I'),
-                          ('sss', '%f'),
-                          ('ss', '%S'),
-                          ('SS', '%S'),
-                          ('TT', '%p'),
-                          ('tt', '%p'),
-                          ('WWWW', '%A'),
-                          ('WWW', '%a'),
-                          ('WW', '%A'),
-                          ('W', '%a'),
-                          ('wwww', '%A'),
-                          ('www', '%a'),
-                          ('ww', '%A'),
-                          ('w', '%a'),
-                          ('XXX', '%z')]
+                           ("YYY", "%y"),
+                           ("YY", "%y"),
+                           ("Y", "%Y"),
+                           ("yyyy", "%Y"),
+                           ("yyy", "%y"),
+                           ("yy", "%y"),
+                           ("y", "%y"),
+                           ("MMMMM", "%B"),
+                           ("MMMM", "%B"),
+                           ("MMM", "%b"),
+                           ("MM", "%m"),
+                           ("M", "%m"),
+                           ("mmmm", "%B"),
+                           ("mmm", "%b"),
+                           ("mm", "%m"),
+                           ("m", "%m"),
+                           ('DD', '%d'),
+                           ('dd', '%d'),
+                           ('D', '%d'),
+                           ('d', '%d'),
+                           ('HH', '%H'),
+                           ('hh', '%I'),
+                           ('sss', '%f'),
+                           ('ss', '%S'),
+                           ('SS', '%S'),
+                           ('TT', '%p'),
+                           ('tt', '%p'),
+                           ('WWWW', '%A'),
+                           ('WWW', '%a'),
+                           ('WW', '%A'),
+                           ('W', '%a'),
+                           ('wwww', '%A'),
+                           ('www', '%a'),
+                           ('ww', '%A'),
+                           ('w', '%a'),
+                           ('XXX', '%z')]
 
 CONTRACTIONS = [
     ("a'ight", "alright"),

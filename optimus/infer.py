@@ -636,7 +636,7 @@ def is_dask_future(value):
     return isinstance(value, distributed.client.Future)
 
 
-def is_decimal(value):
+def is_float(value):
     return fastnumbers.isfloat(value, allow_nan=True)
 
 
@@ -657,6 +657,13 @@ def is_int_like(value):
     """
     return fastnumbers.isintlike(value)
 
+def is_float_like(value):
+    """
+    Check if a var is a float
+    :param value:
+    :return:
+    """
+    return fastnumbers.isfloat(value)
 
 def is_url(value):
     regex = re.compile(
@@ -700,7 +707,7 @@ def is_datetime(value):
 
 def is_valid_datetime_format(value):
     try:
-        now = datetime.datetime.strftime(datetime.datetime.now(), value)
+        now = datetime.datetime.strftime(datetime.datetime.now(tz=datetime.timezone.utc), value)
         datetime.datetime.strptime(now, value)
     except ValueError:
         return False

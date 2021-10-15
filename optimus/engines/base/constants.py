@@ -6,7 +6,7 @@ class BaseConstants:
 
     # inferred/input to internal
     OPTIMUS_TO_INTERNAL = {ProfilerDataTypes.INT.value: "int",
-                           ProfilerDataTypes.DECIMAL.value: "float",
+                           ProfilerDataTypes.FLOAT.value: "float",
                            ProfilerDataTypes.STRING.value: "str",
                            ProfilerDataTypes.BOOL.value: "bool",
                            ProfilerDataTypes.BOOLEAN.value: "bool",
@@ -52,13 +52,13 @@ class BaseConstants:
                            "uint64": ProfilerDataTypes.INT.value,
                            "binary": ProfilerDataTypes.INT.value,
                            "large_binary": ProfilerDataTypes.INT.value,
-                           "numeric": ProfilerDataTypes.DECIMAL.value,
-                           "float": ProfilerDataTypes.DECIMAL.value,
-                           "float16": ProfilerDataTypes.DECIMAL.value,
-                           "float32": ProfilerDataTypes.DECIMAL.value,
-                           "float64": ProfilerDataTypes.DECIMAL.value,
-                           "float_": ProfilerDataTypes.DECIMAL.value,
-                           "double": ProfilerDataTypes.DECIMAL.value,
+                           "numeric": ProfilerDataTypes.FLOAT.value,
+                           "float": ProfilerDataTypes.FLOAT.value,
+                           "float16": ProfilerDataTypes.FLOAT.value,
+                           "float32": ProfilerDataTypes.FLOAT.value,
+                           "float64": ProfilerDataTypes.FLOAT.value,
+                           "float_": ProfilerDataTypes.FLOAT.value,
+                           "double": ProfilerDataTypes.FLOAT.value,
                            "bool_": ProfilerDataTypes.BOOL.value,
                            "date": ProfilerDataTypes.DATETIME.value,
                            "date32": ProfilerDataTypes.DATETIME.value,
@@ -105,7 +105,7 @@ class BaseConstants:
 
     @property
     def NUMERIC_INTERNAL_TYPES(self):
-        types = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
+        types = [ProfilerDataTypes.INT.value, ProfilerDataTypes.FLOAT.value]
         return types + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] in types]
 
     @property
@@ -124,7 +124,7 @@ class BaseConstants:
 
     @property
     def NUMERIC_TYPES(self):
-        types = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
+        types = [ProfilerDataTypes.INT.value, ProfilerDataTypes.FLOAT.value]
         return self.ANY_TYPES + types +\
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] in types]
 

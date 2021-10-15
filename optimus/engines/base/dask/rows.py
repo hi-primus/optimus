@@ -21,15 +21,31 @@ class DaskBaseRows(DistributedBaseRows):
         if count is None:
             return df
 
-        partitions = df.partitions()
+        return self.root.new(
+            self.root._base_to_dfd(
+                df.cols.select("*").data.head(count, npartitions=-1), df.partitions() if count > 100 else 1
+            )
+        )
 
-        return self.root.new(self.root._base_to_dfd(df.cols.select("*").data.head(count), partitions))
+    def _drop_duplicated_builtin(self, cols):
 
+        df = self.root
+        dfd = df.data
+
+        dfd = dfd.drop_duplicates(subset=cols).reset_index(drop=True)
+
+        meta = self.root.meta
+        meta = Meta.action(meta, Actions.DROP_ROW.value, df.cols.names())
+
+        return self.root.new(dfd, meta=meta)
+                
     def drop_duplicated(self, cols="*", keep="first", how="any"):
         # not supported arguments on dask
         if how == "all" and keep == "first":
-            return self._drop_duplicated_builtin(cols, keep)
-        return self._mask(cols, method="duplicated", drop=True, keep=keep, how=how)
+            df = self.root
+            cols = parse_columns(df, cols)
+            return self._drop_duplicated_builtin(cols)
+        return self._mask(cols, func=self.root.mask.duplicated, drop=True, keep=keep, how=how)
 
     def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
                 bounds=None):

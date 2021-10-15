@@ -2,7 +2,6 @@
 
 import cudf
 
-from optimus.helpers.core import val_to_list
 from optimus.engines.base.cudf.functions import CUDFBaseFunctions
 from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
 
@@ -109,7 +108,7 @@ class CUDFFunctions(CUDFBaseFunctions, DataFrameBaseFunctions):
         # Some formats are no supported yet. https://github.com/rapidsai/cudf/issues/5991
         return cudf.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
-    def td_between(self, date_format=None):
+    def time_between(self, date_format=None):
 
         raise NotImplementedError("Not implemented yet see https://github.com/rapidsai/cudf/issues/1041")
         # return cudf.to_datetime(series).astype('str', format=date_format) - datetime.now().date()

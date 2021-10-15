@@ -1,16 +1,16 @@
-from dask_ml.linear_model import LinearRegression, LogisticRegression
-
-from optimus.helpers.columns import parse_columns
 from dask_ml.cluster import KMeans
-from sklearn.externals import joblib
+from dask_ml.linear_model import LinearRegression, LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.externals import joblib
 
-from optimus.helpers.types import *
 from optimus.engines.base.ml.models import BaseML
+from optimus.helpers.columns import parse_columns
+from optimus.helpers.types import *
 
 
 class ML(BaseML):
     def __init__(self, root: 'DataFrameType'):
+        super().__init__(root)
         self.root = root
 
     def linear_regression(self, features, target, *args, **kwargs):

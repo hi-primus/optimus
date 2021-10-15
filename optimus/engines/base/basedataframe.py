@@ -102,7 +102,7 @@ class BaseDataFrame(ABC):
         df = self.__class__(dfd, op=self.op)
         if meta is not None:
             df.meta = meta
-            df.le = self.le
+        df.le = self.le
         return df
 
     @staticmethod
@@ -389,9 +389,23 @@ class BaseDataFrame(ABC):
 
     def to_json(self, cols="*", n="all", orient="list") -> str:
         """
-        Return a json from a Dataframe
+
+        :param cols:
+        :param n:
+        :param orient:
+        The format of the JSON string:
+
+        ‘split’ : dict like {‘index’ -> [index], ‘columns’ -> [columns], ‘data’ -> [values]}
+        ‘records’ : list like [{column -> value}, … , {column -> value}]
+        ‘index’ : dict like {index -> {column -> value}}
+        ‘columns’ : dict like {column -> {index -> value}}
+        ‘values’ : just the values array
+        ‘table’ : dict like {‘schema’: {schema}, ‘data’: {data}}
+
+        Describing the data, where data component is like orient='records'.
         :return:
         """
+
 
         return json.dumps(self.to_dict(cols, n, orient), ensure_ascii=False, default=json_converter)
 
@@ -540,6 +554,10 @@ class BaseDataFrame(ABC):
         has_actions = actions is not None and len(actions) > 0
 
         profiler_columns = Meta.get(df.meta, "profile.columns")
+        if profiler_columns is not None:
+            profiler_columns = {
+                col_name: value for col_name, value in profiler_columns.items() if value.get("data_type", None)
+            }
 
         new_columns = parse_columns(df, columns)
 
@@ -658,7 +676,7 @@ class BaseDataFrame(ABC):
         template = template_env.get_template("table.html")
 
         # Filter only the columns and data type info need it
-        data_types = [(k, v) for k, v in df.cols.data_types(tidy=False)["data_types"].items()]
+        data_types = [(k, v) for k, v in df.cols.data_type(tidy=False)["data_type"].items()]
 
         # Remove not selected columns
         final_columns = []
@@ -741,7 +759,7 @@ class BaseDataFrame(ABC):
         limit = min(limit, df.rows.approx_count())
         return tabulate(df.rows.limit(limit + 1).cols.select(cols).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i,
-                                 j in df.cols.data_types(tidy=False)["data_types"].items()],
+                                 j in df.cols.data_type(tidy=False)["data_type"].items()],
                         tablefmt="simple",
                         showindex="never") + "\n"
 
@@ -757,9 +775,9 @@ class BaseDataFrame(ABC):
                               width=800, compact=True)
         else:
             if data_types == "internal":
-                df_dtypes = self.cols.data_types(tidy=False)["data_types"]
+                df_dtypes = self.cols.data_type(tidy=False)["data_type"]
             else:
-                df_dtypes = self.cols.infer_types(tidy=False)["infer_types"]
+                df_dtypes = self.cols.infer_type(tidy=False)["infer_type"]
                 df_dtypes = {col: df_dtypes[col]["data_type"] for col in df_dtypes}
             df_data = []
             for col_name in df_dict.keys():
@@ -832,17 +850,16 @@ class BaseDataFrame(ABC):
             cols_data_types = {}
             cols_to_infer = [*cols_to_profile]
 
-            if not flush:
-                for col_name in cols_to_profile:
-                    _props = Meta.get(df.meta, f"columns_data_types.{col_name}")
+            for col_name in cols_to_profile:
+                col_data_type = Meta.get(df.meta, f"columns_data_types.{col_name}")
 
-                    if _props is not None:
-                        cols_data_types[col_name] = _props
-                        cols_to_infer.remove(col_name)
+                if col_data_type is not None:
+                    cols_data_types[col_name] = col_data_type
+                    cols_to_infer.remove(col_name)
 
             if cols_to_infer:
-                cols_data_types = {**cols_data_types, **df.cols.infer_types(cols_to_infer, tidy=False)["infer_types"]}
-                cols_data_types = {col: cols_data_types[col] for col in cols_to_profile}
+                cols_data_types = {**cols_data_types, **df.cols.infer_type(cols_to_infer, tidy=False)["infer_type"]}
+                cols_data_types = {col: cols_data_types[col] for col in cols_to_profile if col in cols_data_types}
 
             _t = time.process_time()
             mismatch = df.cols.quality(cols_data_types)
@@ -853,7 +870,7 @@ class BaseDataFrame(ABC):
             cols_properties = cols_data_types.items()
             for col_name, properties in cols_properties:
                 if properties.get("data_type") in df.constants.NUMERIC_TYPES \
-                and not properties.get("categorical", False):
+                   and not properties.get("categorical", False):
                     hist_cols.append(col_name)
                 else:
                     freq_cols.append(col_name)
@@ -910,8 +927,8 @@ class BaseDataFrame(ABC):
 
                 for _col_name in _columns:
                     _c[_col_name] = {
-                        "stats": _mismatch[_col_name],
-                        "data_type": _data_types[_col_name]
+                        "stats": _mismatch.get(_col_name, None),
+                        "data_type": _data_types.get(_col_name, None)
                     }
                     if _col_name in _freq:
                         f = _freq[_col_name]
@@ -927,7 +944,7 @@ class BaseDataFrame(ABC):
             # Nulls
             total_count_na = 0
 
-            data_types = df.cols.data_types("*", tidy=False)["data_types"]
+            data_types = df.cols.data_type("*", tidy=False)["data_type"]
 
             hist, freq, sliced_freq, mismatch = self.functions.compute(
                 hist, freq, sliced_freq, mismatch)
@@ -954,7 +971,7 @@ class BaseDataFrame(ABC):
                 data_set_info.update({'size': df.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
-            data_types_list = list(set(df.cols.data_types("*", tidy=False)["data_types"].values()))
+            data_types_list = list(set(df.cols.data_type("*", tidy=False)["data_type"].values()))
             assign(profiler_data, "summary.data_types_list", data_types_list, dict)
             assign(profiler_data, "summary.total_count_data_types",
                    len(set([i for i in data_types.values()])), dict)
@@ -997,7 +1014,7 @@ class BaseDataFrame(ABC):
         """
         Join 2 dataframes SQL style
         :param df_right:
-        :param how{‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
+        :param how{‘left’, ‘right’, ‘outer’, ‘inner’, ‘exclusive’, ‘exclusive left’, ‘exclusive right’}, default ‘left’
         :param on:
         :param left_on:
         :param right_on:
@@ -1017,10 +1034,10 @@ class BaseDataFrame(ABC):
             left_on = on
             right_on = on
 
-        if df_left.cols.data_types(left_on) == "category":
+        if df_left.cols.data_type(left_on) == "category":
             df_left[left_on] = df_left[left_on].cat.as_ordered()
 
-        if df_right.cols.data_types(right_on) == "category":
+        if df_right.cols.data_type(right_on) == "category":
             df_right[right_on] = df_right[right_on].cat.as_ordered()
 
         # Join does not work with different data types.
@@ -1034,8 +1051,29 @@ class BaseDataFrame(ABC):
         left_names = df_left.cols.names()
         right_names = df_right.cols.names()
 
-        df = self.root.new(df_left.data.merge(df_right.data, how=how, left_on=left_on, right_on=right_on,
-                                              suffixes=(suffix_left, suffix_right)))
+
+        if how in ['exclusive', 'exclusive left', 'exclusive right']:
+            _how = 'outer'
+            indicator = True
+        else:
+            _how = how
+            indicator = False
+
+        dfd = df_left.data.merge(df_right.data, how=_how, left_on=left_on,
+                                 right_on=right_on, suffixes=(suffix_left, suffix_right),
+                                 indicator=indicator)
+
+        if how == 'exclusive':
+            dfd = dfd[(dfd["_merge"] == "left_only") | (dfd["_merge"] == "right_only")]
+        elif how == 'exclusive left':
+            dfd = dfd[dfd["_merge"] == "left_only"]
+        elif how == 'exclusive right':
+            dfd = dfd[dfd["_merge"] == "right_only"]
+
+        if indicator:
+            dfd = dfd.drop(["_merge"], axis=1)
+
+        df = self.root.new(dfd)
 
         # Reorder
         last_column_name = left_names[-1]
@@ -1148,7 +1186,7 @@ class BaseDataFrame(ABC):
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
 
                 elif col["column_data_type"] == "int" or col["column_data_type"] == "string" or col[
-                        "column_data_type"] == "decimal":
+                        "column_data_type"] == "float":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
             if "frequency" in col:

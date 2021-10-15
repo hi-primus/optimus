@@ -52,7 +52,7 @@ def index_to_string(df, cols, output_cols=None, le=None, **kwargs):
     """
 
     def _index_to_string(value):
-        return le.inverse_transform(value)
+        return le.inverse_transform(value.astype("int"))
 
     return df.cols.apply(cols, _index_to_string, output_cols=output_cols,
                          meta_action=Actions.INDEX_TO_STRING.value,

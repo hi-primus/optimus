@@ -57,41 +57,7 @@ class DaskBaseColumns(DistributedBaseColumns):
     def astype(self, cols="*", output_cols=None, *args, **kwargs):
         raise NotImplementedError('Not implemented yet')
 
-    # TODO: Check if we must use * to select all the columns
-
-    def count_by_data_types(self, cols="*", infer=False, str_funcs=None, int_funcs=None, mismatch=None):
-        df = self.root.data
-        cols = parse_columns(df, cols)
-        columns_data_types = df.cols.data_types(tidy=False)
-
-        def value_counts(series):
-            return series.value_counts()
-
-        delayed_results = []
-
-        for col_name in cols:
-            a = df.map_partitions(lambda df: df[col_name].apply(
-                lambda row: Infer.parse((col_name, row), infer, columns_data_types, str_funcs, int_funcs,
-                                        full=False))).compute()
-
-            f = df.functions.map_delayed(a, value_counts)
-            delayed_results.append({col_name: f.to_dict()})
-
-        results_compute = dask.compute(*delayed_results)
-        result = {}
-
-        # Convert list to dict
-        for i in results_compute:
-            result.update(i)
-
-        if infer is True:
-            result = fill_missing_var_types(result, columns_data_types)
-        else:
-            result = self.parse_inferred_types(result)
-
-        return result
-
-    def nest(self, cols="*", separator="", output_col=None, drop=False, shape="string"):
+    def nest(self, cols="*", separator="", output_col=None, drop=True, shape="string"):
         """
         Merge multiple columns with the format specified
         :param cols: columns to be nested

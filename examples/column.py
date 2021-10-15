@@ -532,7 +532,7 @@ df_zeros.cols.count_zeros("*")
 
 # ## Column Data Types
 
-df.cols.data_types('*')
+df.cols.data_type('*')
 
 # ## Replace
 

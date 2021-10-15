@@ -489,6 +489,29 @@ def path_is_local(path):
     return True
 
 
+def prepare_url_schema(path: str, schema="https", force=False):
+    """
+    Prepare a url and include a schema if neccessary.
+    :param path: Url path to prepare.
+    :param schema: schema to include if none is found in 'path'.
+    :param force: forces the schema passed to 'schema'.
+    """
+
+    if not schema.endswith("://"):
+        schema += "://"
+
+    import hiurlparser
+    parsed_url = hiurlparser.parse_url(path)
+    found_schema = parsed_url["protocol"] if parsed_url else None
+
+    if found_schema is not None and not force:
+        return path
+    elif found_schema is None:
+        return schema + path
+    else:
+        return schema + path[len(found_schema + "://"):]
+
+
 def month_names(directive="%B"):
     """
     Gets an array with month names
@@ -504,7 +527,7 @@ def weekday_names(directive="%B"):
     return [datetime.datetime.strptime(str(n + 1), '%m').strftime(directive) for n in range(7)]
 
 
-def match_date(value):
+def match_date(value, error=False):
     """
     Create a regex from a string with a date format like
     `dd/MM/yyyy hh:mm:ss-sss mi` or `%d/%m/%Y`.
@@ -513,7 +536,7 @@ def match_date(value):
     """
     formats = ["d", "dd", "M", "MM", "MMM", "MMMM", "MMMMM", "yy", "yyyy", "w",
                "ww", "www", "wwww", "wwwww", "h", "hh", "H", "HH", "kk", "k",
-               "m", "mm", "s", "ss", "sss", "/", ":", "-", " ", "+", "|", "a",
+               "m", "mm", "s", "ss", "sss", "xxx", "/", ":", "-", " ", "+", "|", "a",
                "mi"]
     formats.sort(key=len, reverse=True)
 
@@ -539,7 +562,12 @@ def match_date(value):
                 found = True
                 break
         if found is False:
-            raise ValueError(f"{value[start]} is not a valid date format. ({value})")
+            error_str = f"{value[start]} is not a valid date format. ({value})"
+            if error:
+                raise ValueError(error_str)
+            else:
+                logger.warn(error_str)
+                return False
 
     exprs = []
     for f in result:

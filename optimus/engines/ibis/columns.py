@@ -33,7 +33,7 @@ class Cols(DataFrameBaseColumns):
         dfd = pd.concat([dfs.data.reset_index(drop=True), dfd.reset_index(drop=True)], axis=1)
         return self.root.new(dfd)
 
-    def data_types(self, columns="*"):
+    def data_type(self, columns="*"):
         df = self.root
         columns = parse_columns(df, columns)
         return dict(df.data[columns].schema().items())
@@ -130,19 +130,6 @@ class Cols(DataFrameBaseColumns):
             df[col_name + "__match_positions__"] = df[col_name].astype("object").apply(get_match_positions,
                                                                                        args=(sub,))
         return df
-
-    def count_by_data_types(self, cols, data_type):
-
-        df = self.root
-        result = {}
-        df_len = len(df)
-        for col_name, na_count in df.cols.count_na(cols, tidy=False)["count_na"].items():
-
-            mismatches_count = df.cols.is_match(col_name, data_type).value_counts().to_dict().get(False)
-            mismatches_count = 0 if mismatches_count is None else mismatches_count
-            result[col_name] = {"match": df_len - na_count, "missing": na_count,
-                                "mismatch": mismatches_count - na_count}
-        return result
 
     @staticmethod
     def correlation(input_cols, method="pearson", output="json"):

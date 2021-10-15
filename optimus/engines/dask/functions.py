@@ -1,14 +1,9 @@
-# This functions must handle one or multiple columns
-# Must return None if the data type can not be handle
-
-
-from optimus.infer import is_list_or_tuple
-
 import dask
 import dask.dataframe as dd
 import dask.array as da
 import pandas as pd
 
+from optimus.infer import is_list_or_tuple
 from optimus.engines.base.pandas.functions import PandasBaseFunctions
 from optimus.engines.base.dask.functions import DaskBaseFunctions
 
@@ -43,8 +38,6 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
         return da.reciprocal(self.to_float(series))
 
     def unique_values(self, series, *args):
-        # print("args",args)
-        # Cudf can not handle null so we fill it with non zero values.
         return self.to_string(series).unique()
 
     def radians(self, series):
@@ -108,7 +101,10 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
     def format_date(self, series, current_format=None, output_format=None):
         return dd.to_datetime(series, format=current_format, errors="coerce").dt.strftime(output_format)
 
-    def td_between(self, series, value=None, date_format=None):
+    def time_between(self, series, value=None, date_format=None):
+
+        name = series.name
+
         value_date_format = date_format
 
         if is_list_or_tuple(date_format) and len(date_format) == 2:
@@ -117,13 +113,14 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
         if is_list_or_tuple(value) and len(value) == 2:
             value, value_date_format = value
 
-        series = dd.to_datetime(series, format=date_format, errors="coerce", unit='ns').astype('int64')
-        dfd = series.to_frame()
-        dfd.columns = ['A']
-        if value is None:
-            dfd['B'] = pd.Timestamp.now()
-        else:
-            value = dd.to_datetime(value, format=value_date_format, errors="coerce", unit='ns')
-            dfd['B'] = value
+        series = dd.to_datetime(series, format=date_format, errors="coerce", unit='ns', utc=True)
 
-        return dd.to_timedelta(dfd['B'].astype('int64') - dfd['A'])
+        if isinstance(value, dd.Series):
+            value = dd.to_datetime(value, format=value_date_format, errors="coerce", unit='ns', utc=True)
+        else:
+            if value is None:
+                value = pd.Timestamp.now('utc')
+            else:
+                value = pd.to_datetime(value, utc=True)
+
+        return dd.to_timedelta(series - value).rename(name)
