@@ -2918,22 +2918,33 @@ class BaseColumns(ABC):
 
         return df
 
-    def fill_na(self, cols="*", value=None, output_cols=None) -> 'DataFrameType':
+    def fill_na(self, cols="*", value=None, output_cols=None,
+            eval_value: bool = False) -> 'DataFrameType':
         """
         Replace null data with a specified value.
 
         :param cols: '*', list of columns names or a single column name.
         :param value: value to replace the nan/None values
         :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :param eval_value: Parse 'value' param in case a string is passed.
         :return: Returns the column filled with given value.
         """
         df = self.root
 
-        columns = prepare_columns(df, cols, output_cols)
+        cols = parse_columns(df, cols)
+        values, eval_values = prepare_columns_arguments(cols, value, eval_value)
+        output_cols = get_output_cols(cols, output_cols)
 
         kw_columns = {}
 
-        for input_col, output_col in columns:
+        for input_col, output_col, value, eval_value in zip(cols, output_cols, values, eval_values):
+
+            if eval_value and is_str(value):
+                value = eval(value)
+
+            if isinstance(value, self.root.__class__):
+                value = value.get_series()
+                
             kw_columns[output_col] = df.data[input_col].fillna(value)
             kw_columns[output_col] = kw_columns[output_col].mask(
                 kw_columns[output_col] == "", value)
