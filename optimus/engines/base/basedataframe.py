@@ -983,7 +983,7 @@ class BaseDataFrame(ABC):
 
         all_columns_names = df.cols.names()
 
-        meta = Meta.set(meta, "transformations", value={})
+        # meta = Meta.set(meta, "transformations", value={})
 
         # Order columns
         actual_columns = profiler_data["columns"]
@@ -997,7 +997,7 @@ class BaseDataFrame(ABC):
             meta = df.meta
 
         # Reset Actions
-        meta = Meta.reset_actions(meta)
+        meta = Meta.reset_actions(meta, parse_columns(df, cols))
         df.meta = meta
         profiler_time["end"] = {"elapsed_time": time.process_time() - _t}
         # print(profiler_time)

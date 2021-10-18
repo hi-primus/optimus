@@ -61,14 +61,19 @@ class Meta:
         return copy.deepcopy(data)
 
     @staticmethod
-    def reset_actions(meta):
+    def reset_actions(meta, cols="*"):
         """
         Reset the data frame metadata
         :param meta: Meta data to be modified
         :return:
         """
 
-        return Meta.set(meta, ACTIONS_PATH, [])
+        if cols == "*":
+            return Meta.set(meta, ACTIONS_PATH, [])
+        else:
+            actions = Meta.get(meta, ACTIONS_PATH) or []
+            actions = [action for action in actions if action["columns"] not in cols]
+            return Meta.set(meta, ACTIONS_PATH, actions)
 
 
     @staticmethod
