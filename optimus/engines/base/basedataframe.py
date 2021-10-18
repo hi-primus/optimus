@@ -1095,14 +1095,22 @@ class BaseDataFrame(ABC):
         # return clusters
 
     def agg(self, aggregations: dict, groupby=None, output="dict", tidy=True):
+        """
+        :param aggregations: Dictionary or list of tuples with the form [("col", "agg")]
+        :param groupby: None, list of columns names or a single column name to group the aggregations.
+        :param output{‘dict’, ‘dataframe’}, default ‘dict’: Output type.
+        """
 
         df = self
         dfd = df.data
 
+        if is_dict(aggregations):
+            aggregations = aggregations.items()
+
         if groupby:
             groupby = parse_columns(df, groupby)
 
-            for column, aggregations_set in aggregations.items():
+            for column, aggregations_set in aggregations:
                 aggregations[column] = val_to_list(aggregations_set)
 
             dfd = dfd.groupby(groupby).agg(aggregations)
@@ -1113,19 +1121,20 @@ class BaseDataFrame(ABC):
                 result = dfd.to_dict()
 
             elif output == "dataframe":
+                dfd.columns = [str(c) for c in dfd.columns]
                 result = self.new(dfd.reset_index())
 
         else:
             result = {}
 
-            for column, aggregations_set in aggregations.items():
+            for column, aggregations_set in aggregations:
                 aggregations_set = val_to_list(aggregations_set)
                 for aggregation in aggregations_set:
                     result[column + "_" + aggregation] = getattr(
                         df.cols, aggregation)(column, tidy=True)
 
             if output == "dataframe":
-                result = self.new(result)
+                result = self.op.create.dataframe({k: [v] for k, v in result.items()})
 
         return convert_numpy(format_dict(result, tidy=tidy))
 
