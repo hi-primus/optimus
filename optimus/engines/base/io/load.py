@@ -80,7 +80,7 @@ class BaseLoad:
             unquoted_path = glob.glob(unquote_path(filepath_or_buffer))
         
         if unquoted_path and len(unquoted_path):
-            meta = {"file_name": unquoted_path, "name": ntpath.basename(unquoted_path[0])}
+            meta = {"file_name": unquoted_path[0], "name": ntpath.basename(unquoted_path[0])}
         else:
             meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
