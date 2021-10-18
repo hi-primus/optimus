@@ -2955,7 +2955,7 @@ class BaseColumns(ABC):
 
         for input_col, output_col, value, eval_value in zip(cols, output_cols, values, eval_values):
 
-            if eval_value and is_str(value):
+            if eval_value and is_str(value) and value:
                 value = eval(value)
 
             if isinstance(value, self.root.__class__):
