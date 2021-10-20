@@ -189,10 +189,11 @@ class BaseRows(ABC):
         dfd = df.functions.sort_df(df.data, sort_cols, order)
         meta = Meta.action(self.root.meta, Actions.SORT_ROW.value, cols)
 
+        if cast:
+            dfd = dfd.drop(sort_cols, axis=1)
+
         df = self.root.new(dfd, meta=meta)
 
-        if cast:
-            df = df.cols.drop(sort_cols)
 
         return df
 
