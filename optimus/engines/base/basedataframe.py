@@ -971,13 +971,21 @@ class BaseDataFrame(ABC):
                 data_set_info.update({'size': df.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
+
             data_types_list = list(set(df.cols.data_type("*", tidy=False)["data_type"].values()))
+
             assign(profiler_data, "summary.data_types_list", data_types_list, dict)
             assign(profiler_data, "summary.total_count_data_types",
                    len(set([i for i in data_types.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
-            assign(profiler_data, "summary.p_missing", round(
-                total_count_na / df.rows.count() * 100, 2))
+            
+            rows_count = df.rows.count()
+
+            if rows_count:
+                assign(profiler_data, "summary.p_missing", round(
+                    total_count_na / rows_count * 100, 2))
+            else:
+                assign(profiler_data, "summary.p_missing", None)
 
         # _t = time.process_time()
 
