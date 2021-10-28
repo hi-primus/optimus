@@ -63,6 +63,7 @@ class BaseDataFrame(ABC):
 
     def __del__(self):
         del self.data
+        del self.le
 
     @property
     def root(self) -> 'DataFrameType':
@@ -104,6 +105,13 @@ class BaseDataFrame(ABC):
             df.meta = meta
         df.le = self.le
         return df
+
+    def copy(self) -> 'DataFrameType':
+        """
+        Return a copy of a dataframe
+        """
+        df = self.root
+        return self.root.new(df.data.copy(), meta=df.meta.copy())
 
     @staticmethod
     def __operator__(df, data_type=None, multiple_columns=False) -> 'DataFrameType':
