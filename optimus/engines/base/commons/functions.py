@@ -36,7 +36,7 @@ def string_to_index(df, cols, output_cols=None, le=None, **kwargs):
 
     return df.cols.apply(cols, _string_to_index, output_cols=output_cols,
                          meta_action=Actions.STRING_TO_INDEX.value,
-                         mode="vectorized", default=STRING_TO_INDEX)
+                         mode="vectorized")
 
 
 def index_to_string(df, cols, output_cols=None, le=None, **kwargs):
@@ -56,7 +56,7 @@ def index_to_string(df, cols, output_cols=None, le=None, **kwargs):
 
     return df.cols.apply(cols, _index_to_string, output_cols=output_cols,
                          meta_action=Actions.INDEX_TO_STRING.value,
-                         mode="vectorized", default=INDEX_TO_STRING)
+                         mode="vectorized")
 
 
 def find(df, columns, sub, ignore_case=False):
