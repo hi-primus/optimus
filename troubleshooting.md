@@ -28,16 +28,16 @@ conda install mysqlclient
 pip install pyodbc
 ```
 
-2. Then run the following commands on the terminal :
+2. Then run the following commands on the terminal:
 ```
 brew install unixodbc
 ```
-(in my case, it appeared an error that got solved by running:
+(in my case, it appeared an error that got solved by running:)
 ```
 sudo chown -R $(whoami) $(brew --prefix)/*
 brew install unixodbc
 ```
-)
+
 ```
 brew tap microsoft/mssql-preview https://github.com/Microsoft/homebrew-mssql-preview
 
@@ -45,11 +45,10 @@ brew update
 
 brew install mssql-tools
 ```
-(again, in my case, it appeared another error that got solved by running:
+(again, in my case, it appeared another error that got solved by running:)
 ```
 brew untap microsoft mssql-preview
 brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
 brew update
 brew install mssql-tools
 ```
-)
