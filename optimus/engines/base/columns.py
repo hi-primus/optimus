@@ -1098,15 +1098,21 @@ class BaseColumns(ABC):
 
         return result
 
-    def groupby(self, by, agg) -> 'DataFrameType':
+    def groupby(self, by: Union[str, list] = None, agg: Union[list, dict] = None) -> 'DataFrameType':
         """
         This helper function aims to help managing columns name in the aggregation output.
         Also how to handle ordering columns because dask can order columns.
 
-        :param by: Column name.
-        :param agg: List of tuples with the form [("agg", "col")]
+        :param by: None, list of columns names or a single column name to group the aggregations.
+        :param agg: List of tuples with the form [("agg", "col")] or 
+            [("agg", "col", "new_col_name")] or dictionary with the form 
+            {"new_col_name": {"col": "agg"}}
         :return:
         """
+
+        if agg is None:
+            raise TypeError(f"Can't aggregate with 'agg' value {agg}")
+
         df = self.root
         compact = {}
 
@@ -1129,10 +1135,20 @@ class BaseColumns(ABC):
 
         dfd = df.data
 
-        dfd = dfd.groupby(by=by).agg(compact).reset_index()
-        agg_names = agg_names or [a[0] + "_" + a[1] for a in agg]
-        dfd.columns = (val_to_list(by) + agg_names)
-        dfd.columns = [str(c) for c in dfd.columns]
+        if by and len(by):
+            dfd = dfd.groupby(by=by)
+
+        dfd = dfd.agg(compact).reset_index()
+
+        if by and len(by):
+            agg_names = agg_names or [a[1] if len(a) < 3 else a[2] for a in agg]
+            dfd.columns = (val_to_list(by) + agg_names)
+        else:
+            if agg_names is not None:
+                logger.warn("New columns names are not supported when 'by' is not passed.")
+            dfd.columns = (["aggregation"] + list(dfd.columns[1:]))
+            dfd.columns = [str(c) for c in dfd.columns]
+        
         return self.root.new(dfd)
 
     def move(self, column, position, ref_col=None) -> 'DataFrameType':
@@ -2918,27 +2934,40 @@ class BaseColumns(ABC):
 
         return df
 
-    def fill_na(self, cols="*", value=None, output_cols=None) -> 'DataFrameType':
+    def fill_na(self, cols="*", value=None, output_cols=None,
+            eval_value: bool = False) -> 'DataFrameType':
         """
         Replace null data with a specified value.
 
         :param cols: '*', list of columns names or a single column name.
         :param value: value to replace the nan/None values
         :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :param eval_value: Parse 'value' param in case a string is passed.
         :return: Returns the column filled with given value.
         """
         df = self.root
 
-        columns = prepare_columns(df, cols, output_cols)
+        cols = parse_columns(df, cols)
+        values, eval_values = prepare_columns_arguments(cols, value, eval_value)
+        output_cols = get_output_cols(cols, output_cols)
 
         kw_columns = {}
 
-        for input_col, output_col in columns:
+        for input_col, output_col, value, eval_value in zip(cols, output_cols, values, eval_values):
+
+            if eval_value and is_str(value) and value:
+                value = eval(value)
+
+            if isinstance(value, self.root.__class__):
+                value = value.get_series()
+                
             kw_columns[output_col] = df.data[input_col].fillna(value)
             kw_columns[output_col] = kw_columns[output_col].mask(
                 kw_columns[output_col] == "", value)
 
-        return df.cols.assign(kw_columns)
+        df = df.cols.assign(kw_columns)
+        df.meta = Meta.action(df.meta, Actions.FILL_NA.value, list(kw_columns.keys()))
+        return df
 
     def count(self) -> int:
         """

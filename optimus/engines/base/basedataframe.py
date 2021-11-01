@@ -63,6 +63,7 @@ class BaseDataFrame(ABC):
 
     def __del__(self):
         del self.data
+        del self.le
 
     @property
     def root(self) -> 'DataFrameType':
@@ -102,8 +103,16 @@ class BaseDataFrame(ABC):
         df = self.__class__(dfd, op=self.op)
         if meta is not None:
             df.meta = meta
-        df.le = self.le
+        import copy
+        df.le = copy.deepcopy(self.le)
         return df
+
+    def copy(self) -> 'DataFrameType':
+        """
+        Return a copy of a dataframe
+        """
+        df = self.root
+        return self.root.new(df.data.copy(), meta=df.meta.copy())
 
     @staticmethod
     def __operator__(df, data_type=None, multiple_columns=False) -> 'DataFrameType':
@@ -971,19 +980,27 @@ class BaseDataFrame(ABC):
                 data_set_info.update({'size': df.size(format="human")})
 
             assign(profiler_data, "summary", data_set_info, dict)
+
             data_types_list = list(set(df.cols.data_type("*", tidy=False)["data_type"].values()))
+
             assign(profiler_data, "summary.data_types_list", data_types_list, dict)
             assign(profiler_data, "summary.total_count_data_types",
                    len(set([i for i in data_types.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
-            assign(profiler_data, "summary.p_missing", round(
-                total_count_na / df.rows.count() * 100, 2))
+            
+            rows_count = df.rows.count()
+
+            if rows_count:
+                assign(profiler_data, "summary.p_missing", round(
+                    total_count_na / rows_count * 100, 2))
+            else:
+                assign(profiler_data, "summary.p_missing", None)
 
         # _t = time.process_time()
 
         all_columns_names = df.cols.names()
 
-        meta = Meta.set(meta, "transformations", value={})
+        # meta = Meta.set(meta, "transformations", value={})
 
         # Order columns
         actual_columns = profiler_data["columns"]
@@ -997,7 +1014,7 @@ class BaseDataFrame(ABC):
             meta = df.meta
 
         # Reset Actions
-        meta = Meta.reset_actions(meta)
+        meta = Meta.reset_actions(meta, parse_columns(df, cols))
         df.meta = meta
         profiler_time["end"] = {"elapsed_time": time.process_time() - _t}
         # print(profiler_time)
@@ -1095,14 +1112,22 @@ class BaseDataFrame(ABC):
         # return clusters
 
     def agg(self, aggregations: dict, groupby=None, output="dict", tidy=True):
+        """
+        :param aggregations: Dictionary or list of tuples with the form [("col", "agg")]
+        :param groupby: None, list of columns names or a single column name to group the aggregations.
+        :param output{‘dict’, ‘dataframe’}, default ‘dict’: Output type.
+        """
 
         df = self
         dfd = df.data
 
+        if is_dict(aggregations):
+            aggregations = aggregations.items()
+
         if groupby:
             groupby = parse_columns(df, groupby)
 
-            for column, aggregations_set in aggregations.items():
+            for column, aggregations_set in aggregations:
                 aggregations[column] = val_to_list(aggregations_set)
 
             dfd = dfd.groupby(groupby).agg(aggregations)
@@ -1113,19 +1138,20 @@ class BaseDataFrame(ABC):
                 result = dfd.to_dict()
 
             elif output == "dataframe":
+                dfd.columns = [str(c) for c in dfd.columns]
                 result = self.new(dfd.reset_index())
 
         else:
             result = {}
 
-            for column, aggregations_set in aggregations.items():
+            for column, aggregations_set in aggregations:
                 aggregations_set = val_to_list(aggregations_set)
                 for aggregation in aggregations_set:
                     result[column + "_" + aggregation] = getattr(
                         df.cols, aggregation)(column, tidy=True)
 
             if output == "dataframe":
-                result = self.new(result)
+                result = self.op.create.dataframe({k: [v] for k, v in result.items()})
 
         return convert_numpy(format_dict(result, tidy=tidy))
 
