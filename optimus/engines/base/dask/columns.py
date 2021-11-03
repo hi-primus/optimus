@@ -1,14 +1,12 @@
-import dask
+import dask.dataframe as dd
 import dask.dataframe as dd
 import pandas as pd
 
+from optimus.engines.base.distributed.columns import DistributedBaseColumns
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.constants import Actions
-from optimus.helpers.core import one_list_to_val, val_to_list
-from optimus.profiler.functions import fill_missing_var_types
-
-from optimus.engines.base.distributed.columns import DistributedBaseColumns
+from optimus.helpers.core import val_to_list
 
 
 class DaskBaseColumns(DistributedBaseColumns):
@@ -22,7 +20,7 @@ class DaskBaseColumns(DistributedBaseColumns):
         """
 
         result = self.F.delayed(self.format_agg)(exprs)
-        
+
         if compute:
             result = self.F.compute(result)
 

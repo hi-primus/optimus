@@ -1,8 +1,5 @@
-import numpy as np
-from pprint import pformat
-from abc import abstractmethod, ABC
 import operator
-import time
+from pprint import pformat
 
 import humanize
 import imgkit
@@ -11,32 +8,25 @@ import simplejson as json
 from glom import assign
 from tabulate import tabulate
 
-from optimus.helpers.types import *
+from optimus.engines.base.columns import *
+from optimus.engines.base.constants import BaseConstants
+from optimus.engines.base.functions import BaseFunctions
+from optimus.engines.base.io.save import *
+from optimus.engines.base.mask import Mask
+from optimus.engines.base.ml.encoding import BaseEncoding
+from optimus.engines.base.ml.models import BaseML
+from optimus.engines.base.profile import BaseProfile
+from optimus.engines.base.rows import *
+from optimus.engines.base.set import BaseSet
 from optimus.helpers.check import is_notebook
-from optimus.helpers.columns import parse_columns
-from optimus.helpers.constants import BUFFER_SIZE, Actions, RELATIVE_ERROR
-from optimus.helpers.core import val_to_list
+from optimus.helpers.constants import BUFFER_SIZE
 from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
-from optimus.helpers.converter import convert_numpy
-from optimus.infer import is_str, is_tuple, is_list
-from optimus.profiler.constants import MAX_BUCKETS
-from optimus.profiler.templates.html import HEADER, FOOTER
-from optimus.engines.base.columns import *
-from optimus.engines.base.rows import *
-from optimus.engines.base.mask import Mask
-from optimus.engines.base.set import BaseSet
-from optimus.engines.base.profile import BaseProfile
-from optimus.engines.base.meta import Meta
-from optimus.engines.base.ml.models import BaseML
-from optimus.engines.base.ml.encoding import BaseEncoding
-from optimus.engines.base.io.save import *
-from optimus.engines.base.constants import BaseConstants
-from optimus.engines.base.functions import BaseFunctions
 from optimus.outliers.outliers import Outliers
 from optimus.plots.functions import plot_hist, plot_frequency
 from optimus.plots.plots import Plot
+from optimus.profiler.templates.html import HEADER, FOOTER
 
 
 class BaseDataFrame(ABC):
@@ -161,7 +151,7 @@ class BaseDataFrame(ABC):
 
         if isinstance(df1, (np.generic,)):
             df1 = np.asscalar(df1)
-        
+
         if isinstance(df2, (np.generic,)):
             df2 = np.asscalar(df2)
 
@@ -169,7 +159,7 @@ class BaseDataFrame(ABC):
             df1 = self.op.create.dataframe({"0": df1})
         if is_list(df2):
             df2 = self.op.create.dataframe({"0": df2})
-        
+
         df1_is_df = isinstance(df1, (BaseDataFrame,))
         df2_is_df = isinstance(df2, (BaseDataFrame,))
 
@@ -314,7 +304,7 @@ class BaseDataFrame(ABC):
             cols2 = list(df2.keys())
 
         cols1 = self.cols.names()
-        
+
         if cols1 != cols2:
             if assertion:
                 raise AssertionError(f"Column names are not equal: {cols1}, {cols2}")
@@ -415,10 +405,9 @@ class BaseDataFrame(ABC):
         :return:
         """
 
-
         return json.dumps(self.to_dict(cols, n, orient), ensure_ascii=False, default=json_converter)
 
-    def to_dict(self, cols="*", n=10, orient="list") -> dict:
+    def to_dict(self, cols="*", n: Union[int, str] = 10, orient="list") -> dict:
         """
             Return a dict from a Collect result
             :param cols:
@@ -445,7 +434,7 @@ class BaseDataFrame(ABC):
         """
         df = self
 
-        cols = parse_columns(df, cols)        
+        cols = parse_columns(df, cols)
 
         return {"columns": [{"title": col_name} for col_name in cols],
                 "value": df.rows.to_list(cols)}
@@ -583,7 +572,7 @@ class BaseDataFrame(ABC):
                 # Operations need to be processed int the same order that created
                 for action in Meta.get(df.meta, "transformations.actions"):
                     dropped_columns = []
-                    
+
                     action_name = action.get("name", "action")
                     column = action.get("columns", None)
 
@@ -649,7 +638,7 @@ class BaseDataFrame(ABC):
             limit=limit, full=True), path, css=css)
         print_html("<img src='" + path + "'>")
 
-    def table_html(self, limit=10, cols=None, title=None, full=False, truncate=True, count=True, highlight=[]):
+    def table_html(self, limit=10, cols=None, title=None, full=False, truncate=True, highlight=None):
         """
         Return a HTML table with the spark cols, data types and values
         :param cols: Columns to be printed
@@ -657,26 +646,27 @@ class BaseDataFrame(ABC):
         :param title: Table title
         :param full: Include html header and footer
         :param truncate: Truncate the row information
-        :param count:
-
+        :param highlight:
         :return:
         """
+
+        if highlight is None:
+            highlight = []
 
         cols = parse_columns(self, cols)
         if limit is None:
             limit = 10
 
         df = self
-
         total_rows = df.rows.approx_count()
 
         if limit == "all":
             limit = total_rows
-            data = df.cols.select(cols).to_dict(n="all", orient="records")
+            data = df.cols.select(cols).to_dict(n=limit, orient="records")
         else:
             limit = min(limit, total_rows)
             data = df.cols.select(cols).rows.limit(
-                limit + 1).to_dict(n="all", orient="records")
+                limit).to_dict(n="all", orient="records")
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(
             searchpath=absolute_path("/templates/out"))
@@ -686,14 +676,12 @@ class BaseDataFrame(ABC):
 
         # Filter only the columns and data type info need it
         data_types = [(k, v) for k, v in df.cols.data_type(tidy=False)["data_type"].items()]
-
         # Remove not selected columns
         final_columns = []
         for i in data_types:
             for j in cols:
                 if i[0] == j:
                     final_columns.append(i)
-
         total_rows = humanize.intword(total_rows)
         total_cols = df.cols.count()
         total_partitions = df.partitions()
@@ -741,6 +729,7 @@ class BaseDataFrame(ABC):
         :param highlight:
         :return:
         """
+
         if highlight is None:
             highlight = []
         df = self
@@ -768,7 +757,7 @@ class BaseDataFrame(ABC):
         limit = min(limit, df.rows.approx_count())
         return tabulate(df.rows.limit(limit + 1).cols.select(cols).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i,
-                                 j in df.cols.data_type(tidy=False)["data_type"].items()],
+                                                       j in df.cols.data_type(tidy=False)["data_type"].items()],
                         tablefmt="simple",
                         showindex="never") + "\n"
 
@@ -879,7 +868,7 @@ class BaseDataFrame(ABC):
             cols_properties = cols_data_types.items()
             for col_name, properties in cols_properties:
                 if properties.get("data_type") in df.constants.NUMERIC_TYPES \
-                   and not properties.get("categorical", False):
+                        and not properties.get("categorical", False):
                     hist_cols.append(col_name)
                 else:
                     freq_cols.append(col_name)
@@ -987,7 +976,7 @@ class BaseDataFrame(ABC):
             assign(profiler_data, "summary.total_count_data_types",
                    len(set([i for i in data_types.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
-            
+
             rows_count = df.rows.count()
 
             if rows_count:
@@ -1027,7 +1016,8 @@ class BaseDataFrame(ABC):
         col1 = self.cols.names(0)[0]
         return self.data[col1]
 
-    def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None, key_middle=False) -> 'DataFrameType':
+    def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None,
+             key_middle=False) -> 'DataFrameType':
         """
         Join 2 dataframes SQL style
         :param df_right:
@@ -1067,7 +1057,6 @@ class BaseDataFrame(ABC):
         # Used to reorder the output
         left_names = df_left.cols.names()
         right_names = df_right.cols.names()
-
 
         if how in ['exclusive', 'exclusive left', 'exclusive right']:
             _how = 'outer'
@@ -1212,7 +1201,7 @@ class BaseDataFrame(ABC):
                                 "hist_hours": hist_hour, "hist_minutes": hist_minute}
 
                 elif col["column_data_type"] == "int" or col["column_data_type"] == "string" or col[
-                        "column_data_type"] == "float":
+                    "column_data_type"] == "float":
                     hist = plot_hist({col_name: hist_dict}, output="base64")
                     hist_pic = {"hist_numeric_string": hist}
             if "frequency" in col:
@@ -1220,7 +1209,7 @@ class BaseDataFrame(ABC):
                     {col_name: col["frequency"]}, output="base64")
 
             html = html + \
-                template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
+                   template.render(data=col, freq_pic=freq_pic, hist_pic=hist_pic)
 
         # Save in case we want to output to a html file
         # self.html = html + df.table_html(10)

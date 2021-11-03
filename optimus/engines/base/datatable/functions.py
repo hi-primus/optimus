@@ -9,7 +9,7 @@ from optimus.helpers.logger import logger
 from optimus.infer import is_int_like, is_list_or_tuple
 
 
-class PandasBaseFunctions(BaseFunctions, ABC):
+class DatatableBaseFunctions(BaseFunctions, ABC):
 
     @staticmethod
     def is_string(series):

@@ -1,12 +1,9 @@
-from abc import abstractmethod
 from functools import reduce
 
+from optimus.engines.base.columns import BaseColumns
 from optimus.helpers.columns import parse_columns, name_col
 from optimus.helpers.core import val_to_list
-from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict
-
-from optimus.engines.base.columns import BaseColumns
 
 
 class DataFrameBaseColumns(BaseColumns):

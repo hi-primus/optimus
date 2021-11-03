@@ -84,7 +84,7 @@ class BaseLoad:
         else:
             meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
-        filepath_or_buffer = val_to_list(filepath_or_buffer)
+        # filepath_or_buffer = val_to_list(filepath_or_buffer)
 
         try:
 
@@ -112,6 +112,7 @@ class BaseLoad:
                                  on_bad_lines=on_bad_lines, na_filter=na_filter,
                                  na_values=val_to_list(null_value), index_col=False,
                                  storage_options=storage_options, *args, **kwargs)
+
 
             if is_list(filepath_or_buffer):
                 df = self.op.F.new_df()

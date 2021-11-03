@@ -89,11 +89,6 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns):
             df[output_col] = df[input_col].str.replace_multi(regex, replace_by, regex=True)
         return df
 
-    # NLP
-    def stem_words(self, input_col):
-        raise NotImplementedError('Not implemented yet')
-
-
     def strip_html(self):
         # df = self.root
         # soup = BeautifulSoup(self.text, "html.parser")
@@ -140,6 +135,7 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns):
             return df
 
     def hist(self, cols="*", buckets=20, compute=True):
+        # TODO:change for .cut https://github.com/rapidsai/cudf/pull/8002
         import cupy as cp
         df = self.root
         cols = parse_columns(df, cols)

@@ -1,9 +1,7 @@
 from optimus.helpers.constants import ProfilerDataTypes
-import numpy as np
 
 
 class BaseConstants:
-
     # inferred/input to internal
     OPTIMUS_TO_INTERNAL = {ProfilerDataTypes.INT.value: "int",
                            ProfilerDataTypes.FLOAT.value: "float",
@@ -81,27 +79,28 @@ class BaseConstants:
                     "integer": "int",
                     "big": "bigint",
                     "long": "bigint",
-                    "bool": "boolean", # TO DO: bool: (True, False), boolean: (True, False, Null)
+                    "bool": "boolean",  # TO DO: bool: (True, False), boolean: (True, False, Null)
                     "timestamp": "datetime"
                     }
-                     
+
     @property
     def OPTIMUS_TO_INTERNALS(self):
         values = set(list(self.INTERNAL_TO_OPTIMUS.values()) + ProfilerDataTypes.list())
-        
+
         _dict = {}
         for v in values:
             _list = [self.OPTIMUS_TO_INTERNAL[v]]
             _list += [t[0] for t in self.INTERNAL_TO_OPTIMUS.items() if t[1] == v]
             _dict.update({v: list(set(_list))})
-            
+
         return _dict
 
     ANY_TYPES = ["object"]
 
     @property
     def INT_INTERNAL_TYPES(self):
-        return [ProfilerDataTypes.INT.value] + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.INT.value]
+        return [ProfilerDataTypes.INT.value] + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if
+                                                item[1] == ProfilerDataTypes.INT.value]
 
     @property
     def NUMERIC_INTERNAL_TYPES(self):
@@ -110,38 +109,39 @@ class BaseConstants:
 
     @property
     def STRING_INTERNAL_TYPES(self):
-        return [ProfilerDataTypes.STRING.value] + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.STRING.value]
-    
+        return [ProfilerDataTypes.STRING.value] + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if
+                                                   item[1] == ProfilerDataTypes.STRING.value]
+
     @property
     def DATETIME_INTERNAL_TYPES(self):
-        return [ProfilerDataTypes.DATETIME.value] +\
+        return [ProfilerDataTypes.DATETIME.value] + \
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.DATETIME.value]
 
     @property
     def INT_TYPES(self):
-        return self.ANY_TYPES + [ProfilerDataTypes.INT.value] +\
+        return self.ANY_TYPES + [ProfilerDataTypes.INT.value] + \
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.INT.value]
 
     @property
     def NUMERIC_TYPES(self):
         types = [ProfilerDataTypes.INT.value, ProfilerDataTypes.FLOAT.value]
-        return self.ANY_TYPES + types +\
+        return self.ANY_TYPES + types + \
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] in types]
 
     @property
     def STRING_TYPES(self):
-        return self.ANY_TYPES + [ProfilerDataTypes.STRING.value] +\
+        return self.ANY_TYPES + [ProfilerDataTypes.STRING.value] + \
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.STRING.value]
-    
+
     @property
     def DATETIME_TYPES(self):
-        return self.ANY_TYPES + [ProfilerDataTypes.DATETIME.value] +\
+        return self.ANY_TYPES + [ProfilerDataTypes.DATETIME.value] + \
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.DATETIME.value]
 
     @property
     def OBJECT_TYPES(self):
         types = [ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.ARRAY.value]
-        return self.ANY_TYPES + types +\
+        return self.ANY_TYPES + types + \
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] in types]
 
     COMPATIBLE_DTYPES = {}

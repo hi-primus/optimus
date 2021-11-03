@@ -257,6 +257,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
     def to_dict(self, cols="*", n=10, orient="list"):
         """
         Create a dict
+        :param cols:
         :param n:
         :param orient:
         :return:

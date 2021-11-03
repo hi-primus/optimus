@@ -2,13 +2,13 @@ from imgkit import imgkit
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
 
-from optimus.helpers.types import *
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int, absolute_path
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.types import *
 
 
 class SparkDataFrame(BaseDataFrame):
@@ -214,7 +214,6 @@ class SparkDataFrame(BaseDataFrame):
 
         return n_bytes
 
-
     def execute(self):
         self.data.cache()
         return self
@@ -265,7 +264,6 @@ class SparkDataFrame(BaseDataFrame):
 
         self.createOrReplaceTempView(value)
 
-
     def partitions(self):
         """
         Return the dataframe partitions number
@@ -312,12 +310,11 @@ class SparkDataFrame(BaseDataFrame):
             df = self.repartition(partitions_number, col_name)
         return df
 
-    @staticmethod
-    def table_image(path, limit=10):
+    def table_image(self, path, limit=10):
         """
-
-        :param limit:
+        Create and image from a html table
         :param path:
+        :param limit:
         :return:
         """
 
@@ -374,4 +371,3 @@ class SparkDataFrame(BaseDataFrame):
 
     def to_pandas(self):
         return self.data.toPandas()
-

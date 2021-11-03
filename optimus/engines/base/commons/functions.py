@@ -4,7 +4,6 @@ import numpy as np
 
 # From a top point of view we organize Optimus separating the functions in dataframes and dask engines.
 # Some functions are commons to pandas and dask.
-from optimus.engines.base.ml.constants import STRING_TO_INDEX, INDEX_TO_STRING
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.core import val_to_list
@@ -15,8 +14,10 @@ def word_tokenize(series):
     import nltk
     return nltk.word_tokenize(series)
 
+
 def hist(series, bins):
     return np.histogram(series.to_float(), bins=bins)
+
 
 def string_to_index(df, cols, output_cols=None, le=None, **kwargs):
     """_
@@ -45,7 +46,7 @@ def index_to_string(df, cols, output_cols=None, le=None, **kwargs):
     either from the ML attributes of the input column, or from user-supplied labels (which take precedence over
     ML attributes).
     :param df: Dataframe to be transformed.
-    :param input_cols: Columns to be indexed.
+    :param cols: Columns to be indexed.
     :param output_cols: Column where the output is going to be saved.
     :param le:
     :return: Dataframe with indexed columns.

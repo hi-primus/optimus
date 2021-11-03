@@ -84,6 +84,10 @@ class BaseColumns(ABC):
 
     @abstractmethod
     def _names(self):
+        """
+        Implementation to return the list of names in every dataframe technology.
+        :return:
+        """
         pass
 
     def _transformed(self, updated=None):
@@ -180,6 +184,9 @@ class BaseColumns(ABC):
         """
         return self.root.join(df_right, how, on, left_on, right_on, key_middle)
 
+    def _select(self, cols):
+        return dfd[cols]
+
     def select(self, cols="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> 'DataFrameType':
         """
         Select columns using index, column name, regex to data type.
@@ -200,7 +207,7 @@ class BaseColumns(ABC):
         meta = Meta.select_columns(meta, cols)
         dfd = df.data
         if cols is not None:
-            dfd = dfd[cols]
+            dfd = self._select(cols)
         return self.root.new(dfd, meta=meta)
 
     def copy(self, cols="*", output_cols=None, columns=None) -> 'DataFrameType':
@@ -321,19 +328,19 @@ class BaseColumns(ABC):
         """
 
         :param cols: "*", column name or list of column names to be processed.
-        :param func:
+        :param func: function that will be applied to the column.
         :param func_return_type:
-        :param args:
+        :param args: Argument to apply to the function
         :param func_type:
-        :param where:
+        :param where: condition in where to apply the function
         :param filter_col_by_data_types:
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :param skip_output_cols_processing:
-        :param meta_action:
-        :param mode:
+        :param meta_action: Action that will be attached to the transformation meta data
+        :param mode: `map`, `vectorized`
         :param set_index:
-        :param default:
-        :param kwargs:
+        :param default: default va
+        :param kwargs: Keyword arguyments.
         :return:
         """
         columns = prepare_columns(self.root, cols, output_cols, filter_by_column_types=filter_col_by_data_types,
@@ -388,6 +395,7 @@ class BaseColumns(ABC):
         df = self.root.new(dfd, meta=meta)
 
         if kw_columns:
+            print("kw_columns",kw_columns)
             df = df.cols.assign(kw_columns)
         # Dataframe to Optimus dataframe
         df = df.cols.select(output_ordered_columns)
@@ -556,7 +564,6 @@ class BaseColumns(ABC):
                                    (old_col_name, new_col_name))
 
         return self.root.new(dfd, meta=meta)
-
 
     def parse_inferred_types(self, col_data_type):
         """
@@ -1148,7 +1155,7 @@ class BaseColumns(ABC):
                 logger.warn("New columns names are not supported when 'by' is not passed.")
             dfd.columns = (["aggregation"] + list(dfd.columns[1:]))
             dfd.columns = [str(c) for c in dfd.columns]
-        
+
         return self.root.new(dfd)
 
     def move(self, column, position, ref_col=None) -> 'DataFrameType':
@@ -1240,20 +1247,24 @@ class BaseColumns(ABC):
 
         return df.cols.select(cols)
 
+    def _data_type(self):
+        return dict(self.root.data.dtypes)
+
     def data_type(self, cols="*", names=False, tidy=True) -> dict:
         """
         Return the column(s) data type as string.
 
         :param cols: Columns to be processed
         :param names: Returns aliases for every type instead of its internal name
+        :param tidy:
         :return: Return a dict of column and its respective data type.
         """
         df = self.root
         cols = parse_columns(df, cols)
-        data_types = {k: str(v) for k, v in dict(df.data.dtypes).items()}
-        _DICT = df.constants.INTERNAL_TO_OPTIMUS
+        data_types = {col_name: str(dtype) for col_name, dtype in self._data_type().items()}
         if names:
-            data_types = {k: _DICT.get(d, d) for k, d in data_types.items()}
+            _DICT = df.constants.INTERNAL_TO_OPTIMUS
+            data_types = {col_name: _DICT.get(dtype, dtype) for col_name, dtype in data_types.items()}
 
         return format_dict({"data_type": {col_name: data_types[col_name] for col_name in cols}}, tidy=tidy)
 
@@ -2672,7 +2683,7 @@ class BaseColumns(ABC):
                                  round=round, output_cols=output_cols)
 
     def seconds_between(self, cols="*", value=None, date_format=None, round=None, output_cols=None) -> 'DataFrameType':
-        """
+        self.saved__return_ = """
         Return the number of seconds between two dates.
 
         :param cols: "*", column name or list of column names to be processed.
@@ -2682,11 +2693,13 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
+        self.return_ = self.saved__return_
         return self.time_between(cols=cols, func=self.F.seconds_between, value=value, date_format=date_format,
                                  round=round, output_cols=output_cols)
 
     def replace(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,
                 output_cols=None) -> 'DataFrameType':
+        #TODO:https://github.com/rapidsai/cudf/pull/9573
         """
         Replace a value, list of values by a specified string.
 
@@ -2935,7 +2948,7 @@ class BaseColumns(ABC):
         return df
 
     def fill_na(self, cols="*", value=None, output_cols=None,
-            eval_value: bool = False) -> 'DataFrameType':
+                eval_value: bool = False) -> 'DataFrameType':
         """
         Replace null data with a specified value.
 
@@ -2960,7 +2973,7 @@ class BaseColumns(ABC):
 
             if isinstance(value, self.root.__class__):
                 value = value.get_series()
-                
+
             kw_columns[output_col] = df.data[input_col].fillna(value)
             kw_columns[output_col] = kw_columns[output_col].mask(
                 kw_columns[output_col] == "", value)
@@ -3337,7 +3350,8 @@ class BaseColumns(ABC):
         :param cols: "*", column name or list of column names to be processed.
         :param buckets:Number of histogram bins to be used.
         :param compute:
-        :return:
+        :return: Dictonory with the form
+            {'hist': {'COL_NAME': [{'lower': 111.0, 'upper': 227.25, 'count': 169}]}}
         """
 
         df = self.root
@@ -3358,7 +3372,7 @@ class BaseColumns(ABC):
         def get_hist(pdf, col_name, _bins):
             _count, bins_edges = np.histogram(pd.to_numeric(
                 pdf, errors='coerce'), bins=_bins[col_name])
-            return (col_name, [list(_count), list(bins_edges)])
+            return col_name, [list(_count), list(bins_edges)]
 
         @self.F.delayed
         def format_histograms(values):
@@ -3570,7 +3584,8 @@ class BaseColumns(ABC):
             infer_value_counts = sample_formats["frequency"][col_name]["values"]
             # Common datatype in a column
             date_format = infer_value_counts[0]["value"]
-            self.root.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.format", date_format)
+            self.root.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.format",
+                                      date_format)
             result.update({col_name: date_format})
 
         return format_dict(result, tidy)
@@ -3590,6 +3605,7 @@ class BaseColumns(ABC):
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
         :return: dict with the count of every element in the column.
+            {'frequency': {'ID_CUENTA': {'values': [{'value': 83564386, 'count': 27}]}}}
         """
         df = self.root
         cols = parse_columns(df, cols)

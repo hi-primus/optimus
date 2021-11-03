@@ -13,6 +13,7 @@ class Engine(Enum):
     SPARK = "spark"
     VAEX = "vaex"
     IBIS = "ibis"
+    DATATABLE = "datatable"
 
     @classmethod
     def list(cls):
@@ -27,6 +28,7 @@ class EnginePretty(Enum):
     SPARK = "Spark"
     VAEX = "Vaex"
     IBIS = "Ibis"
+    DATATABLE = "Datatable"
 
     @classmethod
     def list(cls):
@@ -67,12 +69,17 @@ def start_ibis(*args, **kwargs):
 
 def start_cudf(*args, **kwargs):
     from optimus.engines.cudf.engine import CUDFEngine
-    op = CUDFEngine(*args, **kwargs)
+    return CUDFEngine(*args, **kwargs)
 
 
 def start_dask_cudf(*args, **kwargs):
     from optimus.engines.dask_cudf.engine import DaskCUDFEngine
-    op = DaskCUDFEngine(*args, **kwargs)
+    return DaskCUDFEngine(*args, **kwargs)
+
+
+def start_datatable(*args, **kwargs):
+    from optimus.engines.datatable.engine import DatatableEngine
+    return DatatableEngine(*args, **kwargs)
 
 
 def optimus(engine=Engine.DASK.value, *args, **kwargs):
@@ -95,13 +102,14 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     nltk.download('averaged_perceptron_tagger', quiet=True)
 
     funcs = {Engine.PANDAS.value: start_pandas,
-                   Engine.VAEX.value: start_vaex,
-                   Engine.SPARK.value: start_spark,
-                   Engine.DASK.value: start_dask,
-                   Engine.IBIS.value: start_ibis,
-                   Engine.CUDF.value: start_cudf,
-                   Engine.DASK_CUDF.value: start_dask_cudf
-                   }
+             Engine.VAEX.value: start_vaex,
+             Engine.SPARK.value: start_spark,
+             Engine.DASK.value: start_dask,
+             Engine.IBIS.value: start_ibis,
+             Engine.CUDF.value: start_cudf,
+             Engine.DASK_CUDF.value: start_dask_cudf,
+             Engine.DATATABLE.value: start_datatable
+             }
 
     op = engine_function(engine, funcs)
 

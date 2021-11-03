@@ -1,12 +1,12 @@
 from abc import ABC
 from typing import Callable
-from optimus.helpers.types import *
 
 from optimus.engines.base.meta import Meta
-from optimus.helpers.core import val_to_list
 from optimus.helpers.columns import parse_columns, prepare_columns_arguments
 from optimus.helpers.constants import Actions
+from optimus.helpers.core import val_to_list
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.types import *
 from optimus.infer import is_dict, is_list_of_str, is_list_of_tuples, is_list_value, is_str
 
 
@@ -105,7 +105,7 @@ class BaseRows(ABC):
 
         if not hasattr(expr, "get_series"):
             raise ValueError(f"Invalid value for 'expr': {expr}")
-                
+
         dfd = dfd.reset_index(drop=True)[expr.get_series().reset_index(drop=True)]
 
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
@@ -115,7 +115,7 @@ class BaseRows(ABC):
 
     def _count(self, compute=True) -> int:
         """
-
+        Count the number of dataframe rows. Handle the implementation in multiple dataframe technologies.
         :param compute:
         :return:
         """
@@ -157,7 +157,7 @@ class BaseRows(ABC):
 
         if is_dict(cols):
             cols = list(cols.items())
-            
+
         if is_list_of_tuples(cols):
             cols, order = zip(*cols)
 
@@ -193,7 +193,6 @@ class BaseRows(ABC):
             dfd = dfd.drop(sort_cols, axis=1)
 
         df = self.root.new(dfd, meta=meta)
-
 
         return df
 
@@ -328,7 +327,8 @@ class BaseRows(ABC):
         """
         return self._mask(cols, func=self.root.mask.numeric, drop=drop, how=how)
 
-    def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, drop=False, how="any") -> 'DataFrameType':
+    def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, drop=False,
+                how="any") -> 'DataFrameType':
         """
 
         :param cols:
@@ -340,7 +340,8 @@ class BaseRows(ABC):
         :param how:
         :return:
         """
-        return self._mask(cols, func=self.root.mask.between, drop=drop, how=how, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
+        return self._mask(cols, func=self.root.mask.between, drop=drop, how=how, lower_bound=lower_bound,
+                          upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def greater_than_equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
@@ -809,7 +810,8 @@ class BaseRows(ABC):
         """
         return self._mask(cols, func=self.root.mask.less_than, drop=True, value=value, how=how)
 
-    def drop_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, how="any") -> 'DataFrameType':
+    def drop_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None,
+                     how="any") -> 'DataFrameType':
         """
 
         :param cols:
@@ -820,7 +822,8 @@ class BaseRows(ABC):
         :param how:
         :return:
         """
-        return self._mask(cols, func=self.root.mask.between, drop=True, how=how, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
+        return self._mask(cols, func=self.root.mask.between, drop=True, how=how, lower_bound=lower_bound,
+                          upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def drop_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
