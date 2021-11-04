@@ -6,7 +6,7 @@ package:
 
 source:
   git_url: https://github.com/hi-primus/optimus
-  git_rev: develop-21.9
+  git_rev: develop-21.11
   git_depth: 1 # (Defaults to -1/not shallow)
 
 build:
