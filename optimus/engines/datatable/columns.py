@@ -1,10 +1,11 @@
-import numpy as np
 from sklearn import preprocessing
 
-from datatable import dt
+from datatable import dt, cut, by, f
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.base.pandas.columns import PandasBaseColumns
+from optimus.helpers.columns import parse_columns
+from optimus.profiler.constants import MAX_BUCKETS
 
 DataFrame = dt.Frame
 
@@ -40,12 +41,40 @@ class Cols(PandasBaseColumns, DataFrameBaseColumns):
         df = self.root
         return find(df, cols, sub, ignore_case)
 
+    def frequency(self, cols="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
+                  compute=True, tidy=False) -> dict:
+        df = self.root
+
+        result = []
+
+        cols = parse_columns(df, cols)
+
+        for col_name in cols:
+            _freq = df.data[:, dt.count(), by(col_name)].sort(-f.count)[0:10, :].to_dict()
+
+            edges = _freq[col_name]
+            hist = _freq["count"]
+
+            result_col = []
+            for i in range(0, len(edges)):
+                result_col.append({"values": edges[i], "count": hist[i]})
+            result = {col_name: result_col}
+
+        return {"frequency": result}
+
     def hist(self, cols="*", buckets=20, compute=True):
         df = self.root
-        dfd = df.data
+
         result = []
-        for col_name in df.cols.names():
-            hist, edges = np.histogram(self.F.to_float(dfd[col_name]), bins=buckets)
+
+        cols = parse_columns(df, cols)
+
+        for col_name in cols:
+            _hist = df.data[:, [df.data[col_name], cut(df.data[col_name], nbins=buckets)]][:, dt.count(),
+                    by(col_name)].sort(
+                -f.count)[0:buckets, :].to_dict()
+            edges = _hist[col_name]
+            hist = _hist["count"]
 
             result_col = []
             for i in range(0, len(edges) - 1):
