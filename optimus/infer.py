@@ -636,7 +636,7 @@ def is_dask_future(value):
     return isinstance(value, distributed.client.Future)
 
 
-def is_decimal(value):
+def is_float(value):
     return fastnumbers.isfloat(value, allow_nan=True)
 
 
@@ -657,6 +657,13 @@ def is_int_like(value):
     """
     return fastnumbers.isintlike(value)
 
+def is_float_like(value):
+    """
+    Check if a var is a float
+    :param value:
+    :return:
+    """
+    return fastnumbers.isfloat(value)
 
 def is_url(value):
     regex = re.compile(

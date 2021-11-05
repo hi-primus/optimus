@@ -143,7 +143,7 @@ class ProfilerDataTypesQuality(Enum):
 
 class ProfilerDataTypes(Enum):
     INT = "int"
-    DECIMAL = "decimal"
+    FLOAT = "float"
     STRING = "str"
     BOOL = "bool"
     BOOLEAN = "boolean"
@@ -186,7 +186,7 @@ class Schemas(Enum):
         return list(map(lambda c: c.value, Schemas))
 
 
-PROFILER_NUMERIC_DTYPES = [ProfilerDataTypes.INT.value, ProfilerDataTypes.DECIMAL.value]
+PROFILER_NUMERIC_DTYPES = [ProfilerDataTypes.INT.value, ProfilerDataTypes.FLOAT.value]
 PROFILER_STRING_DTYPES = [ProfilerDataTypes.STRING.value, ProfilerDataTypes.BOOLEAN.value,
                           ProfilerDataTypes.DATETIME.value, ProfilerDataTypes.ARRAY.value,
                           ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.GENDER.value,
@@ -405,7 +405,7 @@ PYTHON_SHORT_TYPES = {"string": "string",
 PYTHON_TYPES = {"string": str, "int": int, "float": float, "boolean": bool}
 PROFILER_COLUMN_TYPES = {"categorical", "numeric", "date", "null", "array", "binary"}
 PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": "numeric", "float": "numeric",
-                      "decimal": "numeric", "date": "date", "array": "array", "binary": "binary", "null": "null"}
+                      "float": "numeric", "date": "date", "array": "array", "binary": "binary", "null": "null"}
 
 PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOL.value,
                                ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value,

@@ -196,7 +196,8 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols if regex is None else regex, is_regex=regex is not None,
                              filter_by_column_types=data_type, invert=invert,
                              accepts_missing_cols=accepts_missing_cols)
-        meta = Meta.select_columns(df.meta, cols)
+        meta = df.meta
+        meta = Meta.select_columns(meta, cols)
         dfd = df.data
         if cols is not None:
             dfd = dfd[cols]
@@ -578,7 +579,7 @@ class BaseColumns(ABC):
             columns[k] = result_default
         return columns
 
-    def inferred_data_type(self, cols="*", use_internal=False, tidy=True):
+    def inferred_data_type(self, cols="*", use_internal=False, calculate=False, tidy=True):
         """
         Get the inferred data types from the meta data.
 
@@ -595,10 +596,16 @@ class BaseColumns(ABC):
 
         for col_name in cols:
             data_type = Meta.get(df.meta, f"columns_data_types.{col_name}.data_type")
+
             if data_type is None:
                 data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.data_type")
+
             if data_type is None:
                 data_type = result.get(col_name, None)
+
+            if calculate and data_type is None:
+                data_type = df.cols.infer_type(col_name)
+
             result.update({col_name: data_type})
 
         result = {"inferred_data_type": result}
@@ -1091,15 +1098,21 @@ class BaseColumns(ABC):
 
         return result
 
-    def groupby(self, by, agg) -> 'DataFrameType':
+    def groupby(self, by: Union[str, list] = None, agg: Union[list, dict] = None) -> 'DataFrameType':
         """
         This helper function aims to help managing columns name in the aggregation output.
         Also how to handle ordering columns because dask can order columns.
 
-        :param by: Column name.
-        :param agg: List of tuples with the form [("agg", "col")]
+        :param by: None, list of columns names or a single column name to group the aggregations.
+        :param agg: List of tuples with the form [("agg", "col")] or 
+            [("agg", "col", "new_col_name")] or dictionary with the form 
+            {"new_col_name": {"col": "agg"}}
         :return:
         """
+
+        if agg is None:
+            raise TypeError(f"Can't aggregate with 'agg' value {agg}")
+
         df = self.root
         compact = {}
 
@@ -1122,10 +1135,20 @@ class BaseColumns(ABC):
 
         dfd = df.data
 
-        dfd = dfd.groupby(by=by).agg(compact).reset_index()
-        agg_names = agg_names or [a[0] + "_" + a[1] for a in agg]
-        dfd.columns = (val_to_list(by) + agg_names)
-        dfd.columns = [str(c) for c in dfd.columns]
+        if by and len(by):
+            dfd = dfd.groupby(by=by)
+
+        dfd = dfd.agg(compact).reset_index()
+
+        if by and len(by):
+            agg_names = agg_names or [a[1] if len(a) < 3 else a[2] for a in agg]
+            dfd.columns = (val_to_list(by) + agg_names)
+        else:
+            if agg_names is not None:
+                logger.warn("New columns names are not supported when 'by' is not passed.")
+            dfd.columns = (["aggregation"] + list(dfd.columns[1:]))
+            dfd.columns = [str(c) for c in dfd.columns]
+        
         return self.root.new(dfd)
 
     def move(self, column, position, ref_col=None) -> 'DataFrameType':
@@ -2911,27 +2934,40 @@ class BaseColumns(ABC):
 
         return df
 
-    def fill_na(self, cols="*", value=None, output_cols=None) -> 'DataFrameType':
+    def fill_na(self, cols="*", value=None, output_cols=None,
+            eval_value: bool = False) -> 'DataFrameType':
         """
         Replace null data with a specified value.
 
         :param cols: '*', list of columns names or a single column name.
         :param value: value to replace the nan/None values
         :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :param eval_value: Parse 'value' param in case a string is passed.
         :return: Returns the column filled with given value.
         """
         df = self.root
 
-        columns = prepare_columns(df, cols, output_cols)
+        cols = parse_columns(df, cols)
+        values, eval_values = prepare_columns_arguments(cols, value, eval_value)
+        output_cols = get_output_cols(cols, output_cols)
 
         kw_columns = {}
 
-        for input_col, output_col in columns:
+        for input_col, output_col, value, eval_value in zip(cols, output_cols, values, eval_values):
+
+            if eval_value and is_str(value) and value:
+                value = eval(value)
+
+            if isinstance(value, self.root.__class__):
+                value = value.get_series()
+                
             kw_columns[output_col] = df.data[input_col].fillna(value)
             kw_columns[output_col] = kw_columns[output_col].mask(
                 kw_columns[output_col] == "", value)
 
-        return df.cols.assign(kw_columns)
+        df = df.cols.assign(kw_columns)
+        df.meta = Meta.action(df.meta, Actions.FILL_NA.value, list(kw_columns.keys()))
+        return df
 
     def count(self) -> int:
         """
@@ -3374,12 +3410,9 @@ class BaseColumns(ABC):
         if is_dict(cols):
             cols_types = cols
         else:
-            cols_types = self.root.cols.infer_type(cols, tidy=False)["infer_type"]
+            cols_types = self.root.cols.inferred_data_type(cols, calculate=True, tidy=False)["inferred_data_type"]
 
         result = {}
-        profiler_to_mask_func = {
-            "decimal": "float"
-        }
 
         quality_props = ["match", "missing", "mismatch"]
 
@@ -3396,12 +3429,9 @@ class BaseColumns(ABC):
                                         "mismatch": cached_props.get("mismatch")}
                     continue
 
-            # Match the profiler dtype with the function. The only function that need to be remapped are decimal and int
-            dtype = props["data_type"]
+            dtype = props if is_str(props) else props["data_type"]
 
             dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
-
-            dtype = profiler_to_mask_func.get(dtype, dtype)
 
             matches_mismatches = getattr(df[col_name].mask, dtype)(
                 col_name).cols.frequency()
@@ -3478,7 +3508,7 @@ class BaseColumns(ABC):
             dtype_i = 0
 
             if len(dtypes) > 1:
-                if dtypes[0] == ProfilerDataTypes.INT.value and dtypes[1] == ProfilerDataTypes.DECIMAL.value:
+                if dtypes[0] == ProfilerDataTypes.INT.value and dtypes[1] == ProfilerDataTypes.FLOAT.value:
                     dtype_i = 1
 
                 if dtypes[0] == ProfilerDataTypes.ZIP_CODE.value and dtypes[1] == ProfilerDataTypes.INT.value:

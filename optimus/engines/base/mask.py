@@ -161,11 +161,13 @@ class Mask(ABC):
         if is_list(data_type):
             mask_match = None
             for _col, _data_type in zip(cols, data_type):
+                _data_type = df.constants.INTERNAL_TO_OPTIMUS.get(_data_type, _data_type)
                 if mask_match is None:
                     mask_match = getattr(df[_col].mask, _data_type)(_col)
                 else:
                     mask_match[_col] = getattr(df[_col].mask, _data_type)(_col)
         else:
+            data_type = df.constants.INTERNAL_TO_OPTIMUS.get(data_type, data_type)
             mask_match = getattr(df[cols].mask, data_type)(cols)
 
         return mask_match

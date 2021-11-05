@@ -6,7 +6,7 @@ import dask.dataframe as dd
 import humanize
 import numpy as np
 import pandas as pd
-from dask.distributed import Variable
+from distributed import Variable
 from dask.utils import parse_bytes
 
 from optimus.engines.base.basedataframe import BaseDataFrame
@@ -232,7 +232,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         if n == "auto":
             # Follow a heuristic for partitioning a mentioned
             # https://docs.dask.org/en/latest/best-practices.html#avoid-very-large-partitions
-            client = dask.distributed.get_client()
+            client = distributed.get_client()
             worker_memory = parse_bytes(client.cluster.worker_spec[0]["options"]["memory_limit"])
             nthreads = client.cluster.worker_spec[0]["options"]["nthreads"]
 

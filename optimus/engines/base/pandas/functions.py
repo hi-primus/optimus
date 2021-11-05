@@ -30,7 +30,8 @@ class PandasBaseFunctions(BaseFunctions, ABC):
 
     @staticmethod
     def is_float(series):
-        return np.vectorize(isfloat)(series).flatten()
+        # use isreal to allow strings like "0"
+        return np.vectorize(isreal)(series).flatten()
 
     def is_numeric(self, series):
         if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:

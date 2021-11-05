@@ -25,6 +25,8 @@ Some amazing things Optimus can do for you:
 * Out of box functions to explore and fix data quality. 
 * Use the same code to process your data in your laptop or in a remote cluster of GPUs.
 
+[See Documentation](https://docs.hi-optimus.com/en/latest/)
+
 ## Try Optimus
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
@@ -176,7 +178,7 @@ If you have issues, see our [Troubleshooting Guide](https://github.com/hi-primus
 Contributions go far beyond pull requests and commits. We are very happy to receive any kind of contributions  
 including: 
  
-* [Documentation](https://github.com/hi-primus/optimus/tree/develop-21.9/docs/source) updates, enhancements, designs, or   bugfixes. 
+* [Documentation](https://docs.hi-optimus.com/en/latest/) updates, enhancements, designs, or bugfixes. 
 * Spelling or grammar fixes. 
 * README.md corrections or redesigns. 
 * Adding unit, or functional [tests](https://github.com/hi-primus/optimus/tree/develop-21.9/tests)  

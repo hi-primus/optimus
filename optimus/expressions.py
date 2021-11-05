@@ -267,8 +267,6 @@ functions = {
         "example": "ROUND(99.44, 1)",
         "text": "ROUND",
     },
-    # "RADIANS": "RADIANS function description",  # Trigonometric Functions
-    # "DEGREES": "DEGREES function description",
     "SIN": {
         "description": "Returns the sin of an angle provided in radians.",
         "parameters": [
@@ -479,7 +477,6 @@ functions = {
         "example": "TRIM('optimus prime')",
         "text": "TRIM",
     },
-    "REMOVE": "ATANH function description",
     "LEN": {
         "description": "Returns the length of a string.",
         "parameters": [
@@ -511,7 +508,7 @@ functions = {
         "example": "LEN('optimus prime')",
         "text": "LEN",
     },
-    "RFIND": "ATANH function description",
+    "RFIND": "RFIND",
     "LEFT": {
         "description": "Returns a substring from the beginning of a specified string.",
         "parameters": [
@@ -536,9 +533,9 @@ functions = {
         "example": "LEN('optimus prime')",
         "text": "LEN",
     },
-    "STARTS_WITH": "ATANH function description",
-    "ENDS_WITH": "ATANH function description",
-    "EXACT": "ATANH function description",
+    "STARTS_WITH": "STARTS_WITH",
+    "ENDS_WITH": "ENDS_WITH",
+    "EXACT": "EXACT",
     "YEAR": {  # Date Functions
         "description": "Returns the year specified by a given date.",
         "parameters": [

@@ -11,9 +11,9 @@ from metaphone import doublemetaphone
 
 from optimus.helpers.logger import logger
 from optimus.helpers.constants import ProfilerDataTypes
-from optimus.helpers.core import one_tuple_to_val, val_to_list
+from optimus.helpers.core import one_list_to_val, one_tuple_to_val, val_to_list
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_decimal, is_datetime, is_valid_datetime_format, \
+    is_credit_card_number, is_zip_code, is_float_like, is_datetime, is_valid_datetime_format, \
     is_object_value, is_ip, is_url, is_missing, is_gender, is_list_of_int, is_list_of_str, \
     is_str, is_phone_number, is_int_like
 
@@ -54,6 +54,27 @@ class BaseFunctions(ABC):
         Gets the set of functions available in the engine
         """
         return self._partition_engine
+
+    @staticmethod
+    def _format_to_dict(_s):
+        if hasattr(_s, "to_dict"):
+            return _s.to_dict()
+        else:
+            return _s
+
+    @staticmethod
+    def _format_to_list(_s):
+        if hasattr(_s, "tolist"):
+            return _s.tolist()
+        else:
+            return _s
+
+    @staticmethod
+    def _format_to_list_one(_s):
+        if hasattr(_s, "tolist"):
+            return one_list_to_val(_s.tolist())
+        else:
+            return _s
 
     @property
     def n_partitions(self):
@@ -135,7 +156,7 @@ class BaseFunctions(ABC):
         :param ascending:
         :return:
         """
-        return dfd.sort_values(cols, ascending=ascending)
+        return dfd.sort_values(cols, ascending=ascending).reset_index(drop=True)
 
     @staticmethod
     def reverse_df(dfd):
@@ -290,9 +311,12 @@ class BaseFunctions(ABC):
     def mean(self, series):
         return self.to_float(series).mean()
 
-    @staticmethod
-    def mode(series):
-        return series.mode()
+    def mode(self, series):
+
+        if str(series.dtype) not in self.constants.NUMERIC_INTERNAL_TYPES:
+            return self.delayed(self._format_to_list_one)(self.to_string(series.dropna()).mode())
+        else:
+            return self.delayed(self._format_to_list_one)(series.mode())
 
     @staticmethod
     def crosstab(series, other):
@@ -372,7 +396,7 @@ class BaseFunctions(ABC):
         series = self.to_float(series)
         return {"min": series.min(), "max": series.max()}
 
-    def percentile(self, series, values, error, estimate=False):
+    def percentile(self, series, values=0.5, error=False, estimate=False):
 
         _series = self.to_float(series).dropna()
 
@@ -382,14 +406,7 @@ class BaseFunctions(ABC):
         if not len(_series):
             return np.nan
         else:
-            @self.delayed
-            def format_percentile(_s):
-                if hasattr(_s, "to_dict"):
-                    return _s.to_dict()
-                else:
-                    return _s
-
-            return format_percentile(_series.quantile(values))
+            return self.delayed(self._format_to_dict)(_series.quantile(values))
 
     # def radians(series):
     #     return series.to_float().radians()
@@ -876,8 +893,8 @@ class BaseFunctions(ABC):
             dtype = ProfilerDataTypes.ZIP_CODE.value
         elif is_int_like(value):
             dtype = ProfilerDataTypes.INT.value
-        elif is_decimal(value):
-            dtype = ProfilerDataTypes.DECIMAL.value
+        elif is_float_like(value):
+            dtype = ProfilerDataTypes.FLOAT.value
         elif is_datetime(value):
             dtype = ProfilerDataTypes.DATETIME.value
         elif is_missing(value):

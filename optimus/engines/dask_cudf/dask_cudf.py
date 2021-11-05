@@ -1,4 +1,4 @@
-from dask.distributed import Client
+from distributed import Client
 # from dask_cuda import LocalCUDACluster
 
 from optimus.engines.base.dask.constants import STARTING_DASK
