@@ -1,4 +1,5 @@
 from optimus.engines.base.basedataframe import BaseDataFrame
+from optimus.engines.base.dataframe.dataframe import DataFrameBaseDataFrame
 
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.vaex.io.save import Save
@@ -6,7 +7,7 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.converter import pandas_to_vaex_dataframe
 
 
-class VaexDataFrame(BaseDataFrame):
+class VaexDataFrame(DataFrameBaseDataFrame):
 
     def _base_to_dfd(self, pdf, n_partitions):
         return pandas_to_vaex_dataframe(pdf, n_partitions)
@@ -24,8 +25,7 @@ class VaexDataFrame(BaseDataFrame):
     def to_pandas(self):
         return self.data.to_pandas_df()
 
-    @staticmethod
-    def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
+    def melt(self, id_cols=None, value_cols=None, var_name="variable", value_name="value", data_type=None):
         pass
 
     @staticmethod
