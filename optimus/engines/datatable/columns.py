@@ -45,27 +45,27 @@ class Cols(PandasBaseColumns, DataFrameBaseColumns):
                   compute=True, tidy=False) -> dict:
         df = self.root
 
-        result = []
+        result = {}
 
         cols = parse_columns(df, cols)
 
         for col_name in cols:
             _freq = df.data[:, dt.count(), by(col_name)].sort(-f.count)[0:10, :].to_dict()
 
-            edges = _freq[col_name]
-            hist = _freq["count"]
+            values = _freq[col_name]
+            count = _freq["count"]
 
             result_col = []
-            for i in range(0, len(edges)):
-                result_col.append({"values": edges[i], "count": hist[i]})
-            result = {col_name: result_col}
+            for i in range(0, len(values)):
+                result_col.append({"values": values[i], "count": count[i]})
+            result[col_name] = result_col
 
         return {"frequency": result}
 
     def hist(self, cols="*", buckets=20, compute=True):
         df = self.root
 
-        result = []
+        result = {}
 
         cols = parse_columns(df, cols)
 
@@ -79,7 +79,7 @@ class Cols(PandasBaseColumns, DataFrameBaseColumns):
             result_col = []
             for i in range(0, len(edges) - 1):
                 result_col.append({"lower": edges[i], "upper": edges[i + 1], "count": hist[i]})
-            result = {col_name: result_col}
+            result[col_name] = result_col
 
         return {"hist": result}
 
