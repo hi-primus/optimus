@@ -1,15 +1,13 @@
+import nltk
+import numpy as np
+import pandas as pd
 import re
 import string
 import time
 import warnings
+import wordninja
 from abc import abstractmethod, ABC
 from functools import reduce
-from typing import Callable, Union
-
-import nltk
-import numpy as np
-import pandas as pd
-import wordninja
 from glom import glom
 from nltk import LancasterStemmer, ngrams
 from nltk.corpus import stopwords
@@ -17,6 +15,7 @@ from nltk.stem import PorterStemmer
 from nltk.stem import SnowballStemmer
 from num2words import num2words
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from typing import Callable, Union
 
 from optimus.engines.base.meta import Meta
 from optimus.engines.base.stringclustering import Clusters
@@ -185,6 +184,7 @@ class BaseColumns(ABC):
         return self.root.join(df_right, how, on, left_on, right_on, key_middle)
 
     def _select(self, cols):
+        dfd = self.root.data
         return dfd[cols]
 
     def select(self, cols="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> 'DataFrameType':
@@ -395,7 +395,6 @@ class BaseColumns(ABC):
         df = self.root.new(dfd, meta=meta)
 
         if kw_columns:
-            print("kw_columns",kw_columns)
             df = df.cols.assign(kw_columns)
         # Dataframe to Optimus dataframe
         df = df.cols.select(output_ordered_columns)
@@ -2699,7 +2698,7 @@ class BaseColumns(ABC):
 
     def replace(self, cols="*", search=None, replace_by=None, search_by=None, ignore_case=False,
                 output_cols=None) -> 'DataFrameType':
-        #TODO:https://github.com/rapidsai/cudf/pull/9573
+        # TODO:https://github.com/rapidsai/cudf/pull/9573
         """
         Replace a value, list of values by a specified string.
 
