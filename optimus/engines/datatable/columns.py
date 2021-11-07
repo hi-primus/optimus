@@ -64,15 +64,16 @@ class Cols(PandasBaseColumns, DataFrameBaseColumns):
 
     def hist(self, cols="*", buckets=20, compute=True):
         df = self.root
+        dfd = df.data
 
         result = {}
 
         cols = parse_columns(df, cols)
 
         for col_name in cols:
-            _hist = df.data[:, [df.data[col_name], cut(df.data[col_name], nbins=buckets)]][:, dt.count(),
-                    by(col_name)].sort(
-                -f.count)[0:buckets, :].to_dict()
+            n = df.cols.to_integer(col_name).data[col_name]
+            _hist = dfd[:, [n, cut(n, nbins=buckets)]][:, dt.count(), by(col_name)].sort(-f.count)[0:buckets,
+                    :].to_dict()
             edges = _hist[col_name]
             hist = _hist["count"]
 
