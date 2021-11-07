@@ -8,7 +8,7 @@ import pandas as pd
 from fastnumbers import fast_float, fast_int
 from jsonschema._format import is_email
 from metaphone import doublemetaphone
-
+import hiurlparser
 from optimus.helpers.logger import logger
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_list_to_val, one_tuple_to_val, val_to_list
@@ -827,43 +827,34 @@ class BaseFunctions(ABC):
         return series.dt.days * 86400 + series.dt.seconds
 
     def domain(self, series):
-        import hiurlparser
+
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["domain"], na_action=None)
 
     def top_domain(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["top_domain"], na_action=None)
 
     def sub_domain(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["sub_domain"], na_action=None)
 
     def url_scheme(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["protocol"], na_action=None)
 
     def url_path(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["path"], na_action=None)
 
     def url_file(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["file"], na_action=None)
 
     def url_query(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["query"], na_action=None)
 
     def url_fragment(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["fragment"], na_action=None)
 
     def host(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["host"], na_action=None)
 
     def port(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["port"], na_action=None)
 
     def email_username(self, series):
