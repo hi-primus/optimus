@@ -2,23 +2,22 @@ import re
 from abc import abstractmethod, ABC
 
 import hidateinfer
+import hiurlparser
 import jellyfish
 import numpy as np
 import pandas as pd
 from fastnumbers import fast_float, fast_int
 from jsonschema._format import is_email
 from metaphone import doublemetaphone
-import hiurlparser
-from optimus.helpers.logger import logger
+
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_list_to_val, one_tuple_to_val, val_to_list
+from optimus.helpers.logger import logger
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
     is_credit_card_number, is_zip_code, is_float_like, is_datetime, is_valid_datetime_format, \
     is_object_value, is_ip, is_url, is_missing, is_gender, is_list_of_int, is_list_of_str, \
     is_str, is_phone_number, is_int_like
 
-
-# ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
 
 class BaseFunctions(ABC):
     """
