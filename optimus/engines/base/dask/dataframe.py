@@ -89,7 +89,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         def func(value):
-            return value[lower_bound:upper_bound]
+            return value[lower_bound:upper_bound].reset_index(drop=True)
 
         return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute(), op=self.op,
                                label_encoder=self.le)

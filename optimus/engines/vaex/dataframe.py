@@ -12,7 +12,7 @@ class VaexDataFrame(BaseDataFrame):
         return pandas_to_vaex_dataframe(pdf, n_partitions)
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas_df(), op=self.op, label_encoder=self.le)
+        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas_df().reset_index(drop=True), op=self.op, label_encoder=self.le)
 
     def _assign(self, kw_columns):
         dfd = self.root.data

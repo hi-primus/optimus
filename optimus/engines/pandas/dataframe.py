@@ -56,7 +56,7 @@ class PandasDataFrame(PandasBaseDataFrame, DataFrameBaseDataFrame):
         pass
 
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound], op=self.op, label_encoder=self.le)
+        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].reset_index(drop=True), op=self.op, label_encoder=self.le)
 
     def set_buffer(self, columns="*", n=None):
         return True
