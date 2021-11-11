@@ -568,7 +568,7 @@ class BaseDataFrame(ABC):
                 col_name: value for col_name, value in profiler_columns.items() if value.get("data_type", None)
             }
 
-        new_columns = parse_columns(df, columns)
+        new_columns = parse_columns(df, columns) or []
 
         if profiler_columns is None:
             calculate_columns = new_columns
@@ -1014,7 +1014,7 @@ class BaseDataFrame(ABC):
             meta = df.meta
 
         # Reset Actions
-        meta = Meta.reset_actions(meta, parse_columns(df, cols))
+        meta = Meta.reset_actions(meta, parse_columns(df, cols or []))
         df.meta = meta
         profiler_time["end"] = {"elapsed_time": time.process_time() - _t}
         # print(profiler_time)

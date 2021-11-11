@@ -72,7 +72,7 @@ class Meta:
             return Meta.set(meta, ACTIONS_PATH, [])
         else:
             actions = Meta.get(meta, ACTIONS_PATH) or []
-            actions = [action for action in actions if action["columns"] not in cols]
+            actions = [action for action in actions if action["columns"] not in (cols or [])]
             return Meta.set(meta, ACTIONS_PATH, actions)
 
 
