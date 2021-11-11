@@ -27,7 +27,7 @@ class TestExamplePandas(TestBase):
     def test_cols_upper_single(self):
         df = self.df
         result = df.cols.upper(cols=['name'])
-        expected = self.create_dataframe(dict={('name', 'object'): ['OPTIMUS', 'BUMBLEBEE', 'EJECT'], ('age (M)', 'int64'): [5, 5, 5]}, force_data_types=True)
+        expected = self.create_dataframe(data={('name', 'object'): ['OPTIMUS', 'BUMBLEBEE', 'EJECT'], ('age (M)', 'int64'): [5, 5, 5]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
 
