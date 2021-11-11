@@ -27,7 +27,14 @@ class BaseFunctions(ABC):
     """
 
     _engine = None
+    """The engine to be used for internal use:
+        `pd` from `import pandas as pd` or `dask` from `import dask`
+    """
     _partition_engine = None
+    """(optional, defaults to `_engine`) The engine to be used for internal use
+        in a distributed engine (if supported):
+        `pd` from `import pandas as pd` which is used by `Dask`
+    """
 
     def __init_subclass__(cls):
 
@@ -85,6 +92,7 @@ class BaseFunctions(ABC):
     @staticmethod
     def delayed(func):
         """
+        Convert function to a delayed function (Dummy method on unsupported engines)
 
         :param func:
         :return:
@@ -93,6 +101,7 @@ class BaseFunctions(ABC):
 
     def from_delayed(self, delayed):
         """
+        Convert delayed objects to a DataFrame or Series (Dummy method on unsupported engines)
 
         :param delayed:
         :return:
@@ -101,6 +110,7 @@ class BaseFunctions(ABC):
 
     def to_delayed(self, delayed):
         """
+        Convert DataFrame or Series to a list of delayed objects (Dummy method on unsupported engines)
 
         :param delayed:
         :return:
@@ -109,6 +119,7 @@ class BaseFunctions(ABC):
 
     def apply_delayed(self, series, func, *args, **kwargs):
         """
+        Applies a function to a Series for every partition using apply
 
         :param series:
         :param func:
@@ -124,6 +135,7 @@ class BaseFunctions(ABC):
 
     def map_delayed(self, series, func, *args, **kwargs):
         """
+        Applies a function to a Series for every partition using map
 
         :param series:
         :param func:
@@ -149,7 +161,7 @@ class BaseFunctions(ABC):
     @staticmethod
     def sort_df(dfd, cols, ascending):
         """
-        Sort rows taking into account one column.
+        Sort rows taking into account one column
 
         :param dfd:
         :param cols:
@@ -224,6 +236,9 @@ class BaseFunctions(ABC):
             return self._new_series(self._functions.to_numeric(series, errors='coerce')).astype('float')
 
     def to_float(self, series):
+        """
+        Converts a series values to floats
+        """
         return self._to_float(series)
 
     def _to_integer(self, series, default=0):
@@ -236,27 +251,49 @@ class BaseFunctions(ABC):
             return self._new_series(self._functions.to_numeric(series, errors='coerce').fillna(default)).astype('int')
 
     def to_integer(self, series, default=0):
+        """
+        Converts a series values to integers
+        """
         return self._to_integer(series, default)
 
     def _to_datetime(self, series, format):
+        """
+        Converts a series values to datetimes
+        """
         return series
 
     def to_datetime(self, series, format):
+        """
+        Converts a series values to datetimes
+        """
         return self._to_datetime(series, format)
 
     @staticmethod
     def to_string(series):
+        """
+        Converts a series values to strings
+        """
         return series.astype(str)
 
     @staticmethod
     def to_string_accessor(series):
+        """
+        Converts a series values to strings and returns it's main functions
+        accessor
+        """
         return series.astype(str).str
 
     @staticmethod
     def duplicated(dfd, keep, subset):
+        """
+        Mark the duplicated values in a DataFrame using a subset of columns
+        """
         return dfd.duplicated(keep=keep, subset=subset)
 
     def impute(self, series, strategy, fill_value):
+        """
+        Impute missing values in a series
+        """
         from sklearn.impute import SimpleImputer
         imputer = SimpleImputer(strategy=strategy, fill_value=fill_value)
         series_fit = series.dropna()
@@ -272,6 +309,9 @@ class BaseFunctions(ABC):
 
     # Aggregation
     def date_format(self, series):
+        """
+        Get the date format of a series
+        """
         dtype = str(series.dtype)
         if dtype in self.constants.STRING_TYPES:
             series = series.astype(str)
@@ -290,6 +330,9 @@ class BaseFunctions(ABC):
         return False
 
     def min(self, series, numeric=False, string=False):
+        """
+        Get the minimum value of a series
+        """
         if numeric:
             series = self.to_float(series)
 
@@ -299,7 +342,9 @@ class BaseFunctions(ABC):
             return series.min()
 
     def max(self, series, numeric=False, string=False):
-
+        """
+        Get the maximum value of a series
+        """
         if numeric:
             series = self.to_float(series)
 
@@ -309,10 +354,15 @@ class BaseFunctions(ABC):
             return series.max()
 
     def mean(self, series):
+        """
+        Get the mean value of a series
+        """
         return self.to_float(series).mean()
 
     def mode(self, series):
-
+        """
+        Get the modal value of a series
+        """
         if str(series.dtype) not in self.constants.NUMERIC_INTERNAL_TYPES:
             return self.delayed(self._format_to_list_one)(self.to_string(series.dropna()).mode())
         else:
@@ -320,38 +370,71 @@ class BaseFunctions(ABC):
 
     @staticmethod
     def crosstab(series, other):
+        """
+        Compute a cross tabulation of two series
+        """
         return pd.crosstab(series, other)
 
     def std(self, series):
+        """
+        Get the standard deviation of a series
+        """
         return self.to_float(series).std()
 
     def sum(self, series):
+        """
+        Get the sum of a series
+        """
         return self.to_float(series).sum()
 
     def cumsum(self, series):
+        """
+        Get the cumulative sum of a series
+        """
         return self.to_float(series).cumsum()
 
     def cumprod(self, series):
+        """
+        Get the cumulative product of a series
+        """
         return self.to_float(series).cumprod()
 
     def cummax(self, series):
+        """
+        Get the cumulative maximum of a series
+        """
         return self.to_float(series).cummax()
 
     def cummin(self, series):
+        """
+        Get the cumulative minimum of a series
+        """
         return self.to_float(series).cummin()
 
     def var(self, series):
+        """
+        Get the variance of a series
+        """
         return self.to_float(series).var()
 
     def count_uniques(self, series, estimate=False):
+        """
+        Get the count of unique values in a series
+        """
         return self.to_string(series).nunique()
 
     def unique_values(self, series, estimate=False):
+        """
+        Get the unique values in a series
+        """
         # Cudf can not handle null so we fill it with non zero values.
         return self.to_string(series).unique()
 
     @staticmethod
     def count_na(series):
+        """
+        Get the count of missing values in a series
+        """
         return series.isna().sum()
         # return {"count_na": {col_name:  for col_name in columns}}
         # return np.count_nonzero(_df[_serie].isnull().values.ravel())
