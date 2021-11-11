@@ -334,56 +334,6 @@ def create():
     t.create(method="cols.rdiv", variant="string", cols=["names", "function"], output_col="names*function", select_cols=True)
     t.create(method="cols.rdiv", variant="various_types", cols=["NullType", "weight(t)", "japanese name"], output_col="nt*wt*jn")
 
-    df2 = df.cols.append({"add_test": [None, float("nan"), 5, 10.234, float("-inf"), -42]})
-
-    t.create(df=df2, method="cols.add", variant="with_value", cols=["add_test"], value=33.5, select_cols=True)
-    t.create(method="cols.add", variant="all_with_value", cols="*", value=float("10"))
-    t.create(method="cols.add", variant="2_numerics_with_value", cols=["height(ft)", "rank"], value="-3", select_cols=True)
-    t.create(method="cols.add", variant="3_numerics_with_value", cols=["height(ft)", "rank", "age"], value=float("inf"), select_cols=True)
-    t.create(method="cols.add", variant="all_numerics_with_value", cols=["height(ft)", "rank", "age", "weight(t)"], value=float("nan"), select_cols=True)
-    t.create(method="cols.add", variant="string_with_value", cols=["names", "function"], value=103, output_col="names*function", select_cols=True)
-    t.create(method="cols.add", variant="various_types_with_value", cols=["NullType", "weight(t)", "japanese name"], value=23.071, output_col="nt*wt*jn")
-
-    df2 = df.cols.append({"sub_test": [None, float("nan"), 5, 10.234, float("-inf"), -42]})
-
-    t.create(df=df2, method="cols.sub", variant="with_value", cols=["sub_test"], value=33.5, select_cols=True)
-    t.create(method="cols.sub", variant="all_with_value", cols="*", value=float("10"))
-    t.create(method="cols.sub", variant="2_numerics_with_value", cols=["height(ft)", "rank"], value="-3", select_cols=True)
-    t.create(method="cols.sub", variant="3_numerics_with_value", cols=["height(ft)", "rank", "age"], value=float("inf"), select_cols=True)
-    t.create(method="cols.sub", variant="all_numerics_with_value", cols=["height(ft)", "rank", "age", "weight(t)"], value=float("nan"), select_cols=True)
-    t.create(method="cols.sub", variant="string_with_value", cols=["names", "function"], value=103, output_col="names*function", select_cols=True)
-    t.create(method="cols.sub", variant="various_types_with_value", cols=["NullType", "weight(t)", "japanese name"], value=23.071, output_col="nt*wt*jn")
-
-    df2 = df.cols.append({"mul_test": [None, float("nan"), 5, 10.234, float("-inf"), -42]})
-
-    t.create(df=df2, method="cols.mul", variant="with_value", cols=["mul_test"], value=33.5, select_cols=True)
-    t.create(method="cols.mul", variant="all_with_value", cols="*", value=float("10"))
-    t.create(method="cols.mul", variant="2_numerics_with_value", cols=["height(ft)", "rank"], value="-3", select_cols=True)
-    t.create(method="cols.mul", variant="3_numerics_with_value", cols=["height(ft)", "rank", "age"], value=float("inf"), select_cols=True)
-    t.create(method="cols.mul", variant="all_numerics_with_value", cols=["height(ft)", "rank", "age", "weight(t)"], value=float("nan"), select_cols=True)
-    t.create(method="cols.mul", variant="string_with_value", cols=["names", "function"], value=103, output_col="names*function", select_cols=True)
-    t.create(method="cols.mul", variant="various_types_with_value", cols=["NullType", "weight(t)", "japanese name"], value=23.071, output_col="nt*wt*jn")
-
-    df2 = df.cols.append({"div_test": [None, float("nan"), 5, 10.234, float("-inf"), -42]})
-
-    t.create(df=df2, method="cols.div", variant="with_value", cols=["div_test"], value=33.5, select_cols=True)
-    t.create(method="cols.div", variant="all_with_value", cols="*", value=float("10"))
-    t.create(method="cols.div", variant="2_numerics_with_value", cols=["height(ft)", "rank"], value="0", select_cols=True)
-    t.create(method="cols.div", variant="3_numerics_with_value", cols=["height(ft)", "rank", "age"], value=float("inf"), select_cols=True)
-    t.create(method="cols.div", variant="all_numerics_with_value", cols=["height(ft)", "rank", "age", "weight(t)"], value=float("nan"), select_cols=True)
-    t.create(method="cols.div", variant="string_with_value", cols=["names", "function"], value=103, output_col="names*function", select_cols=True)
-    t.create(method="cols.div", variant="various_types_with_value", cols=["NullType", "weight(t)", "japanese name"], value=23.071, output_col="nt*wt*jn")
-
-    df2 = df.cols.append({"rdiv_test": [None, float("nan"), 5, 10.234, float("-inf"), -42]})
-
-    t.create(df=df2, method="cols.rdiv", variant="with_value", cols=["rdiv_test"], value=33.5, select_cols=True)
-    t.create(method="cols.rdiv", variant="all_with_value", cols="*", value=float("10"))
-    t.create(method="cols.rdiv", variant="2_numerics_with_value", cols=["height(ft)", "rank"], value="0", select_cols=True)
-    t.create(method="cols.rdiv", variant="3_numerics_with_value", cols=["height(ft)", "rank", "age"], value=float("inf"), select_cols=True)
-    t.create(method="cols.rdiv", variant="all_numerics_with_value", cols=["height(ft)", "rank", "age", "weight(t)"], value=float("nan"), select_cols=True)
-    t.create(method="cols.rdiv", variant="string_with_value", cols=["names", "function"], value=103, output_col="names*function", select_cols=True)
-    t.create(method="cols.rdiv", variant="various_types_with_value", cols=["NullType", "weight(t)", "japanese name"], value=23.071, output_col="nt*wt*jn")
-
     t.run()
 
     t = TestCreator(op, df, name="statistics", configs=default_configs)
