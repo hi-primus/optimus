@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   release:
     types: [published]
+  pull_request:
+    branches: 
+      - main
+      - develop-21.11
 
 jobs:
   build:
