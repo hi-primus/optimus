@@ -112,7 +112,8 @@ class BaseDataFrame(ABC):
         Return a copy of a dataframe
         """
         df = self.root
-        return self.root.new(df.data.copy(), meta=df.meta.copy())
+        import copy
+        return self.root.new(df.data.copy(), meta=copy.deepcopy(df.meta))
 
     @staticmethod
     def __operator__(df, data_type=None, multiple_columns=False) -> 'DataFrameType':
