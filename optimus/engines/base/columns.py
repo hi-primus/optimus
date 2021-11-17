@@ -585,6 +585,7 @@ class BaseColumns(ABC):
 
         :param cols: "*", column name or list of column names to be processed.
         :param use_internal: If no inferred data type is found, return a translated internal data type instead of None.
+        :param calculate: If True, calculate the inferred data type.
         :param tidy: The result format. If 'True' it will return a value if you 'False' will return the column name a value.
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
@@ -600,11 +601,11 @@ class BaseColumns(ABC):
             if data_type is None:
                 data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.data_type")
 
+            if calculate and data_type is None:
+                data_type = df.cols.infer_type(col_name)['data_type']
+
             if data_type is None:
                 data_type = result.get(col_name, None)
-
-            if calculate and data_type is None:
-                data_type = df.cols.infer_type(col_name)
 
             result.update({col_name: data_type})
 
