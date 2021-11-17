@@ -28,8 +28,9 @@ class PandasBaseFunctions(BaseFunctions, ABC):
             return True
         return np.vectorize(isintlike)(series).flatten()
 
-    @staticmethod
-    def is_float(series):
+    def is_float(self, series):
+        if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
+            return False
         # use isreal to allow strings like "0"
         return np.vectorize(isreal)(series).flatten()
 
