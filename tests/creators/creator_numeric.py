@@ -352,9 +352,17 @@ def create():
     t.create(method="cols.max", variant="numeric", cols="weight(t)")
     t.create(method="cols.max", variant="multiple", cols=["height(ft)", "age", "rank"])
 
-    t.create(method="cols.mode", variant="all", cols="*")
-    t.create(method="cols.mode", variant="numeric", cols="weight(t)")
-    t.create(method="cols.mode", variant="multiple", cols=["height(ft)", "age", "rank"])
+    
+    df2_cols = {"weight": [10.2, 10.2, 20.4, 20.5, 33.2],
+                "height": [26, 17, 26, 17, None, 300],
+                'date arrival': ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'],
+                'age': [5000000, 5000000, 5000000, 5000000, 5000000],
+                'rank': [10, 7, 7, 8, 10, 8]}
+    df2 = op.create.dataframe(df2_cols)
+
+    t.create(df=df2, method="cols.mode", variant="all", cols="*")
+    t.create(df=df2, method="cols.mode", variant="numeric", cols="weight")
+    t.create(df=df2, method="cols.mode", variant="multiple", cols=["height", "age", "rank"])
 
     t.create(method="cols.percentile", variant="all", cols="*", estimate=False)
     t.create(method="cols.percentile", variant="numeric_single", cols="weight(t)", values=0.30, estimate=False)

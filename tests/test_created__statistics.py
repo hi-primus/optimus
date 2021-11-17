@@ -200,21 +200,21 @@ class TestStatisticsPandas(TestBase):
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_mode_all(self):
-        df = self.df.copy()
+        df = self.create_dataframe(data={('weight', 'float64'): [10.2, 10.2, 20.4, 20.5, 33.2, nan], ('height', 'float64'): [26.0, 17.0, 26.0, 17.0, nan, 300.0], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', nan], ('age', 'float64'): [5000000.0, 5000000.0, 5000000.0, 5000000.0, 5000000.0, nan], ('rank', 'int64'): [10, 7, 7, 8, 10, 8]}, force_data_types=True)
         result = df.cols.mode(cols='*')
-        expected = {'NullType': [], 'attributes': ['[3.9624, 1800.0]', '[5.334, 2000.0]', '[7.9248, 4000.0]', '[8.5344, 4300.0]', '[91.44, None]', '[None, 5700.0]'], 'date arrival': '1980/04/10', 'function(binary)': ["bytearray(b'Battle Station')", "bytearray(b'Espionage')", "bytearray(b'First Lieutenant')", "bytearray(b'Leader')", "bytearray(b'None')", "bytearray(b'Security')"], 'height(ft)': [-28.0, 13.0, 17.0, 26.0, 300.0], 'japanese name': ["['Bumble', 'Goldback']", "['Inochi', 'Convoy']", "['Megatron']", "['Meister']", "['Metroflex']", "['Roadbuster']"], 'last date seen': ['2011/04/10', '2012/05/10', '2013/06/10', '2014/07/10', '2015/08/10', '2016/09/10'], 'last position seen': ['10.642707,-71.612534', '19.442735,-99.201111', '33.670666,-117.841553', '37.789563,-122.400356'], 'rank': [7, 8, 10], 'Cybertronian': 'True', 'Date Type': ['2011-04-10', '2012-05-10', '2013-06-24', '2014-06-24', '2015-08-10', '2016-09-10'], 'age': 5000000, 'function': ['Battle Station', 'Espionage', 'First Lieutenant', 'Leader', 'None', 'Security'], 'names': ['Jazz', 'Megatron', 'Metroplex_)^$', 'Optimus', 'bumbl#ebéé  ', 'ironhide&'], 'timestamp': '2014-06-24', 'weight(t)': [1.8, 2.0, 4.0, 4.3, 5.7]}
+        expected = {'weight': 10.2, 'height': [17.0, 26.0], 'date arrival': '1980/04/10', 'age': 5000000.0, 'rank': [7, 8, 10]}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_mode_multiple(self):
-        df = self.df.copy()
-        result = df.cols.mode(cols=['height(ft)', 'age', 'rank'])
-        expected = {'height(ft)': [-28.0, 13.0, 17.0, 26.0, 300.0], 'age': 5000000, 'rank': [7, 8, 10]}
+        df = self.create_dataframe(data={('weight', 'float64'): [10.2, 10.2, 20.4, 20.5, 33.2, nan], ('height', 'float64'): [26.0, 17.0, 26.0, 17.0, nan, 300.0], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', nan], ('age', 'float64'): [5000000.0, 5000000.0, 5000000.0, 5000000.0, 5000000.0, nan], ('rank', 'int64'): [10, 7, 7, 8, 10, 8]}, force_data_types=True)
+        result = df.cols.mode(cols=['height', 'age', 'rank'])
+        expected = {'height': [17.0, 26.0], 'age': 5000000.0, 'rank': [7, 8, 10]}
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_mode_numeric(self):
-        df = self.df.copy()
-        result = df.cols.mode(cols='weight(t)')
-        expected = [1.8, 2.0, 4.0, 4.3, 5.7]
+        df = self.create_dataframe(data={('weight', 'float64'): [10.2, 10.2, 20.4, 20.5, 33.2, nan], ('height', 'float64'): [26.0, 17.0, 26.0, 17.0, nan, 300.0], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', nan], ('age', 'float64'): [5000000.0, 5000000.0, 5000000.0, 5000000.0, 5000000.0, nan], ('rank', 'int64'): [10, 7, 7, 8, 10, 8]}, force_data_types=True)
+        result = df.cols.mode(cols='weight')
+        expected = 10.2
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
     def test_cols_percentile_all(self):
