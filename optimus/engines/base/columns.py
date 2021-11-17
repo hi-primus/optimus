@@ -3030,7 +3030,11 @@ class BaseColumns(ABC):
         if value is None:
             if not output_col:
                 output_col = name + "_" + "_".join(cols)
-            if cast:
+            
+            dtypes = [df[col_name].cols.data_type() for col_name in parsed_cols]
+            same = not dtypes or dtypes.count(dtypes[0]) == len(dtypes)
+
+            if cast or not same:
                 expr = reduce(operator, [df[col_name].cols.to_float() for col_name in parsed_cols])
             else:
                 expr = reduce(operator, [df[col_name] for col_name in parsed_cols])
