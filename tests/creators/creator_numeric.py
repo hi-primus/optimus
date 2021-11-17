@@ -437,10 +437,10 @@ def create():
     t.create(method="cols.hist", variant="numeric", cols="price", buckets=10)
     t.create(method="cols.hist", variant="multiple", cols=["id", "code", "discount"], buckets=4)
 
-    t.create(method="cols.crosstab", variant="numeric_numeric", col_x="discount", col_y="price", output="dict")
-    t.create(method="cols.crosstab", variant="numeric_string", col_x="price", col_y="code", output="dataframe")
-    t.create(method="cols.crosstab", variant="string_numeric", col_x="name", col_y="id", output="dataframe")
-    t.create(method="cols.crosstab", variant="string_string", col_x="code", col_y="name", output="dict")
+    # t.create(method="cols.crosstab", variant="numeric_numeric", col_x="discount", col_y="price", output="dict")
+    # t.create(method="cols.crosstab", variant="numeric_string", col_x="price", col_y="code", output="dataframe")
+    # t.create(method="cols.crosstab", variant="string_numeric", col_x="name", col_y="id", output="dataframe")
+    # t.create(method="cols.crosstab", variant="string_string", col_x="code", col_y="name", output="dict")
 
     t.create(method="cols.boxplot", variant="all", cols="*")
     t.create(method="cols.boxplot", variant="numeric", cols="price")

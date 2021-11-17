@@ -125,30 +125,6 @@ class TestMoreStatisticsPandas(TestBase):
         expected = 0
         self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
 
-    def test_cols_crosstab_numeric_numeric(self):
-        df = self.df
-        result = df.cols.crosstab(col_x='discount', col_y='price', output='dict')
-        expected = {30.0: {'0': 0, '15%': 0, '20%': 0, '5%': 1}, 34.99: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 50.0: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 57.99: {'0': 0, '15%': 0, '20%': 1, '5%': 0}, 69.99: {'0': 0, '15%': 1, '20%': 0, '5%': 0}, 95.0: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 132.99: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 169.99: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 173.47: {'0': 1, '15%': 0, '20%': 0, '5%': 0}, 179.99: {'0': 0, '15%': 1, '20%': 0, '5%': 0}}
-        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
-
-    def test_cols_crosstab_numeric_string(self):
-        df = self.df
-        result = df.cols.crosstab(col_x='price', col_y='code', output='dataframe')
-        expected = self.create_dataframe(data={('price', 'float64'): [30.0, 34.99, 50.0, 57.99, 69.99, 95.0, 132.99, 169.99, 173.47, 179.99], ('B', 'int64'): [0, 0, 0, 1, 0, 0, 0, 0, 0, 0], ('FT50', 'int64'): [0, 0, 1, 0, 0, 0, 0, 0, 0, 0], ('J10', 'int64'): [0, 1, 0, 0, 0, 0, 0, 0, 0, 0], ('JG15', 'int64'): [0, 0, 0, 0, 0, 0, 1, 1, 0, 0], ('JG20', 'int64'): [0, 0, 0, 0, 0, 0, 0, 0, 0, 1], ('L15', 'int64'): [0, 0, 0, 0, 0, 0, 0, 0, 1, 0], ('L20', 'int64'): [0, 0, 0, 0, 0, 1, 0, 0, 0, 0], ('RG30', 'int64'): [1, 0, 0, 0, 0, 0, 0, 0, 0, 0], ('SH', 'int64'): [0, 0, 0, 0, 1, 0, 0, 0, 0, 0]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-
-    def test_cols_crosstab_string_numeric(self):
-        df = self.df
-        result = df.cols.crosstab(col_x='name', col_y='id', output='dataframe')
-        expected = self.create_dataframe(data={('name', 'object'): ['pants', 'shirt', 'shoes'], ('1', 'int64'): [1, 0, 0], ('2', 'int64'): [0, 0, 1], ('3', 'int64'): [0, 1, 0], ('4', 'int64'): [1, 0, 0], ('5', 'int64'): [1, 0, 0], ('6', 'int64'): [0, 0, 1], ('7', 'int64'): [1, 0, 0], ('8', 'int64'): [1, 0, 0], ('9', 'int64'): [0, 1, 0], ('10', 'int64'): [1, 0, 0]}, force_data_types=True)
-        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
-
-    def test_cols_crosstab_string_string(self):
-        df = self.df
-        result = df.cols.crosstab(col_x='code', col_y='name', output='dict')
-        expected = {'pants': {'B': 0, 'FT50': 0, 'J10': 1, 'JG15': 2, 'JG20': 1, 'L15': 1, 'L20': 1, 'RG30': 0, 'SH': 0}, 'shirt': {'B': 0, 'FT50': 1, 'J10': 0, 'JG15': 0, 'JG20': 0, 'L15': 0, 'L20': 0, 'RG30': 1, 'SH': 0}, 'shoes': {'B': 1, 'FT50': 0, 'J10': 0, 'JG15': 0, 'JG20': 0, 'L15': 0, 'L20': 0, 'RG30': 0, 'SH': 1}}
-        self.assertTrue(results_equal(result, expected, decimal=5, assertion=True))
-
     def test_cols_frequency_all(self):
         df = self.create_dataframe(data={('vf', 'float64'): [9.9, 9.9, 9.9, 9.9, 3.3000000000000003, 3.3000000000000003, 3.3000000000000003, 22.0, 22.0, 1.1, 1.1, 0.0, 0.0, 4.4], ('vs', 'object'): ['STR9', 'STR9', 'STR9', 'STR9', 'STR3', 'STR3', 'STR3', 'STR20', 'STR20', 'STR1', 'STR1', 'STR0', 'STR0', 'STR4'], ('values', 'int64'): [9, 9, 9, 9, 3, 3, 3, 20, 20, 1, 1, 0, 0, 4], ('o', 'object'): ['nine', [9], {'nine': 9}, 9, 3, 3, 3, None, None, 1, 1, 1, 1, 1]}, force_data_types=True)
         result = df.cols.frequency(cols='*', n=10, count_uniques=True)
