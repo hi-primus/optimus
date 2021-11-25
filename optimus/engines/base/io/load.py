@@ -213,7 +213,7 @@ class BaseLoad:
         return df
 
     def excel(self, filepath_or_buffer, header=0, sheet_name=0, merge_sheets=False, skip_rows=0, n_rows=None, storage_options=None,
-              conn=None, n_partitions=None, *args, **kwargs) -> 'DataFrameType':
+              conn=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a excel file.
         
@@ -224,8 +224,7 @@ class BaseLoad:
         :param skip_rows: 
         :param n_rows: 
         :param storage_options: 
-        :param conn: 
-        :param n_partitions: 
+        :param conn:
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
         :return: 
@@ -246,7 +245,7 @@ class BaseLoad:
             skip_rows = -1
 
         df, sheet_names = self._excel(file, sheet_name=sheet_name, skiprows=skip_rows, header=header, nrows=n_rows,
-                                      storage_options=storage_options, n_partitions=n_partitions, *args, **kwargs)
+                                      storage_options=storage_options, *args, **kwargs)
 
         df = self.df(df, op=self.op)
 
