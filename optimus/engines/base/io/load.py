@@ -396,6 +396,11 @@ class BaseLoad:
             file = open(full_path, "rb")
             buffer = file.read(BYTES_SIZE)
 
+        ext_to_type = {
+            "xls": "excel",
+            "xlsx": "excel"
+        }
+
         # Detect the file type
         try:
             file_ext = os.path.splitext(file_name)[1].replace(".", "")
@@ -411,9 +416,9 @@ class BaseLoad:
             file_name = path.split('/')[-1]
             file_ext = file_name.split('.')[-1]
             mime = False
-            mime_info = {"file_type": file_ext, "encoding": False}
+            mime_info = {"file_type": ext_to_type.get(file_ext, file_ext), "encoding": False}
 
-        file_type = file_ext
+        file_type = ext_to_type.get(file_ext, file_ext)
 
         if mime:
             if mime in ["text/plain", "application/csv"]:
@@ -428,7 +433,7 @@ class BaseLoad:
             elif mime in ["application/vnd.ms-excel",
                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
                 file_type = "excel"
-            else:
+            elif not file_type:
                 RaiseIt.value_error(
                     mime, ["csv", "json", "xml", "xls", "xlsx"])
 
@@ -472,7 +477,7 @@ class BaseLoad:
 
         else:
             RaiseIt.value_error(
-                file_type, ["csv", "json", "xml", "xls", "xlsx"])
+                file_type, ["csv", "json", "xml", "excel"])
 
         return df
 
