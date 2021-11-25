@@ -19,7 +19,7 @@ class TestCSVPandas(TestBase):
         self.assertEqual(df.cols.names(), ["id", "firstName", "lastName", "billingId", "product", "price", "birth", "dummyCol"])
 
 class TestCSVDask(TestCSVPandas):
-    config = {'engine': 'dask', 'n_partitions': 1}
+    config = {'engine': 'dask'}
 
 
 class TestCSVPartitionDask(TestCSVPandas):
@@ -41,7 +41,7 @@ except:
     pass
 else:
     class TestCSVDC(TestCSVPandas):
-        config = {'engine': 'dask_cudf', 'n_partitions': 1}
+        config = {'engine': 'dask_cudf'}
 
 
 try:
