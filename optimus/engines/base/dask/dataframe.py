@@ -229,6 +229,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
     def repartition(self, n=None, *args, **kwargs):
         dfd = self.data
         df = self
+
         if n == "auto":
             # Follow a heuristic for partitioning a mentioned
             # https://docs.dask.org/en/latest/best-practices.html#avoid-very-large-partitions
@@ -242,7 +243,9 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
             # Partition can not be lower than 1
             n = n if n < 0 else 1
             # TODO .repartition(partition_size="100MB"). https://stackoverflow.com/questions/44657631/strategy-for-partitioning-dask-dataframes-efficiently
-        dfd = dfd.repartition(npartitions=n, *args, **kwargs)
+
+        if n > 0:
+            dfd = dfd.repartition(npartitions=n, *args, **kwargs)
 
         return self.new(dfd, meta=self.meta)
 
