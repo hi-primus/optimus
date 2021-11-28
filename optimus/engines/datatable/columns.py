@@ -25,6 +25,7 @@ class Cols(PandasBaseColumns, DataFrameBaseColumns):
         return result
 
     def _names(self):
+        # print(self.root.data)
         return list(self.root.data.names)
 
     def _select(self, cols):

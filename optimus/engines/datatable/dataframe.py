@@ -10,8 +10,8 @@ class DatatableDataFrame(DatatableBaseDataFrame, DataFrameBaseDataFrame):
         df = self.root
         dfd = df.data
         cols_exprs = ({col_name: dfd[col_name] for i, col_name in enumerate(df.cols.names())})
-        cols_exprs = {**cols_exprs, **kw_columns}
 
+        cols_exprs = {**cols_exprs, **kw_columns}
         return dfd[:, list(cols_exprs.values())]
 
     def _base_to_dfd(self, pdf, n_partitions):
@@ -73,3 +73,10 @@ class DatatableDataFrame(DatatableBaseDataFrame, DataFrameBaseDataFrame):
 
     def to_pandas(self):
         return self.root.data.to_pandas()
+
+    def get_series(self):
+        return self.data[0]
+
+    def compute(self) -> 'InternalDataFrameType':
+        self.root.data.materialize()
+        return self.root

@@ -368,6 +368,7 @@ class BaseColumns(ABC):
 
         for input_col, output_col in columns:
             if mode == "vectorized":
+                print("func",type(func),func)
                 # kw_columns[output_col] = self.F.delayed(func)(part, *args)
                 kw_columns[output_col] = func(dfd[input_col], *args)
 
@@ -395,8 +396,10 @@ class BaseColumns(ABC):
         df = self.root.new(dfd, meta=meta)
 
         if kw_columns:
+
             df = df.cols.assign(kw_columns)
         # Dataframe to Optimus dataframe
+
         df = df.cols.select(output_ordered_columns)
 
         return df
@@ -3570,6 +3573,8 @@ class BaseColumns(ABC):
 
         :param cols: Columns in which you want to infer the datatype.
         :return: dict with the column and the inferred date format
+        :param sample:
+        :param tidy:
         """
         df = self.root
 
@@ -4336,7 +4341,7 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, ProfilerDataTypes.MISSING.value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols,self.root.mask.missing, inverse=inverse, tidy=tidy, compute=compute)
 
     def count_nulls(self, cols="*", inverse=False, tidy=True, compute=True):
         """

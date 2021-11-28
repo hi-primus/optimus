@@ -363,9 +363,7 @@ def is_object(value):
 
 
 def is_bool(value):
-    if is_bool_value(value):
-        return True
-    elif is_bool_value(value):
+    if is_bool_value(value) or is_bool_str(value):
         return True
     return False
 

@@ -243,13 +243,11 @@ class BaseFunctions(ABC):
     def to_datetime(self, series, format):
         return self._to_datetime(series, format)
 
-    @staticmethod
-    def to_string(series):
+    def to_string(self, series):
         return series.astype(str)
 
-    @staticmethod
-    def to_string_accessor(series):
-        return series.astype(str).str
+    def to_string_accessor(self, series):
+        return self.to_string(self, series).str
 
     @staticmethod
     def duplicated(dfd, keep, subset):
