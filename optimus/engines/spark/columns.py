@@ -11,7 +11,6 @@ import pyspark
 from multipledispatch import dispatch
 from pyspark.ml.feature import Imputer, QuantileDiscretizer
 from pyspark.ml.feature import VectorAssembler
-from pyspark.ml.linalg import Vectors, VectorUDT
 from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
@@ -26,8 +25,7 @@ from optimus.engines.base.pandas.columns import PandasBaseColumns
 from optimus.engines.spark.ml.encoding import index_to_string as ml_index_to_string
 from optimus.engines.spark.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import has_, is_column_a, is_spark_dataframe
-from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, validate_columns_names, \
-    name_col, prepare_columns
+from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, name_col, prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
@@ -38,7 +36,6 @@ from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes, compress_list
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
-from optimus.profiler.functions import fill_missing_var_types
 
 # Add the directory containing your module to the Python path (wants absolute paths)
 sys.path.append(os.path.abspath(ROOT_DIR))
@@ -47,7 +44,7 @@ sys.path.append(os.path.abspath(ROOT_DIR))
 # as python module because it generate a pickle error.
 # from infer import Infer
 
-from optimus.infer import is_, is_type, is_function, is_list_value, is_tuple, is_list_of_str, \
+from optimus.infer import is_, is_list_value, is_tuple, is_list_of_str, \
     is_list_of_tuples, is_one_element, is_num_or_str, is_numeric, is_str, is_int
 # from optimus.infer_spark import SPARK_DTYPES_TO_INFERRED, parse_spark_class_dtypes, is_list_of_spark_dataframes
 # NUMERIC_TYPES, NOT_ARRAY_TYPES, STRING_TYPES, ARRAY_TYPES
@@ -348,16 +345,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return r
 
-    @staticmethod
-    def range(columns):
-        """
-        Return the range form the min to the max value
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-
-        return Cols.agg_exprs(columns, self.root.functions.range_agg)
-
     # Descriptive Analytics
     @staticmethod
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
@@ -407,34 +394,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
     def reverse(columns):
         pass
 
-    @staticmethod
-    def mode(columns):
-        """
-        Return the the column mode
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-
-        columns = parse_columns(self.root, columns)
-        mode_result = []
-
-        for col_name in columns:
-            count = self.groupBy(col_name).count()
-            mode_df = count.join(
-                count.agg(F.max("count").alias("max_")), F.col("count") == F.col("max_")
-            )
-
-            mode_df = mode_df.cache()
-            # if none of the values are repeated we not have mode
-            mode_list = (mode_df
-                         .rows.select(mode_df["count"] > 1)
-                         .cols.select(col_name)
-                         .collect())
-
-            mode_result.append({col_name: filter_list(mode_list)})
-
-        return format_dict(mode_result)
-
     # String Operations
 
     def remove(self, columns, search=None, search_by="chars", output_cols=None):
@@ -470,36 +429,36 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
                         meta_action=Actions.REMOVE_ACCENTS.value)
         return df
 
-    def remove_special_chars(self, input_cols="*", output_cols=None):
-        """
-        Reference https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
-        This method remove special characters (i.e. !”#$%&/()=?) in columns of dataFrames.
-        :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :return:
-        """
+    # def remove_special_chars(self, input_cols="*", output_cols=None):
+    #     """
+    #     Reference https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
+    #     This method remove special characters (i.e. !”#$%&/()=?) in columns of dataFrames.
+    #     :param input_cols: '*', list of columns names or a single column name.
+    #     :param output_cols:
+    #     :return:
+    #     """
+    #
+    #     input_cols = parse_columns(
+    #         self.root, input_cols, filter_by_column_types=self.root.constants.STRING_TYPES)
+    #     check_column_numbers(input_cols, "*")
+    #
+    #     df = self.replace(input_cols, [f"\\{s}" for s in string.punctuation], "", "chars", output_cols=output_cols)
+    #     return df
 
-        input_cols = parse_columns(
-            self.root, input_cols, filter_by_column_types=self.root.constants.STRING_TYPES)
-        check_column_numbers(input_cols, "*")
-
-        df = self.replace(input_cols, [f"\\{s}" for s in string.punctuation], "", "chars", output_cols=output_cols)
-        return df
-
-    def remove_white_spaces(self, input_cols="*", output_cols=None):
-        """
-        Remove all the white spaces from a string
-        :param input_cols:
-        :param output_cols:
-        :return:
-        """
-
-        def _remove_white_spaces(col_name, args):
-            return F.regexp_replace(F.col(col_name), " ", "")
-
-        return self.apply(input_cols, _remove_white_spaces, output_cols=output_cols,
-                          filter_col_by_dtypes=self.root.constants.NOT_ARRAY_TYPES,
-                          meta_action=Actions.REMOVE_WHITE_SPACES.value)
+    # def remove_white_spaces(self, input_cols="*", output_cols=None):
+    #     """
+    #     Remove all the white spaces from a string
+    #     :param input_cols:
+    #     :param output_cols:
+    #     :return:
+    #     """
+    #
+    #     def _remove_white_spaces(col_name, args):
+    #         return F.regexp_replace(F.col(col_name), " ", "")
+    #
+    #     return self.apply(input_cols, _remove_white_spaces, output_cols=output_cols,
+    #                       filter_col_by_dtypes=self.root.constants.NOT_ARRAY_TYPES,
+    #                       meta_action=Actions.REMOVE_WHITE_SPACES.value)
 
     @staticmethod
     def format_date(input_cols, current_format=None, output_format=None, output_cols=None):
@@ -711,11 +670,13 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             # Imputer require not only numeric but float or double
             # print("{} values imputed for column(s) '{}'".format(df.cols.count_na(input_col), input_col))
             df = df.cols.cast(input_cols, "float", output_cols)
+            dfd = df.data.to_spark()
+
             imputer = Imputer(inputCols=output_cols, outputCols=output_cols)
 
-            model = imputer.setStrategy(strategy).fit(df)
+            model = imputer.setStrategy(strategy).fit(dfd)
 
-            df = model.transform(df)
+            df = model.transform(dfd)
 
         elif data_type == "categorical":
 
@@ -784,17 +745,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return self.apply(input_cols, _replace_na, output_cols=output_cols, meta_action=Actions.IS_NA.value)
 
-    @staticmethod
-    def count_zeros(columns):
-        """
-        Count zeros in a column
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        columns = parse_columns(self.root, columns)
-
-        return format_dict(Cols.agg_exprs(columns, self.root.functions.zeros_agg))
-
 
     @staticmethod
     def unique(columns):
@@ -811,7 +761,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         for col_name in columns:
             result.update(compress_list(self.select(col_name).distinct().to_dict()))
         return result
-
 
     # Stats
     @staticmethod
@@ -889,35 +838,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
                           output_cols=output_cols,
                           meta_action=Actions.MAX_ABS_SCALER.value)
 
-    @staticmethod
-    def iqr(columns, more=None, relative_error=RELATIVE_ERROR):
-        """
-        Return the column Inter Quartile Range
-        :param columns:
-        :param more: Return info about q1 and q3
-        :param relative_error:
-        :return:
-        """
-        iqr_result = {}
-        df = self.root
-        columns = parse_columns(
-            df, columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        quartile = df.cols.percentile(columns, [0.25, 0.5, 0.75], relative_error=relative_error)
-        for col_name in columns:
-            q1 = quartile[col_name]["percentile"]["0.25"]
-            q2 = quartile[col_name]["percentile"]["0.5"]
-            q3 = quartile[col_name]["percentile"]["0.75"]
-
-            iqr_value = q3 - q1
-            if more:
-                result = {"iqr": iqr_value, "q1": q1, "q2": q2, "q3": q3}
-            else:
-                result = iqr_value
-            iqr_result[col_name] = result
-
-        return format_dict(iqr_result)
 
     def create_key(self, col="id") -> 'DataFrameType':
         dfd = self.data.withColumn(col, F.monotonically_increasing_id())
@@ -1159,55 +1079,55 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         #     print(Cols.agg_exprs(hist_agg, col_name, self, buckets))
         #     # print(df.agg(hist_agg(col_name, self, buckets)))
         # return result
-
-    def frequency(self, columns="*", n=10, percentage=False, total_rows=None, count_uniques=False, compute=True):
-        """
-        Output values frequency in json format
-        :param columns: Columns to be processed
-        :param n: n top elements
-        :param percentage: Get
-        :param total_rows: Total rows to calculate the percentage. If not provided is calculated
-        :return:
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-
-        dfd = df.data
-        if columns is not None:
-
-            # Convert non compatible columns(non str, int or float) to string
-            non_compatible_columns = self.names(columns)
-
-            if non_compatible_columns is not None:
-                dfd = self.root.cols.cast(non_compatible_columns, "str").data
-
-            freq = (dfd.select(columns).rdd
-                    .flatMap(lambda x: x.asDict().items())
-                    .map(lambda x: (x, 1))
-                    .reduceByKey(lambda a, b: a + b)
-                    .groupBy(lambda x: x[0][0])
-                    .flatMap(lambda g: nlargest(n, g[1], key=lambda x: x[1]))
-                    .repartition(1)  # Because here we have small data move all to 1 partition
-                    .map(lambda x: (x[0][0], (x[0][1], x[1])))
-                    .groupByKey().map(lambda x: (x[0], list(x[1]))))
-
-            result = {}
-            for f in freq.collect():
-                result[f[0]] = {"count_uniques": "N/A", "values": [{"value": kv[0], "count": kv[1]} for kv in f[1]]}
-
-            # if count_uniques:
-            #     print(dfd.count())
-
-            if percentage:
-                if total_rows is None:
-                    total_rows = dfd.count()
-
-                    RaiseIt.type_error(total_rows, ["int"])
-                for col_name in columns:
-                    for c in result[col_name]:
-                        c["percentage"] = round((c["count"] * 100 / total_rows), 2)
-
-            return {"frequency": result}
+    #
+    # def frequency(self, columns="*", n=10, percentage=False, total_rows=None, count_uniques=False, compute=True):
+    #     """
+    #     Output values frequency in json format
+    #     :param columns: Columns to be processed
+    #     :param n: n top elements
+    #     :param percentage: Get
+    #     :param total_rows: Total rows to calculate the percentage. If not provided is calculated
+    #     :return:
+    #     """
+    #     df = self.root
+    #     columns = parse_columns(df, columns)
+    #
+    #     dfd = df.data
+    #     if columns is not None:
+    #
+    #         # Convert non compatible columns(non str, int or float) to string
+    #         non_compatible_columns = self.names(columns)
+    #
+    #         if non_compatible_columns is not None:
+    #             dfd = self.root.cols.cast(non_compatible_columns, "str").data
+    #
+    #         freq = (dfd.select(columns).rdd
+    #                 .flatMap(lambda x: x.asDict().items())
+    #                 .map(lambda x: (x, 1))
+    #                 .reduceByKey(lambda a, b: a + b)
+    #                 .groupBy(lambda x: x[0][0])
+    #                 .flatMap(lambda g: nlargest(n, g[1], key=lambda x: x[1]))
+    #                 .repartition(1)  # Because here we have small data move all to 1 partition
+    #                 .map(lambda x: (x[0][0], (x[0][1], x[1])))
+    #                 .groupByKey().map(lambda x: (x[0], list(x[1]))))
+    #
+    #         result = {}
+    #         for f in freq.collect():
+    #             result[f[0]] = {"count_uniques": "N/A", "values": [{"value": kv[0], "count": kv[1]} for kv in f[1]]}
+    #
+    #         # if count_uniques:
+    #         #     print(dfd.count())
+    #
+    #         if percentage:
+    #             if total_rows is None:
+    #                 total_rows = dfd.count()
+    #
+    #                 RaiseIt.type_error(total_rows, ["int"])
+    #             for col_name in columns:
+    #                 for c in result[col_name]:
+    #                     c["percentage"] = round((c["count"] * 100 / total_rows), 2)
+    #
+    #         return {"frequency": result}
 
     def correlation(self, input_cols, method="pearson", output="json"):
         """
@@ -1269,17 +1189,15 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return {"cols": input_cols, "data": result}
 
-    def schema_data_type(self, columns="*"):
-        """
-        Return the column(s) data type as Type
-        :param columns: Columns to be processed
-        :return:
-        """
-        df = self.root
-        columns = parse_columns(df, columns)
-        return format_dict([df.data.schema[col_name].dataType for col_name in columns])
-
-
+    # def schema_data_type(self, columns="*"):
+    #     """
+    #     Return the column(s) data type as Type
+    #     :param columns: Columns to be processed
+    #     :return:
+    #     """
+    #     df = self.root
+    #     columns = parse_columns(df, columns)
+    #     return format_dict([df.data.schema[col_name].dataType for col_name in columns])
 
     def qcut(self, columns, quantiles, handle_invalid="skip"):
         """
