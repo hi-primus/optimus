@@ -1078,55 +1078,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         #     print(Cols.agg_exprs(hist_agg, col_name, self, buckets))
         #     # print(df.agg(hist_agg(col_name, self, buckets)))
         # return result
-    #
-    # def frequency(self, columns="*", n=10, percentage=False, total_rows=None, count_uniques=False, compute=True):
-    #     """
-    #     Output values frequency in json format
-    #     :param columns: Columns to be processed
-    #     :param n: n top elements
-    #     :param percentage: Get
-    #     :param total_rows: Total rows to calculate the percentage. If not provided is calculated
-    #     :return:
-    #     """
-    #     df = self.root
-    #     columns = parse_columns(df, columns)
-    #
-    #     dfd = df.data
-    #     if columns is not None:
-    #
-    #         # Convert non compatible columns(non str, int or float) to string
-    #         non_compatible_columns = self.names(columns)
-    #
-    #         if non_compatible_columns is not None:
-    #             dfd = self.root.cols.cast(non_compatible_columns, "str").data
-    #
-    #         freq = (dfd.select(columns).rdd
-    #                 .flatMap(lambda x: x.asDict().items())
-    #                 .map(lambda x: (x, 1))
-    #                 .reduceByKey(lambda a, b: a + b)
-    #                 .groupBy(lambda x: x[0][0])
-    #                 .flatMap(lambda g: nlargest(n, g[1], key=lambda x: x[1]))
-    #                 .repartition(1)  # Because here we have small data move all to 1 partition
-    #                 .map(lambda x: (x[0][0], (x[0][1], x[1])))
-    #                 .groupByKey().map(lambda x: (x[0], list(x[1]))))
-    #
-    #         result = {}
-    #         for f in freq.collect():
-    #             result[f[0]] = {"count_uniques": "N/A", "values": [{"value": kv[0], "count": kv[1]} for kv in f[1]]}
-    #
-    #         # if count_uniques:
-    #         #     print(dfd.count())
-    #
-    #         if percentage:
-    #             if total_rows is None:
-    #                 total_rows = dfd.count()
-    #
-    #                 RaiseIt.type_error(total_rows, ["int"])
-    #             for col_name in columns:
-    #                 for c in result[col_name]:
-    #                     c["percentage"] = round((c["count"] * 100 / total_rows), 2)
-    #
-    #         return {"frequency": result}
 
     def correlation(self, input_cols, method="pearson", output="json"):
         """
