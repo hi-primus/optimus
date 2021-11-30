@@ -9,7 +9,7 @@ from optimus.engines.base.pandas.functions import PandasBaseFunctions
 
 # These function can return a Column Expression or a list of columns expression
 # Must return None if the data type can not be handle
-
+import pandas as pd
 
 class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
 
@@ -19,6 +19,11 @@ class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
     def dask_to_compatible(dfd):
         from optimus.helpers.converter import dask_dataframe_to_pandas
         return ks.from_pandas(dask_dataframe_to_pandas(dfd))
+
+    @staticmethod
+    def new_df(*args, **kwargs):
+        return ks.from_pandas(pd.DataFrame(*args, **kwargs))
+
 
     @staticmethod
     def df_concat(df_list):

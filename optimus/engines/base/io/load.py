@@ -52,20 +52,24 @@ class BaseLoad:
         Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params.
 
-        :param encoding:
-        :param storage_options:
-        :param quoting:
-        :param filepath_or_buffer: path or location of the file.
-        :param sep: usually delimiter mark are ',' or ';'.
-        :param header: tell the function whether dataset has a header row. True default.
-        :param infer_schema: infers the input schema automatically from data.
+        :param filepath_or_buffer: Path or location of the file.
+        :param sep: Usually delimiter mark are ',' or ';'.
+        :param encoding: Encoding to use for UTF when reading/writing.
+        :param header: Tell the function whether dataset has a header row. True default.
+        :param infer_schema: Infers the input schema automatically from data.
         :param n_rows:
-        :param null_value:
+        :param null_value: Whether or not to include the default NaN values when parsing the data
+        :param quoting: Control field quoting behavior
         :param cache:
-        :param na_filter:
-        :param lineterminator:
-        :param on_bad_lines:
-        :param conn:
+        :param na_filter: Detect missing value markers (empty strings and the value of na_values).
+        :param lineterminator: Character to break file into lines.
+        :param on_bad_lines: Specifies what to do upon encountering a bad line (a line with too many fields).
+            Allowed values are:
+            ‘error’, raise an Exception when a bad line is encountered.
+            ‘warn’, raise a warning when a bad line is encountered and skip that line.
+            ‘skip’, skip bad lines without raising or warning when they are encountered
+        :param storage_options: A dict with the connection params.
+        :param conn: A connection object.
         It requires one extra pass over the data. True default.
 
         :return dataFrame
@@ -84,8 +88,6 @@ class BaseLoad:
         else:
             meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
-        filepath_or_buffer = val_to_list(filepath_or_buffer)
-
         try:
 
             # Pandas do not support \r\n terminator.
@@ -93,7 +95,7 @@ class BaseLoad:
                 lineterminator = None
 
             if conn is not None:
-                filepath_or_buffer = [conn.path(fb) for fb in filepath_or_buffer]
+                filepath_or_buffer = [conn.path(fb) for fb in val_to_list(filepath_or_buffer)]
                 storage_options = conn.storage_options
 
             if kwargs.get("chunk_size") == "auto":
@@ -134,10 +136,10 @@ class BaseLoad:
         """
         Loads a dataframe from a XML file.
 
-        :param path:
+        :param path: Any valid XML string or path is acceptable. The string could be a URL.
         :param n_rows:
-        :param storage_options:
-        :param conn:
+        :param storage_options: A dict with the connection params.
+        :param conn: A connection object.
         :param args:
         :param kwargs:
         :return:
@@ -172,8 +174,8 @@ class BaseLoad:
         :param filepath_or_buffer: path or location of the file.
         :param multiline:
         :param n_rows:
-        :param storage_options:
-        :param conn:
+        :param storage_options: A dict with the connection params.
+        :param conn: A connection object.
         :param args:
         :param kwargs:
         :return:
@@ -212,8 +214,8 @@ class BaseLoad:
 
         return df
 
-    def excel(self, filepath_or_buffer, header=0, sheet_name=0, merge_sheets=False, skip_rows=0, n_rows=None, storage_options=None,
-              conn=None, *args, **kwargs) -> 'DataFrameType':
+    def excel(self, filepath_or_buffer, header=0, sheet_name=0, merge_sheets=False, skip_rows=0, n_rows=None,
+              storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         """
         Loads a dataframe from a excel file.
         
@@ -223,8 +225,8 @@ class BaseLoad:
         :param merge_sheets: 
         :param skip_rows: 
         :param n_rows: 
-        :param storage_options: 
-        :param conn:
+        :param storage_options: A dict with the connection params.
+        :param conn: A connection object.
         :param args: custom argument to be passed to the excel function
         :param kwargs: custom keyword arguments to be passed to the excel function
         :return: 
@@ -261,8 +263,8 @@ class BaseLoad:
 
         :param filepath_or_buffer: path or location of the file. Must be string dataType
         :param n_rows:
-        :param storage_options:
-        :param conn:
+        :param storage_options: A dict with the connection params.
+        :param conn: A connection object.
         :param args: custom argument to be passed to the spark avro function
         :param kwargs: custom keyword arguments to be passed to the spark avro function
         """
@@ -298,8 +300,8 @@ class BaseLoad:
 
         :param filepath_or_buffer: path or location of the file. Must be string dataType
         :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
-        :param storage_options:
-        :param conn:
+        :param storage_options: A dict with the connection params.
+        :param conn: A connection object.
         :param args: custom argument to be passed to the spark parquet function
         :param kwargs: custom keyword arguments to be passed to the spark parquet function
         """
@@ -332,8 +334,8 @@ class BaseLoad:
 
         :param path: path or location of the file. Must be string dataType.
         :param columns: Specific column names to be loaded from the file.
-        :param storage_options:
-        :param conn:
+        :param storage_options: A dict with the connection params.
+        :param conn: A connection object.
         :param args: custom argument to be passed to the spark avro function.
         :param kwargs: custom keyword arguments to be passed to the spark avro function.
         """
