@@ -649,10 +649,11 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
                           filter_col_by_dtypes=self.root.constants.STRING_TYPES + self.root.constants.NUMERIC_TYPES,
                           meta_action=Actions.REPLACE_REGEX.value)
 
-    def impute(self, input_cols, data_type="continuous", strategy="mean", output_cols=None):
+    def impute(self, cols="*", data_type="continuous", strategy="mean", fill_value=0, output_cols=None):
         """
         Imputes missing data from specified columns using the mean or median.
-        :param input_cols: list of columns to be analyze.
+        :param fill_value:
+        :param cols: list of columns to be analyze.
         :param output_cols:
         :param data_type: "continuous" or "categorical"
         :param strategy: String that specifies the way of computing missing data. Can be "mean", "median" for continuous
@@ -660,77 +661,75 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         :return: Dataframe object (DF with columns that has the imputed values).
         """
         df = self.root
+        dfd = df.data.to_spark()
+        columns = prepare_columns(self.root, cols, output_cols,accepts_missing_cols=True,)
 
         if data_type == "continuous":
-            input_cols = parse_columns(df, input_cols,
+            input_cols = parse_columns(df, cols,
                                        filter_by_column_types=df.constants.NUMERIC_TYPES)
-            check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
 
             # Imputer require not only numeric but float or double
             # print("{} values imputed for column(s) '{}'".format(df.cols.count_na(input_col), input_col))
             df = df.cols.cast(input_cols, "float", output_cols)
-            dfd = df.data.to_spark()
-
             imputer = Imputer(inputCols=output_cols, outputCols=output_cols)
+            model = imputer.setStrategy(strategy).setMissingValue(fill_value).fit(df.data.to_spark())
 
-            model = imputer.setStrategy(strategy).fit(dfd)
-
-            df = model.transform(dfd)
+            meta = Meta.action(df.meta, Actions.SET.value, cols)
+            df = self.root.new(model.transform(dfd).to_koalas(), meta=meta)
 
         elif data_type == "categorical":
 
-            input_cols = parse_columns(df, input_cols,
+            input_cols = parse_columns(df, cols,
                                        filter_by_column_types=df.constants.STRING_TYPES)
-            check_column_numbers(input_cols, "*")
             output_cols = get_output_cols(input_cols, output_cols)
-
             value = df.cols.mode(input_cols)
-            df = df.cols.fill_na(output_cols, value, output_cols)
+            df = df.cols.fill_na(output_cols, value=value, output_cols=output_cols)
         else:
-            RaiseIt.value_error(data_type, ["continuous", "categorical"])
+            RaiseIt.value_error(data_type, ["continuous", "categorical", "auto"])
+
 
         return df
 
-    def fill_na(self, input_cols, value=None, output_cols=None):
-        """
-        Replace null data with a specified value
-        :param input_cols: '*', list of columns names or a single column name.
-        :param output_cols:
-        :param value: value to replace the nan/None values
-        :return:
-        """
-        df = self.root
-        input_cols = parse_columns(df, input_cols)
-        check_column_numbers(input_cols, "*")
-        output_cols = get_output_cols(input_cols, output_cols)
-
-        for input_col, output_col in zip(input_cols, output_cols):
-            func = None
-            if is_column_a(self, input_col, df.constants.NUMERIC_TYPES):
-
-                new_value = fastnumbers.fast_float(value)
-                func = F.when(df.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-            elif is_column_a(self, input_col, df.constants.STRING_TYPES):
-                new_value = str(value)
-                func = F.when(df.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-            elif is_column_a(self, input_col, df.constants.ARRAY_TYPES):
-                if is_one_element(value):
-                    new_value = F.array(F.lit(value))
-                else:
-                    new_value = F.array(*[F.lit(v) for v in value])
-                func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
-            else:
-                if df.cols.data_type(input_col) == parse_python_dtypes(type(value).__name__):
-
-                    new_value = value
-                    func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
-                else:
-                    RaiseIt.type_error(value, [df.cols.data_type(input_col)])
-
-            df = df.cols.apply(input_col, func=func, output_cols=output_col, meta_action=Actions.FILL_NA.value)
-
-        return df
+    # def fill_na(self, input_cols, value=None, output_cols=None):
+    #     """
+    #     Replace null data with a specified value
+    #     :param input_cols: '*', list of columns names or a single column name.
+    #     :param output_cols:
+    #     :param value: value to replace the nan/None values
+    #     :return:
+    #     """
+    #     df = self.root
+    #     input_cols = parse_columns(df, input_cols)
+    #     check_column_numbers(input_cols, "*")
+    #     output_cols = get_output_cols(input_cols, output_cols)
+    #
+    #     for input_col, output_col in zip(input_cols, output_cols):
+    #         func = None
+    #         if is_column_a(self, input_col, df.constants.NUMERIC_TYPES):
+    #
+    #             new_value = fastnumbers.fast_float(value)
+    #             func = F.when(df.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
+    #         elif is_column_a(self, input_col, df.constants.STRING_TYPES):
+    #             new_value = str(value)
+    #             func = F.when(df.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
+    #         elif is_column_a(self, input_col, df.constants.ARRAY_TYPES):
+    #             if is_one_element(value):
+    #                 new_value = F.array(F.lit(value))
+    #             else:
+    #                 new_value = F.array(*[F.lit(v) for v in value])
+    #             func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
+    #         else:
+    #             if df.cols.data_type(input_col) == parse_python_dtypes(type(value).__name__):
+    #
+    #                 new_value = value
+    #                 func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
+    #             else:
+    #                 RaiseIt.type_error(value, [df.cols.data_type(input_col)])
+    #
+    #         df = df.cols.apply(input_col, func=func, output_cols=output_col, meta_action=Actions.FILL_NA.value)
+    #
+    #     return df
 
     def is_na(self, input_cols, output_cols=None):
         """
