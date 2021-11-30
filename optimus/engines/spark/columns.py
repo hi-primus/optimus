@@ -1,10 +1,8 @@
 import builtins
 import os
 import re
-import string
 import sys
 import unicodedata
-from heapq import nlargest
 
 import fastnumbers
 import pyspark
@@ -30,7 +28,7 @@ from optimus.helpers.constants import RELATIVE_ERROR, Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions \
-    import filter_list, create_buckets
+    import create_buckets
 from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes, compress_list
@@ -38,6 +36,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
 
 # Add the directory containing your module to the Python path (wants absolute paths)
+
 sys.path.append(os.path.abspath(ROOT_DIR))
 
 # To use this functions as a Spark udf function we need to load it using addPyFile because the file can not be loaded
@@ -567,7 +566,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             _regex = re.compile("|".join(map(re.escape, _search_and_replace_by.keys())))
 
             def multiple_replace(_value, __search_and_replace_by):
-                print("__search_and_replace_by11111111111", __search_and_replace_by)
                 # Create a regular expression from all of the dictionary keys
                 if _value is not None:
                     __regex = None
@@ -577,14 +575,12 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
                         __regex = re.compile(
                             r'\b%s\b' % r'\b|\b'.join(map(re.escape, __search_and_replace_by.keys())))
                     result = __regex.sub(lambda match: __search_and_replace_by[match.group(0)], str(_value))
-                    print("result11111111-----", result)
+
                 else:
                     result = None
 
                 return result
 
-            print("_search_and_replace_by", _search_and_replace_by)
-            print("multiple_replace", multiple_replace)
             return self.apply(_input_col, multiple_replace, "str", (_search_and_replace_by,), output_cols=_output_col)
 
         def func_full(_df, _input_col, _output_col, _search, _replace_by):
@@ -744,7 +740,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return self.apply(input_cols, _replace_na, output_cols=output_cols, meta_action=Actions.IS_NA.value)
 
-
     @staticmethod
     def unique(columns):
         """
@@ -836,7 +831,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         return Cols.apply(input_cols, func=_result, filter_col_by_dtypes=self.root.constants.NUMERIC_TYPES,
                           output_cols=output_cols,
                           meta_action=Actions.MAX_ABS_SCALER.value)
-
 
     def create_key(self, col="id") -> 'DataFrameType':
         dfd = self.data.withColumn(col, F.monotonically_increasing_id())
