@@ -390,18 +390,18 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return format_dict(result)
 
-    @staticmethod
-    def sum(columns):
-        """
-        Return the sum of a column dataframe
-        :param columns: '*', list of columns names or a single column name.
-        :return:
-        """
-        columns = parse_columns(
-            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        return format_dict(Cols.agg_exprs(columns, F.sum))
+    # @staticmethod
+    # def sum(columns):
+    #     """
+    #     Return the sum of a column dataframe
+    #     :param columns: '*', list of columns names or a single column name.
+    #     :return:
+    #     """
+    #     columns = parse_columns(
+    #         self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
+    #     check_column_numbers(columns, "*")
+    #
+    #     return format_dict(Cols.agg_exprs(columns, F.sum))
 
     @staticmethod
     def reverse(columns):
@@ -949,7 +949,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         else:
             input_cols = parse_columns(df, input_cols)
 
-        if shape is "vector":
+        if shape == "vector":
             input_cols = parse_columns(df, input_cols,
                                        filter_by_column_types=df.constants.NUMERIC_TYPES)
             output_col = one_list_to_val(output_col)
@@ -961,13 +961,13 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
             df.meta = Meta.action(df.meta, None, Actions.NEST.value, output_col)
 
-        elif shape is "array":
+        elif shape == "array":
             # Arrays needs all the elements with the same data type. We try to cast to type
             df = df.cols.cast("*", "str")
             df = df.cols.apply(input_cols, F.array(*input_cols), output_cols=output_col,
                                skip_output_cols_processing=True, meta_action=Actions.NEST.value)
 
-        elif shape is "string":
+        elif shape == "string":
             df = df.cols.apply(input_cols, F.concat_ws(separator, *input_cols), output_cols=output_col,
                                skip_output_cols_processing=True, meta_action=Actions.NEST.value)
         else:
@@ -1245,10 +1245,10 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         corr = Correlation.corr(df, output_col, method).head()[0].toArray()
         result = None
-        if output is "array":
+        if output == "array":
             result = corr
 
-        elif output is "json":
+        elif output == "json":
             # Parse result to json
             col_pair = []
             for col_name in input_cols:

@@ -1,19 +1,34 @@
-import numpy as np
 import databricks.koalas as ks
-
-from optimus.engines.base.commons.functions import word_tokenize
-
-from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
-from optimus.engines.base.pandas.functions import PandasBaseFunctions
-
-
+import numpy as np
 # These function can return a Column Expression or a list of columns expression
 # Must return None if the data type can not be handle
 import pandas as pd
 
-class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
+from optimus.engines.base.commons.functions import word_tokenize
+from optimus.engines.base.dataframe.functions import DataFrameBaseFunctions
+from optimus.engines.base.pandas.functions import PandasBaseFunctions
 
+
+class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
     _engine = ks
+
+    def _to_float(self, series):
+        """
+        Converts a series values to floats
+        """
+        return series.astype("float")
+
+    def _to_integer(self, series, default=0):
+        """
+        Converts a series values to integers
+        """
+        return series.astype("integer")
+
+    def _to_string(self, series):
+        """
+        Converts a series values to strings
+        """
+        return series.astype("str")
 
     @staticmethod
     def dask_to_compatible(dfd):
@@ -23,7 +38,6 @@ class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
     @staticmethod
     def new_df(*args, **kwargs):
         return ks.from_pandas(pd.DataFrame(*args, **kwargs))
-
 
     @staticmethod
     def df_concat(df_list):
@@ -122,6 +136,7 @@ class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
             value, value_date_format = value
 
         date = pd.to_datetime(series, format=date_format, errors="coerce")
-        value = pd.Timestamp.now() if value is None else pd.to_datetime(value, format=value_date_format, errors="coerce")
+        value = pd.Timestamp.now() if value is None else pd.to_datetime(value, format=value_date_format,
+                                                                        errors="coerce")
 
         return (value - date)
