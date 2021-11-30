@@ -2935,8 +2935,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def fill_na(self, cols="*", value=None, output_cols=None,
-            eval_value: bool = False) -> 'DataFrameType':
+    def fill_na(self, cols="*", value=None, output_cols=None, eval_value: bool = False) -> 'DataFrameType':
         """
         Replace null data with a specified value.
 
@@ -2953,7 +2952,6 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(cols, output_cols)
 
         kw_columns = {}
-
         for input_col, output_col, value, eval_value in zip(cols, output_cols, values, eval_values):
 
             if eval_value and is_str(value) and value:
@@ -2961,8 +2959,7 @@ class BaseColumns(ABC):
 
             if isinstance(value, self.root.__class__):
                 value = value.get_series()
-                
-            kw_columns[output_col] = df.data[input_col].fillna(value)
+            kw_columns[output_col] = df.data[input_col].fillna(value=value)
             kw_columns[output_col] = kw_columns[output_col].mask(
                 kw_columns[output_col] == "", value)
 
