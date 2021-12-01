@@ -30,6 +30,12 @@ class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
         """
         return series.astype("str")
 
+    def _to_boolean(self, series):
+        """
+        Converts a series values to bool
+        """
+        return series.astype("str")
+
     @staticmethod
     def dask_to_compatible(dfd):
         from optimus.helpers.converter import dask_dataframe_to_pandas

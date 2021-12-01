@@ -1,8 +1,9 @@
 from enum import Enum
 
+import nltk
+
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-import nltk
 
 
 class Engine(Enum):
@@ -51,6 +52,12 @@ def start_vaex(*args, **kwargs):
 
 
 def start_spark(*args, **kwargs):
+    import databricks.koalas as ks
+    """
+        Koalas disallows the operations on different DataFrames (or Series) by default to prevent expensive operations.
+        It internally performs a join operation which can be expensive in general.
+    """
+    ks.set_option('compute.ops_on_diff_frames', True)
     from optimus.engines.spark.engine import SparkEngine
     return SparkEngine(*args, **kwargs)
 
@@ -95,13 +102,13 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     nltk.download('averaged_perceptron_tagger', quiet=True)
 
     funcs = {Engine.PANDAS.value: start_pandas,
-                   Engine.VAEX.value: start_vaex,
-                   Engine.SPARK.value: start_spark,
-                   Engine.DASK.value: start_dask,
-                   Engine.IBIS.value: start_ibis,
-                   Engine.CUDF.value: start_cudf,
-                   Engine.DASK_CUDF.value: start_dask_cudf
-                   }
+             Engine.VAEX.value: start_vaex,
+             Engine.SPARK.value: start_spark,
+             Engine.DASK.value: start_dask,
+             Engine.IBIS.value: start_ibis,
+             Engine.CUDF.value: start_cudf,
+             Engine.DASK_CUDF.value: start_dask_cudf
+             }
 
     op = engine_function(engine, funcs)
 

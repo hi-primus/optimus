@@ -4,10 +4,10 @@ import re
 import sys
 import unicodedata
 
-import fastnumbers
 import pyspark
 from multipledispatch import dispatch
-from pyspark.ml.feature import Imputer, QuantileDiscretizer
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import Imputer, QuantileDiscretizer, StringIndexer, IndexToString
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.stat import Correlation
 from pyspark.sql import DataFrame
@@ -20,8 +20,6 @@ from optimus.engines.base.distributed.columns import DistributedBaseColumns
 from optimus.engines.base.meta import Meta
 # Helpers
 from optimus.engines.base.pandas.columns import PandasBaseColumns
-from optimus.engines.spark.ml.encoding import index_to_string as ml_index_to_string
-from optimus.engines.spark.ml.encoding import string_to_index as ml_string_to_index
 from optimus.helpers.check import has_, is_column_a, is_spark_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, name_col, prepare_columns
 from optimus.helpers.constants import RELATIVE_ERROR, Actions
@@ -31,7 +29,7 @@ from optimus.helpers.functions \
     import create_buckets
 from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
-from optimus.helpers.parser import parse_python_dtypes, compress_list
+from optimus.helpers.parser import compress_list
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
 
@@ -48,6 +46,7 @@ from optimus.infer import is_, is_list_value, is_tuple, is_list_of_str, \
 # from optimus.infer_spark import SPARK_DTYPES_TO_INFERRED, parse_spark_class_dtypes, is_list_of_spark_dataframes
 # NUMERIC_TYPES, NOT_ARRAY_TYPES, STRING_TYPES, ARRAY_TYPES
 from optimus.engines.spark.audf import filter_row_by_data_type as fbdt
+from optimus.engines.base.ml.constants import STRING_TO_INDEX, INDEX_TO_STRING
 
 # Functions
 
@@ -114,28 +113,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             RaiseIt.type_error(cols_values, ["list of tuples", "dataframes"])
 
         return df_result
-
-    # @staticmethod
-    # def select(columns="*", regex=None, data_type=None, invert=False):
-    #     """
-    #     Select columns using index, column name, regex to data type
-    #     :param columns:
-    #     :param regex: Regular expression to filter the columns
-    #     :param data_type: Data type to be filtered for
-    #     :param invert: Invert the selection
-    #     :return:
-    #     """
-    #     df = self
-    #     columns = parse_columns(df, columns, is_regex=regex, filter_by_column_types=data_type, invert=invert)
-    #     if columns is not None:
-    #         df = df.select(columns)
-    #         # Metadata get lost when using select(). So we copy here again.
-    #         df.meta = Meta.action(df.meta, None)
-    #
-    #     else:
-    #         df = None
-    #
-    #     return df
 
     def copy(self, input_cols, output_cols=None, columns=None):
         """
@@ -376,19 +353,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return format_dict(result)
 
-    # @staticmethod
-    # def sum(columns):
-    #     """
-    #     Return the sum of a column dataframe
-    #     :param columns: '*', list of columns names or a single column name.
-    #     :return:
-    #     """
-    #     columns = parse_columns(
-    #         self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
-    #     check_column_numbers(columns, "*")
-    #
-    #     return format_dict(Cols.agg_exprs(columns, F.sum))
-
     @staticmethod
     def reverse(columns):
         pass
@@ -428,36 +392,36 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
                         meta_action=Actions.REMOVE_ACCENTS.value)
         return df
 
-    # def remove_special_chars(self, input_cols="*", output_cols=None):
-    #     """
-    #     Reference https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
-    #     This method remove special characters (i.e. !”#$%&/()=?) in columns of dataFrames.
-    #     :param input_cols: '*', list of columns names or a single column name.
-    #     :param output_cols:
-    #     :return:
-    #     """
-    #
-    #     input_cols = parse_columns(
-    #         self.root, input_cols, filter_by_column_types=self.root.constants.STRING_TYPES)
-    #     check_column_numbers(input_cols, "*")
-    #
-    #     df = self.replace(input_cols, [f"\\{s}" for s in string.punctuation], "", "chars", output_cols=output_cols)
-    #     return df
+    def remove_special_chars(self, input_cols="*", output_cols=None):
+        """
+        Reference https://stackoverflow.com/questions/265960/best-way-to-strip-punctuation-from-a-string-in-python
+        This method remove special characters (i.e. !”#$%&/()=?) in columns of dataFrames.
+        :param input_cols: '*', list of columns names or a single column name.
+        :param output_cols:
+        :return:
+        """
 
-    # def remove_white_spaces(self, input_cols="*", output_cols=None):
-    #     """
-    #     Remove all the white spaces from a string
-    #     :param input_cols:
-    #     :param output_cols:
-    #     :return:
-    #     """
-    #
-    #     def _remove_white_spaces(col_name, args):
-    #         return F.regexp_replace(F.col(col_name), " ", "")
-    #
-    #     return self.apply(input_cols, _remove_white_spaces, output_cols=output_cols,
-    #                       filter_col_by_dtypes=self.root.constants.NOT_ARRAY_TYPES,
-    #                       meta_action=Actions.REMOVE_WHITE_SPACES.value)
+        input_cols = parse_columns(
+            self.root, input_cols, filter_by_column_types=self.root.constants.STRING_TYPES)
+        check_column_numbers(input_cols, "*")
+
+        df = self.replace(input_cols, [f"\\{s}" for s in string.punctuation], "", "chars", output_cols=output_cols)
+        return df
+
+    def remove_white_spaces(self, input_cols="*", output_cols=None):
+        """
+        Remove all the white spaces from a string
+        :param input_cols:
+        :param output_cols:
+        :return:
+        """
+
+        def _remove_white_spaces(col_name, args):
+            return F.regexp_replace(F.col(col_name), " ", "")
+
+        return self.apply(input_cols, _remove_white_spaces, output_cols=output_cols,
+                          filter_col_by_dtypes=self.root.constants.NOT_ARRAY_TYPES,
+                          meta_action=Actions.REMOVE_WHITE_SPACES.value)
 
     @staticmethod
     def format_date(input_cols, current_format=None, output_format=None, output_cols=None):
@@ -657,21 +621,19 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         :return: Dataframe object (DF with columns that has the imputed values).
         """
         df = self.root
-        dfd = df.data.to_spark()
-        columns = prepare_columns(self.root, cols, output_cols,accepts_missing_cols=True,)
 
         if data_type == "continuous":
-            input_cols = parse_columns(df, cols,
-                                       filter_by_column_types=df.constants.NUMERIC_TYPES)
+            input_cols = parse_columns(df, cols)
+
             output_cols = get_output_cols(input_cols, output_cols)
 
             # Imputer require not only numeric but float or double
             # print("{} values imputed for column(s) '{}'".format(df.cols.count_na(input_col), input_col))
-            df = df.cols.cast(input_cols, "float", output_cols)
+            dfd = df.cols.cast(input_cols, "float", output_cols).data.to_spark()
             imputer = Imputer(inputCols=output_cols, outputCols=output_cols)
-            model = imputer.setStrategy(strategy).setMissingValue(fill_value).fit(df.data.to_spark())
+            model = imputer.setStrategy(strategy).setMissingValue(fill_value).fit(dfd)
 
-            meta = Meta.action(df.meta, Actions.SET.value, cols)
+            meta = Meta.action(df.meta, Actions.IMPUTE.value, cols)
             df = self.root.new(model.transform(dfd).to_koalas(), meta=meta)
 
         elif data_type == "categorical":
@@ -684,48 +646,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         else:
             RaiseIt.value_error(data_type, ["continuous", "categorical", "auto"])
 
-
         return df
-
-    # def fill_na(self, input_cols, value=None, output_cols=None):
-    #     """
-    #     Replace null data with a specified value
-    #     :param input_cols: '*', list of columns names or a single column name.
-    #     :param output_cols:
-    #     :param value: value to replace the nan/None values
-    #     :return:
-    #     """
-    #     df = self.root
-    #     input_cols = parse_columns(df, input_cols)
-    #     check_column_numbers(input_cols, "*")
-    #     output_cols = get_output_cols(input_cols, output_cols)
-    #
-    #     for input_col, output_col in zip(input_cols, output_cols):
-    #         func = None
-    #         if is_column_a(self, input_col, df.constants.NUMERIC_TYPES):
-    #
-    #             new_value = fastnumbers.fast_float(value)
-    #             func = F.when(df.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-    #         elif is_column_a(self, input_col, df.constants.STRING_TYPES):
-    #             new_value = str(value)
-    #             func = F.when(df.functions.match_nulls_strings(input_col), new_value).otherwise(F.col(input_col))
-    #         elif is_column_a(self, input_col, df.constants.ARRAY_TYPES):
-    #             if is_one_element(value):
-    #                 new_value = F.array(F.lit(value))
-    #             else:
-    #                 new_value = F.array(*[F.lit(v) for v in value])
-    #             func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
-    #         else:
-    #             if df.cols.data_type(input_col) == parse_python_dtypes(type(value).__name__):
-    #
-    #                 new_value = value
-    #                 func = F.when(df.functions.match_null(input_col), new_value).otherwise(F.col(input_col))
-    #             else:
-    #                 RaiseIt.type_error(value, [df.cols.data_type(input_col)])
-    #
-    #         df = df.cols.apply(input_col, func=func, output_cols=output_col, meta_action=Actions.FILL_NA.value)
-    #
-    #     return df
 
     def is_na(self, input_cols, output_cols=None):
         """
@@ -757,34 +678,34 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         return result
 
     # Stats
-    @staticmethod
-    def z_score(input_cols, output_cols=None):
-        """
-        Return the column z score
-        :param input_cols: '*', list of columns names or a single column name
-        :param output_cols:
-        :return:
-        """
-
-        df = self.root
-
-        def _z_score(col_name, attr):
-            mean_value = df.cols.mean(col_name)
-            stdev_value = df.cols.std(col_name)
-            return F.abs((F.col(col_name) - mean_value) / stdev_value)
-
-        input_cols = parse_columns(df, input_cols)
-
-        # Hint the user if the column has not the correct data type
-        for input_col in input_cols:
-            if not is_column_a(df, input_col, df.constants.NUMERIC_TYPES):
-                print(
-                    "'{}' column is not numeric, z-score can not be calculated. Cast column to numeric using df.cols.cast()".format(
-                        input_col))
-
-        return Cols.apply(input_cols, func=_z_score, filter_col_by_dtypes=df.constants.NUMERIC_TYPES,
-                          output_cols=output_cols,
-                          meta_action=Actions.Z_SCORE.value)
+    # @staticmethod
+    # def z_score(input_cols="*", output_cols=None):
+    #     """
+    #     Return the column z score
+    #     :param input_cols: '*', list of columns names or a single column name
+    #     :param output_cols:
+    #     :return:
+    #     """
+    #
+    #     df = self.root
+    #
+    #     def _z_score(col_name, attr):
+    #         mean_value = df.cols.mean(col_name)
+    #         stdev_value = df.cols.std(col_name)
+    #         return F.abs((F.col(col_name) - mean_value) / stdev_value)
+    #
+    #     input_cols = parse_columns(df, input_cols)
+    #
+    #     # Hint the user if the column has not the correct data type
+    #     for input_col in input_cols:
+    #         if not is_column_a(df, input_col, df.constants.NUMERIC_TYPES):
+    #             print(
+    #                 "'{}' column is not numeric, z-score can not be calculated. Cast column to numeric using df.cols.cast()".format(
+    #                     input_col))
+    #
+    #     return Cols.apply(input_cols, func=_z_score, filter_col_by_dtypes=df.constants.NUMERIC_TYPES,
+    #                       output_cols=output_cols,
+    #                       meta_action=Actions.Z_SCORE.value)
 
     @staticmethod
     def standard_scaler(input_cols, output_cols=None):
@@ -1189,7 +1110,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             df = df.cols.apply_expr(col_name, _clip, [lower_bound, upper_bound])
         return df
 
-    def string_to_index(self, cols=None, output_cols=None):
+    def string_to_index(self, cols=None, output_cols=None, columns=None, **kwargs):
         """
         Encodes a string column of labels to a column of label indices
         :param cols:
@@ -1197,13 +1118,30 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         :param columns:
         :return:
         """
+
         df = self.root
 
-        df = ml_string_to_index(df, cols, output_cols)
+        if columns is None:
+            input_cols = parse_columns(df, cols)
+            if output_cols is None:
+                output_cols = [name_col(input_col, STRING_TO_INDEX) for input_col in input_cols]
+            output_cols = get_output_cols(input_cols, output_cols)
+        else:
+            input_cols, output_cols = zip(*columns)
 
+        dfd = df.data.to_spark()
+        indexers = [StringIndexer(inputCol=input_col, outputCol=output_col, handleInvalid="skip", **kwargs).fit(dfd) for
+                    input_col, output_col
+                    in zip(list(set(input_cols)), list(set(output_cols)))]
+
+        pipeline = Pipeline(stages=indexers)
+        dfd = pipeline.fit(dfd).transform(dfd)
+
+        meta = Meta.action(df.meta, Actions.STRING_TO_INDEX.value, input_cols)
+        df = self.root.new(dfd.to_koalas(), meta=meta)
         return df
 
-    def index_to_string(self, cols=None, output_cols=None):
+    def index_to_string(self, cols=None, output_cols=None, columns=None, **kwargs):
         """
         Encodes a string column of labels to a column of label indices
         :param cols:
@@ -1213,8 +1151,22 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         """
         df = self.root
 
-        df = ml_index_to_string(df, cols, output_cols)
+        if columns is None:
+            input_cols = parse_columns(df, cols)
+            if output_cols is None:
+                output_cols = [name_col(input_col, INDEX_TO_STRING) for input_col in input_cols]
+            output_cols = get_output_cols(input_cols, output_cols)
+        else:
+            input_cols, output_cols = zip(*columns)
 
+        dfd = df.data.to_spark()
+        indexers = [IndexToString(inputCol=input_col, outputCol=output_col, **kwargs) for input_col, output_col
+                    in zip(list(set(input_cols)), list(set(output_cols)))]
+        pipeline = Pipeline(stages=indexers)
+        dfd = pipeline.fit(dfd).transform(dfd)
+
+        meta = Meta.action(df.meta, Actions.STRING_TO_INDEX.value, input_cols)
+        df = self.root.new(dfd.to_koalas(), meta=meta)
         return df
 
     @staticmethod
