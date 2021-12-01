@@ -622,13 +622,18 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         """
         df = self.root
 
+        strategy_options = ["mean", "median", "mode"]
         if data_type == "continuous":
             input_cols = parse_columns(df, cols)
-
             output_cols = get_output_cols(input_cols, output_cols)
 
             # Imputer require not only numeric but float or double
-            # print("{} values imputed for column(s) '{}'".format(df.cols.count_na(input_col), input_col))
+            if strategy == "most_frequent":
+                strategy = "mode"
+
+            if strategy not in strategy_options:
+                RaiseIt.value_error(strategy, strategy_options)
+
             dfd = df.cols.cast(input_cols, "float", output_cols).data.to_spark()
             imputer = Imputer(inputCols=output_cols, outputCols=output_cols)
             model = imputer.setStrategy(strategy).setMissingValue(fill_value).fit(dfd)
