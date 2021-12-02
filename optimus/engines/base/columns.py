@@ -1522,6 +1522,19 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.sum, tidy=tidy, compute=compute)
 
+    def prod(self, cols="*", tidy=True, compute=True):
+        """
+        Return the prod of the values over the requested column.
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If True it will return a value if you process a column or column name and
+            value if not. If False it will return the functions name, the column name.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return: Column containing the sum of multiple columns.
+        """
+        df = self.root
+        return df.cols.agg_exprs(cols, self.F.prod, tidy=tidy, compute=compute)
+
     def cumsum(self, cols="*", output_cols=None):
         """
         Return cumulative sum over a DataFrame or column.

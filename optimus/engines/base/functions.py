@@ -387,6 +387,12 @@ class BaseFunctions(ABC):
         """
         return self.to_float(series).sum()
 
+    def prod(self, series):
+        """
+        Get the sum of a series
+        """
+        return self.to_float(series).prod()
+
     def cumsum(self, series):
         """
         Get the cumulative sum of a series
