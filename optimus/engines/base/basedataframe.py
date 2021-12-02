@@ -1106,7 +1106,10 @@ class BaseDataFrame(ABC):
         """
         :param aggregations: Dictionary or list of tuples with the form [("col", "agg")]
         :param groupby: None, list of columns names or a single column name to group the aggregations.
-        :param output{‘dict’, ‘dataframe’}, default ‘dict’: Output type.
+        :param output:{‘dict’, ‘dataframe’}, default ‘dict’: Output type.
+        :param tidy: The result format. If 'True' it will return a value if you 'False' will return the column name a value.
+        process a column or column name and value if not. If False it will return the functions name, the column name
+
         """
 
         df = self
@@ -1119,6 +1122,7 @@ class BaseDataFrame(ABC):
             groupby = parse_columns(df, groupby)
 
             for column, aggregations_set in aggregations:
+                print(aggregations)
                 aggregations[column] = val_to_list(aggregations_set)
 
             dfd = dfd.groupby(groupby).agg(aggregations)
@@ -1152,7 +1156,7 @@ class BaseDataFrame(ABC):
         """
         Return dataframe statistical information in HTML Format
         :param df: Dataframe to be analyzed
-        :param columns: Columns to be analyzed
+        :param cols: Columns to be analyzed
         :param buckets: Number of buckets calculated to print the histogram
         :param infer: infer data type
         :param relative_error: Relative Error for quantile discretizer calculation

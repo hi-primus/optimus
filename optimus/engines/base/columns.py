@@ -1289,7 +1289,7 @@ class BaseColumns(ABC):
         """
         df = self.root
         cols = parse_columns(df, cols)
-
+        print(11111)
         if args is None:
             args = []
         elif not is_tuple(args, ):
@@ -1311,14 +1311,17 @@ class BaseColumns(ABC):
         if parallel:
             all_funcs = [getattr(df[cols].data, func.__name__)()
                          for func in funcs]
-            agg_result = {func.__name__: self.exec_agg(all_funcs, compute=False) for func in funcs}
 
+            agg_result = {func.__name__: self.exec_agg(all_funcs, compute=False) for func in funcs}
+            print("agg_result",type(agg_result),agg_result)
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute=False) for
                                           col_name in cols} for func in funcs}
 
+
         @self.F.delayed
         def compute_agg(values):
+            print(tidy)
             return convert_numpy(format_dict(values, tidy))
 
         agg_result = compute_agg(agg_result)
@@ -1345,14 +1348,21 @@ class BaseColumns(ABC):
         :param exprs:
         :return:
         """
+        print(exprs, "eeee")
         while isinstance(exprs, (list, tuple, set)) and len(exprs) == 1:
+            print("aaaaaaa")
             exprs = exprs[0]
         if getattr(exprs, "tolist", None):
-            exprs = exprs.tolist()
-            if not is_list_of_list(exprs):
-                exprs = one_list_to_val(exprs)
+            print(exprs.to_dict(), "ddd")
+            # exprs = exprs.tolist()
+            # if not is_list_of_list(exprs):
+            #     exprs = one_list_to_val(exprs)
+            #     print(exprs, "ccc")
         if getattr(exprs, "to_dict", None):
+            print("ddd")
             exprs = exprs.to_dict()
+
+        print(exprs, "aaa")
         return exprs
 
     def mad(self, cols="*", relative_error=RELATIVE_ERROR, more=False, estimate=True, tidy=True, compute=True):
@@ -3182,11 +3192,12 @@ class BaseColumns(ABC):
 
         quartile = df.cols.percentile(cols, [0.25, 0.5, 0.75], relative_error=relative_error,
                                       estimate=estimate, tidy=False)["percentile"]
-
+        print(quartile)
         for col_name in cols:
-            if is_null(quartile[col_name]):
+            if is_null(any(quartile[col_name])):
                 iqr_result[col_name] = np.nan
             else:
+                print(quartile)
                 q1 = quartile[col_name][0.25]
                 q2 = quartile[col_name][0.5]
                 q3 = quartile[col_name][0.75]

@@ -34,6 +34,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
 
 # Add the directory containing your module to the Python path (wants absolute paths)
+from optimus.profiler.constants import MAX_BUCKETS
 
 sys.path.append(os.path.abspath(ROOT_DIR))
 
@@ -321,37 +322,37 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return r
 
-    # Descriptive Analytics
-    @staticmethod
-    # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    def mad(columns, relative_error=RELATIVE_ERROR, more=None):
-        """
-        Return the Median Absolute Deviation
-        :param columns: Column to be processed
-        :param more: Return some extra computed values (Median).
-        :param relative_error: Relative error calculating the media
-        :return:
-        """
-        columns = parse_columns(
-            self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
-        check_column_numbers(columns, "*")
-
-        result = {}
-        for col_name in columns:
-
-            _mad = {}
-            median_value = self.root.cols.median(col_name, relative_error)
-            mad_value = self.root.data.withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
-                .cols.median(col_name, relative_error)
-
-            if more:
-                _mad = {"mad": mad_value, "median": median_value}
-            else:
-                _mad = {"mad": mad_value}
-
-            result[col_name] = _mad
-
-        return format_dict(result)
+    # # Descriptive Analytics
+    # @staticmethod
+    # # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
+    # def mad(columns, relative_error=RELATIVE_ERROR, more=None):
+    #     """
+    #     Return the Median Absolute Deviation
+    #     :param columns: Column to be processed
+    #     :param more: Return some extra computed values (Median).
+    #     :param relative_error: Relative error calculating the media
+    #     :return:
+    #     """
+    #     columns = parse_columns(
+    #         self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
+    #     check_column_numbers(columns, "*")
+    #
+    #     result = {}
+    #     for col_name in columns:
+    #
+    #         _mad = {}
+    #         median_value = self.root.cols.median(col_name, relative_error)
+    #         mad_value = self.root.data.withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
+    #             .cols.median(col_name, relative_error)
+    #
+    #         if more:
+    #             _mad = {"mad": mad_value, "median": median_value}
+    #         else:
+    #             _mad = {"mad": mad_value}
+    #
+    #         result[col_name] = _mad
+    #
+    #     return format_dict(result)
 
     @staticmethod
     def reverse(columns):
@@ -623,6 +624,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         df = self.root
 
         strategy_options = ["mean", "median", "mode"]
+        meta = Meta.action(df.meta, Actions.IMPUTE.value, cols)
         if data_type == "continuous":
             input_cols = parse_columns(df, cols)
             output_cols = get_output_cols(input_cols, output_cols)
@@ -638,7 +640,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             imputer = Imputer(inputCols=output_cols, outputCols=output_cols)
             model = imputer.setStrategy(strategy).setMissingValue(fill_value).fit(dfd)
 
-            meta = Meta.action(df.meta, Actions.IMPUTE.value, cols)
             df = self.root.new(model.transform(dfd).to_koalas(), meta=meta)
 
         elif data_type == "categorical":
@@ -648,9 +649,11 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             output_cols = get_output_cols(input_cols, output_cols)
             value = df.cols.mode(input_cols)
             df = df.cols.fill_na(output_cols, value=value, output_cols=output_cols)
+
+            df = self.root.new(df.data.to_koalas(), meta=meta)
+
         else:
             RaiseIt.value_error(data_type, ["continuous", "categorical", "auto"])
-
         return df
 
     def is_na(self, input_cols, output_cols=None):
@@ -973,12 +976,12 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
-    def hist(self, columns="*", buckets=20, compute=True):
+    def hist(self, cols="*", buckets=MAX_BUCKETS, compute=True) -> dict:
         df = self.root
         # return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=True)
 
-        result = df.cols.agg_exprs(columns, self.F.hist_agg, buckets, None, df=self.root)
-
+        return df.cols.agg_exprs(cols, self.F.hist, buckets, compute=compute)
+        # return df.cols.agg_exprs(cols, self.F.mad, relative_error, more, estimate, compute=compute, tidy=tidy)
         # TODO: for some reason casting to int in the exprs do not work. Casting Here. A Spark bug?
         # Example
         # Column < b'array(map(count, CAST(sum(CASE WHEN ((rank >= 7) AND (rank < 7.75)) THEN 1 ELSE 0 END) AS INT),
