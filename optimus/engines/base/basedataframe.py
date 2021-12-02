@@ -1120,11 +1120,7 @@ class BaseDataFrame(ABC):
 
         if groupby:
             groupby = parse_columns(df, groupby)
-
-            for column, aggregations_set in aggregations:
-                print(aggregations)
-                aggregations[column] = val_to_list(aggregations_set)
-
+            aggregations = { column: val_to_list(aggregations_set) for column, aggregations_set in aggregations }
             dfd = dfd.groupby(groupby).agg(aggregations)
 
             dfd.columns = ['_'.join(col).strip() for col in dfd.columns.values]
