@@ -57,7 +57,7 @@ class SparkDataFrame(BaseDataFrame):
     def _buffer_window(self, input_cols, lower_bound, upper_bound):
         return self.__class__(self.data[input_cols][lower_bound: upper_bound], op=self.op, label_encoder=self.le)
 
-    def cache(self):
+    def execute(self):
         df = self.data
         return self.new(df.cache(), meta=self.meta)
 
