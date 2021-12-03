@@ -1348,21 +1348,16 @@ class BaseColumns(ABC):
         :param exprs:
         :return:
         """
-        print(exprs, "eeee")
         while isinstance(exprs, (list, tuple, set)) and len(exprs) == 1:
-            print("aaaaaaa")
             exprs = exprs[0]
         if getattr(exprs, "tolist", None):
-            print(exprs.to_dict(), "ddd")
-            # exprs = exprs.tolist()
-            # if not is_list_of_list(exprs):
-            #     exprs = one_list_to_val(exprs)
-            #     print(exprs, "ccc")
+            exprs = exprs.tolist()
+            if not is_list_of_list(exprs):
+                exprs = one_list_to_val(exprs)
+
         if getattr(exprs, "to_dict", None):
-            print("ddd")
             exprs = exprs.to_dict()
 
-        print(exprs, "aaa")
         return exprs
 
     def mad(self, cols="*", relative_error=RELATIVE_ERROR, more=False, estimate=True, tidy=True, compute=True):
