@@ -64,11 +64,11 @@ class Plot:
         for k, v in data.items():
             plot_frequency({k: v}, output=output_format, path=output_path)
 
-    def correlation(self, col_name, method="pearson", output_format="plot", output_path=None):
+    def correlation(self, cols, method="pearson", output_format="plot", output_path=None):
         """
         Compute the correlation matrix for the input data set of Vectors using the specified method. Method
         mapped from pyspark.ml.stat.Correlation.
-        :param col_name: The name of the column for which the correlation coefficient needs to be computed.
+        :param cols: The name of the columns for which the correlation coefficient needs to be computed.
         :param method: String specifying the method to use for computing correlation. Supported: pearson (default),
         spearman.
         :param output_format: Output image format
@@ -76,7 +76,7 @@ class Plot:
         :return: Heatmap plot of the corr matrix using seaborn.
         """
         df = self.df
-        cols_data = df.cols.correlation(col_name, method)
+        cols_data = df.cols.correlation(cols, method, tidy=False)
         plot_correlation(cols_data, output=output_format, path=output_path)
 
     def qqplot(self, columns, n=100, output_format="plot", output_path=None):
