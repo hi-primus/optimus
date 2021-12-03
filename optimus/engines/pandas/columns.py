@@ -1,10 +1,9 @@
-import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
-from optimus.engines.base.pandas.columns import PandasBaseColumns
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
+from optimus.engines.base.pandas.columns import PandasBaseColumns
 
 DataFrame = pd.DataFrame
 

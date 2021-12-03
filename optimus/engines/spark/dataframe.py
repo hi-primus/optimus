@@ -2,18 +2,21 @@ from imgkit import imgkit
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
 
-from optimus.helpers.types import *
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int, absolute_path
 from optimus.helpers.output import print_html
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.types import *
 
 
 class SparkDataFrame(BaseDataFrame):
     def _base_to_dfd(self, pdf, n_partitions) -> 'InternalDataFrameType':
         pass
+
+    def get_series(self):
+        return self.data.iloc[:, 0]
 
     def visualize(self):
         pass
@@ -40,6 +43,11 @@ class SparkDataFrame(BaseDataFrame):
     def constants(self):
         from optimus.engines.spark.constants import Constants
         return Constants()
+
+    @property
+    def encoding(self):
+        from optimus.engines.spark.ml.encoding import Encoding
+        return Encoding(self)
 
     @property
     def functions(self):
@@ -214,9 +222,8 @@ class SparkDataFrame(BaseDataFrame):
 
         return n_bytes
 
-
     def execute(self):
-        self.data.cache()
+        self.data.spark.cache()
         return self
 
     def compute(self):
@@ -264,7 +271,6 @@ class SparkDataFrame(BaseDataFrame):
             RaiseIt.value_error(value, ["> 0"])
 
         self.createOrReplaceTempView(value)
-
 
     def partitions(self):
         """
@@ -374,4 +380,3 @@ class SparkDataFrame(BaseDataFrame):
 
     def to_pandas(self):
         return self.data.toPandas()
-

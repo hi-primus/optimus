@@ -106,7 +106,7 @@ class BaseRows(ABC):
         if not hasattr(expr, "get_series"):
             raise ValueError(f"Invalid value for 'expr': {expr}")
                 
-        dfd = dfd.reset_index(drop=True)[expr.get_series().reset_index(drop=True)]
+        dfd = dfd.reset_index(drop=True)[expr.get_series().reset_index(drop=True)].reset_index(drop=True)
 
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 

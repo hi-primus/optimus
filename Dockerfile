@@ -24,12 +24,12 @@ RUN sudo chown -R root ~/anaconda3/bin && \
     conda install -c conda-forge jupyter_kernel_gateway && \
     conda clean -afy
 
-RUN echo "Version 21.9.0-beta4"
+RUN echo "Version 21.11.0-beta4"
 
 RUN pip install cytoolz && \
     pip install llvmlite --ignore-installed && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[pandas] && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-21.9#egg=pyoptimus[dask]
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.11#egg=pyoptimus[pandas] && \
+    pip install git+https://github.com/hi-primus/optimus.git@develop-21.11#egg=pyoptimus[dask]
 
 CMD jupyter notebook --port=8888 --no-browser --ip=0.0.0.0 --allow-root
 

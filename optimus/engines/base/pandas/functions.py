@@ -1,12 +1,12 @@
-from optimus.helpers.logger import logger
+from abc import ABC
+
 import numpy as np
 import pandas as pd
-from fastnumbers import isintlike, isfloat, isreal, fast_forceint, fast_float
-
-from optimus.infer import is_int_like, is_list_or_tuple
+from fastnumbers import isintlike, isreal, fast_forceint, fast_float
 
 from optimus.engines.base.functions import BaseFunctions
-from abc import ABC
+from optimus.helpers.logger import logger
+from optimus.infer import is_int_like, is_list_or_tuple
 
 
 class PandasBaseFunctions(BaseFunctions, ABC):
@@ -28,8 +28,9 @@ class PandasBaseFunctions(BaseFunctions, ABC):
             return True
         return np.vectorize(isintlike)(series).flatten()
 
-    @staticmethod
-    def is_float(series):
+    def is_float(self, series):
+        if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
+            return False
         # use isreal to allow strings like "0"
         return np.vectorize(isreal)(series).flatten()
 
@@ -55,8 +56,8 @@ class PandasBaseFunctions(BaseFunctions, ABC):
             if default is not None:
                 series = series.fillna(default)
             series = pd.Series(np.vectorize(fast_forceint,
-                               otypes=otypes)(series, default=default,
-                                              on_fail=lambda x: default).flatten())
+                                            otypes=otypes)(series, default=default,
+                                                           on_fail=lambda x: default).flatten())
 
         except Exception:
             series = series.replace([np.inf, -np.inf], default)

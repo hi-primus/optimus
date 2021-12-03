@@ -72,7 +72,7 @@ class Constants(BaseConstants):
 
     NUMERIC_TYPES = ["byte", "short", "big", "int", "double", "float"]
     NOT_ARRAY_TYPES = ["byte", "short", "big", "int", "double", "float", "string", "date", "bool"]
-    STRING_TYPES = ["str"]
+    STRING_TYPES = ["str", "object"]
     ARRAY_TYPES = ["array"]
 
     DTYPES_TO_INFERRED = {"int": ["smallint", "tinyint", "bigint", "int"], "float": ["float", "double"],

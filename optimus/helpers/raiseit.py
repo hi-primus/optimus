@@ -1,5 +1,4 @@
-from optimus.helpers.core import one_list_to_val, val_to_list
-
+from optimus.helpers.core import val_to_list
 
 
 class RaiseIt:
@@ -9,14 +8,14 @@ class RaiseIt:
         values = val_to_list(values)
         if len(values) == 1:
             return f"'{values[0]}'"
-        return ", ".join([f"'{v}'" for v in values[0:-1]]) + " or " +  f"'{values[-1]}'"
+        return ", ".join([f"'{v}'" for v in values[0:-1]]) + " or " + f"'{values[-1]}'"
 
     @staticmethod
     def _and(values):
         values = val_to_list(values)
         if len(values) == 1:
-            return  f"'{values[0]}'"
-        return ", ".join([f"'{v}'" for v in values[0:-1]]) + " and " +  f"'{values[-1]}'"
+            return f"'{values[0]}'"
+        return ", ".join([f"'{v}'" for v in values[0:-1]]) + " and " + f"'{values[-1]}'"
 
     @classmethod
     def type_error(cls, vars, data_types):
@@ -100,7 +99,6 @@ class RaiseIt:
             err += f" {extra_text}."
 
         raise ValueError(err)
-
 
     @staticmethod
     def type(cls, var):

@@ -31,8 +31,13 @@ class Load(BaseLoad):
         kwargs.pop("n_partitions", None)
 
         if is_url(filepath_or_buffer):
-            s = requests.get(filepath_or_buffer).text
-            df = pd.read_csv(StringIO(s), *args, **kwargs)
+            try:
+                resp = requests.get(filepath_or_buffer)
+                df = pd.read_csv(StringIO(resp.text), *args, **kwargs)
+                resp.raise_for_status()
+            except requests.exceptions.HTTPError as err:
+                print(err)
+
         else:
             df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
 

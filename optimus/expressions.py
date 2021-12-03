@@ -252,8 +252,8 @@ functions = {
         "description": "Rounds a number to a certain number of decimal places according to standard rules.",
         "parameters": [
             {
-                "type": "series",
-                "name": "series",
+                "type": ["column", "number"],
+                "name": "col_name",
                 "description": "The value to round to places number of places."
             },
 

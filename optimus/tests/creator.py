@@ -198,9 +198,9 @@ class TestCreator:
             if select_cols:
                 df = df.cols.select(select_cols)
                 add_buffer(
-                    f"df = self.df.cols.select({pformat(select_cols, compact=True)})\n", 2)
+                    f"df = self.df.copy().cols.select({pformat(select_cols, compact=True)})\n", 2)
             else:
-                add_buffer("df = self.df\n", 2)
+                add_buffer("df = self.df.copy()\n", 2)
             df_func = df
         elif isinstance(df, (BaseDataFrame,)):
             if select_cols:

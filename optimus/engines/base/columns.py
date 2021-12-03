@@ -585,6 +585,7 @@ class BaseColumns(ABC):
 
         :param cols: "*", column name or list of column names to be processed.
         :param use_internal: If no inferred data type is found, return a translated internal data type instead of None.
+        :param calculate: If True, calculate the inferred data type.
         :param tidy: The result format. If 'True' it will return a value if you 'False' will return the column name a value.
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
@@ -600,11 +601,11 @@ class BaseColumns(ABC):
             if data_type is None:
                 data_type = Meta.get(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.data_type")
 
+            if calculate and data_type is None:
+                data_type = df.cols.infer_type(col_name)['data_type']
+
             if data_type is None:
                 data_type = result.get(col_name, None)
-
-            if calculate and data_type is None:
-                data_type = df.cols.infer_type(col_name)
 
             result.update({col_name: data_type})
 
@@ -1288,7 +1289,7 @@ class BaseColumns(ABC):
         """
         df = self.root
         cols = parse_columns(df, cols)
-
+        print(11111)
         if args is None:
             args = []
         elif not is_tuple(args, ):
@@ -1310,14 +1311,17 @@ class BaseColumns(ABC):
         if parallel:
             all_funcs = [getattr(df[cols].data, func.__name__)()
                          for func in funcs]
-            agg_result = {func.__name__: self.exec_agg(all_funcs, compute=False) for func in funcs}
 
+            agg_result = {func.__name__: self.exec_agg(all_funcs, compute=False) for func in funcs}
+            print("agg_result",type(agg_result),agg_result)
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute=False) for
                                           col_name in cols} for func in funcs}
 
+
         @self.F.delayed
         def compute_agg(values):
+            print(tidy)
             return convert_numpy(format_dict(values, tidy))
 
         agg_result = compute_agg(agg_result)
@@ -1350,8 +1354,10 @@ class BaseColumns(ABC):
             exprs = exprs.tolist()
             if not is_list_of_list(exprs):
                 exprs = one_list_to_val(exprs)
+
         if getattr(exprs, "to_dict", None):
             exprs = exprs.to_dict()
+
         return exprs
 
     def mad(self, cols="*", relative_error=RELATIVE_ERROR, more=False, estimate=True, tidy=True, compute=True):
@@ -1520,6 +1526,19 @@ class BaseColumns(ABC):
         """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.sum, tidy=tidy, compute=compute)
+
+    def prod(self, cols="*", tidy=True, compute=True):
+        """
+        Return the prod of the values over the requested column.
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param tidy: The result format. If True it will return a value if you process a column or column name and
+            value if not. If False it will return the functions name, the column name.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return: Column containing the sum of multiple columns.
+        """
+        df = self.root
+        return df.cols.agg_exprs(cols, self.F.prod, tidy=tidy, compute=compute)
 
     def cumsum(self, cols="*", output_cols=None):
         """
@@ -2934,8 +2953,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def fill_na(self, cols="*", value=None, output_cols=None,
-            eval_value: bool = False) -> 'DataFrameType':
+    def fill_na(self, cols="*", value=None, output_cols=None, eval_value: bool = False) -> 'DataFrameType':
         """
         Replace null data with a specified value.
 
@@ -2952,7 +2970,6 @@ class BaseColumns(ABC):
         output_cols = get_output_cols(cols, output_cols)
 
         kw_columns = {}
-
         for input_col, output_col, value, eval_value in zip(cols, output_cols, values, eval_values):
 
             if eval_value and is_str(value) and value:
@@ -2960,8 +2977,7 @@ class BaseColumns(ABC):
 
             if isinstance(value, self.root.__class__):
                 value = value.get_series()
-                
-            kw_columns[output_col] = df.data[input_col].fillna(value)
+            kw_columns[output_col] = df.data[input_col].fillna(value=value)
             kw_columns[output_col] = kw_columns[output_col].mask(
                 kw_columns[output_col] == "", value)
 
@@ -3029,7 +3045,11 @@ class BaseColumns(ABC):
         if value is None:
             if not output_col:
                 output_col = name + "_" + "_".join(cols)
-            if cast:
+            
+            dtypes = [df[col_name].cols.data_type() for col_name in parsed_cols]
+            same = not dtypes or dtypes.count(dtypes[0]) == len(dtypes)
+
+            if cast or not same:
                 expr = reduce(operator, [df[col_name].cols.to_float() for col_name in parsed_cols])
             else:
                 expr = reduce(operator, [df[col_name] for col_name in parsed_cols])
@@ -3167,11 +3187,12 @@ class BaseColumns(ABC):
 
         quartile = df.cols.percentile(cols, [0.25, 0.5, 0.75], relative_error=relative_error,
                                       estimate=estimate, tidy=False)["percentile"]
-
+        print(quartile)
         for col_name in cols:
-            if is_null(quartile[col_name]):
+            if is_null(any(quartile[col_name])):
                 iqr_result[col_name] = np.nan
             else:
+                print(quartile)
                 q1 = quartile[col_name][0.25]
                 q2 = quartile[col_name][0.5]
                 q3 = quartile[col_name][0.75]

@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 from optimus.tests.base import TestBase
 from optimus.helpers.json import json_encoding
 from optimus.helpers.functions import deep_sort, df_dicts_equal, results_equal
@@ -8,6 +9,7 @@ def Timestamp(t):
     return datetime.datetime.strptime(t, "%Y-%m-%d %H:%M:%S")
 
 
+NaT = np.datetime64('NaT')
 nan = float("nan")
 inf = float("inf")
 
@@ -18,16 +20,16 @@ class TestExamplePandas(TestBase):
     maxDiff = None
 
     def test_cols_upper_multiple(self):
-        df = self.df
+        df = self.df.copy()
         result = df.cols.upper(cols=['name', 'age (M)'])
         result = result.to_dict()
         expected = {'name': ['OPTIMUS', 'BUMBLEBEE', 'EJECT'], 'age (M)': ['5', '5', '5']}
         self.assertEqual(json_encoding(result), json_encoding(expected))
 
     def test_cols_upper_single(self):
-        df = self.df
+        df = self.df.copy()
         result = df.cols.upper(cols=['name'])
-        expected = self.create_dataframe(dict={('name', 'object'): ['OPTIMUS', 'BUMBLEBEE', 'EJECT'], ('age (M)', 'int64'): [5, 5, 5]}, force_data_types=True)
+        expected = self.create_dataframe(data={('name', 'object'): ['OPTIMUS', 'BUMBLEBEE', 'EJECT'], ('age (M)', 'int64'): [5, 5, 5]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
 

@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   release:
     types: [published]
+  pull_request:
+    branches: 
+      - main
+      - develop-21.11
 
 jobs:
   build:
@@ -26,6 +30,7 @@ jobs:
           if [ -f requirements/pandas-requirements.txt ]; then pip install -r requirements/pandas-requirements.txt; fi
           if [ -f requirements/dask-requirements.txt ]; then pip install -r requirements/dask-requirements.txt; fi
           if [ -f requirements/api-requirements.txt ]; then pip install -r requirements/api-requirements.txt; fi
+          python -m nltk.downloader punkt wordnet stopwords averaged_perceptron_tagger
       - name: Test with unittest
         run: |
           python -m unittest
