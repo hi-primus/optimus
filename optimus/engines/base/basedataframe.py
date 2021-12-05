@@ -412,7 +412,7 @@ class BaseDataFrame(ABC):
 
         return json.dumps(self.to_dict(cols, n, orient), ensure_ascii=False, default=json_converter)
 
-    def to_dict(self, cols="*", n=10, orient="list") -> dict:
+    def to_dict(self, cols="*", n: Union[int, str] = 10, orient="list") -> dict:
         """
             Return a dict from a Collect result
             :param cols:
