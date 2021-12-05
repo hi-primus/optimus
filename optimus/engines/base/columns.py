@@ -2116,7 +2116,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        return self.apply(cols, self.F.to_boolean, func_return_type=int,
+        return self.apply(cols, self.F.to_boolean, func_return_type=bool,
                           output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="vectorized")
 
     def to_string(self, cols="*", output_cols=None) -> 'DataFrameType':
