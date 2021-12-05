@@ -204,8 +204,7 @@ class BaseDataFrame(ABC):
                 name_right = getattr(df2, "name", 0)
 
             if name_left and name_right:
-                name = (name_left + "_" +
-                        name_right) if name_left != name_right else name_left
+                name = (name_left + "_" + name_right) if name_left != name_right else name_left
             else:
                 name = name_left if name_left else name_right
 
@@ -652,6 +651,7 @@ class BaseDataFrame(ABC):
         :param full: Include html header and footer
         :param truncate: Truncate the row information
         :param count:
+        :param highlight:
 
         :return:
         """
@@ -705,7 +705,7 @@ class BaseDataFrame(ABC):
         """
 
         :param limit:
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param title:
         :param truncate:
         :param plain_text:
@@ -729,7 +729,7 @@ class BaseDataFrame(ABC):
         """
         Print a dataframe in html format
         :param limit: The number of files that will be printed
-        :param cols: Select the columns to be printed
+        :param cols: "*", column name or list of column names to be processed.
         :param title:
         :param truncate:
         :param highlight:
@@ -752,7 +752,7 @@ class BaseDataFrame(ABC):
         """
         Print a dataframe in ascii format
         :param limit:
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :return:
         """
         df = self
@@ -814,7 +814,7 @@ class BaseDataFrame(ABC):
     def calculate_profile(self, cols="*", bins: int = MAX_BUCKETS, flush: bool = False, size=False):
         """
         Returns a new dataframe with the profile data in its added to the meta property
-        :param columns:
+        :param cols: "*", column name or list of column names to be processed.
         :param bins:
         :param flush:
         :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
@@ -1124,7 +1124,7 @@ class BaseDataFrame(ABC):
 
         if groupby:
             groupby = parse_columns(df, groupby)
-            aggregations = { column: val_to_list(aggregations_set) for column, aggregations_set in aggregations }
+            aggregations = {column: val_to_list(aggregations_set) for column, aggregations_set in aggregations}
             dfd = dfd.groupby(groupby).agg(aggregations)
 
             dfd.columns = ['_'.join(col).strip() for col in dfd.columns.values]
