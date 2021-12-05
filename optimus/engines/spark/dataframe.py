@@ -15,8 +15,13 @@ class SparkDataFrame(BaseDataFrame):
     def _base_to_dfd(self, pdf, n_partitions) -> 'InternalDataFrameType':
         pass
 
-    def get_series(self):
-        return self.data.iloc[:, 0]
+    # def get_series(self):
+    #     print("self.data-----------",type(self.data),self.data)
+    #     return self.data.iloc[:, 0]
+
+    # Koalas do not support the 'or' operation over the whole dataframe.
+    # def __or__(self, df2) -> 'DataFrameType':
+    #     return self.new(((self.get_series()) | (df2.get_series())).to_frame())
 
     def visualize(self):
         pass
