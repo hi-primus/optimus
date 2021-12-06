@@ -185,13 +185,20 @@ class BaseDataFrame(ABC):
 
         from optimus.engines.spark.dataframe import SparkDataFrame
         if isinstance(df1, SparkDataFrame) and opb == operator.__or__:
+<<<<<<< HEAD
+            # We use multiple_columns to extract the series
+            multiple_columns = False
+
+        if isinstance(df2, SparkDataFrame) and opb == operator.__or__:
+=======
+>>>>>>> develop-21.11
             # We use multiple_columns to extract the series
             multiple_columns = False
 
         if isinstance(df2, SparkDataFrame) and opb == operator.__or__:
             # We use multiple_columns to extract the series
             multiple_columns = False
-
+            
         df1 = BaseDataFrame.__operator__(df1, data_type, multiple_columns)
         df2 = BaseDataFrame.__operator__(df2, data_type, multiple_columns)
 
