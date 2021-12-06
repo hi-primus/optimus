@@ -19,10 +19,10 @@ def create():
         ('Date Type'): [datetime.datetime(2016, 9, 10), datetime.datetime(2015, 8, 10), datetime.datetime(2014, 6, 24), datetime.datetime(2013, 6, 24), datetime.datetime(2012, 5, 10), datetime.datetime(2011, 4, 10)],
         ('age', 'int'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000],
         ('function', 'string'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', None, 'Battle Station'],
-        ('names', 'str'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'],
+        ('names', 'str'): ['Optimus', 'bumbl#ebéé  ', 'Metroplex', 'bumblebee', 'métrop´le-x', 'Metroplex_)^$'],
         ('timestamp', 'time'): [datetime.datetime(2014, 6, 24, 0, 0), datetime.datetime(2014, 6, 24, 0, 0), datetime.datetime(2014, 6, 24, 0, 0), datetime.datetime(2014, 6, 24, 0, 0), datetime.datetime(2014, 6, 24, 0, 0), datetime.datetime(2014, 6, 24, 0, 0)],
         ('weight(t)', 'float'): [4.3, 2.0, 4.0, 1.8, 5.7, None]
-    })
+        })
 
     t = TestCreator(op, df, name="stringclustering", configs=default_configs)
 
@@ -61,6 +61,54 @@ def create():
     t.create(method="string_clustering", variant="multiple_double_metaphone", cols=["NullType","Cybertronian","timestamp"], algorithm="double_metaphone")
     t.create(method="string_clustering", variant="multiple_soundex", cols=["NullType","Cybertronian","timestamp"], algorithm="soundex")
     t.create(method="string_clustering", variant="multiple_levenshtein", cols=["NullType","Cybertronian","timestamp"], algorithm="levenshtein")
+
+    t.create(method="cols.fingerprint", variant="all", cols="*")
+    t.create(method="cols.fingerprint", variant="string", cols=["names"])
+    t.create(method="cols.fingerprint", variant="numeric", cols=["rank"], output_cols=["rk"])
+    t.create(method="cols.fingerprint", variant="multiple", cols=["NullType","Cybertronian","timestamp"], output_cols=["nt","ct","ts"])
+
+    t.create(method="cols.pos", variant="single", cols=["names"])
+    t.create(method="cols.pos", variant="multiple", cols=["date arrival","japanese name","last date seen"], output_cols=["da","jn","lds"])
+
+    t.create(method="cols.ngrams", variant="single", cols=["names"])
+    t.create(method="cols.ngrams", variant="multiple", cols=["date arrival","japanese name","last date seen"], n_size=1, output_cols=["da","jn","lds"])
+
+    t.create(method="cols.ngram_fingerprint", variant="all", cols="*")
+    t.create(method="cols.ngram_fingerprint", variant="string", cols=["function(binary)"], n_size=25)
+    t.create(method="cols.ngram_fingerprint", variant="numeric", cols=["rank"], output_cols=["rk"])
+    t.create(method="cols.ngram_fingerprint", variant="multiple", cols=["NullType","Cybertronian","timestamp"], n_size=4, output_cols=["nt","ct","ts"])
+
+    t.create(method="cols.metaphone", variant="all", cols="*")
+    t.create(method="cols.metaphone", variant="string", cols=["names"])
+    t.create(method="cols.metaphone", variant="numeric", cols=["rank"], output_cols=["rk"])
+    t.create(method="cols.metaphone", variant="multiple", cols=["NullType","Cybertronian","timestamp"], output_cols=["nt","ct","ts"])
+
+    t.create(method="cols.nysiis", variant="all", cols="*")
+    t.create(method="cols.nysiis", variant="string", cols=["names"])
+    t.create(method="cols.nysiis", variant="numeric", cols=["rank"], output_cols=["rk"])
+    t.create(method="cols.nysiis", variant="multiple", cols=["NullType","Cybertronian","timestamp"], output_cols=["nt","ct","ts"])
+
+    t.create(method="cols.match_rating_codex", variant="all", cols="*")
+    t.create(method="cols.match_rating_codex", variant="string", cols=["names"])
+    t.create(method="cols.match_rating_codex", variant="numeric", cols=["rank"], output_cols=["rk"])
+    t.create(method="cols.match_rating_codex", variant="multiple", cols=["NullType","Cybertronian","timestamp"], output_cols=["nt","ct","ts"])
+
+    t.create(method="cols.double_metaphone", variant="all", cols="*")
+    t.create(method="cols.double_metaphone", variant="string", cols=["names"])
+    t.create(method="cols.double_metaphone", variant="numeric", cols=["rank"], output_cols=["rk"])
+    t.create(method="cols.double_metaphone", variant="multiple", cols=["NullType","Cybertronian","timestamp"], output_cols=["nt","ct","ts"])
+
+    t.create(method="cols.soundex", variant="all", cols="*")
+    t.create(method="cols.soundex", variant="string", cols=["names"])
+    t.create(method="cols.soundex", variant="numeric", cols=["rank"], output_cols=["rk"])
+    t.create(method="cols.soundex", variant="multiple", cols=["NullType","Cybertronian","timestamp"], output_cols=["nt","ct","ts"])
+
+    t.create(method="cols.levenshtein", variant="all_value", cols="*", value=["1a#-s","ERR","d2e","0","[]","''","","1","lu","2016","5000000","aeiou","abc#&^","2014-06-23","nan."])
+    t.create(method="cols.levenshtein", variant="all_col", cols="*", other_cols=['date arrival','weight(t)','age','height(ft)','japanese name','rank','last date seen','names','last position seen','Cybertronian','NullType','Date Type','function(binary)','function','timestamp'])
+    t.create(method="cols.levenshtein", variant="single_value", cols=["names"], value="prime", output_cols="nms")
+    t.create(method="cols.levenshtein", variant="single_col", cols=["rank"], other_cols=["weight(t)"])
+    t.create(method="cols.levenshtein", variant="multiple_value", cols=["last position seen","age","japanese name"], value=["10005","000","['Bumble']"])
+    t.create(method="cols.levenshtein", variant="multiple_col", cols=["NullType","Cybertronian","timestamp"], other_cols=["height(ft)","function","Date Type"], output_cols=["nt-ht","ct-ft","ts-dt"])
 
     t.run()
 
