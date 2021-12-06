@@ -183,12 +183,15 @@ class BaseDataFrame(ABC):
             if data_type == "auto":
                 data_type = None
 
-        # koalas no not accept 'or' in dataframes
         from optimus.engines.spark.dataframe import SparkDataFrame
-        if isinstance([df1, df2], SparkDataFrame) and opb == operator.__or__:
+        if isinstance(df1, SparkDataFrame) and opb == operator.__or__:
             # We use multiple_columns to extract the series
             multiple_columns = False
 
+        if isinstance(df2, SparkDataFrame) and opb == operator.__or__:
+            # We use multiple_columns to extract the series
+            multiple_columns = False
+            
         df1 = BaseDataFrame.__operator__(df1, data_type, multiple_columns)
         df2 = BaseDataFrame.__operator__(df2, data_type, multiple_columns)
 
