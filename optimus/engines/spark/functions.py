@@ -37,7 +37,7 @@ class SparkFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
         """
         Converts a series values to bool
         """
-        return series.astype("str")
+        return series.astype("bool")
 
     def hist(col_name, df, buckets, min_max=None, dtype=None):
         """

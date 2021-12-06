@@ -1,8 +1,5 @@
 from abc import ABC, abstractmethod
 
-from optimus.helpers.columns import parse_columns, name_col
-from optimus.helpers.core import one_list_to_val
-
 
 class AbstractOutlierThreshold(ABC):
     """

@@ -1289,7 +1289,6 @@ class BaseColumns(ABC):
         """
         df = self.root
         cols = parse_columns(df, cols)
-        print(11111)
         if args is None:
             args = []
         elif not is_tuple(args, ):
@@ -1313,7 +1312,6 @@ class BaseColumns(ABC):
                          for func in funcs]
 
             agg_result = {func.__name__: self.exec_agg(all_funcs, compute=False) for func in funcs}
-            print("agg_result",type(agg_result),agg_result)
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute=False) for
                                           col_name in cols} for func in funcs}
@@ -1321,7 +1319,6 @@ class BaseColumns(ABC):
 
         @self.F.delayed
         def compute_agg(values):
-            print(tidy)
             return convert_numpy(format_dict(values, tidy))
 
         agg_result = compute_agg(agg_result)
@@ -2119,7 +2116,7 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        return self.apply(cols, self.F.to_boolean, func_return_type=int,
+        return self.apply(cols, self.F.to_boolean, func_return_type=bool,
                           output_cols=output_cols, meta_action=Actions.TO_BOOLEAN.value, mode="vectorized")
 
     def to_string(self, cols="*", output_cols=None) -> 'DataFrameType':
@@ -2727,14 +2724,14 @@ class BaseColumns(ABC):
             search_by = search_by or "full"
             for col, replace in cols.items():
                 _replace_by, _search = zip(*replace.items())
-                df = df.cols._replace_regex(col, _search, _replace_by, search_by=search_by)
+                df = df.cols._replace(col, list(_search), list(_replace_by), search_by=search_by)
 
         else:
             search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
-            df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
+            df = df.cols._replace(cols, search, list(replace_by), search_by, ignore_case, output_cols)
 
         return df
 
@@ -2797,14 +2794,14 @@ class BaseColumns(ABC):
             search_by = search_by or "full"
             for col, replace in columns.items():
                 _replace_by, _search = zip(*replace.items())
-                df = self._replace_regex(col, _search, _replace_by, search_by=search_by)
+                df = self._replace_regex(col, list(_search), list(_replace_by), search_by=search_by)
 
         else:
             search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
-            df = self._replace_regex(cols, search, replace_by, search_by, ignore_case, output_cols)
+            df = self._replace_regex(cols, list(search), list(replace_by), search_by, ignore_case, output_cols)
 
         return df
 
@@ -3187,12 +3184,10 @@ class BaseColumns(ABC):
 
         quartile = df.cols.percentile(cols, [0.25, 0.5, 0.75], relative_error=relative_error,
                                       estimate=estimate, tidy=False)["percentile"]
-        print(quartile)
         for col_name in cols:
-            if is_null(any(quartile[col_name])):
+            if is_null(quartile[col_name]):
                 iqr_result[col_name] = np.nan
             else:
-                print(quartile)
                 q1 = quartile[col_name][0.25]
                 q2 = quartile[col_name][0.5]
                 q3 = quartile[col_name][0.75]

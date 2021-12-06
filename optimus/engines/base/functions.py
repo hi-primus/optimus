@@ -68,7 +68,6 @@ class BaseFunctions(ABC):
             result = _s.to_dict()
         else:
             result = _s
-        print(result)
         return result
 
     @staticmethod
@@ -497,7 +496,7 @@ class BaseFunctions(ABC):
         if not len(_series):
             return np.nan
         else:
-            return self.delayed(_series.quantile(values))
+            return self.delayed(self._format_to_dict(_series.quantile(values)))
 
     # def radians(series):
     #     return series.to_float().radians()
