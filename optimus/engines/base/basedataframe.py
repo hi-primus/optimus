@@ -1105,7 +1105,7 @@ class BaseDataFrame(ABC):
 
         return df
 
-    def string_clustering(self, cols="*", algorithm="fingerrint", *args, **kwargs):
+    def string_clustering(self, cols="*", algorithm="fingerprint", *args, **kwargs):
         from optimus.engines.base.stringclustering import string_clustering
         return string_clustering(self, cols, algorithm, *args, **kwargs)
         # return clusters
