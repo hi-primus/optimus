@@ -2724,14 +2724,14 @@ class BaseColumns(ABC):
             search_by = search_by or "full"
             for col, replace in cols.items():
                 _replace_by, _search = zip(*replace.items())
-                df = df.cols._replace_regex(col, _search, _replace_by, search_by=search_by)
+                df = df.cols._replace(col, list(_search), list(_replace_by), search_by=search_by)
 
         else:
             search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
-            df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
+            df = df.cols._replace(cols, search, list(replace_by), search_by, ignore_case, output_cols)
 
         return df
 
@@ -2794,14 +2794,14 @@ class BaseColumns(ABC):
             search_by = search_by or "full"
             for col, replace in columns.items():
                 _replace_by, _search = zip(*replace.items())
-                df = self._replace_regex(col, _search, _replace_by, search_by=search_by)
+                df = self._replace_regex(col, list(_search), list(_replace_by), search_by=search_by)
 
         else:
             search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
-            df = self._replace_regex(cols, search, replace_by, search_by, ignore_case, output_cols)
+            df = self._replace_regex(cols, list(search), list(replace_by), search_by, ignore_case, output_cols)
 
         return df
 
