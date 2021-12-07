@@ -192,7 +192,6 @@ class BaseDataFrame(ABC):
             # We use multiple_columns to extract the series
             multiple_columns = False
 
-            
         df1 = BaseDataFrame.__operator__(df1, data_type, multiple_columns)
         df2 = BaseDataFrame.__operator__(df2, data_type, multiple_columns)
 
@@ -1029,12 +1028,12 @@ class BaseDataFrame(ABC):
     def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None,
              key_middle=False) -> 'DataFrameType':
         """
-        Join 2 dataframes SQL style
-        :param df_right:
-        :param how{‘left’, ‘right’, ‘outer’, ‘inner’, ‘exclusive’, ‘exclusive left’, ‘exclusive right’}, default ‘left’
-        :param on:
-        :param left_on:
-        :param right_on:
+        Join 2 dataframes using SQL style
+        :param df_right: Dataframe used to make the join with.
+        :param how {‘left’, ‘right’, ‘outer’, ‘inner’, ‘exclusive’, ‘exclusive left’, ‘exclusive right’}, default ‘left’
+        :param on: Key column in both dataframe to make a join.
+        :param left_on: Key column on the left used to make a join.
+        :param right_on: Key column on the right used to make the join.
         :param key_middle: Order the columns putting the left df columns before the key column and the right df columns
 
         :return:
@@ -1066,7 +1065,7 @@ class BaseDataFrame(ABC):
 
         # Used to reorder the output
         left_names = df_left.cols.names()
-        right_names = df_right.cols.names()
+        # right_names = df_right.cols.names()
 
         if how in ['exclusive', 'exclusive left', 'exclusive right']:
             _how = 'outer'
@@ -1105,7 +1104,7 @@ class BaseDataFrame(ABC):
 
         return df
 
-    def string_clustering(self, cols="*", algorithm="fingerrint", *args, **kwargs):
+    def string_clustering(self, cols="*", algorithm="fingerprint", *args, **kwargs):
         from optimus.engines.base.stringclustering import string_clustering
         return string_clustering(self, cols, algorithm, *args, **kwargs)
         # return clusters

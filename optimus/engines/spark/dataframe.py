@@ -1,12 +1,11 @@
-from imgkit import imgkit
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
+from pyspark.sql import functions as F
 
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import random_int, absolute_path
-from optimus.helpers.output import print_html
+from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
 
@@ -151,21 +150,47 @@ class SparkDataFrame(BaseDataFrame):
 
         return self.data.sample(False, fraction, seed=seed).limit(n)
 
-    @staticmethod
-    def stratified_sample(col_name, seed: int = 1):
+    def stratified_sample(self, col_name, seed: int = 1):
         """
         Stratified Sampling
         :param col_name:
         :param seed:
         :return:
         """
-        df = self
+        df = self.root.data.to_spark()
         fractions = df.select(col_name).distinct().withColumn("fraction", F.lit(0.8)).rdd.collectAsMap()
-        df = df.stat.sampleBy(col_name, fractions, seed)
-        return df
+        df = df.stat.sampleBy(col_name, fractions, seed).to_koalas()
+        return self.new(df)
 
-    @staticmethod
-    def pivot(index, column, values):
+    def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None,
+             key_middle=False) -> 'DataFrameType':
+        """
+
+        :param df_right:
+        :param how:
+        :param on:
+        :param left_on:
+        :param right_on:
+        :param key_middle:
+        :return:
+        """
+
+        suffix_left = "_left"
+        suffix_right = "_right"
+
+        if on is not None:
+            left_on = on
+            right_on = on
+        suffix_left_name = left_on + suffix_left
+        suffix_right_name = right_on + suffix_right
+
+        df_left = self.root.data.to_spark().withColumnRenamed(left_on, suffix_left_name)
+        df_right = df_right.data.to_spark().withColumnRenamed(left_on, suffix_right_name)
+
+        return self.new(df_left.join(df_right, df_left[left_on + suffix_left] == df_right[right_on + suffix_right],
+                            how).to_koalas())
+
+    def pivot(self, col, groupby, agg=None, values=None):
         """
         Return reshaped DataFrame organized by given index / column values.
         :param self: Spark Dataframe
@@ -174,7 +199,15 @@ class SparkDataFrame(BaseDataFrame):
         :param values: Column(s) to use for populating new frame's values.
         :return:
         """
-        return self.groupby(index).pivot(column).agg(F.first(values))
+        if values is not None:
+            agg = (F.first(values))
+
+        groupby = val_to_list(groupby)
+        if agg is None:
+            agg = (F.count(col))
+
+        dfd = self.root.data
+        return self.new(dfd.to_spark().groupby(groupby).pivot(col).agg(agg).to_koalas())
 
     @staticmethod
     def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
@@ -227,7 +260,7 @@ class SparkDataFrame(BaseDataFrame):
 
         return n_bytes
 
-    def execute(self):
+    def execute(self) -> 'DataFrameType':
         self.data.spark.cache()
         return self
 
@@ -322,37 +355,6 @@ class SparkDataFrame(BaseDataFrame):
         else:
             df = self.repartition(partitions_number, col_name)
         return df
-
-    @staticmethod
-    def table_image(path, limit=10):
-        """
-
-        :param limit:
-        :param path:
-        :return:
-        """
-
-        css = absolute_path("/css/styles.css")
-
-        imgkit.from_string(self.table_html(limit=limit, full=True), path, css=css)
-        print_html("<img src='" + path + "'>")
-
-    @staticmethod
-    def isnotebook():
-        """
-        Detect you are in a notebook or in a terminal
-        :return:
-        """
-        try:
-            shell = get_ipython().__class__.__name__
-            if shell == 'ZMQInteractiveShell':
-                return True  # Jupyter notebook or qtconsole
-            elif shell == 'TerminalInteractiveShell':
-                return False  # Terminal running IPython
-            else:
-                return False  # Other type (?)
-        except NameError:
-            return False  # Probably standard Python interpreter
 
     def show(self):
         """
