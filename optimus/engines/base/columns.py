@@ -2724,14 +2724,20 @@ class BaseColumns(ABC):
             search_by = search_by or "full"
             for col, replace in cols.items():
                 _replace_by, _search = zip(*replace.items())
-                df = df.cols._replace(col, list(_search), list(_replace_by), search_by=search_by)
+                if is_tuple(_search):
+                    _search = list(_search)
+                if is_tuple(_replace_by):
+                    _replace_by = list(_replace_by)
+                df = df.cols._replace(col, _search, _replace_by, search_by=search_by)
 
         else:
             search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
-            df = df.cols._replace(cols, search, list(replace_by), search_by, ignore_case, output_cols)
+            if is_tuple(replace_by):
+                replace_by = list(replace_by)
+            df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
 
         return df
 
