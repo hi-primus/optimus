@@ -1,6 +1,6 @@
 # Optimus
 
-[![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-21.11/images/optimus-logo.png)](https://hi-optimus.com)
+[![Logo Optimus](https://raw.githubusercontent.com/hi-primus/optimus/develop-22.1/images/optimus-logo.png)](https://hi-optimus.com)
 
 [![Tests](https://github.com/hi-primus/optimus/actions/workflows/main.yml/badge.svg)](https://github.com/hi-primus/optimus/actions/workflows/main.yml)
 [![Docker image updated](https://github.com/hi-primus/optimus/actions/workflows/docker.yml/badge.svg)](https://hub.docker.com/r/hiprimus/optimus)
@@ -30,7 +30,7 @@ Some amazing things Optimus can do for you:
 ## Try Optimus
 To launch a live notebook server to test optimus using binder or Colab, click on one of the following badges:
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-21.11?filepath=https%3A%2F%2Fraw.githubusercontent.com%2Fhi-primus%2Foptimus%2Fdevelop-21.11%2Fexamples%2F10_min_to_optimus.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/hi-primus/optimus/develop-22.1?filepath=https%3A%2F%2Fraw.githubusercontent.com%2Fhi-primus%2Foptimus%2Fdevelop-22.1%2Fexamples%2F10_min_to_optimus.ipynb)
 [![Colab](https://img.shields.io/badge/launch-colab-yellow.svg?logo=googlecolab&color=e6a210)](https://colab.research.google.com/github/hi-primus/optimus/blob/master/examples/10_min_to_optimus_colab.ipynb)
 
 ## Installation (pip): 
@@ -51,12 +51,12 @@ By default Optimus install Pandas as the default engine, to install other engine
 
 To install from the repo: 
 ```
-pip install git+https://github.com/hi-primus/optimus.git@develop-21.11
+pip install git+https://github.com/hi-primus/optimus.git@develop-22.1
 ```
 
 To install other engines: 
 ```
-pip install git+https://github.com/hi-primus/optimus.git@develop-21.11#egg=pyoptimus[dask]
+pip install git+https://github.com/hi-primus/optimus.git@develop-22.1#egg=pyoptimus[dask]
 ```
 
 
@@ -66,11 +66,11 @@ pip install git+https://github.com/hi-primus/optimus.git@develop-21.11#egg=pyopt
 
 ## Examples
 
-You can go to [10 minutes to Optimus](https://github.com/hi-primus/optimus/blob/develop-21.11/examples/10_min_to_optimus.ipynb) where you can find the basics to start working in a notebook.
+You can go to [10 minutes to Optimus](https://github.com/hi-primus/optimus/blob/develop-22.1/examples/10_min_to_optimus.ipynb) where you can find the basics to start working in a notebook.
 
-Also you can go to the [Examples](https://github.com/hi-primus/optimus/tree/develop-21.11/examples/examples.md) section and find specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
+Also you can go to the [Examples](https://github.com/hi-primus/optimus/tree/develop-22.1/examples/examples.md) section and find specific notebooks about data cleaning, data munging, profiling, data enrichment and how to create ML and DL models.
 
-Here's a handy [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-21.11/docs/cheatsheet/optimus_cheat_sheet.html) with the most common Optimus' operations.
+Here's a handy [Cheat Sheet](https://htmlpreview.github.io/?https://github.com/hi-primus/optimus/blob/develop-22.1/docs/cheatsheet/optimus_cheat_sheet.html) with the most common Optimus' operations.
 
 ## Start Optimus
 
@@ -93,7 +93,7 @@ df = op.load.csv("../examples/data/foo.csv")
 df = op.load.json("../examples/data/foo.json")
 
 # using a url
-df = op.load.json("https://raw.githubusercontent.com/hi-primus/optimus/develop-21.11/examples/data/foo.json")
+df = op.load.json("https://raw.githubusercontent.com/hi-primus/optimus/develop-22.1/examples/data/foo.json")
 
 # parquet
 df = op.load.parquet("../examples/data/foo.parquet")
@@ -136,7 +136,7 @@ Using `display` you have a beautiful way to show your data with extra informatio
 ```python
 display(df)
 ```
-![](https://github.com/hi-primus/optimus/tree/develop-21.11/readme/images/table.png)
+![](https://github.com/hi-primus/optimus/tree/develop-22.1/readme/images/table.png)
 
 ## Cleaning and Processing
  
@@ -171,7 +171,7 @@ Also if you want to a suggestion or feature request use https://github.com/hi-pr
 
 ## Troubleshooting
 
-If you have issues, see our [Troubleshooting Guide](https://github.com/hi-primus/optimus/tree/develop-21.11/troubleshooting.md)
+If you have issues, see our [Troubleshooting Guide](https://github.com/hi-primus/optimus/tree/develop-22.1/troubleshooting.md)
 
 # Contributing to Optimus 💡
 
@@ -181,7 +181,7 @@ including:
 * [Documentation](https://docs.hi-optimus.com/en/latest/) updates, enhancements, designs, or bugfixes. 
 * Spelling or grammar fixes. 
 * README.md corrections or redesigns. 
-* Adding unit, or functional [tests](https://github.com/hi-primus/optimus/tree/develop-21.11/tests)  
+* Adding unit, or functional [tests](https://github.com/hi-primus/optimus/tree/develop-22.1/tests)  
 * Triaging GitHub issues -- especially determining whether an issue still persists or is reproducible.
 * [Blogging, speaking about, or creating tutorials](https://hioptimus.com/category/blog/) about Optimus and its many features. 
 * Helping others on our official chats
