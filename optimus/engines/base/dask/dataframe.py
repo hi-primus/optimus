@@ -40,8 +40,6 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
 
             if isinstance(kw_column, (dd.Series, dd.DataFrame)):
 
-                kw_column.index = dfd.index
-
                 if isinstance(kw_column, dd.DataFrame):
                     if key in kw_column:
                         # the incoming series has the same column key
