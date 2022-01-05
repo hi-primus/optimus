@@ -19,7 +19,7 @@ from optimus.engines.base.profile import BaseProfile
 from optimus.engines.base.rows import *
 from optimus.engines.base.set import BaseSet
 from optimus.helpers.check import is_notebook
-from optimus.helpers.constants import BUFFER_SIZE
+from optimus.helpers.constants import BUFFER_SIZE, RELATIVE_ERROR
 from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
@@ -27,6 +27,7 @@ from optimus.outliers.outliers import Outliers
 from optimus.plots.functions import plot_hist, plot_frequency
 from optimus.plots.plots import Plot
 from optimus.profiler.templates.html import HEADER, FOOTER
+from optimus.profiler.constants import MAX_BUCKETS
 
 
 class BaseDataFrame(ABC):
