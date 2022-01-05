@@ -136,9 +136,14 @@ class BaseDataFrame(ABC):
         :param data_type: 
         :return:
         """
-        df = BaseDataFrame.__operator__(df.get_series(), data_type, True)
+        df = BaseDataFrame.__operator__(df.get_series(True), data_type, True)
 
-        return self.new(opb(df).to_frame())
+        dfd = opb(df)
+
+        if hasattr(dfd, "to_frame"):
+            dfd = dfd.to_frame()
+
+        return self.new(dfd)
 
     def operation(self, df1, df2, opb, data_type=None) -> 'DataFrameType':
         """
@@ -1018,9 +1023,10 @@ class BaseDataFrame(ABC):
     def graph(self) -> dict:
         raise NotImplementedError(f"Not supported using {type(self).__name__}")
 
-    def get_series(self):
-        col_name = self.cols.names(0)[0]
-        return self.data[col_name]
+    def get_series(self, multiple_columns: bool = False):
+        cols = self.cols.names() if multiple_columns else self.cols.names(0)[0]
+        cols = one_list_to_val(cols)
+        return self.data[cols]
         # return self.iloc[:, 0]
 
     def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None,
