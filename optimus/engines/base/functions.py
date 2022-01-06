@@ -496,7 +496,7 @@ class BaseFunctions(ABC):
         if not len(_series):
             return np.nan
         else:
-            return self.delayed(self._format_to_dict(_series.quantile(values)))
+            return self.delayed(self._format_to_dict)(_series.quantile(values))
 
     # def radians(series):
     #     return series.to_float().radians()

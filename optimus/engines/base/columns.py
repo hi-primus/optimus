@@ -1316,7 +1316,6 @@ class BaseColumns(ABC):
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute=False) for
                                           col_name in cols} for func in funcs}
 
-
         @self.F.delayed
         def compute_agg(values):
             return convert_numpy(format_dict(values, tidy))
@@ -1455,7 +1454,7 @@ class BaseColumns(ABC):
 
         if values is None:
             values = [0.25, 0.5, 0.75]
-        return df.cols.agg_exprs(cols, self.F.percentile, values, relative_error, estimate, tidy=tidy, compute=True)
+        return df.cols.agg_exprs(cols, self.F.percentile, values, relative_error, estimate, tidy=tidy, compute=compute)
 
     def median(self, cols="*", relative_error=RELATIVE_ERROR, tidy=True, compute=True):
         """
