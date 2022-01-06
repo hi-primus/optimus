@@ -30,7 +30,7 @@ jobs:
           if [ -f requirements/pandas-requirements.txt ]; then pip install -r requirements/pandas-requirements.txt; fi
           if [ -f requirements/dask-requirements.txt ]; then pip install -r requirements/dask-requirements.txt; fi
           if [ -f requirements/api-requirements.txt ]; then pip install -r requirements/api-requirements.txt; fi
-          python -m nltk.downloader punkt wordnet stopwords averaged_perceptron_tagger
+          python -m nltk.downloader punkt wordnet stopwords averaged_perceptron_tagger omw-1.4
       - name: Test with unittest
         run: |
           python -m unittest
