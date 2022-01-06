@@ -2724,10 +2724,8 @@ class BaseColumns(ABC):
             search_by = search_by or "full"
             for col, replace in cols.items():
                 _replace_by, _search = zip(*replace.items())
-                if is_tuple(_search):
-                    _search = list(_search)
-                if is_tuple(_replace_by):
-                    _replace_by = list(_replace_by)
+                _search = val_to_list(_search, convert_tuple=True)
+                _replace_by = val_to_list(_replace_by, convert_tuple=True)
                 df = df.cols._replace(col, _search, _replace_by, search_by=search_by)
 
         else:
@@ -2735,8 +2733,7 @@ class BaseColumns(ABC):
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
-            if is_tuple(replace_by):
-                replace_by = list(replace_by)
+            replace_by = val_to_list(replace_by, convert_tuple=True)
             df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
 
         return df
@@ -2800,6 +2797,8 @@ class BaseColumns(ABC):
             search_by = search_by or "full"
             for col, replace in columns.items():
                 _replace_by, _search = zip(*replace.items())
+                _search = val_to_list(_search, convert_tuple=True)
+                _replace_by = val_to_list(_replace_by, convert_tuple=True)
                 df = self._replace_regex(col, list(_search), list(_replace_by), search_by=search_by)
 
         else:
@@ -2807,6 +2806,7 @@ class BaseColumns(ABC):
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
+            replace_by = val_to_list(replace_by, convert_tuple=True)
             df = self._replace_regex(cols, list(search), list(replace_by), search_by, ignore_case, output_cols)
 
         return df
