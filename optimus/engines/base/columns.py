@@ -2015,6 +2015,37 @@ class BaseColumns(ABC):
         return df.cols.apply(cols, self.F.atanh, output_cols=output_cols, meta_action=Actions.MATH.value,
                              mode="vectorized")
 
+    def substring(self, cols="*", start=None, end=None, output_cols=None) -> 'DataFrameType':
+        """
+        Extract a string between two strings or indices.
+
+        :param cols: "*", column name or list of column names to be processed.
+        :param start: string or index to start the substring.
+        :param end: string or index to end the substring.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        if (is_numeric(start) or is_numeric(end)) and not is_str(start) and not is_str(end):
+            df = self.mid(cols=cols, start=start, end=end, output_cols=output_cols)
+        
+        elif (is_str(start) or is_str(end)) and not is_numeric(start) and not is_numeric(end):
+            if start is not None:
+                regex = re.escape(start)
+            else:
+                regex = ""
+
+            regex += "(.*)"
+
+            if end is not None:
+                regex += re.escape(end)
+            
+            df = self.extract(cols, regex=regex, output_cols=output_cols)
+
+        else:
+            raise ValueError("'start' and 'end' must be both numeric or string.")
+
+        return df
+
     def extract(self, cols="*", regex=None, output_cols=None) -> 'DataFrameType':
         """
         Extract a string that match a regular expression.
