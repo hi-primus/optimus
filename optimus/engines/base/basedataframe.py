@@ -286,13 +286,13 @@ class BaseDataFrame(ABC):
         return self.operation(self, df2, operator.le, "float")
 
     def __and__(self, df2) -> 'DataFrameType':
-        return self.operation(self, df2, operator.__and__, "bool")
+        return self.operation(self, df2, operator.__and__, "boolean")
 
     def __or__(self, df2) -> 'DataFrameType':
-        return self.operation(self, df2, operator.__or__, "bool")
+        return self.operation(self, df2, operator.__or__, "boolean")
 
     def __xor__(self, df2) -> 'DataFrameType':
-        return self.operation(self, df2, operator.__xor__, "bool")
+        return self.operation(self, df2, operator.__xor__, "boolean")
 
     def _to_values(self):
         """
