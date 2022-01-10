@@ -798,8 +798,8 @@ class BaseFunctions(ABC):
     def right(self, series, position):
         return self.to_string_accessor(series)[-1 * position:]
 
-    def mid(self, series, _start, _n):
-        return self.to_string_accessor(series)[_start:_n]
+    def mid(self, series, start, end):
+        return self.to_string_accessor(series)[start:end]
 
     def starts_with(self, series, pat):
         return self.to_string_accessor(series).startswith(pat)

@@ -2073,17 +2073,25 @@ class BaseColumns(ABC):
                         output_cols=output_cols, meta_action=Actions.RIGHT.value, mode="vectorized")
         return df
 
-    def mid(self, cols="*", start=0, n=1, output_cols=None) -> 'DataFrameType':
+    def mid(self, cols="*", start=0, end=None, n=None, output_cols=None) -> 'DataFrameType':
         """
-        Get the substring from
+        Get the substring from two indices or from an index and a length
 
         :param cols: "*", column name or list of column names to be processed.
-        :param start:
-        :param n:
+        :param start: start position for slice operation.
+        :param end: stop position for slice operation.
+        :param n: number of character to get starting from 0.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
-        df = self.apply(cols, self.F.mid, args=(start, n), func_return_type=str,
+
+        if end is not None and n is not None:
+            raise ValueError("'end' and 'n' cannot be both defined")
+        
+        if end is None and n is not None:
+            end = n if start is None else n + start
+        
+        df = self.apply(cols, self.F.mid, args=(start, end), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
 
