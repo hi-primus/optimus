@@ -415,7 +415,7 @@ class Mask(ABC):
         return self.match_regex(cols, regex_gender)
 
     def boolean(self, cols="*") -> 'MaskDataFrameType':
-        return self.root[cols].cols.apply(cols, is_bool)
+        return self.root[cols].cols.apply(cols, is_bool, mode="map")  # TODO: Use a vectorized function in self.F
 
     def zip_code(self, cols="*") -> 'MaskDataFrameType':
         return self.match_regex(cols, regex_zip_code)
@@ -431,7 +431,7 @@ class Mask(ABC):
         non_datetime_cols = list(set(cols) - set(datetime_cols)) if datetime_cols else cols
         df = df[cols]
         if datetime_cols and len(datetime_cols):
-            df = df.cols.apply(datetime_cols, is_datetime)
+            df = df.cols.apply(datetime_cols, is_datetime, mode="map")
         if non_datetime_cols and len(non_datetime_cols):
 
             date_formats = df.cols.date_format(non_datetime_cols, tidy=False)["date_format"]
@@ -451,11 +451,11 @@ class Mask(ABC):
         return df
 
     def object(self, cols="*") -> 'MaskDataFrameType':
-        return self.root[cols].cols.apply(cols, is_object)
+        return self.root[cols].cols.apply(cols, is_object, mode="map")
         # return self.match_regex(cols, is_object)
 
     def array(self, cols="*") -> 'MaskDataFrameType':
-        return self.root[cols].cols.apply(cols, is_list)
+        return self.root[cols].cols.apply(cols, is_list, mode="map")
         # return self.match_regex(cols, is_list_value)
 
     def phone_number(self, cols="*") -> 'MaskDataFrameType':
