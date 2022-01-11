@@ -469,7 +469,7 @@ class Mask(ABC):
 
     #
 
-    def all(self, cols="*") -> 'MaskDataFrameType':
+    def all(self, cols="*", col_name=None) -> 'MaskDataFrameType':
         
         df = self.root
 
@@ -482,9 +482,12 @@ class Mask(ABC):
             else:
                 mask = mask & _mask
 
+        if col_name is not None:
+            mask = mask.cols.rename(mask.cols.names()[0], col_name)
+
         return mask
 
-    def any(self, cols="*") -> 'MaskDataFrameType':
+    def any(self, cols="*", col_name=None) -> 'MaskDataFrameType':
         
         df = self.root
 
@@ -496,5 +499,8 @@ class Mask(ABC):
                 mask = _mask
             else:
                 mask = mask | _mask
+
+        if col_name is not None:
+            mask = mask.cols.rename(mask.cols.names()[0], col_name)
 
         return mask
