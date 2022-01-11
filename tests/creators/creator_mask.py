@@ -293,15 +293,23 @@ def create():
     t.create(method="mask.http_code", variant="string", cols=["names"])
     t.create(method="mask.http_code", variant="multiple", cols=["NullType", "weight(t)", "japanese name"])
 
-    t.create(method="mask.all", variant="all", cols="*")
-    t.create(method="mask.all", variant="numeric", cols=["height(ft)"])
-    t.create(method="mask.all", variant="string", cols=["names"])
-    t.create(method="mask.all", variant="multiple", cols=["NullType", "weight(t)", "japanese name"])
+    df2 = df.mask.greater_than("*", 2.0)
+    t.create(df=df2, method="mask.all", variant="all", cols="*", col_name="all")
+    
+    df2 = df.mask.greater_than(["height(ft)", "weight(t)", "rank"], 4.0)
+    t.create(df=df2, method="mask.all", variant="numeric", cols=["height(ft)", "weight(t)", "rank"], col_name="all")
+    
+    df2 = df.mask.starts_with(["names", "function"], "M")
+    t.create(df=df2, method="mask.all", variant="string", cols=["names", "function"], col_name="all")
 
-    t.create(method="mask.any", variant="all", cols="*")
-    t.create(method="mask.any", variant="numeric", cols=["height(ft)"])
-    t.create(method="mask.any", variant="string", cols=["names"])
-    t.create(method="mask.any", variant="multiple", cols=["NullType", "weight(t)", "japanese name"])
+    df2 = df.mask.greater_than("*", 2.0)
+    t.create(df=df2, method="mask.any", variant="all", cols="*", col_name="any")
+    
+    df2 = df.mask.greater_than(["height(ft)", "weight(t)", "rank"], 4.0)
+    t.create(df=df2, method="mask.any", variant="numeric", cols=["height(ft)", "weight(t)", "rank"], col_name="any")
+    
+    df2 = df.mask.starts_with(["names", "function"], "M")
+    t.create(df=df2, method="mask.any", variant="string", cols=["names", "function"], col_name="any")
 
     t.run()
 
