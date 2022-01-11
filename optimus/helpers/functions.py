@@ -26,7 +26,7 @@ from optimus import ROOT_DIR
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_dict, is_list_with_dicts, is_url
+from optimus.infer import is_dict, is_list_with_dicts, is_numeric, is_url
 
 def _list_variables(ins, namespace=None):
     
@@ -674,8 +674,11 @@ def df_dicts_equal(df1, df2, decimal: Union[int, bool] = True, assertion=False):
         decimal = 7
     for k in df1:
         try:
-            np.testing.assert_almost_equal(df1[k], df2[k], decimal=decimal)
+            atol = pow(10.0, -decimal) if is_numeric(decimal) else 0
+            np.testing.assert_allclose(df1[k], df2[k], atol=atol, equal_nan=True)
         except AssertionError as e:
+            if df1[k] == df2[k]:
+                return True
             if assertion:
                 logger.warn(f"AssertionError on column {k}")
                 raise e
