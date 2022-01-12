@@ -449,19 +449,21 @@ class BaseLoad:
                 dialect = csv.Sniffer().sniff(str(buffer))
                 mime_info["file_type"] = "csv"
 
-                r = {"properties": {"sep": dialect.delimiter,
-                                    "doublequote": dialect.doublequote,
-                                    "escapechar": dialect.escapechar,
-                                    "lineterminator": dialect.lineterminator,
-                                    "quotechar": dialect.quotechar,
-                                    "quoting": dialect.quoting,
-                                    "skipinitialspace": dialect.skipinitialspace}}
+                properties = {"sep": dialect.delimiter,
+                              "doublequote": dialect.doublequote,
+                              "escapechar": dialect.escapechar,
+                              "lineterminator": dialect.lineterminator,
+                              "quotechar": dialect.quotechar,
+                              "quoting": dialect.quoting,
+                              "skipinitialspace": dialect.skipinitialspace}
 
-                mime_info.update(r)
-                kwargs.update({
-                    "encoding": mime_info.get("encoding", None),
-                    **mime_info.get("properties", {})
-                })
+                for k in properties:
+                    if k not in kwargs:
+                        kwargs.update({k: properties[k]})
+                
+                mime_info.update({"properties": properties})
+                kwargs.update({"encoding": mime_info.get("encoding", None)})
+
             df = self.csv(filepath_or_buffer=path, *args, **kwargs)
 
         elif file_type == "json":
