@@ -136,6 +136,18 @@ def delete_session(session_key):
             del sessions[session_key]
             return {"status": "ok", "content": "Session deleted", "code": 200}
 
+def get_session(session_key):
+    global sessions
+
+    if session_key is None:
+        return {}
+    else:
+        return sessions.get(session_key, {})
+
+def set_session(session_key, body):
+    global sessions
+    sessions.update({session_key: body})
+
 def features():
     global optimus_features
     if optimus_features is None:
