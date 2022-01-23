@@ -74,12 +74,12 @@ def start_ibis(*args, **kwargs):
 
 def start_cudf(*args, **kwargs):
     from optimus.engines.cudf.engine import CUDFEngine
-    op = CUDFEngine(*args, **kwargs)
+    return CUDFEngine(*args, **kwargs)
 
 
 def start_dask_cudf(*args, **kwargs):
     from optimus.engines.dask_cudf.engine import DaskCUDFEngine
-    op = DaskCUDFEngine(*args, **kwargs)
+    return DaskCUDFEngine(*args, **kwargs)
 
 
 def optimus(engine=Engine.DASK.value, *args, **kwargs):
