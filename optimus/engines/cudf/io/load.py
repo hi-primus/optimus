@@ -2,7 +2,6 @@ import ntpath
 
 import cudf
 
-from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.cudf.dataframe import CUDFDataFrame
@@ -33,7 +32,8 @@ class Load(BaseLoad):
             raise
         return df
 
-    def csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None", n_rows=-1, cache=False,
+    def csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, encoding="utf-8", null_value="None",
+            n_rows=-1, cache=False,
             quoting=0, lineterminator=None, on_bad_lines='warn', keep_default_na=False, na_filter=True, data_type=None,
             *args, **kwargs):
 

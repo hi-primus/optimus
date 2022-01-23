@@ -1,17 +1,17 @@
-import os
 import glob
 import ntpath
-import psutil
-
+import os
 from abc import abstractmethod
 
-from optimus.infer import is_empty_function, is_list, is_str, is_url
-from optimus.helpers.core import one_list_to_val, val_to_list
+import psutil
+
+from optimus.engines.base.meta import Meta
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path, unquote_path
-from optimus.helpers.types import DataFrameType, InternalDataFrameType
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
-from optimus.engines.base.meta import Meta
+from optimus.helpers.types import DataFrameType, InternalDataFrameType
+from optimus.infer import is_empty_function, is_list, is_str, is_url
 
 XML_THRESHOLD = 10
 JSON_THRESHOLD = 20
@@ -79,10 +79,10 @@ class BaseLoad:
             raise NotImplementedError(f"'load.csv' is not implemented on '{self.op.engine_label}'")
 
         unquoted_path = None
-        
+
         if not is_url(filepath_or_buffer):
             unquoted_path = glob.glob(unquote_path(filepath_or_buffer))
-        
+
         if unquoted_path and len(unquoted_path):
             meta = {"file_name": unquoted_path[0], "name": ntpath.basename(unquoted_path[0])}
         else:
@@ -183,7 +183,7 @@ class BaseLoad:
 
         if is_empty_function(self._json):
             raise NotImplementedError(f"'load.json' is not implemented on '{self.op.engine_label}'")
-        
+
         if conn is not None:
             filepath_or_buffer = conn.path(filepath_or_buffer)
             storage_options = conn.storage_options
@@ -319,7 +319,8 @@ class BaseLoad:
             dfd = self._parquet(filepath_or_buffer, columns=columns, nrows=n_rows,
                                 storage_options=storage_options, *args, **kwargs)
             df = self.df(dfd, op=self.op)
-            df.meta = Meta.set(df.meta, value={"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)})
+            df.meta = Meta.set(df.meta,
+                               value={"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)})
 
         except IOError as error:
             logger.print(error)
@@ -341,7 +342,7 @@ class BaseLoad:
         """
         raise NotImplementedError('Not implemented yet')
 
-    def zip(self, path, filename, dest=None, columns=None, storage_options=None, conn=None, n_partitions=None, 
+    def zip(self, path, filename, dest=None, columns=None, storage_options=None, conn=None, n_partitions=None,
             *args, **kwargs) -> 'DataFrameType':
         pass
 

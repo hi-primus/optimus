@@ -557,7 +557,6 @@ class BaseColumns(ABC):
 
         return self.root.new(dfd, meta=meta)
 
-
     def parse_inferred_types(self, col_data_type):
         """
         Parse a engine column specific data type to a profiler data type.
@@ -1149,7 +1148,7 @@ class BaseColumns(ABC):
                 logger.warn("New columns names are not supported when 'by' is not passed.")
             dfd.columns = (["aggregation"] + list(dfd.columns[1:]))
             dfd.columns = [str(c) for c in dfd.columns]
-        
+
         return self.root.new(dfd)
 
     def move(self, column, position, ref_col=None) -> 'DataFrameType':
@@ -3087,7 +3086,7 @@ class BaseColumns(ABC):
         if value is None:
             if not output_col:
                 output_col = name + "_" + "_".join(cols)
-            
+
             dtypes = [df[col_name].cols.data_type() for col_name in parsed_cols]
             same = not dtypes or dtypes.count(dtypes[0]) == len(dtypes)
 
@@ -3631,7 +3630,8 @@ class BaseColumns(ABC):
             infer_value_counts = sample_formats["frequency"][col_name]["values"]
             # Common datatype in a column
             date_format = infer_value_counts[0]["value"]
-            self.root.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.format", date_format)
+            self.root.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.format",
+date_format)
             result.update({col_name: date_format})
 
         return format_dict(result, tidy)

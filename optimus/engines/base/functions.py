@@ -246,6 +246,9 @@ class BaseFunctions(ABC):
     def _to_integer(self, series, default=0):
         """
         Converts a series values to integers
+        :param series:
+        :param default:
+        :return:
         """
         try:
             return self._new_series(np.vectorize(fast_int)(series, default=default).flatten())
