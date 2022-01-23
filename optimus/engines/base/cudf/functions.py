@@ -30,8 +30,8 @@ class CUDFBaseFunctions(BaseFunctions, ABC):
     def is_string(self, series):
         return series.str.isalpha()
 
-    def _to_integer(self, series):
-        return cudf.to_numeric(series, errors="ignore", downcast="integer")
+    def _to_integer(self, series, default=0):
+        return cudf.to_numeric(series, errors="coerce", downcast="integer")
 
     def _to_float(self, series):
         import numpy as np
