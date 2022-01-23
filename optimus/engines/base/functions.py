@@ -2,6 +2,7 @@ import re
 from abc import abstractmethod, ABC
 
 import hidateinfer
+import hiurlparser
 import jellyfish
 import numpy as np
 import pandas as pd
@@ -917,43 +918,34 @@ class BaseFunctions(ABC):
         return series.dt.days * 86400 + series.dt.seconds
 
     def domain(self, series):
-        import hiurlparser
+
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["domain"], na_action=None)
 
     def top_domain(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["top_domain"], na_action=None)
 
     def sub_domain(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["sub_domain"], na_action=None)
 
     def url_scheme(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["protocol"], na_action=None)
 
     def url_path(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["path"], na_action=None)
 
     def url_file(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["file"], na_action=None)
 
     def url_query(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["query"], na_action=None)
 
     def url_fragment(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["fragment"], na_action=None)
 
     def host(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["host"], na_action=None)
 
     def port(self, series):
-        import hiurlparser
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["port"], na_action=None)
 
     def email_username(self, series):
