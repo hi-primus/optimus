@@ -34,7 +34,12 @@ class CUDFBaseFunctions(BaseFunctions, ABC):
         return cudf.to_numeric(series, errors="ignore", downcast="integer")
 
     def _to_float(self, series):
-        return cudf.to_numeric(series, errors="ignore", downcast="float")
+        import numpy as np
+        # Workaround to https://github.com/rapidsai/cudf/issues/10049
+        if series.dtype.type == np.bool_:
+            return series.astype(float)
+        else:
+            return cudf.to_numeric(series, errors="coerce", downcast="float")
 
     @staticmethod
     def to_string(series):
