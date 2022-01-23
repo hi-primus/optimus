@@ -2026,7 +2026,7 @@ class BaseColumns(ABC):
         """
         if (is_numeric(start) or is_numeric(end)) and not is_str(start) and not is_str(end):
             df = self.mid(cols=cols, start=start, end=end, output_cols=output_cols)
-        
+
         elif (is_str(start) or is_str(end)) and not is_numeric(start) and not is_numeric(end):
             if start is not None:
                 regex = re.escape(start)
@@ -2037,7 +2037,7 @@ class BaseColumns(ABC):
 
             if end is not None:
                 regex += re.escape(end)
-            
+
             df = self.extract(cols, regex=regex, output_cols=output_cols)
 
         else:
@@ -2117,10 +2117,10 @@ class BaseColumns(ABC):
 
         if end is not None and n is not None:
             raise ValueError("'end' and 'n' cannot be both defined")
-        
+
         if end is None and n is not None:
             end = n if start is None else n + start
-        
+
         df = self.apply(cols, self.F.mid, args=(start, end), func_return_type=str,
                         output_cols=output_cols, meta_action=Actions.MID.value, mode="vectorized")
         return df
@@ -3631,7 +3631,7 @@ class BaseColumns(ABC):
             # Common datatype in a column
             date_format = infer_value_counts[0]["value"]
             self.root.meta = Meta.set(df.meta, f"profile.columns.{col_name}.stats.inferred_data_type.format",
-date_format)
+                                      date_format)
             result.update({col_name: date_format})
 
         return format_dict(result, tidy)
