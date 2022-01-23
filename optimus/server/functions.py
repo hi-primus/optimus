@@ -65,9 +65,9 @@ def run_or_code(session, body, run=False):
             res.update({"error": str(error)})
             res.update({"status": "error"})
             
-        result = eval("result or None", session)
-        if result:
-            res.update({"result": result})
+        _result = eval("result or None", session)
+        if _result:
+            res.update({"result": _result})
 
     if updated and len(updated):
         res.update({"updated": updated})
@@ -135,6 +135,18 @@ def delete_session(session_key):
         else:
             del sessions[session_key]
             return {"status": "ok", "content": "Session deleted", "code": 200}
+
+def get_session(session_key):
+    global sessions
+
+    if session_key is None:
+        return {}
+    else:
+        return sessions.get(session_key, {})
+
+def set_session(session_key, body):
+    global sessions
+    sessions.update({session_key: body})
 
 def features():
     global optimus_features
