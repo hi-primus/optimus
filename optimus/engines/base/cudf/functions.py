@@ -1,14 +1,22 @@
+from abc import ABC
+
 import cudf
 
 from optimus.engines.base.functions import BaseFunctions
-from abc import ABC
 
 
 class CUDFBaseFunctions(BaseFunctions, ABC):
-
-    def to_dict(self, series) -> dict:
+    @staticmethod
+    def to_dict(series) -> dict:
         series.name = str(series.name)
         return series.to_pandas().to_dict()
+
+    def to_items(self, series) -> dict:
+        """
+        Convert series to a list of tuples [(index, value), ...]
+        """
+        df = series.reset_index()
+        return df.to_pandas().to_dict(orient='split')['data']
 
     def is_integer(self, series):
         return series.str.isinteger()
