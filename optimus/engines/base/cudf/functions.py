@@ -1,8 +1,10 @@
+import re
 from abc import ABC
 
 import cudf
 
 from optimus.engines.base.functions import BaseFunctions
+from optimus.helpers.core import val_to_list
 
 
 class CUDFBaseFunctions(BaseFunctions, ABC):
@@ -47,3 +49,11 @@ class CUDFBaseFunctions(BaseFunctions, ABC):
 
     def _to_datetime(self, value, format):
         return cudf.to_datetime(value, format=format, errors="coerce")
+
+    def replace_chars(self, series, search, replace_by, ignore_case):
+        search = val_to_list(search, convert_tuple=True)
+        if ignore_case:
+            str_regex = [r'(?i)%s' % re.escape(s) for s in search]
+        else:
+            str_regex = [r'%s' % re.escape(s) for s in search]
+        return self.to_string(series).str.replace(str_regex, replace_by, regex=True)
