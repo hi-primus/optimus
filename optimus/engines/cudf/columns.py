@@ -1,4 +1,3 @@
-from cuml import preprocessing
 from sklearn.preprocessing import StandardScaler
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
@@ -161,11 +160,13 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns):
         raise NotImplementedError('Not implemented yet')
 
     def string_to_index(self, cols=None, output_cols=None):
+        from cuml import preprocessing
         df = self.root
         df.le = df.le or preprocessing.LabelEncoder()
         return string_to_index(df, cols, output_cols, df.le)
 
     def index_to_string(self, cols=None, output_cols=None):
+        from cuml import preprocessing
         df = self.root
         df.le = df.le or preprocessing.LabelEncoder()
         return index_to_string(df, cols, output_cols, df.le)
