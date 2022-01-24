@@ -549,7 +549,6 @@ def match_date(value, error=False):
     start = 0
 
     end = len(value)
-    found = False
 
     while start < end:
         found = False
@@ -664,9 +663,9 @@ def match_date(value, error=False):
         # Extras
         # mi or a -> Meridian indicator (AM am Am) (PM pm Pm) (m M)
         elif f in ["mi", "a"]:
-            exprs.append(r"([A|P]?.?\s?)M.?")
+            exprs.append(r"([A|P|a|p]?.?\s?)[M|m].?")
 
-    return r"(?i)%s" % "".join(exprs)
+    return r"".join(exprs)
 
 
 def df_dicts_equal(df1, df2, decimal: Union[int, bool] = True, assertion=False):
