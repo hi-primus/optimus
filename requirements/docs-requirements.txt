@@ -3,4 +3,5 @@ numpy==1.21.0
 pytest==4.6.2
 matplotlib==3.0.3
 setuptools==41.6.0
-ipython==7.5.0
+ipython>=8.0.1; python_version >= "3.8"
+ipython>=7.31.1; python_version < "3.8"

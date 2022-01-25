@@ -16,7 +16,8 @@ deprecated>=1.2.12
 setuptools>=50.3.1
 Jinja2>=3.0.1
 pygments>=2.2.0
-ipython>=7.24.1
+ipython>=8.0.1; python_version >= "3.8"
+ipython>=7.31.1; python_version < "3.8"
 humanize>=3.9.0
 psutil>=5.8.0
 ordered-set>=4.0.2
