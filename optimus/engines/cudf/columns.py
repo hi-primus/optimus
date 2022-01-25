@@ -92,7 +92,6 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns):
     def stem_words(self, input_col):
         raise NotImplementedError('Not implemented yet')
 
-
     def strip_html(self):
         # df = self.root
         # soup = BeautifulSoup(self.text, "html.parser")

@@ -388,6 +388,7 @@ class BaseColumns(ABC):
         df = self.root.new(dfd, meta=meta)
 
         if kw_columns:
+
             df = df.cols.assign(kw_columns)
         # Dataframe to Optimus dataframe
         df = df.cols.select(output_ordered_columns)

@@ -1,4 +1,2 @@
-from abc import abstractmethod
-
-class CUDFBaseColumns():
+class CUDFBaseColumns:
     pass

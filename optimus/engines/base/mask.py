@@ -1,12 +1,11 @@
 from abc import ABC
-from optimus.helpers.functions import match_date
-from optimus.engines.base.meta import Meta
-from optimus.helpers.types import *
 
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.functions import match_date
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.types import *
 from optimus.infer import is_dict, is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
     regex_credit_card_number, regex_zip_code, regex_gender, regex_ip, regex_email, \
     is_datetime, is_list, is_bool, is_object, regex_url
@@ -51,9 +50,9 @@ class Mask(ABC):
         return df[cols] <= value
 
     def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None) -> 'MaskDataFrameType':
-        
+
         dfc = self.root[cols]
-        
+
         if bounds is None:
             if lower_bound is None and upper_bound is None:
                 RaiseIt.type_error((lower_bound, upper_bound), (int, float))
@@ -63,7 +62,7 @@ class Mask(ABC):
         mask = None
 
         for lower_b, upper_b in bounds:
-            
+
             if upper_b is not None and lower_b is not None:
 
                 upper_b = float(upper_b) if is_str(upper_b) else upper_b
@@ -85,7 +84,6 @@ class Mask(ABC):
             mask = _mask if mask is None else (mask | _mask)
 
         return mask
-
 
     def equal(self, cols="*", value=None) -> 'MaskDataFrameType':
         df = self.root
@@ -173,7 +171,7 @@ class Mask(ABC):
         return mask_match
 
     def value_in(self, cols="*", values=None) -> 'MaskDataFrameType':
-        
+
         df = self.root
         cols = parse_columns(df, cols)
 
@@ -183,14 +181,14 @@ class Mask(ABC):
         return df.new(self._to_frame(mask))
 
     def pattern(self, cols="*", pattern=None) -> 'MaskDataFrameType':
-        
+
         df = self.root
         cols = parse_columns(df, cols)
 
         return df[cols].cols.pattern() == pattern
 
     def starts_with(self, cols="*", value=None) -> 'MaskDataFrameType':
-                
+
         df = self.root
         cols = val_to_list(parse_columns(df, cols))
 
@@ -206,7 +204,7 @@ class Mask(ABC):
         return df.new(self._to_frame(mask))
 
     def ends_with(self, cols="*", value=None) -> 'MaskDataFrameType':
-                
+
         df = self.root
         cols = val_to_list(parse_columns(df, cols))
 
@@ -232,7 +230,7 @@ class Mask(ABC):
         :param regex:
         :return:
         """
-                
+
         df = self.root
         cols = val_to_list(parse_columns(df, cols))
 
@@ -243,7 +241,7 @@ class Mask(ABC):
             regex = True
 
         for col in cols:
-            series = df.functions.to_string_accessor(df.data[col]).contains(value, case=case, flags=flags, na=na, regex=regex)
+            series = df.functions.contains(df.data[col], value, case=case, flags=flags, na=na, regex=regex)
             if mask is None:
                 mask = self._to_frame(series)
             else:
@@ -273,7 +271,7 @@ class Mask(ABC):
         RaiseIt.type_error(where, ["Dataframe", "Expression", "Column name"])
 
     def find(self, cols="*", value=None) -> 'MaskDataFrameType':
-        
+
         df = self.root
         cols = val_to_list(parse_columns(df, cols))
 
@@ -291,8 +289,6 @@ class Mask(ABC):
 
         else:
             return df[cols] == value
-
-
 
     def null(self, cols="*", how="any") -> 'MaskDataFrameType':
         """
@@ -314,7 +310,6 @@ class Mask(ABC):
 
         return self.root.new(self._to_frame(mask))
 
-    
     def none(self, cols="*") -> 'MaskDataFrameType':
         """
         Find the rows that have None values
@@ -408,7 +403,7 @@ class Mask(ABC):
 
         if allow_schemeless:
             schemes_regex = r"(" + schemes_regex + r")?"
-        
+
         return self.match_regex(cols, r"^" + schemes_regex + regex_url)
 
     def gender(self, cols="*") -> 'MaskDataFrameType':
@@ -470,7 +465,7 @@ class Mask(ABC):
     #
 
     def all(self, cols="*", col_name=None) -> 'MaskDataFrameType':
-        
+
         df = self.root
 
         mask = None
@@ -488,7 +483,7 @@ class Mask(ABC):
         return mask
 
     def any(self, cols="*", col_name=None) -> 'MaskDataFrameType':
-        
+
         df = self.root
 
         mask = None
