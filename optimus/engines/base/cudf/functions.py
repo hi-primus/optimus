@@ -21,16 +21,26 @@ class CUDFBaseFunctions(BaseFunctions, ABC):
         return df.to_pandas().to_dict(orient='split')['data']
 
     def is_integer(self, series):
-        return series.str.isinteger()
+        if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
+            return cudf.Series([False] * len(series))
+        if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
+            return cudf.Series([True] * len(series))
+        return series.astype(str).str.isinteger()
 
     def is_float(self, series):
-        return series.str.isfloat()
+        if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
+            return cudf.Series([False] * len(series))
+        return series.astype(str).str.isfloat()
 
     def is_numeric(self, series):
-        return series.str.isnumeric()
+        if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
+            return cudf.Series([False] * len(series))
+        return series.astype(str).str.isfloat()
 
     def is_string(self, series):
-        return series.str.isalpha()
+        if str(series.dtype) in [*self.constants.STRING_INTERNAL_TYPES, *self.constants.OBJECT_INTERNAL_TYPES]:
+            return cudf.Series([True] * len(series))
+        return cudf.Series([False] * len(series))
 
     def _to_integer(self, series, default=0):
         return cudf.to_numeric(series, errors="coerce", downcast="integer")
