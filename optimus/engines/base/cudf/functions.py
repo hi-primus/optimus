@@ -67,3 +67,6 @@ class CUDFBaseFunctions(BaseFunctions, ABC):
         else:
             str_regex = [r'%s' % re.escape(s) for s in search]
         return self.to_string(series).str.replace(str_regex, replace_by, regex=True)
+
+    def contains(self, series, value, case, flags, na, regex):
+        return self.to_string_accessor(series).contains(value, case=case, flags=flags, regex=regex).fillna(na)

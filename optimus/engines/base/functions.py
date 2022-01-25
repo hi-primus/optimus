@@ -811,8 +811,8 @@ class BaseFunctions(ABC):
     def ends_with(self, series, pat):
         return self.to_string_accessor(series).endswith(pat)
 
-    def contains(self, series, pat):
-        return self.to_string_accessor(series).contains(pat)
+    def contains(self, series, value, case, flags, na, regex):
+        return self.to_string_accessor(series).contains(value, case=case, flags=flags, na=na, regex=regex)
 
     def char(self, series, _n):
         return self.to_string_accessor(series)[_n]
