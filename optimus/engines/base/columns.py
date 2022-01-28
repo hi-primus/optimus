@@ -934,10 +934,10 @@ class BaseColumns(ABC):
 
                 # Plus n + 1 so we can could let the user know if there are more patterns
                 result[input_col] = \
-                    df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n + 1)["frequency"][
+                    df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n+1 if n is not None else None)["frequency"][
                         input_col]
 
-                if len(result[input_col]["values"]) > n:
+                if n is not None and len(result[input_col]["values"]) > n:
                     result[input_col].update({"more": True})
 
                     # Remove extra element from list
@@ -1068,7 +1068,7 @@ class BaseColumns(ABC):
             patterns_more = Meta.get(
                 df.meta, f"profile.columns.{input_col}.patterns.more")
 
-            if patterns_values is None or (len(patterns_values) < n and patterns_more):
+            if patterns_values is None or (n is not None and len(patterns_values) < n and patterns_more):
                 calculate = True
                 break
 
@@ -1093,9 +1093,12 @@ class BaseColumns(ABC):
         for input_col in cols:
             result[input_col] = Meta.get(
                 df.meta, f"profile.columns.{input_col}.patterns")
-            if len(result[input_col]["values"]) > n:
+            if n is not None and len(result[input_col]["values"]) > n:
                 result[input_col].update({"more": True})
                 result[input_col]["values"] = result[input_col]["values"][0:n]
+            else:
+                result[input_col].update({"more": False})
+                result[input_col]["values"] = result[input_col]["values"]
 
         return result
 
@@ -3662,7 +3665,10 @@ class BaseColumns(ABC):
         @self.F.delayed
         def calculate_n_largest(_series, include_uniques):
             _value_counts = _series.value_counts()
-            _n_largest = _value_counts.nlargest(n)
+            if n is not None:
+                _n_largest = _value_counts.nlargest(n)
+            else:
+                _n_largest = _value_counts
 
             if include_uniques:
                 _count_uniques = _value_counts.count()
