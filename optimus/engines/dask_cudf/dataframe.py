@@ -41,9 +41,6 @@ class DaskCUDFDataFrame(CUDFBaseDataFrame, DaskBaseDataFrame):
         from optimus.engines.base.dask.constants import Constants
         return Constants()
 
-    def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.get_buffer().data[input_cols][lower_bound: upper_bound].to_pandas().reset_index(drop=True), op=self.op, label_encoder=self.le)
-
     @staticmethod
     def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):
         pass

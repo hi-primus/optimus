@@ -52,17 +52,8 @@ class PandasDataFrame(PandasBaseDataFrame, DataFrameBaseDataFrame):
         from optimus.engines.pandas.ml.encoding import Encoding
         return Encoding(self)
 
-    def _create_buffer_df(self, input_cols, n):
-        pass
-
-    def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].reset_index(drop=True), op=self.op, label_encoder=self.le)
-
-    def set_buffer(self, columns="*", n=None):
-        return True
-
-    def get_buffer(self):
-        return self
+    def _iloc(self, input_cols, lower_bound, upper_bound):
+        return self.root.new(self.data[input_cols][lower_bound: upper_bound].reset_index(drop=True))
 
     def to_optimus_pandas(self):
         return self.root

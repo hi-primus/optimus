@@ -19,7 +19,7 @@ from optimus.engines.base.profile import BaseProfile
 from optimus.engines.base.rows import *
 from optimus.engines.base.set import BaseSet
 from optimus.helpers.check import is_notebook
-from optimus.helpers.constants import BUFFER_SIZE, RELATIVE_ERROR
+from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
@@ -38,7 +38,7 @@ class BaseDataFrame(ABC):
     def __init__(self, data: 'InternalDataFrameType', op: 'EngineType', label_encoder=None):
         data = self._compatible_data(data)
         self.data = data
-        self.buffer = None
+        self.cache = {}
         self.updated = None
         self.meta = {}
         self.le = label_encoder
@@ -71,7 +71,7 @@ class BaseDataFrame(ABC):
     def __getitem__(self, item):
 
         if isinstance(item, slice):
-            return self.buffer_window("*", item.start, item.stop)
+            return self.iloc("*", item.start, item.stop)
         elif is_str(item) or is_list(item):
             return self.cols.select(item)
         elif isinstance(item, BaseDataFrame):
@@ -81,7 +81,7 @@ class BaseDataFrame(ABC):
 
         df = self.cols.assign({key: value})
         self.data = df.data
-        self.buffer = df.buffer
+        self.cache = df.cache
         self.updated = df.updated
         self.meta = df.meta
         self.le = df.le
@@ -429,7 +429,7 @@ class BaseDataFrame(ABC):
         if n == "all":
             dfd = self.cols.select(cols).to_pandas()
         else:
-            dfd = self.buffer_window(cols, 0, n).data
+            dfd = self.iloc(cols, 0, n).to_pandas()
 
         return dfd.to_dict(orient)
 
@@ -463,49 +463,24 @@ class BaseDataFrame(ABC):
         """
         raise NotImplementedError(f"\"stratified_sample\" is not available using {type(self).__name__}")
 
-    def get_buffer(self) -> 'DataFrameType':
-        """
-        Get buffer from the dataframe
-        """
-        return self.buffer
-
     @abstractmethod
-    def _buffer_window(self, input_cols, lower_bound, upper_bound):
+    def _iloc(self, input_cols, lower_bound, upper_bound) -> 'DataFrameType':
         pass
 
-    def _reset_buffer(self):
-        self.buffer = None
-
-    def reset_buffer(self):
-        self._reset_buffer()
-        self.meta = Meta.reset(self.meta, "buffer_time")
-
-    def buffer_window(self, cols="*", lower_bound=None, upper_bound=None, n=BUFFER_SIZE):
+    def iloc(self, cols="*", lower_bound=None, upper_bound=None, n=None) -> 'DataFrameType':
         """
-        Get a window from the buffer of the dataframe
+        Get a window from the dataframe
         """
         df = self
-
-        meta = df.meta
-        buffer_time = Meta.get(meta, "buffer_time")
-        last_action_time = Meta.get(meta, "last_action_time")
-
-        if buffer_time and last_action_time:
-            if buffer_time > last_action_time:
-                self.set_buffer(cols, n)
 
         if lower_bound is None or lower_bound < 0:
             lower_bound = 0
 
-        input_columns = parse_columns(df, cols)
-        return self._buffer_window(input_columns, lower_bound, upper_bound)
+        if upper_bound is None and n is not None:
+            upper_bound = lower_bound + n
 
-    def buffer_json(self, columns):
-        df = self.buffer
-        columns = parse_columns(df, columns)
-
-        return {"columns": [{"title": col_name} for col_name in df.cols.select(columns).cols.names()],
-                "value": df.rows.to_list(columns)}
+        input_cols = parse_columns(df, cols)
+        return self._iloc(input_cols, lower_bound, upper_bound)
 
     def size(self, deep=True, format=None):
         """

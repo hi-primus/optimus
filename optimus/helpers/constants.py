@@ -215,8 +215,6 @@ def print_check_point_config(filesystem):
 JAVA_PATH_COLAB = "/usr/lib/jvm/java-8-openjdk-amd64"
 RELATIVE_ERROR = 10000
 
-# Buffer size in rows
-BUFFER_SIZE = 500000
 US_STATES_NAMES = ["alabama",
                    "alaska",
                    "american samoa",

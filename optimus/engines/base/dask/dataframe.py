@@ -77,20 +77,11 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
     def visualize(self):
         return display(self.data.visualize())
 
-    def _reset_buffer(self):
-        if self.buffer:
-            Variable(self.buffer).delete()
-            self.buffer = None
-
-    def get_buffer(self):
-        return Variable(self.buffer).get() if self.buffer else None
-
-    def _buffer_window(self, input_cols, lower_bound, upper_bound):
+    def _iloc(self, input_cols, lower_bound, upper_bound):
         def func(value):
             return value[lower_bound:upper_bound].reset_index(drop=True)
 
-        return PandasDataFrame(self.data[input_cols].partitions[0].map_partitions(func).compute(), op=self.op,
-                               label_encoder=self.le)
+        return self.root.new(self.data[input_cols].partitions[0].map_partitions(func))
 
     def graph(self) -> dict:
         """
@@ -266,7 +257,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         if n == "all":
             series = self.cols.select(cols).to_pandas()
         else:
-            series = self.buffer_window(cols, 0, n).data
+            series = self.iloc(cols, 0, n).to_pandas()
 
         return series.to_dict(orient)
 

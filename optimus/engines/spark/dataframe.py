@@ -58,7 +58,7 @@ class SparkDataFrame(BaseDataFrame):
         from optimus.engines.spark.functions import SparkFunctions
         return SparkFunctions(self)
 
-    def _buffer_window(self, input_cols, lower_bound, upper_bound):
+    def _iloc(self, input_cols, lower_bound, upper_bound):
         return self.__class__(self.data[input_cols][lower_bound: upper_bound], op=self.op, label_encoder=self.le)
 
     def execute(self):

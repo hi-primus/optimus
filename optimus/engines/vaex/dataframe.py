@@ -11,8 +11,8 @@ class VaexDataFrame(BaseDataFrame):
     def _base_to_dfd(self, pdf, n_partitions):
         return pandas_to_vaex_dataframe(pdf, n_partitions)
 
-    def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas_df().reset_index(drop=True), op=self.op, label_encoder=self.le)
+    def _iloc(self, input_cols, lower_bound, upper_bound):
+        return self.root.new(self.data[input_cols][lower_bound: upper_bound])
 
     def _assign(self, kw_columns):
         dfd = self.root.data
@@ -22,7 +22,7 @@ class VaexDataFrame(BaseDataFrame):
         return _dfd
 
     def to_pandas(self):
-        return self.data.to_pandas_df()
+        return self.data.to_pandas_df().reset_index(drop=True)
 
     @staticmethod
     def melt(id_vars, value_vars, var_name="variable", value_name="value", data_type="str"):

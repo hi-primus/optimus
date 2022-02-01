@@ -41,14 +41,11 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         from optimus.engines.cudf.constants import Constants
         return Constants()
 
-    def _buffer_window(self, input_cols, lower_bound, upper_bound):
-        return PandasDataFrame(self.data[input_cols][lower_bound: upper_bound].to_pandas().reset_index(drop=True), op=self.op, label_encoder=self.le)
-
-    def get_buffer(self):
-        return self
+    def _iloc(self, input_cols, lower_bound, upper_bound):
+        return self.root.new(self.data[input_cols][lower_bound: upper_bound])
 
     def to_pandas(self):
-        return self.data.to_pandas()
+        return self.data.to_pandas().reset_index(drop=True)
 
     def to_dict(self, cols="*", n=10, orient="list"):
         """
@@ -62,7 +59,7 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         if n == "all":
             series = self.cols.select(cols).to_pandas()
         else:
-            series = self.buffer_window(cols, 0, n).to_pandas()
+            series = self.iloc(cols, 0, n).to_pandas()
 
         return series.to_dict(orient)
 
