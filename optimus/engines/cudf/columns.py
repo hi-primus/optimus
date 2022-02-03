@@ -1,3 +1,4 @@
+import builtins
 from sklearn.preprocessing import StandardScaler
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
@@ -5,6 +6,7 @@ from optimus.engines.base.cudf.columns import CUDFBaseColumns
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.helpers.columns import parse_columns, get_output_cols
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_dict, is_list, is_tuple
 
 
 class Cols(CUDFBaseColumns, DataFrameBaseColumns):
@@ -137,10 +139,20 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns):
                 df = ~df if invert is True else df
             return df
 
-    def hist(self, cols="*", buckets=20, compute=True):
+    def hist(self, cols="*", buckets=20, range=None, compute=True):
         import cupy as cp
         df = self.root
         cols = parse_columns(df, cols)
+
+        if range is not None and (is_tuple(range) or is_list(range)):
+            _min = {col: range[0] for col in cols}
+            _max = {col: range[1] for col in cols}
+        elif range is not None and is_dict(range):
+            _min = {col: range[col][0] for col in cols}
+            _max = {col: range[col][1] for col in cols}
+        else:
+            _min = None
+            _max = None
 
         result = {}
         for col_name in cols:
@@ -148,10 +160,11 @@ class Cols(CUDFBaseColumns, DataFrameBaseColumns):
             # we drop na before  converting to array
             df_numeric = cp.array(self.F.to_float(df.data[col_name]).dropna().to_cupy())
             if len(df_numeric) > 0:
-                _count, _bins = cp.histogram(df_numeric, buckets)
+                _range = (_min[col_name], _max[col_name]) if _min is not None and _max is not None else None
+                _count, _bins = cp.histogram(df_numeric, buckets, range=_range)
                 result[col_name] = [
                     {"lower": float(_bins[i]), "upper": float(_bins[i + 1]), "count": int(_count[i])}
-                    for i in range(buckets)]
+                    for i in builtins.range(buckets)]
 
         return {"hist": result}
 

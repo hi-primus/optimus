@@ -1,10 +1,11 @@
+import builtins
 import re
 import string
 import time
 import warnings
 from abc import abstractmethod, ABC
 from functools import reduce
-from typing import Callable, Union
+from typing import Callable, Union, Optional, Tuple
 
 import nltk
 import numpy as np
@@ -3394,14 +3395,15 @@ class BaseColumns(ABC):
 
         return result
 
-    def hist(self, cols="*", buckets=MAX_BUCKETS, compute=True) -> dict:
+    def hist(self, cols="*", buckets: int = MAX_BUCKETS, range: Optional[Tuple[float, float]] = None, compute=True) -> dict:
         """
         Return the histogram representation of the distribution of the data.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param buckets:Number of histogram bins to be used.
-        :param compute:
-        :return:
+        :param buckets: Number of histogram bins to be used.
+        :param range: Range of the histogram. If None is passed, the range is computed from the data.
+        :param compute: Compute the final result. False imply to return a delayed object.
+        :return: A dictionary with the histogram representation.
         """
 
         df = self.root
@@ -3414,8 +3416,16 @@ class BaseColumns(ABC):
                 for
                 col_name in _cols}
 
-        _min = df.cols.min(cols, numeric=True, compute=compute, tidy=False)
-        _max = df.cols.max(cols, numeric=True, compute=compute, tidy=False)
+        if range is not None and (is_tuple(range) or is_list(range)):
+            _min = {"min": {col: range[0] for col in cols}}
+            _max = {"max": {col: range[1] for col in cols}}
+        elif range is not None and is_dict(range):
+            _min = {"min": {col: range[col][0] for col in cols}}
+            _max = {"max": {col: range[col][1] for col in cols}}
+        else:
+            _min = df.cols.min(cols, numeric=True, compute=compute, tidy=False)
+            _max = df.cols.max(cols, numeric=True, compute=compute, tidy=False)
+
         _bins = _bins_col(cols, _min, _max)
 
         @self.F.delayed
@@ -3433,7 +3443,7 @@ class BaseColumns(ABC):
                     _count = np.sum([x, count_edges[0]], axis=0)
                     _bins = count_edges[1]
                     dr = {}
-                    for i in range(len(_count)):
+                    for i in builtins.range(len(_count)):
                         key = (float(_bins[i]), float(_bins[i + 1]))
                         if np.isnan(key[0]) and np.isnan(key[1]):
                             continue

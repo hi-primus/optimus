@@ -976,11 +976,11 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return {"x": {"name": columns[0], "data": x}, "y": {"name": columns[1], "data": y}, "s": s}
 
-    def hist(self, cols="*", buckets=MAX_BUCKETS, compute=True) -> dict:
+    def hist(self, cols="*", buckets=MAX_BUCKETS, range=None, compute=True) -> dict:
         df = self.root
         # return df.cols.agg_exprs(columns, self.F.min, compute=compute, tidy=True)
 
-        return df.cols.agg_exprs(cols, self.F.hist, buckets, compute=compute)
+        return df.cols.agg_exprs(cols, self.F.hist, buckets=buckets, range=range, compute=compute)
         # return df.cols.agg_exprs(cols, self.F.mad, relative_error, more, estimate, compute=compute, tidy=tidy)
         # TODO: for some reason casting to int in the exprs do not work. Casting Here. A Spark bug?
         # Example

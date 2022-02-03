@@ -7,6 +7,7 @@ from optimus.engines.base.pandas.columns import PandasBaseColumns
 from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.helpers.columns import parse_columns
 import dask
+from optimus.infer import is_dict, is_list, is_tuple
 
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -29,15 +30,26 @@ class Cols(PandasBaseColumns, DaskBaseColumns):
         df.le = df.le or preprocessing.LabelEncoder()
         return index_to_string(self, cols, output_cols, df.le)
 
-    def hist(self, cols="*", buckets=MAX_BUCKETS, compute=True):
+    def hist(self, cols="*", buckets=MAX_BUCKETS, range=None, compute=True):
         df = self.root
         cols = parse_columns(df, cols)
+
+        if range is not None and (is_tuple(range) or is_list(range)):
+            _min = {col: range[0] for col in cols}
+            _max = {col: range[1] for col in cols}
+        elif range is not None and is_dict(range):
+            _min = {col: range[col][0] for col in cols}
+            _max = {col: range[col][1] for col in cols}
+        else:
+            _min = None
+            _max = None
 
         result = {}
 
         for col_name in cols:
             series = self.F.to_float(df.data[col_name])
-            result[col_name] = da.histogram(series, bins=buckets, range=[series.min(), series.max()])
+            _range = (_min[col_name], _max[col_name]) if _min is not None and _max is not None else (series.min(), series.max())
+            result[col_name] = da.histogram(series, bins=buckets, range=_range)
 
         @self.F.delayed
         def format_hist(_cols):

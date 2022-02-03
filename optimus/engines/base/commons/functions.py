@@ -15,8 +15,8 @@ def word_tokenize(series):
     return nltk.word_tokenize(series)
 
 
-def hist(series, bins):
-    return np.histogram(series.to_float(), bins=bins)
+def hist(series, bins, range):
+    return np.histogram(series.to_float(), bins=bins, range=range)
 
 
 def string_to_index(df, cols, output_cols=None, le=None, **kwargs):

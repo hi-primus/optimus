@@ -1,3 +1,4 @@
+import builtins
 import dask
 import fastnumbers
 from dask_ml import preprocessing
@@ -7,6 +8,7 @@ from optimus.engines.base.dask.columns import DaskBaseColumns
 from optimus.engines.base.cudf.columns import CUDFBaseColumns
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.raiseit import RaiseIt
+from optimus.infer import is_dict, is_list, is_tuple
 from optimus.profiler.functions import fill_missing_var_types
 
 
@@ -35,7 +37,7 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
         df.le = df.le or preprocessing.LabelEncoder()
         return index_to_string(df, cols, output_cols, df.le)
 
-    def hist(self, columns="*", buckets=20, compute=True):
+    def hist(self, columns="*", buckets=20, range=None, compute=True):
 
         df = self.root
         columns = parse_columns(df, columns)
@@ -48,8 +50,15 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
                                           num=buckets) for
                     col_name in _columns}
 
-        _min = df.cols.min(columns, numeric=True, compute=False, tidy=False)
-        _max = df.cols.max(columns, numeric=True, compute=False, tidy=False)
+        if range is not None and (is_tuple(range) or is_list(range)):
+            _min = {"min": {col: range[0] for col in columns}}
+            _max = {"max": {col: range[1] for col in columns}}
+        elif range is not None and is_dict(range):
+            _min = {"min": {col: range[col][0] for col in columns}}
+            _max = {"max": {col: range[col][1] for col in columns}}
+        else:
+            _min = df.cols.min(columns, numeric=True, compute=False, tidy=False)
+            _max = df.cols.max(columns, numeric=True, compute=False, tidy=False)
 
         _bins = _bins_col(columns, _min, _max)
 
@@ -64,7 +73,7 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
             result = {}
             result[_col_name] = [
                 {"lower": float(_bins[i]), "upper": float(_bins[i + 1]), "count": int(_count[i])}
-                for i in range(len(_bins) - 1)]
+                for i in builtins.range(len(_bins) - 1)]
             return result
 
         for col_name in columns:

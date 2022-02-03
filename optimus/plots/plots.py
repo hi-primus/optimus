@@ -7,11 +7,12 @@ class Plot:
     def __init__(self, df):
         self.df = df
 
-    def hist(self, columns=None, buckets=10, output_format="plot", output_path=None):
+    def hist(self, columns=None, buckets=10, range=None, output_format="plot", output_path=None):
         """
         Plot histogram
         :param columns: Columns to be printed
         :param buckets: Number of buckets
+        :param range: Range of the histogram
         :param output_format:
         :param output_path: path where the image is going to be saved
         :return:
@@ -19,7 +20,7 @@ class Plot:
         df = self.df
         columns = parse_columns(df, columns)
 
-        data = df.cols.hist(columns, buckets)["hist"]
+        data = df.cols.hist(columns, buckets, range)["hist"]
         for col_name in data.keys():
             plot_hist({col_name: data[col_name]}, output=output_format, path=output_path)
 
