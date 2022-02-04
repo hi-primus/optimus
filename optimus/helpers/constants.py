@@ -142,26 +142,26 @@ class ProfilerDataTypesQuality(Enum):
 
 
 class ProfilerDataTypes(Enum):
-    INT = "int"
-    FLOAT = "float"
+    OBJECT = "object"
     STRING = "str"
+    FLOAT = "float"
+    INT = "int"
     BOOL = "bool"
     BOOLEAN = "boolean"
     DATETIME = "datetime"
     ARRAY = "array"
-    OBJECT = "object"
+    ZIP_CODE = "zip_code"
     GENDER = "gender"
     IP = "ip"
     URL = "url"
     EMAIL = "email"
     CREDIT_CARD_NUMBER = "credit_card_number"
-    ZIP_CODE = "zip_code"
-    MISSING = "missing"
-    CATEGORICAL = "categorical"
     PHONE_NUMBER = "phone_number"
     SOCIAL_SECURITY_NUMBER = "social_security_number"
     HTTP_CODE = "http_code"
     US_STATE = "us_state"
+    CATEGORICAL = "categorical"
+    MISSING = "missing"
     NULL = "null"
 
     @staticmethod
