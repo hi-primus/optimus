@@ -3657,13 +3657,12 @@ class BaseColumns(ABC):
 
         :param cols: "*", column name or list of column names to be processed.
         :param n: numbers of bins to be returned.
-        :param percentage: if True calculate the
-        :param total_rows: If True returned the total count.
-        :param count_uniques: If True returned the number of uniques elements.
+        :param percentage: If True, returns the percentage by the total number of rows.
+        :param total_rows: If True, returns the total number of rows.
+        :param count_uniques: If True, returns the number of uniques elements.
         :param compute: Compute the result or return a delayed function.
-        :param tidy: The result format. If True it will return a value if you
-        process a column or column name and value if not. If False it will return the functions name, the column name
-        and the value.
+        :param tidy: The result format. If True, return a value if one column is processed, otherwise, return a dict
+        with column names and values. If False, return a dict with the functions name, the column name and the result.
         :return: dict with the count of every element in the column.
         """
         df = self.root
