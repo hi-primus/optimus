@@ -167,13 +167,13 @@ class BaseProfile(ABC):
             sliced_freq = {}
             count_uniques = None
 
-            if len(hist_cols):
+            if len(hist_cols) and bins>0:
                 _t = time.process_time()
                 hist = df.cols.hist(hist_cols, buckets=bins, compute=False)
                 profiler_time["hist"] = {
                     "columns": hist_cols, "elapsed_time": time.process_time() - _t}
 
-            if len(freq_cols):
+            if len(freq_cols) and bins>0:
                 _t = time.process_time()
                 sliced_cols = []
                 non_sliced_cols = []
