@@ -1,3 +1,4 @@
+import builtins
 import numpy as np
 import dask.array as da
 from dask_ml import preprocessing
@@ -60,7 +61,7 @@ class Cols(PandasBaseColumns, DaskBaseColumns):
                 _count, _bins = _cols[col_name]
 
                 dr = {}
-                for i in range(len(_count)):
+                for i in builtins.range(len(_count)):
                     key = (float(_bins[i]), float(_bins[i + 1]))
                     if np.isnan(key[0]) and np.isnan(key[1]):
                         continue
