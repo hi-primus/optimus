@@ -10,7 +10,7 @@ RUN conda install libmagic && \
     conda clean -afy
 
 RUN pip install aiohttp --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-22.1 --no-cache-dir
+    pip install git+https://github.com/hi-primus/optimus.git@develop-22.2 --no-cache-dir
 
 
 
