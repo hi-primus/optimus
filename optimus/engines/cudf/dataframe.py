@@ -42,7 +42,7 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         return Constants()
 
     def _iloc(self, input_cols, lower_bound, upper_bound):
-        return self.root.new(self.data[input_cols][lower_bound: upper_bound])
+        return self.root.new(self.data[input_cols][lower_bound: upper_bound].reset_index(drop=True))
 
     def to_pandas(self):
         return self.data.to_pandas().reset_index(drop=True)
