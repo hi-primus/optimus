@@ -315,6 +315,16 @@ class BaseColumns(ABC):
         """
         pass
 
+    def to_list(self, cols="*"):
+        """
+        Convert a column to a list.
+        :param cols: Column name or list of column names to be processed.
+        :return: List of values
+        """
+        columns = prepare_columns(self.root, cols)
+
+        return [self.root.data[input_col].to_list() for input_col, output_col in columns]
+
     def apply(self, cols="*", func=None, func_return_type=None, args=None, func_type=None, where=None,
               filter_col_by_data_types=None, output_cols=None, skip_output_cols_processing=False,
               meta_action=Actions.APPLY_COLS.value, mode="vectorized", set_index=False, default=None,
