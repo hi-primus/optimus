@@ -13,6 +13,7 @@ from metaphone import doublemetaphone
 from optimus.helpers.constants import ProfilerDataTypes
 from optimus.helpers.core import one_list_to_val, one_tuple_to_val, val_to_list
 from optimus.helpers.logger import logger
+from optimus.helpers.decorators import apply_to_categories
 from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
     is_credit_card_number, is_zip_code, is_float_like, is_datetime, is_valid_datetime_format, \
     is_object_value, is_ip, is_url, is_missing, is_gender, is_list_of_int, is_list_of_str, \
@@ -64,7 +65,7 @@ class BaseFunctions(ABC):
         return self._partition_engine
 
     @staticmethod
-    def _format_to_dict(_s):
+    def to_dict(_s):
         if hasattr(_s, "to_dict"):
             result = _s.to_dict()
         else:
@@ -72,14 +73,14 @@ class BaseFunctions(ABC):
         return result
 
     @staticmethod
-    def _format_to_list(_s):
+    def to_list(_s):
         if hasattr(_s, "tolist"):
             return _s.tolist()
         else:
             return _s
 
     @staticmethod
-    def _format_to_list_one(_s):
+    def to_list_one(_s):
         if hasattr(_s, "tolist"):
             return one_list_to_val(_s.tolist())
         else:
@@ -194,13 +195,6 @@ class BaseFunctions(ABC):
 
     def compute(self, *args, **kwargs):
         return one_tuple_to_val((*(a for a in args), *(kwargs[k] for k in kwargs)))
-
-    @staticmethod
-    def to_dict(series) -> dict:
-        """
-        Convert series to a Python dictionary
-        """
-        return series.to_dict()
 
     @staticmethod
     def to_items(series) -> dict:
@@ -369,9 +363,9 @@ class BaseFunctions(ABC):
         Get the modal value of a series
         """
         if str(series.dtype) not in self.constants.NUMERIC_INTERNAL_TYPES:
-            return self.delayed(self._format_to_list_one)(self.to_string(series.dropna()).mode())
+            return self.delayed(self.to_list_one)(self.to_string(series.dropna()).mode())
         else:
-            return self.delayed(self._format_to_list_one)(series.mode())
+            return self.delayed(self.to_list_one)(series.mode())
 
     @staticmethod
     def crosstab(series, other):
@@ -500,7 +494,7 @@ class BaseFunctions(ABC):
         if not len(_series):
             return np.nan
         else:
-            return self.delayed(self._format_to_dict)(_series.quantile(values))
+            return self.delayed(self.to_dict)(_series.quantile(values))
 
     # def radians(series):
     #     return series.to_float().radians()
@@ -533,6 +527,7 @@ class BaseFunctions(ABC):
     def clip(self, series, lower_bound, upper_bound):
         return self.to_float(series).clip(float(lower_bound), float(upper_bound))
 
+    @apply_to_categories
     def cut(self, series, bins, labels, default):
         if is_list_of_int(bins):
             return pd.cut(self.to_float(series), bins, include_lowest=True, labels=labels)
@@ -569,9 +564,11 @@ class BaseFunctions(ABC):
 
         return self.map_delayed(self.to_string(series), lemmatize_verbs_map, na_action=None, meta="object")
 
+    @apply_to_categories
     def word_count(self, series):
         return self.word_tokenize(series).str.len()
 
+    @apply_to_categories
     def len(self, series):
         return self.to_string_accessor(series).len()
 
@@ -670,33 +667,43 @@ class BaseFunctions(ABC):
         pass
 
     # Strings
+    @apply_to_categories
     def match(self, series, regex):
         return self.to_string_accessor(series).match(regex)
 
+    @apply_to_categories
     def lower(self, series):
         return self.to_string_accessor(series).lower()
 
+    @apply_to_categories
     def upper(self, series):
         return self.to_string_accessor(series).upper()
 
+    @apply_to_categories
     def title(self, series):
         return self.to_string_accessor(series).title()
 
+    @apply_to_categories
     def capitalize(self, series):
         return self.to_string_accessor(series).capitalize()
 
+    @apply_to_categories
     def pad(self, series, width, side, fillchar=""):
         return self.to_string_accessor(series).pad(width, side, fillchar)
 
+    @apply_to_categories
     def extract(self, series, regex):
         return self.to_string_accessor(series).extract(regex)
 
+    @apply_to_categories
     def slice(self, series, start, stop, step):
         return self.to_string_accessor(series).slice(start, stop, step)
 
+    @apply_to_categories
     def trim(self, series):
         return self.to_string_accessor(series).strip()
 
+    @apply_to_categories
     def strip_html(self, series):
         return self.to_string(series).replace('<.*?>', '', regex=True)
 
@@ -766,20 +773,23 @@ class BaseFunctions(ABC):
             str_regex = [r'^%s$' % s for s in search]
         return series.replace(str_regex, replace_by, regex=True)
 
+    @apply_to_categories
     def remove_numbers(self, series):
         return self.to_string_accessor(series).replace(r'\d+', '', regex=True)
 
+    @apply_to_categories
     def remove_white_spaces(self, series):
         return self.to_string_accessor(series).replace(" ", "")
 
+    @apply_to_categories
     def remove_urls(self, series):
         return self.to_string_accessor(series).replace(r"https?://\S+|www\.\S+", "", regex=True)
 
+    @apply_to_categories
     def normalize_spaces(self, series):
         return self.to_string_accessor(series).replace(r" +", " ", regex=True)
 
     def expand_contractions(self, series):
-
         pass
 
     # @staticmethod
@@ -789,31 +799,40 @@ class BaseFunctions(ABC):
     def normalize_chars(self, series):
         pass
 
+    @apply_to_categories
     def find(self, sub, start=0, end=None):
         series = self.series
         return self.to_string_accessor(series).find(sub, start, end)
 
+    @apply_to_categories
     def rfind(self, series, sub, start=0, end=None):
         return self.to_string_accessor(series).rfind(sub, start, end)
 
+    @apply_to_categories
     def left(self, series, position):
         return self.to_string_accessor(series)[:position]
 
+    @apply_to_categories
     def right(self, series, position):
         return self.to_string_accessor(series)[-1 * position:]
 
+    @apply_to_categories
     def mid(self, series, start, end):
         return self.to_string_accessor(series)[start:end]
 
+    @apply_to_categories
     def starts_with(self, series, pat):
         return self.to_string_accessor(series).startswith(pat)
 
+    @apply_to_categories
     def ends_with(self, series, pat):
         return self.to_string_accessor(series).endswith(pat)
 
+    @apply_to_categories
     def contains(self, series, value, case, flags, na, regex):
         return self.to_string_accessor(series).contains(value, case=case, flags=flags, na=na, regex=regex)
 
+    @apply_to_categories
     def char(self, series, _n):
         return self.to_string_accessor(series)[_n]
 
@@ -951,9 +970,11 @@ class BaseFunctions(ABC):
     def port(self, series):
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["port"], na_action=None)
 
+    @apply_to_categories
     def email_username(self, series):
         return self.to_string_accessor(series).split('@').str[0]
 
+    @apply_to_categories
     def email_domain(self, series):
         return self.to_string_accessor(series).split('@').str[1]
 
