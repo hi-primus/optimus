@@ -197,13 +197,6 @@ class BaseFunctions(ABC):
         return one_tuple_to_val((*(a for a in args), *(kwargs[k] for k in kwargs)))
 
     @staticmethod
-    def to_dict(series) -> dict:
-        """
-        Convert series to a Python dictionary
-        """
-        return series.to_dict()
-
-    @staticmethod
     def to_items(series) -> dict:
         """
         Convert series to a list of tuples [(index, value), ...]
