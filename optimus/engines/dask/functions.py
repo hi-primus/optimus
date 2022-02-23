@@ -2,6 +2,7 @@ import dask
 import dask.dataframe as dd
 import dask.array as da
 import pandas as pd
+from optimus.helpers.decorators import apply_to_categories
 
 from optimus.infer import is_list_or_tuple
 from optimus.engines.base.pandas.functions import PandasBaseFunctions
@@ -94,6 +95,7 @@ class DaskFunctions(PandasBaseFunctions, DaskBaseFunctions):
     def atanh(self, series):
         return da.arctanh(self.to_float(series))
 
+    @apply_to_categories
     def normalize_chars(self, series):
         # str.decode return a float column. We are forcing to return a string again
         return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8').astype(str)
