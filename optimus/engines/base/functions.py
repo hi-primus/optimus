@@ -64,7 +64,7 @@ class BaseFunctions(ABC):
         return self._partition_engine
 
     @staticmethod
-    def _format_to_dict(_s):
+    def to_dict(_s):
         if hasattr(_s, "to_dict"):
             result = _s.to_dict()
         else:
@@ -72,14 +72,14 @@ class BaseFunctions(ABC):
         return result
 
     @staticmethod
-    def _format_to_list(_s):
+    def to_list(_s):
         if hasattr(_s, "tolist"):
             return _s.tolist()
         else:
             return _s
 
     @staticmethod
-    def _format_to_list_one(_s):
+    def to_list_one(_s):
         if hasattr(_s, "tolist"):
             return one_list_to_val(_s.tolist())
         else:
@@ -369,9 +369,9 @@ class BaseFunctions(ABC):
         Get the modal value of a series
         """
         if str(series.dtype) not in self.constants.NUMERIC_INTERNAL_TYPES:
-            return self.delayed(self._format_to_list_one)(self.to_string(series.dropna()).mode())
+            return self.delayed(self.to_list_one)(self.to_string(series.dropna()).mode())
         else:
-            return self.delayed(self._format_to_list_one)(series.mode())
+            return self.delayed(self.to_list_one)(series.mode())
 
     @staticmethod
     def crosstab(series, other):
@@ -500,7 +500,7 @@ class BaseFunctions(ABC):
         if not len(_series):
             return np.nan
         else:
-            return self.delayed(self._format_to_dict)(_series.quantile(values))
+            return self.delayed(self.to_dict)(_series.quantile(values))
 
     # def radians(series):
     #     return series.to_float().radians()
