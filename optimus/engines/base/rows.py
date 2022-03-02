@@ -63,17 +63,22 @@ class BaseRows(ABC):
         dfd = self.root.data
         kw_columns = {}
 
-        output_cols = val_to_list(output_cols)
-        func = prepare_columns_arguments(output_cols, func)
+        if output_cols:
+            output_cols = val_to_list(output_cols)
+            func = prepare_columns_arguments(output_cols, func)
 
         if mode == "vectorized":
             for output_col, _func in zip(output_cols, func):
                 result = _func(dfd, *(args or []))
                 kw_columns = {output_col: result}
         elif mode == "map":
-            for output_col, _func in zip(output_cols, func):
-                result = dfd.apply(_func, axis=1)
-                kw_columns = {output_col: result}
+            if output_cols is None:
+                result = dfd.apply(func, axis=1)
+                return self.root.op.create.dataframe(result)
+            else:
+                for output_col, _func in zip(output_cols, func):
+                    result = _func(dfd, *(args or []))
+                    kw_columns = {output_col: result}
         else:
             RaiseIt.value_error(mode, ["map", "vectorized"])
 
