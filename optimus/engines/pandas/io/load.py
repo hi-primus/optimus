@@ -3,6 +3,7 @@ from optimus.infer import is_url
 import uuid
 import zipfile
 from pathlib import Path
+from typing import Tuple
 
 from io import StringIO
 import requests
@@ -48,13 +49,31 @@ class Load(BaseLoad):
 
     @staticmethod
     def _json(filepath_or_buffer, *args, **kwargs):
+
+        def _safe_json(filepath_or_buffer, *args, **kwargs) -> Tuple[pd.DataFrame, bool]:
+
+            try:
+                df = pd.read_json(filepath_or_buffer, *args, **kwargs)
+                return df, True
+            except ValueError:
+                kwargs.pop("nrows", None)
+                kwargs.pop("lines", None)
+                df = pd.read_json(filepath_or_buffer, *args, **kwargs)
+                return df, False
+
         kwargs.pop("n_partitions", None)
 
         if is_url(filepath_or_buffer):
             s = requests.get(filepath_or_buffer).text
-            df = pd.read_json(StringIO(s), *args, **kwargs)
+            df, truncated = _safe_json(StringIO(s), *args, **kwargs)
         else:
-            df = pd.read_json(filepath_or_buffer, *args, **kwargs)
+            df, truncated = _safe_json(filepath_or_buffer, *args, **kwargs)
+
+        if not truncated:
+            nrows = kwargs.get("nrows", None)
+            if nrows:
+                logger.warn(f"'load.json' on {EnginePretty.PANDAS.value} loads the whole dataset and then truncates it if file is not multiline.")
+                df = df[:nrows]
 
         return df
 
