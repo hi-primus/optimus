@@ -1119,8 +1119,8 @@ class BaseColumns(ABC):
         Also how to handle ordering columns because dask can order columns.
 
         :param by: None, list of columns names or a single column name to group the aggregations.
-        :param agg: List of tuples with the form [("agg", "col")] or 
-            [("agg", "col", "new_col_name")] or dictionary with the form 
+        :param agg: List of tuples with the form [("agg", "col")] or
+            [("agg", "col", "new_col_name")] or dictionary with the form
             {"new_col_name": {"col": "agg"}}
         :return:
         """
@@ -2764,7 +2764,7 @@ class BaseColumns(ABC):
         :param cols: '*', list of columns names or a single column name.
         :param search: Values to look at to be replaced
         :param replace_by: New value to replace the old one. Supports an array when searching by characters.
-        :param search_by: Can be "full","words","chars" or "values".
+        :param search_by: Can be "full","words","chars" or "values". Example [(("k","kilos"),("kg"))]
         :param ignore_case: Ignore case when searching for match
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return: DataFrame
@@ -3939,7 +3939,7 @@ class BaseColumns(ABC):
 
     def url_scheme(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        Returns the top domain string from a url. From 'https://www.hi-optimus.com' it returns 'https'.
+        Returns the scheme string from a url. From 'https://www.hi-optimus.com' it returns 'https'.
 
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
@@ -3952,7 +3952,7 @@ class BaseColumns(ABC):
 
     def url_path(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        Returns the top domain string from a url. From https://www.hi-optimus.com it returns 'hi-optimus.com'.
+        Returns the url path string from a url. From https://www.hi-optimus.com/spark/index.html it returns 'spark/index.html'.
 
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
