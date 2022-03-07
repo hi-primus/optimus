@@ -1,5 +1,4 @@
 import timeit
-from functools import wraps
 
 from optimus.helpers.logger import logger
 
@@ -14,6 +13,7 @@ def time_it(method):
 
     return timed
 
+
 def apply_to_categories(func):
 
     if hasattr(func, "__func__"):
@@ -23,20 +23,23 @@ def apply_to_categories(func):
         static = False
 
     def wrapper(ref, series, *args, **kwargs):
+        # TODO:
+        #  Handle Ibis Series. Ibis use 'type' instead of dtype.
+        #  This implementation should be handle in the Optimus Ibis Dataframe
 
         # if series doesn't have a 'known' property it is a dask series,
         # which already optimizes this kind of operations
+        if hasattr(series, "dtype"):
+            if str(series.dtype) == "category" and hasattr(series, "cat") and not hasattr(series.cat, "known"):
 
-        if str(series.dtype) == "category" and hasattr(series, "cat") and not hasattr(series.cat, "known"):
+                transformed = series.cat.categories.to_series()
+                if static:
+                    transformed = func(transformed, *args, **kwargs)
+                else:
+                    transformed = func(ref, transformed, *args, **kwargs)
+                string_index = series.cat.categories.__class__(ref.to_list(transformed))
+                return series.cat.set_categories(string_index, rename=True)
 
-            transformed = series.cat.categories.to_series()
-            if static:
-                transformed = func(transformed, *args, **kwargs)
-            else:
-                transformed = func(ref, transformed, *args, **kwargs)
-            string_index = series.cat.categories.__class__(ref.to_list(transformed))
-            return series.cat.set_categories(string_index, rename=True)
-    
         if static:
             return func(series, *args, **kwargs)
         else:
