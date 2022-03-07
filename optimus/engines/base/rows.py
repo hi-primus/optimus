@@ -50,39 +50,48 @@ class BaseRows(ABC):
 
         return df.new(df.data.reset_index(drop=True))
 
-    def apply(self, func, args=None, output_cols=None, mode="vectorized") -> 'DataFrameType':
+    def apply(self, func, args=None, output_cols=None, mode="vectorized", **kwargs) -> 'DataFrameType':
         """
-        This will aimed to handle vectorized and not vectorized operations
-        :param func:
-        :param args:
-        :param output_cols:
-        :param mode:
+        Apply a function to each row of the dataframe
+        :param func: function to be applied
+        :param args: list of arguments to pass to 'func'
+        :param output_cols: pass the result to one or more columns, if None, the
+        result will replace the original dataframe
+        :param mode: 
         :return:
         """
         df = self.root
         dfd = self.root.data
         kw_columns = {}
+        args = args or ()
 
         if output_cols:
             output_cols = val_to_list(output_cols)
             func = prepare_columns_arguments(output_cols, func)
 
         if mode == "vectorized":
+            if output_cols is None:
+                data = func(dfd, *args, **kwargs)
             for output_col, _func in zip(output_cols, func):
-                result = _func(dfd, *(args or []))
+                result = _func(dfd, *args, **kwargs)
                 kw_columns = {output_col: result}
+        
         elif mode == "map":
             if output_cols is None:
-                result = dfd.apply(func, axis=1)
-                return self.root.op.create.dataframe(result)
+                data = dfd.apply(func, axis=1, args=args, **kwargs)
             else:
                 for output_col, _func in zip(output_cols, func):
-                    result = _func(dfd, *(args or []))
+                    result = _func(dfd, *args, **kwargs)
                     kw_columns = {output_col: result}
         else:
             RaiseIt.value_error(mode, ["map", "vectorized"])
 
-        return df.cols.assign(kw_columns)
+        if output_cols is None:
+            df = self.root.op.create.dataframe(data)
+        else:
+            df = df.cols.assign(kw_columns)
+
+        return df
 
     def select(self, expr=None, contains=None, case=None, flags=0, na=False, regex=False) -> 'DataFrameType':
         """
