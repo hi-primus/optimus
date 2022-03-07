@@ -1,10 +1,12 @@
 from abc import abstractmethod
+
+import numpy as np
+
 from optimus.engines.base.constants import BaseConstants
 from optimus.engines.base.functions import BaseFunctions
-
 from optimus.engines.base.io.connect import Connect
 from optimus.helpers.logger import logger
-import numpy as np
+
 
 class BaseEngine:
 
