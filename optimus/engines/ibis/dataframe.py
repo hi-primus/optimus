@@ -4,6 +4,25 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 
 class IbisDataFrame(BaseDataFrame):
 
+    def _base_to_dfd(self, pdf, n_partitions) -> 'InternalDataFrameType':
+        pass
+
+    @property
+    def save(self) -> 'BaseSave':
+        pass
+
+    def visualize(self):
+        pass
+
+    def stratified_sample(self, col_name, seed: int = 1) -> 'DataFrameType':
+        pass
+
+    def _iloc(self, input_cols, lower_bound, upper_bound) -> 'DataFrameType':
+        pass
+
+    def graph(self) -> dict:
+        pass
+
     @property
     def rows(self):
         from optimus.engines.ibis.rows import Rows
