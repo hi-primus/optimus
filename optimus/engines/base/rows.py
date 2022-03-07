@@ -247,6 +247,8 @@ class BaseRows(ABC):
         :param count:
         :return:
         """
+        # Ensure that count is an integer. Ibis complains otherwise
+        count = int(count)
         return self.root.new(self.root.data[:count])
 
     @staticmethod
