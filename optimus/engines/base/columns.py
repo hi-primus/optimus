@@ -2783,16 +2783,22 @@ class BaseColumns(ABC):
                 _replace_by = val_to_list(_replace_by, convert_tuple=True)
                 df = df.cols._replace(col, _search, _replace_by, search_by=search_by)
 
-        else:
-            if is_list_of_tuples(search) and replace_by is None:
-                search, replace_by = zip(*search)
-                search_by = search_by or "full"
-            search_by = search_by or "chars"
-            search = val_to_list(search, convert_tuple=True)
-            replace_by = val_to_list(replace_by, convert_tuple=True)
-            df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
+        elif is_list_of_tuples(search) and replace_by is None:
+            # This can handle search = [(["k","kilos"],("kg")),("g", "gr")]
 
+            for _search, _replace_by in search:
+                df = df.cols._replace(cols, _search, _replace_by, search_by, ignore_case, output_cols)
+        else:
+            df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
         return df
+
+        #     # search, replace_by = zip(*search)
+        #     # search_by = search_by or "full"
+        #
+        # search_by = search_by or "chars"
+        # # search = val_to_list(search, convert_tuple=True)
+        # # replace_by = val_to_list(replace_by, convert_tuple=True)
+        # print(search, search_by, replace_by)
 
     def _replace(self, cols="*", search=None, replace_by=None, search_by="chars", ignore_case=False,
                  output_cols=None) -> 'DataFrameType':
