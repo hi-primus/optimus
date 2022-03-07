@@ -1255,6 +1255,9 @@ class BaseColumns(ABC):
 
         return df.cols.select(cols)
 
+    def _data_type(self):
+        return dict(self.root.data.dtypes).items()
+
     def data_type(self, cols="*", names=False, tidy=True) -> dict:
         """
         Return the column(s) data type as string.
@@ -1265,7 +1268,7 @@ class BaseColumns(ABC):
         """
         df = self.root
         cols = parse_columns(df, cols)
-        data_types = {k: str(v) for k, v in dict(df.data.dtypes).items()}
+        data_types = {k: str(v) for k, v in self._data_type()}
         _DICT = df.constants.INTERNAL_TO_OPTIMUS
         if names:
             data_types = {k: _DICT.get(d, d) for k, d in data_types.items()}
