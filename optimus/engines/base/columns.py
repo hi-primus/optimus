@@ -399,8 +399,8 @@ class BaseColumns(ABC):
         df = self.root.new(dfd, meta=meta)
 
         if kw_columns:
-
             df = df.cols.assign(kw_columns)
+
         # Dataframe to Optimus dataframe
         df = df.cols.select(output_ordered_columns)
 
@@ -945,7 +945,8 @@ class BaseColumns(ABC):
 
                 # Plus n + 1 so we can could let the user know if there are more patterns
                 result[input_col] = \
-                    df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n+1 if n is not None else None)["frequency"][
+                    df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n + 1 if n is not None else None)[
+                        "frequency"][
                         input_col]
 
                 if n is not None and len(result[input_col]["values"]) > n:
@@ -2775,6 +2776,7 @@ class BaseColumns(ABC):
         if isinstance(cols, Clusters):
             cols = cols.to_dict()
 
+        # If you want search and replace in multiple columns using cols
         if is_dict(cols):
             search_by = search_by or "full"
             for col, replace in cols.items():
@@ -3414,7 +3416,8 @@ class BaseColumns(ABC):
 
         return result
 
-    def hist(self, cols="*", buckets: int = MAX_BUCKETS, range: Optional[Tuple[float, float]] = None, compute=True) -> dict:
+    def hist(self, cols="*", buckets: int = MAX_BUCKETS, range: Optional[Tuple[float, float]] = None,
+             compute=True) -> dict:
         """
         Return the histogram representation of the distribution of the data.
 
