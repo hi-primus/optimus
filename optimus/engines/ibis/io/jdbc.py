@@ -9,7 +9,10 @@ from optimus.engines.pandas.dataframe import PandasDataFrame
 class JDBC:
     def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
                  oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
-                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, sso=False):
+                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, op=None, sso=False):
+
+        self.op = op
+
         if database is None:
             database = ""
 
@@ -83,6 +86,7 @@ class JDBC:
 
         table = self._connect().table(table_name, database=database)
         # return PandasDataFrame(table.execute())
+        print(self.op)
         return IbisDataFrame(table, op=self.op)
 
     # def execute(self, query: str, limit: str = None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,

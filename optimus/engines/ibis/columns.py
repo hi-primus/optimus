@@ -10,7 +10,7 @@ from optimus.helpers.columns import parse_columns, prepare_columns
 from optimus.helpers.constants import Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
-from optimus.infer import is_str, is_tuple, is_dict
+from optimus.infer import is_str, is_tuple
 
 DataFrame = TableExpr
 
@@ -33,10 +33,8 @@ class Cols(DataFrameBaseColumns):
         dfd = pd.concat([dfs.data.reset_index(drop=True), dfd.reset_index(drop=True)], axis=1)
         return self.root.new(dfd)
 
-    def data_type(self, columns="*"):
-        df = self.root
-        columns = parse_columns(df, columns)
-        return dict(df.data[columns].schema().items())
+    def _data_type(self, columns="*") -> dict:
+        return self.root.data.schema().items()
 
     def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
         df = self.root
@@ -67,7 +65,7 @@ class Cols(DataFrameBaseColumns):
             result = exprs.execute()
         else:
             result = exprs
-            
+
         while isinstance(result, (list, tuple)) and len(result) == 1:
             result = result[0]
 
@@ -88,12 +86,11 @@ class Cols(DataFrameBaseColumns):
                                   accepts_missing_cols=True, default=default)
         kw_columns = {}
         if args is None:
-            args = (None,)
+            args = []
         elif not is_tuple(args, ):
             args = (args,)
 
         for input_col, output_col in columns:
-            # print("args",args)
             kw_columns.update({output_col: func(self.root.data[input_col], *args)})
         return self.root.new(self.root.data.mutate(**kw_columns))
 

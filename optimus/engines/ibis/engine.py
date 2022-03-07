@@ -13,7 +13,7 @@ class IbisEngine(BaseEngine):
         self.engine = Engine.IBIS.value
 
         self.verbose(verbose)
-
+        self.op = op
         self.client = ibis
 
     @property
