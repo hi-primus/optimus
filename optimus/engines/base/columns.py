@@ -2788,8 +2788,14 @@ class BaseColumns(ABC):
         elif is_list_of_tuples(search) and replace_by is None:
             # This can handle search = [(["k","kilos"],("kg")),("g", "gr")]
 
+            cols = val_to_list(cols)
+            output_cols = val_to_list(get_output_cols(cols, output_cols))
+
+            for input_col, output_col in zip(cols, output_cols):
+                df[output_col] = df[input_col]
+
             for _search, _replace_by in search:
-                df = df.cols._replace(cols, _search, _replace_by, search_by, ignore_case, output_cols)
+                df = df.cols._replace(output_cols, _search, _replace_by, search_by, ignore_case, output_cols)
         else:
             df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
         return df
