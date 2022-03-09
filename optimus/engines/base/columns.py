@@ -2792,7 +2792,7 @@ class BaseColumns(ABC):
             output_cols = val_to_list(get_output_cols(cols, output_cols))
 
             for input_col, output_col in zip(cols, output_cols):
-                df[output_col] = df[input_col]
+                df = df.cols.copy(input_col, output_col)
 
             for _search, _replace_by in search:
                 df = df.cols._replace(output_cols, _search, _replace_by, search_by, ignore_case, output_cols)
