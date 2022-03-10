@@ -203,7 +203,10 @@ class BaseLoad:
                     df_list.append(df)
                 df = self.op.F.df_concat(df_list)
                 df = self.df(df, op=self.op)
-                df.meta = Meta.set(df.meta, "file_name", local_file_names[0])
+                
+                file_name = local_file_names[0][1]
+                df.meta = Meta.set(df.meta, "file_name", file_name)
+
             except IOError as error:
                 logger.print(error)
                 raise
