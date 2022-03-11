@@ -833,18 +833,18 @@ class BaseColumns(ABC):
         punctuation = split(string.punctuation)
 
         if mode == 0:
-            search_by = alpha_lower + alpha_upper + digits
+            search = alpha_lower + alpha_upper + digits
             replace_by = ["l"] * len(alpha_lower) + ["U"] * \
                          len(alpha_upper) + ["#"] * len(digits)
         elif mode == 1:
-            search_by = alpha_lower + alpha_upper + digits
+            search = alpha_lower + alpha_upper + digits
             replace_by = ["c"] * len(alpha_lower) + ["c"] * \
                          len(alpha_upper) + ["#"] * len(digits)
         elif mode == 2:
-            search_by = alpha_lower + alpha_upper + digits
+            search = alpha_lower + alpha_upper + digits
             replace_by = ["*"] * len(alpha_lower + alpha_upper + digits)
         elif mode == 3:
-            search_by = alpha_lower + alpha_upper + digits + punctuation
+            search = alpha_lower + alpha_upper + digits + punctuation
             replace_by = ["*"] * \
                          len(alpha_lower + alpha_upper + digits + punctuation)
         else:
@@ -854,7 +854,7 @@ class BaseColumns(ABC):
 
         for input_col, output_col in columns:
             kw_columns[output_col] = df.cols.select(input_col).cols.to_string().cols.normalize_chars().cols.replace(
-                search=search_by, replace_by=replace_by).data[input_col]
+                search=search, replace_by=replace_by, search_by="chars").data[input_col]
 
         return df.cols.assign(kw_columns)
 
