@@ -1,27 +1,42 @@
 # DataFrame = pd.DataFrame
 from datetime import datetime
 
+import ibis
 import numpy as np
 import pandas as pd
-import ibis
 
 from optimus.engines.base.functions import BaseFunctions
 from optimus.helpers.core import val_to_list
 
 
 class IbisFunctions(BaseFunctions):
-
     _engine = ibis
+
+    def _series_dtype(self, series):
+        return series.type().to_pandas().name
+
+    def min(self, series, numeric=False, string=False):
+        """
+        Get the minimum value of a series
+        """
+
+        return series.min()
+
+    def max(self, series, numeric=False, string=False):
+        """
+        Get the maximum value of a series
+        """
+        return series.max()
+
 
     def to_float(self, series, *args):
         return series.cast("float64")
 
     def to_string(self, series):
         return series.cast("string")
-    
+
     def to_string_accessor(self, series):
         return self.to_string(series)
-
 
     def title(self, series, *args):
         raise NotImplementedError("Not implemented yet")

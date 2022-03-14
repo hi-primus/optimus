@@ -328,6 +328,9 @@ class BaseFunctions(ABC):
 
         return False
 
+    def _series_dtype(self, series):
+        return series.dtype
+
     def min(self, series, numeric=False, string=False):
         """
         Get the minimum value of a series
@@ -335,7 +338,7 @@ class BaseFunctions(ABC):
         if numeric:
             series = self.to_float(series)
 
-        if string or str(series.dtype) in self.constants.STRING_TYPES:
+        if string or str(self._series_dtype(series)) in self.constants.STRING_TYPES:
             return self.to_string(series.dropna()).min()
         else:
             return series.min()
