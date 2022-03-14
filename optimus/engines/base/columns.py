@@ -1610,6 +1610,7 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.agg_exprs(cols, self.F.var, tidy=tidy, compute=compute)
 
+
     def std(self, cols="*", tidy=True, compute=True):
         """
         Return unbiased variance over requested columns.
@@ -3089,6 +3090,7 @@ class BaseColumns(ABC):
         and the value.
         :return:
         """
+
         df = self.root
         if df.op.engine != Engine.SPARK.value and estimate is not False:
             logger.warn(f"'estimate' argument is only supported on {EnginePretty.SPARK.value}")
@@ -3686,6 +3688,19 @@ class BaseColumns(ABC):
         :param tidy: The result format. If True, return a value if one column is processed, otherwise, return a dict
         with column names and values. If False, return a dict with the functions name, the column name and the result.
         :return: dict with the count of every element in the column.
+        {'frequency':
+            {'col_1': {'values': [
+                {'value': 1, 'count': 2},
+                {'value': 2, 'count': 3},
+                {'value': 3, 'count': 5},
+                {'value': 4, 'count': 11},
+                {'value': 5, 'count': 9}]},
+            'col_2':
+                {'value': 1, 'count': 1},
+                {'value': 2, 'count': 1},
+                {'value': 3, 'count': 1},
+                {'value': 4, 'count': 1},
+                {'value': 5, 'count': 1}]},]
         """
         df = self.root
         cols = parse_columns(df, cols)
