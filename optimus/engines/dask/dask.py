@@ -26,9 +26,7 @@ class Dask:
 
     def load(self, session):
         self._client = session
-        # self._sc = session.sparkContext
         return self
-
 
     @property
     def dask(self):

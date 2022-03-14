@@ -170,7 +170,7 @@ class Load(BaseLoad):
         dest = Path(dest).expanduser()
 
         # if csv concat all files
-        # if json multilie concat files
+        # if json, multiple concat files
 
         for filename in zip_path:
             # print(filename)
