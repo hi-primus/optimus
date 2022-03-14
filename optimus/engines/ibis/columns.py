@@ -11,6 +11,7 @@ from optimus.helpers.constants import Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_str, is_tuple
+from optimus.profiler.constants import MAX_BUCKETS
 
 DataFrame = TableExpr
 
@@ -34,18 +35,47 @@ class Cols(DataFrameBaseColumns):
         return self.root.new(dfd)
 
     def _data_type(self, columns="*") -> dict:
-        return self.root.data.schema().items()
-
-    def agg_exprs(self, columns, funcs, *args, compute=True, tidy=True):
         df = self.root
         columns = parse_columns(df, columns)
+        return self.root.data[columns].schema().items()
+
+    def frequency(self, cols="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
+                  compute=True, tidy=False) -> dict:
+        """
+        Frequency of values in a column
+        :param cols:
+        :param n:
+        :param percentage:
+        :param total_rows:
+        :param count_uniques:
+        :param compute:
+        :param tidy:
+        :return:
+        """
+        df = self.root
+        columns = parse_columns(df, cols)
+        data = {}
+        result = {}
+        for col_name in columns:
+            data.update({col_name: {"values": []}})
+            for i in df.data[col_name].value_counts().sort_by([('count', False)])[:n].execute().to_dict("split")[
+                "data"]:
+                data[col_name]["values"].append({"value": i[0], "count": i[1]})
+        result["frequency"] = data
+
+        return format_dict(result, tidy)
+
+    def agg_exprs(self, cols="*", funcs=None, *args, compute=True, tidy=True, parallel=False, **kwargs):
+        df = self.root
+        columns = parse_columns(df, cols)
 
         funcs = val_to_list(funcs)
         all_funcs = []
 
         for col_name in columns:
             for func in funcs:
-                all_funcs.append({func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args))}})
+                all_funcs.append(
+                    {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute=compute)}})
 
         result = {}
         for i in all_funcs:
