@@ -18,7 +18,7 @@ class IbisDataFrame(BaseDataFrame):
         pass
 
     def _iloc(self, input_cols, lower_bound, upper_bound) -> 'DataFrameType':
-        pass
+        return self.root.new(self.data[input_cols][lower_bound:upper_bound])
 
     def graph(self) -> dict:
         pass
