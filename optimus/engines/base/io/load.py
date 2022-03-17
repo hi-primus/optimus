@@ -238,22 +238,25 @@ class BaseLoad:
         if is_empty_function(self._excel):
             raise NotImplementedError(f"'load.excel' is not implemented on '{self.op.engine_label}'")
 
-        filepath_or_buffer = unquote_path(filepath_or_buffer)
-
         if conn is not None:
             filepath_or_buffer = conn.path(filepath_or_buffer)
             storage_options = conn.storage_options
 
-        file, file_name = prepare_path(filepath_or_buffer, "xls")[0]
+        filepath_or_buffer = unquote_path(filepath_or_buffer)
+        local_file_names = prepare_path(filepath_or_buffer, "xls")
 
         if merge_sheets is True:
             skip_rows = -1
+
+        file = local_file_names[0][0]
 
         df, sheet_names = self._excel(file, sheet_name=sheet_name, skiprows=skip_rows, header=header, nrows=n_rows,
                                       storage_options=storage_options, *args, **kwargs)
 
         df = self.df(df, op=self.op)
 
+        file_name = local_file_names[0][1]
+        print(local_file_names, file, file_name, filepath_or_buffer)
         df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         df.meta = Meta.set(df.meta, "sheet_names", sheet_names)
 
@@ -468,7 +471,7 @@ class BaseLoad:
                 mime_info.update({"properties": properties})
                 kwargs.update({"encoding": mime_info.get("encoding", None)})
 
-            df = self.csv(filepath_or_buffer=path, *args, **kwargs)
+            df = self.csv(full_path, *args, **kwargs)
 
         elif file_type == "json":
             mime_info["file_type"] = "json"
@@ -485,6 +488,9 @@ class BaseLoad:
         else:
             RaiseIt.value_error(
                 file_type, ["csv", "json", "xml", "excel"])
+
+        if file_name:
+            df.meta = Meta.set(df.meta, "file_name", file_name)
 
         return df
 
