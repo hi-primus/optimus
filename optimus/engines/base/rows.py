@@ -28,20 +28,25 @@ class BaseRows(ABC):
         every_df = [self.root, *dfs]
 
         if names_map is not None:
-            rename = [[] for _ in every_df]
+            rename: list[list] = [[] for _ in every_df]
+
             for key in names_map:
                 assert len(names_map[key]) == len(every_df)
-                for i in range(len(names_map[key])):
-                    col_name = names_map[key][i]
+                for i, col_name in enumerate(names_map[key]):
                     if col_name:
                         rename[i] = [*rename[i], (col_name, "__output_column__" + key)]
-            for i in range(len(rename)):
-                every_df[i] = every_df[i].cols.rename(rename[i])
+
+            for i, _rename in enumerate(rename):
+                every_df[i] = every_df[i].cols.rename(_rename)
+                select = [output_name for name, output_name in _rename]
+                every_df[i] = every_df[i].cols.select(select)
 
         dfd = every_df[0].data
-        for i in range(len(every_df)):
+
+        for i, _df in enumerate(every_df):
             if i != 0:
-                dfd = self.root.functions.append(dfd, every_df[i].data)
+                dfd = self.root.functions.append(dfd, _df.data)
+        
         df = self.root.new(dfd)
 
         if names_map is not None:
