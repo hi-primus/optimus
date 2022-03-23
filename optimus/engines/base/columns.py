@@ -440,26 +440,42 @@ class BaseColumns(ABC):
         if args is None:
             args = []
         df = self.root
-        dfd = df.data
 
         cols = parse_columns(df, cols) if cols == "*" else cols
-
         cols = val_to_list(cols)
+
         values = val_to_list(value_func, allow_none=True)
         eval_values = val_to_list(eval_value, allow_none=True)
 
-        if len(cols) > len(values):
+        if is_list_of_list(value_func):
+            _zip = zip([w[0] for w in values], [v[1] for v in values])
+        else:
+            _zip = zip(where, values)
+
+        for _where, _values in _zip:
+            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values,
+                              args=args)
+        return df
+
+    def _set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
+             eval_value: bool = False) -> 'DataFrameType':
+
+        df = self.root
+        dfd = df.data
+
+        values = val_to_list(value_func, allow_none=True)
+        eval_values = val_to_list(eval_value, allow_none=True)
+
+        if len(cols) > len(value_func):
             values = [value_func] * len(cols)
 
-        if len(cols) > len(eval_values):
+        if len(cols) > len(eval_value):
             eval_values = [eval_value] * len(cols)
 
         assign_dict = {}
-
         move_cols = []
 
         for col_name, _value, _eval_value in zip(cols, values, eval_values):
-
             temp_col_name = name_col(col_name, "SET")
 
             if default is not None:
@@ -477,7 +493,7 @@ class BaseColumns(ABC):
                 if col_name in df.cols.names():
                     default = dfd[col_name]
                 else:
-                    default = None
+                    default = df.op.create.dataframe({"temp": [default] * df.rows.count()}).data
             if _eval_value and is_str(_value):
                 _value = eval(_value)
 
@@ -494,13 +510,8 @@ class BaseColumns(ABC):
             if where is not None:
                 if isinstance(_value, self.root.__class__):
                     _value = _value.get_series()
-                # else:
-                #     # TO-DO: Create the value series
-                #     dfd[temp_col_name] = _value
-                #     _value = dfd[temp_col_name]
-                #     del dfd[temp_col_name]
-
-                _value = default.mask(where.get_series(), _value)
+                else:
+                    _value = default.mask(where.get_series(), _value)
 
             else:
                 if isinstance(_value, self.root.__class__):
@@ -510,6 +521,7 @@ class BaseColumns(ABC):
 
         # meta = Meta.action(df.meta, Actions.SET.value, col_name)
         new_df = self.root.new(df.data).cols.assign(assign_dict)
+
         for col, new_col in move_cols:
             new_df = new_df.cols.move(new_col, "after", col)
         return new_df
@@ -1609,7 +1621,6 @@ class BaseColumns(ABC):
         """
         df = self.root
         return df.cols.agg_exprs(cols, self.F.var, tidy=tidy, compute=compute)
-
 
     def std(self, cols="*", tidy=True, compute=True):
         """
