@@ -446,6 +446,7 @@ class BaseColumns(ABC):
 
         values = val_to_list(value_func, allow_none=True)
         eval_values = val_to_list(eval_value, allow_none=True)
+        where = val_to_list(where, allow_none=True)
 
         if is_list_of_list(value_func):
             _zip = zip([w[0] for w in values], [v[1] for v in values])
