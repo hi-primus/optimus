@@ -452,7 +452,10 @@ class BaseColumns(ABC):
             where, value_func = zip(*value_func)
 
         for _where, _values in zip(where, value_func):
-            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values,args=args)
+            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values, args=args)
+            # drops default value after the first iteration to avoid overwriting
+            default = None
+        
         return df
 
     def _set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
@@ -474,7 +477,6 @@ class BaseColumns(ABC):
         move_cols = []
 
         for col_name, _value, _eval_value in zip(cols, values, eval_values):
-            temp_col_name = name_col(col_name, "SET")
 
             if default is not None:
                 if is_str(default) and default in df.cols.names():
@@ -484,14 +486,12 @@ class BaseColumns(ABC):
                 elif isinstance(default, self.root.__class__):
                     default = default.get_series()
                 else:
-                    dfd[temp_col_name] = default
-                    default = dfd[temp_col_name]
-                    del dfd[temp_col_name]
+                    default = self.F._new_series(default, index=dfd.index)
             elif col_name:
                 if col_name in df.cols.names():
                     default = dfd[col_name]
                 else:
-                    default = df.op.create.dataframe({"temp": [default] * df.rows.count()}).data
+                    default = self.F._new_series(default, index=dfd.index)
             if _eval_value and is_str(_value):
                 _value = eval(_value)
 
