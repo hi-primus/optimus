@@ -444,18 +444,15 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols) if cols == "*" else cols
         cols = val_to_list(cols)
 
-        values = val_to_list(value_func, allow_none=True)
+        value_func = val_to_list(value_func, allow_none=True)
         eval_values = val_to_list(eval_value, allow_none=True)
         where = val_to_list(where, allow_none=True)
 
-        if is_list_of_list(value_func):
-            _zip = zip([w[0] for w in values], [v[1] for v in values])
-        else:
-            _zip = zip(where, values)
+        if is_list_of_list(value_func) or is_list_of_tuples(value_func):
+            where, value_func = zip(*value_func)
 
-        for _where, _values in _zip:
-            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values,
-                              args=args)
+        for _where, _values in zip(where, value_func):
+            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values,args=args)
         return df
 
     def _set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
@@ -467,7 +464,7 @@ class BaseColumns(ABC):
         values = val_to_list(value_func, allow_none=True)
         eval_values = val_to_list(eval_value, allow_none=True)
 
-        if len(cols) > len(value_func):
+        if len(cols) > len(values):
             values = [value_func] * len(cols)
 
         if len(cols) > len(eval_value):
