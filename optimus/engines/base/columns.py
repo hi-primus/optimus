@@ -11,6 +11,7 @@ import nltk
 import numpy as np
 import pandas as pd
 import wordninja
+from fast_histogram import histogram1d
 from glom import glom
 from nltk import LancasterStemmer, ngrams
 from nltk.corpus import stopwords
@@ -452,7 +453,8 @@ class BaseColumns(ABC):
             where, value_func = zip(*value_func)
 
         for _where, _values in zip(where, value_func):
-            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values,args=args)
+            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values,
+                              args=args)
         return df
 
     def _set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
@@ -491,6 +493,7 @@ class BaseColumns(ABC):
                 if col_name in df.cols.names():
                     default = dfd[col_name]
                 else:
+
                     default = df.op.create.dataframe({"temp": [default] * df.rows.count()}).data
             if _eval_value and is_str(_value):
                 _value = eval(_value)
@@ -1338,7 +1341,6 @@ class BaseColumns(ABC):
         if parallel:
             all_funcs = [getattr(df[cols].data, func.__name__)()
                          for func in funcs]
-
             agg_result = {func.__name__: self.exec_agg(all_funcs, compute=False) for func in funcs}
         else:
             agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute=False) for
@@ -1418,7 +1420,7 @@ class BaseColumns(ABC):
             types = df.cols.inferred_data_type(cols, use_internal=True, tidy=False)['inferred_data_type']
             numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
 
-        return df.cols.agg_exprs(cols, self.F.min, numeric, compute=compute, tidy=tidy, parallel=False)
+        return df.cols.agg_exprs(cols, self.F.min, not numeric, compute=compute, tidy=tidy, parallel=False)
 
     def max(self, cols="*", numeric=None, tidy: bool = True, compute: bool = True):
         """
@@ -1438,7 +1440,7 @@ class BaseColumns(ABC):
             types = df.cols.inferred_data_type(cols, use_internal=True, tidy=False)['inferred_data_type']
             numeric = all([data_type in df.constants.NUMERIC_TYPES for data_type in types.values()])
 
-        return df.cols.agg_exprs(cols, self.F.max, numeric, compute=compute, tidy=tidy, parallel=False)
+        return df.cols.agg_exprs(cols, self.F.max, not numeric, compute=compute, tidy=tidy, parallel=False)
 
     def mode(self, cols="*", tidy: bool = True, compute: bool = True):
         """
@@ -2163,6 +2165,16 @@ class BaseColumns(ABC):
         """
         return self.apply(cols, self.F.to_float, func_return_type=float,
                           output_cols=output_cols, meta_action=Actions.TO_FLOAT.value, mode="vectorized")
+
+    def to_numeric(self, cols="*", output_cols=None) -> 'DataFrameType':
+        """
+        Cast the elements inside a column or a list of columns to float.
+        :param cols: "*", column name or list of column names to be processed.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        return self.apply(cols, self.F.to_numeric, func_return_type=float,
+                          output_cols=output_cols, meta_action=Actions.TO_NUMERIC.value, mode="vectorized")
 
     def to_integer(self, cols="*", default=0, output_cols=None) -> 'DataFrameType':
         """
@@ -3465,13 +3477,12 @@ class BaseColumns(ABC):
             _min = df.cols.min(cols, numeric=True, compute=compute, tidy=False)
             _max = df.cols.max(cols, numeric=True, compute=compute, tidy=False)
 
-        _bins = _bins_col(cols, _min, _max)
+        _bins_edges = _bins_col(cols, _min, _max)
 
         @self.F.delayed
-        def get_hist(pdf, col_name, _bins):
-            _count, bins_edges = np.histogram(pd.to_numeric(
-                pdf, errors='coerce'), bins=_bins[col_name])
-            return (col_name, [list(_count), list(bins_edges)])
+        def get_hist(pdf, col_name, range, bins, bins_edges):
+            _count = histogram1d(pdf.values, range=range, bins=bins)
+            return col_name, [list(_count), list(bins_edges[col_name])]
 
         @self.F.delayed
         def format_histograms(values):
@@ -3494,10 +3505,9 @@ class BaseColumns(ABC):
 
             return {"hist": _result}
 
-        partitions = self.F.to_delayed(df.data)
-
-        result = [get_hist(part[col_name], col_name, _bins)
-                  for part in partitions for col_name in cols]
+        partitions = self.F.to_delayed(df.cols.select(cols).cols.to_numeric().data)
+        result = [get_hist(part[col_name], col_name, [_min["min"][col_name], _max["max"][col_name]], buckets, _bins_edges) for part
+                  in partitions for col_name in cols]
 
         result = format_histograms(result)
 
@@ -3520,6 +3530,7 @@ class BaseColumns(ABC):
         df = self.root
 
         # if a dict is passed to cols, assumes it contains the data types
+
         if is_dict(cols):
             cols_types = cols
         else:
@@ -3541,18 +3552,15 @@ class BaseColumns(ABC):
                                         "missing": cached_props.get("missing"),
                                         "mismatch": cached_props.get("mismatch")}
                     continue
-
             dtype = props if is_str(props) else props["data_type"]
 
             dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
 
             matches_mismatches = getattr(df[col_name].mask, dtype)(
                 col_name).cols.frequency()
-
             missing = df.mask.null(col_name).cols.sum()
             values = {list(j.values())[0]: list(j.values())[1] for j in
                       matches_mismatches["frequency"][col_name]["values"]}
-
             matches = values.get(True)
             mismatches = values.get(False, missing) - missing
 

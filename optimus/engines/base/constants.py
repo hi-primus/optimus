@@ -123,6 +123,11 @@ class BaseConstants:
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.DATETIME.value]
 
     @property
+    def BOOLEAN_INTERNAL_TYPES(self):
+        return [ProfilerDataTypes.BOOL.value] + \
+               [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.BOOL.value]
+
+    @property
     def INT_TYPES(self):
         return self.ANY_TYPES + [ProfilerDataTypes.INT.value] + \
                [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] == ProfilerDataTypes.INT.value]

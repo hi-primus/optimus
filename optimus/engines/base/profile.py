@@ -1,14 +1,14 @@
-from abc import ABC
-from optimus.helpers.types import *
-
 import time
-from glom import assign
-from optimus.helpers.functions import update_dict
+from abc import ABC
 
+from glom import assign
+from optimus.helpers.decorators import time_it
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.core import one_list_to_val, val_to_list
+from optimus.helpers.core import one_list_to_val
+from optimus.helpers.functions import update_dict
 from optimus.helpers.json import dump_json
+from optimus.helpers.types import *
 from optimus.infer import is_list
 from optimus.profiler.constants import MAX_BUCKETS
 
@@ -47,13 +47,14 @@ class BaseProfile(ABC):
 
         return one_list_to_val(dtype)
 
-    def __call__(self, cols="*", bins: int = MAX_BUCKETS, force_hist = None, output: str = None, flush: bool = False, size=False) -> dict:
+    def __call__(self, cols="*", bins: int = MAX_BUCKETS, force_hist=None, output: str = None, flush: bool = False,
+                 size=False) -> dict:
         """
         Returns a dict the profile of the dataset
         :param cols: Columns to get the profile from
         :param bins: Number of buckets
         :param force_hist: Force histogram on selected columns
-        :param output:
+        :param output: Output format
         :param flush: Flushes the cache of the whole profile to process it again
         :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
         :return:
@@ -92,6 +93,7 @@ class BaseProfile(ABC):
 
         return profile
 
+    @time_it
     def _calculate(self, cols="*", bins: int = MAX_BUCKETS, force_hist=None, flush: bool = False, size=False):
         """
         Returns a new dataframe with the profile data in its added to the meta property
@@ -101,6 +103,7 @@ class BaseProfile(ABC):
         :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
         :return:
         """
+
         _t = time.process_time()
         profiler_time = {"hist": {}, "frequency": {}, "count_mismatch": {}}
 
@@ -123,7 +126,6 @@ class BaseProfile(ABC):
         cols_data_types = None
 
         profiler_time["beginning"] = {"elapsed_time": time.process_time() - _t}
-
         if cols_to_profile or not is_cached or flush:
 
             if flush:
@@ -156,7 +158,7 @@ class BaseProfile(ABC):
             cols_properties = cols_data_types.items()
             for col_name, properties in cols_properties:
                 if (properties.get("data_type") in df.constants.NUMERIC_TYPES
-                        and not properties.get("categorical", False)) \
+                    and not properties.get("categorical", False)) \
                         or col_name in force_hist:
                     hist_cols.append(col_name)
                 else:
@@ -166,14 +168,13 @@ class BaseProfile(ABC):
             freq = {}
             sliced_freq = {}
             count_uniques = None
-
-            if len(hist_cols) and bins>0:
+            if len(hist_cols) and bins > 0:
                 _t = time.process_time()
                 hist = df.cols.hist(hist_cols, buckets=bins, compute=False)
                 profiler_time["hist"] = {
                     "columns": hist_cols, "elapsed_time": time.process_time() - _t}
 
-            if len(freq_cols) and bins>0:
+            if len(freq_cols) and bins > 0:
                 _t = time.process_time()
                 sliced_cols = []
                 non_sliced_cols = []

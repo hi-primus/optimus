@@ -235,7 +235,11 @@ class BaseFunctions(ABC):
         """
         Converts a series values to floats
         """
-        return self._to_float(series)
+        # print(series.dtype, "----",self.constants.NUMERIC_INTERNAL_TYPES)
+        if not str(series.dtype) in self.constants.NUMERIC_INTERNAL_TYPES + self.constants.BOOLEAN_INTERNAL_TYPES:
+            return self._to_float(series)
+        else:
+            return series
 
     def _to_integer(self, series, default=0):
         """
@@ -248,6 +252,12 @@ class BaseFunctions(ABC):
             return self._new_series(np.vectorize(fast_int)(series, default=default).flatten())
         except:
             return self._new_series(self._functions.to_numeric(series, errors='coerce').fillna(default)).astype('int')
+
+    def to_numeric(self, series, default=0):
+        if not str(series.dtype) in self.constants.NUMERIC_INTERNAL_TYPES:
+            return self._to_float(series)
+        else:
+            return series
 
     def to_integer(self, series, default=0):
         """

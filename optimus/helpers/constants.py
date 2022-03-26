@@ -71,6 +71,7 @@ class Actions(Enum):
     CUM_MIN = "cummin"
     TO_FLOAT = "to_float"
     TO_INTEGER = "to_integer"
+    TO_NUMERIC = "to_numeric"
     TO_BOOL = "to_bool"
     TO_BOOLEAN = "to_boolean"
     TO_STRING = "to_string"
