@@ -26,7 +26,7 @@ deepdiff>=5.5.0
 statsmodels>=0.12.2
 glom>=20.11.0
 fastavro>=1.4.1
-fast-histogram>=0.9
+fast-histogram>=0.10
 python-magic>=0.4.15; sys_platform != 'win32'
 python-magic-bin==0.4.14; sys_platform == 'win32'
 nltk>=3.6.2
