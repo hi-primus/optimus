@@ -81,7 +81,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         def func(value):
             return value[lower_bound:upper_bound].reset_index(drop=True)
 
-        return self.root.new(self.data[input_cols].partitions[0].map_partitions(func))
+        return self.root.new(self.data[input_cols].partitions[0].map_partitions(func), meta=self.root.meta)
 
     def graph(self) -> dict:
         """

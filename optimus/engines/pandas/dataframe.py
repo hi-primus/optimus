@@ -53,7 +53,8 @@ class PandasDataFrame(PandasBaseDataFrame, DataFrameBaseDataFrame):
         return Encoding(self)
 
     def _iloc(self, input_cols, lower_bound, upper_bound):
-        return self.root.new(self.data[input_cols][lower_bound: upper_bound].reset_index(drop=True))
+        return self.root.new(self.data[input_cols][lower_bound: upper_bound].reset_index(drop=True),
+                             meta=self.root.meta)
 
     def to_optimus_pandas(self):
         return self.root

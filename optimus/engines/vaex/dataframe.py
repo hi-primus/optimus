@@ -12,7 +12,7 @@ class VaexDataFrame(BaseDataFrame):
         return pandas_to_vaex_dataframe(pdf, n_partitions)
 
     def _iloc(self, input_cols, lower_bound, upper_bound):
-        return self.root.new(self.data[input_cols][lower_bound: upper_bound])
+        return self.root.new(self.data[input_cols][lower_bound: upper_bound],meta=self.root.meta)
 
     def _assign(self, kw_columns):
         dfd = self.root.data
