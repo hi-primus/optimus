@@ -835,36 +835,30 @@ class BaseColumns(ABC):
         df = self.root
         columns = prepare_columns(df, cols, output_cols)
 
-        def split(word):
-            return [char for char in word]
-
-        alpha_lower = split(string.ascii_lowercase)
-        alpha_upper = split(string.ascii_uppercase)
-        digits = split(string.digits)
-        punctuation = split(string.punctuation)
+        alpha_lower = string.ascii_lowercase
+        alpha_upper = string.ascii_uppercase
+        digits = string.digits
+        punctuation = [re.escape(c) for c in string.punctuation]
 
         if mode == 0:
-            search = alpha_lower + alpha_upper + digits
-            replace_by = ["l"] * len(alpha_lower) + ["U"] * \
-                         len(alpha_upper) + ["#"] * len(digits)
+            search = ["|".join(punctuation), "|".join(alpha_lower), "|".join(alpha_upper), "|".join(digits)]
+            replace_by = ["!", "l", "U", "#"]
         elif mode == 1:
-            search = alpha_lower + alpha_upper + digits
-            replace_by = ["c"] * len(alpha_lower) + ["c"] * \
-                         len(alpha_upper) + ["#"] * len(digits)
+            search = ["|".join(punctuation), "|".join(alpha_lower + alpha_upper), "|".join(digits)]
+            replace_by = ["!", "c", "#"]
         elif mode == 2:
-            search = alpha_lower + alpha_upper + digits
-            replace_by = ["*"] * len(alpha_lower + alpha_upper + digits)
+            search = ["|".join(punctuation), "|".join(alpha_lower + alpha_upper + digits)]
+            replace_by = ["!", "*"]
         elif mode == 3:
-            search = alpha_lower + alpha_upper + digits + punctuation
-            replace_by = ["*"] * \
-                         len(alpha_lower + alpha_upper + digits + punctuation)
+            search = "|".join(alpha_lower + alpha_upper + digits + punctuation)
+            replace_by = "*"
         else:
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
         kw_columns = {}
 
         for input_col, output_col in columns:
-            kw_columns[output_col] = df.cols.select(input_col).cols.to_string().cols.normalize_chars().cols.replace(
+            kw_columns[output_col] = df.cols.select(input_col).cols.to_string().cols.normalize_chars().cols.replace_regex(
                 search=search, replace_by=replace_by, search_by="chars").data[input_col]
 
         return df.cols.assign(kw_columns)
