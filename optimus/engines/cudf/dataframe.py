@@ -41,8 +41,8 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         from optimus.engines.cudf.constants import Constants
         return Constants()
 
-    def _iloc(self, input_cols, lower_bound, upper_bound, copy=True):
-        dfd = self.data[input_cols][lower_bound: upper_bound]
+    def _iloc(self, lower_bound, upper_bound, copy=True):
+        dfd = self.data[lower_bound: upper_bound]
         if copy:
             dfd = dfd.reset_index(drop=True)
         return self.root.new(dfd)
@@ -62,7 +62,7 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         if n == "all":
             series = self.cols.select(cols).to_pandas()
         else:
-            series = self.iloc(cols, 0, n).to_pandas()
+            series = self.cols.select(cols).iloc(0, n).to_pandas()
 
         return series.to_dict(orient)
 

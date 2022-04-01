@@ -77,13 +77,13 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
     def visualize(self):
         return display(self.data.visualize())
 
-    def _iloc(self, input_cols, lower_bound, upper_bound, copy=True):
+    def _iloc(self, lower_bound, upper_bound, copy=True):
         def func(value):
             if copy:
                 return value[lower_bound:upper_bound].reset_index(drop=True)
             return value[lower_bound:upper_bound]
 
-        return self.root.new(self.data[input_cols].partitions[0].map_partitions(func))
+        return self.root.new(self.data.partitions[0].map_partitions(func))
 
     def graph(self) -> dict:
         """
@@ -259,7 +259,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         if n == "all":
             series = self.cols.select(cols).to_pandas()
         else:
-            series = self.iloc(cols, 0, n).to_pandas()
+            series = self.cols.select(cols).iloc(0, n).to_pandas()
 
         return series.to_dict(orient)
 

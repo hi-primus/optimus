@@ -58,8 +58,8 @@ class SparkDataFrame(BaseDataFrame):
         from optimus.engines.spark.functions import SparkFunctions
         return SparkFunctions(self)
 
-    def _iloc(self, input_cols, lower_bound, upper_bound, copy=True):
-        dfd = self.data[input_cols][lower_bound: upper_bound]
+    def _iloc(self, lower_bound, upper_bound, copy=True):
+        dfd = self.data[lower_bound: upper_bound]
         if copy:
             dfd = dfd.reset_index(drop=True)
         return self.__class__(dfd, op=self.op, label_encoder=self.le)
