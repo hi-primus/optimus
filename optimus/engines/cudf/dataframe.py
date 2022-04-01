@@ -41,8 +41,11 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         from optimus.engines.cudf.constants import Constants
         return Constants()
 
-    def _iloc(self, input_cols, lower_bound, upper_bound):
-        return self.root.new(self.data[input_cols][lower_bound: upper_bound].reset_index(drop=True))
+    def _iloc(self, input_cols, lower_bound, upper_bound, copy=True):
+        dfd = self.data[input_cols][lower_bound: upper_bound]
+        if copy:
+            dfd = dfd.reset_index(drop=True)
+        return self.root.new(dfd)
 
     def to_pandas(self):
         return self.data.to_pandas().reset_index(drop=True)

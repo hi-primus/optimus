@@ -463,10 +463,10 @@ class BaseDataFrame(ABC):
         raise NotImplementedError(f"\"stratified_sample\" is not available using {type(self).__name__}")
 
     @abstractmethod
-    def _iloc(self, input_cols, lower_bound, upper_bound) -> 'DataFrameType':
+    def _iloc(self, input_cols, lower_bound, upper_bound, copy=True) -> 'DataFrameType':
         pass
 
-    def iloc(self, cols="*", lower_bound=None, upper_bound=None, n=None) -> 'DataFrameType':
+    def iloc(self, cols="*", lower_bound=None, upper_bound=None, copy=True, n=None) -> 'DataFrameType':
         """
         Get a window from the dataframe
         """
@@ -479,7 +479,7 @@ class BaseDataFrame(ABC):
             upper_bound = lower_bound + n
 
         input_cols = parse_columns(df, cols)
-        return self._iloc(input_cols, lower_bound, upper_bound)
+        return self._iloc(input_cols, lower_bound, upper_bound, copy)
 
     def size(self, deep=True, format=None):
         """

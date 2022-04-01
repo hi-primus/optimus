@@ -77,9 +77,11 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
     def visualize(self):
         return display(self.data.visualize())
 
-    def _iloc(self, input_cols, lower_bound, upper_bound):
+    def _iloc(self, input_cols, lower_bound, upper_bound, copy=True):
         def func(value):
-            return value[lower_bound:upper_bound].reset_index(drop=True)
+            if copy:
+                return value[lower_bound:upper_bound].reset_index(drop=True)
+            return value[lower_bound:upper_bound]
 
         return self.root.new(self.data[input_cols].partitions[0].map_partitions(func))
 

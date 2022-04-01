@@ -52,8 +52,11 @@ class PandasDataFrame(PandasBaseDataFrame, DataFrameBaseDataFrame):
         from optimus.engines.pandas.ml.encoding import Encoding
         return Encoding(self)
 
-    def _iloc(self, input_cols, lower_bound, upper_bound):
-        return self.root.new(self.data[input_cols][lower_bound: upper_bound].reset_index(drop=True))
+    def _iloc(self, input_cols, lower_bound, upper_bound, copy=True):
+        dfd = self.data[input_cols][lower_bound: upper_bound]  
+        if copy:
+            dfd = dfd.reset_index(drop=True)
+        return self.root.new(dfd)
 
     def to_optimus_pandas(self):
         return self.root

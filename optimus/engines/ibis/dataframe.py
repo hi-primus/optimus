@@ -17,8 +17,11 @@ class IbisDataFrame(BaseDataFrame):
     def stratified_sample(self, col_name, seed: int = 1) -> 'DataFrameType':
         pass
 
-    def _iloc(self, input_cols, lower_bound, upper_bound) -> 'DataFrameType':
-        return self.root.new(self.data[input_cols][lower_bound:upper_bound])
+    def _iloc(self, input_cols, lower_bound, upper_bound, copy=True):
+        dfd = self.data[input_cols][lower_bound: upper_bound]
+        if copy:
+            dfd = dfd.reset_index(drop=True)
+        return self.root.new(dfd)
 
     def graph(self) -> dict:
         pass
