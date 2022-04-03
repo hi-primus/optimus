@@ -277,12 +277,15 @@ class BaseFunctions(ABC):
         """
         return self._to_datetime(series, format)
 
-    @staticmethod
-    def to_string(series):
+    def to_string(self, series):
         """
         Converts a series values to strings
         """
-        return series.astype(str)
+        if not str(series.dtype) in self.constants.OBJECT_INTERNAL_TYPES:
+            return series.astype(str)
+        else:
+
+            return series
 
     @staticmethod
     def to_string_accessor(series):
