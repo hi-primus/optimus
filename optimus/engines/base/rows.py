@@ -134,7 +134,7 @@ class BaseRows(ABC):
 
     def _count(self, compute=True) -> int:
         """
-
+        Specific implementation to count the number of rows in the dataframe
         :param compute:
         :return:
         """
