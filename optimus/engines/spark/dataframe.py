@@ -59,7 +59,8 @@ class SparkDataFrame(BaseDataFrame):
         return SparkFunctions(self)
 
     def _iloc(self, input_cols, lower_bound, upper_bound):
-        return self.__class__(self.data[input_cols][lower_bound: upper_bound], op=self.op, label_encoder=self.le)
+        return self.__class__(self.data[input_cols][lower_bound: upper_bound], op=self.op, label_encoder=self.le,
+                              meta=self.root.meta)
 
     def execute(self):
         df = self.data
@@ -188,7 +189,7 @@ class SparkDataFrame(BaseDataFrame):
         df_right = df_right.data.to_spark().withColumnRenamed(left_on, suffix_right_name)
 
         return self.new(df_left.join(df_right, df_left[left_on + suffix_left] == df_right[right_on + suffix_right],
-                            how).to_koalas())
+                                     how).to_koalas())
 
     def pivot(self, col, groupby, agg=None, values=None):
         """
