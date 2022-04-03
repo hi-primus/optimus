@@ -835,37 +835,31 @@ class BaseColumns(ABC):
         df = self.root
         columns = prepare_columns(df, cols, output_cols)
 
-        def split(word):
-            return [char for char in word]
-
-        alpha_lower = split(string.ascii_lowercase)
-        alpha_upper = split(string.ascii_uppercase)
-        digits = split(string.digits)
-        punctuation = split(string.punctuation)
+        alpha_lower = r"[a-z]"
+        alpha_upper = r"[A-Z]"
+        digits = r"\d"
+        alpha = r"[A-Z][a-z]"
+        alpha_numeric = r"[A-Za-z0-9]"
+        punctuation = r"[!@#$%^&*()_+\-=\[\]{};':\\|,.<>/?]"
+        alpha_numeric_punctuation = r"[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\\|,.<>/?]"
 
         if mode == 0:
-            search = alpha_lower + alpha_upper + digits
-            replace_by = ["l"] * len(alpha_lower) + ["U"] * \
-                         len(alpha_upper) + ["#"] * len(digits)
+            search = [(punctuation, "!"), (alpha_lower, "l"), (alpha_upper, "U"), (digits, "#")]
         elif mode == 1:
-            search = alpha_lower + alpha_upper + digits
-            replace_by = ["c"] * len(alpha_lower) + ["c"] * \
-                         len(alpha_upper) + ["#"] * len(digits)
+            search = [(punctuation, "!"), (alpha, "c"), (digits, "#")]
         elif mode == 2:
-            search = alpha_lower + alpha_upper + digits
-            replace_by = ["*"] * len(alpha_lower + alpha_upper + digits)
+            search = [(punctuation, "!"), (alpha_numeric, "*")]
         elif mode == 3:
-            search = alpha_lower + alpha_upper + digits + punctuation
-            replace_by = ["*"] * \
-                         len(alpha_lower + alpha_upper + digits + punctuation)
+            search = [(alpha_numeric_punctuation, "*")]
         else:
             RaiseIt.value_error(mode, ["0", "1", "2", "3"])
 
         kw_columns = {}
 
         for input_col, output_col in columns:
-            kw_columns[output_col] = df.cols.select(input_col).cols.to_string().cols.normalize_chars().cols.replace(
-                search=search, replace_by=replace_by, search_by="chars").data[input_col]
+            kw_columns[output_col] = \
+                df.cols.select(input_col).cols.to_string().cols.normalize_chars().cols.replace_regex(
+                    search=search, search_by="chars").data[input_col]
 
         return df.cols.assign(kw_columns)
 
@@ -2887,13 +2881,16 @@ class BaseColumns(ABC):
                 _search = val_to_list(_search, convert_tuple=True)
                 _replace_by = val_to_list(_replace_by, convert_tuple=True)
                 df = self._replace_regex(col, list(_search), list(_replace_by), search_by=search_by)
-
+        elif is_list_of_tuples(search) and replace_by is None:
+            for _search, _replace_by in search:
+                df = df.cols._replace_regex(output_cols, _search, _replace_by, search_by, ignore_case, output_cols)
         else:
             search_by = search_by or "chars"
             if is_list_of_tuples(search) and replace_by is None:
                 search, replace_by = zip(*search)
             search = val_to_list(search, convert_tuple=True)
             replace_by = val_to_list(replace_by, convert_tuple=True)
+
             df = self._replace_regex(cols, list(search), list(replace_by), search_by, ignore_case, output_cols)
 
         return df
