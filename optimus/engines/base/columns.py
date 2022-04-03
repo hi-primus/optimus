@@ -914,7 +914,7 @@ class BaseColumns(ABC):
         return self.root.new(df._assign(kw_columns), meta=meta)
 
     # TODO: Consider implement lru_cache for caching
-    def calculate_pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> 'DataFrameType':
+    def _calculate_pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> 'DataFrameType':
         """
         Counts how many equal patterns there are in a column. Uses a cache to trigger the operation only if necessary.
         Saves the result to meta and returns the same dataframe.
@@ -1100,7 +1100,7 @@ class BaseColumns(ABC):
                 break
 
         if calculate:
-            df = df.cols.calculate_pattern_counts(cols, n, mode, flush)
+            df = df.cols._calculate_pattern_counts(cols, n, mode, flush)
             profile = Meta.get(df.meta, "profile")
             self.meta = df.meta
 
