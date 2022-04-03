@@ -948,28 +948,25 @@ class BaseColumns(ABC):
 
             patterns_more = Meta.get(
                 df.meta, f"profile.columns.{input_col}.patterns.more")
-
             if column_modified_time > patterns_update_time \
                     or patterns_update_time == 0 \
                     or flush is True \
-                    or patterns_more:
-
+                    or patterns_more is False:
                 # Plus n + 1 so we can could let the user know if there are more patterns
+
                 result[input_col] = \
                     df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n + 1 if n is not None else None)[
                         "frequency"][
                         input_col]
 
-                if n is not None and len(result[input_col]["values"]) > n:
+                if n is None and len(result[input_col]["values"]) > n:
                     result[input_col].update({"more": True})
 
                     # Remove extra element from list
                     result[input_col]["values"].pop()
 
-                df.meta = Meta.set(
-                    df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
-                df.meta = Meta.set(
-                    df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
+                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
+                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
 
             else:
                 result[input_col] = Meta.get(
