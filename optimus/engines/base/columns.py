@@ -25,7 +25,7 @@ from optimus.engines.base.stringclustering import Clusters
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     prepare_columns_arguments, \
-    validate_columns_names, name_col
+    validate_columns_names
 from optimus.helpers.constants import Actions, CONTRACTIONS, PROFILER_CATEGORICAL_DTYPES, ProfilerDataTypes, \
     RELATIVE_ERROR
 from optimus.helpers.converter import convert_numpy, format_dict
@@ -298,6 +298,7 @@ class BaseColumns(ABC):
         :param regex: Regex expression to select the columns
         :return:
         """
+
         df = self.root
         dfd = df.data
         _cols = parse_columns(df, "*")
@@ -463,10 +464,11 @@ class BaseColumns(ABC):
             where, value_func = zip(*value_func)
 
         for _where, _values in zip(where, value_func):
-            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values, args=args)
+            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values,
+                              args=args)
             # drops default value after the first iteration to avoid overwriting
             default = None
-        
+
         return df
 
     def _set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
@@ -937,7 +939,6 @@ class BaseColumns(ABC):
         """
 
         df = self.root
-
         result = {}
         cols = parse_columns(df, cols)
         for input_col in cols:
@@ -1091,7 +1092,6 @@ class BaseColumns(ABC):
                 df.meta, f"profile.columns.{input_col}.patterns.values")
             patterns_more = Meta.get(
                 df.meta, f"profile.columns.{input_col}.patterns.more")
-
             if patterns_values is None or (n is not None and len(patterns_values) < n and patterns_more):
                 calculate = True
                 break
@@ -3508,8 +3508,10 @@ class BaseColumns(ABC):
             return {"hist": _result}
 
         partitions = self.F.to_delayed(df.cols.select(cols).cols.to_numeric().data)
-        result = [get_hist(part[col_name], col_name, [_min["min"][col_name], _max["max"][col_name]], buckets, _bins_edges) for part
-                  in partitions for col_name in cols]
+        result = [
+            get_hist(part[col_name], col_name, [_min["min"][col_name], _max["max"][col_name]], buckets, _bins_edges) for
+            part
+            in partitions for col_name in cols]
 
         result = format_histograms(result)
 
