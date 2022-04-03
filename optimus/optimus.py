@@ -14,6 +14,7 @@ class Engine(Enum):
     SPARK = "spark"
     VAEX = "vaex"
     IBIS = "ibis"
+    POLARS = "polars"
 
     @classmethod
     def list(cls):
@@ -28,6 +29,7 @@ class EnginePretty(Enum):
     SPARK = "Spark"
     VAEX = "Vaex"
     IBIS = "Ibis"
+    POLARS = "Polars"
 
     @classmethod
     def list(cls):
@@ -82,6 +84,11 @@ def start_dask_cudf(*args, **kwargs):
     return DaskCUDFEngine(*args, **kwargs)
 
 
+def start_polars(*args, **kwargs):
+    from optimus.engines.polars.engine import PolarsEngine
+    return PolarsEngine(*args, **kwargs)
+
+
 def optimus(engine=Engine.DASK.value, *args, **kwargs):
     """
     This is the entry point to initialize the selected engine.
@@ -107,7 +114,9 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
              Engine.DASK.value: start_dask,
              Engine.IBIS.value: start_ibis,
              Engine.CUDF.value: start_cudf,
-             Engine.DASK_CUDF.value: start_dask_cudf
+             Engine.DASK_CUDF.value: start_dask_cudf,
+             Engine.POLARS.value: start_polars
+
              }
 
     op = engine_function(engine, funcs)
