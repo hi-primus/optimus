@@ -1,3 +1,5 @@
+import vaex
+
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 
 
