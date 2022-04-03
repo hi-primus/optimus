@@ -182,27 +182,37 @@ class BaseColumns(ABC):
         """
         return self.root.join(df_right, how, on, left_on, right_on, key_middle)
 
+    def _select(self, cols):
+        """
+
+        :param cols:
+        :return:
+        """
+        # print(type(self.root.data))
+        return self.root.data[cols]
+
     def select(self, cols="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> 'DataFrameType':
         """
         Select columns using index, column name, regex to data type.
 
         :param cols: "*", column name or list of column names to be processed.
         :param regex: Regular expression to filter the columns
-        :param data_type: Data type to be filtered for
-        :param invert: Invert the selection
-        :param accepts_missing_cols:
+        :param data_type: Data type to be filtered for, example "int", "str" or "float"
+        :param invert: Invert the selection, columns that are not selected will be selected
+        :param accepts_missing_cols: If True, missing columns will not return error.
         :return:
         """
 
         df = self.root
+        meta = self.root.meta
         cols = parse_columns(df, cols if regex is None else regex, is_regex=regex is not None,
                              filter_by_column_types=data_type, invert=invert,
                              accepts_missing_cols=accepts_missing_cols)
-        meta = df.meta
+        # meta = df.meta
         meta = Meta.select_columns(meta, cols)
         dfd = df.data
         if cols is not None:
-            dfd = dfd[cols]
+            dfd = self._select(cols)
         return self.root.new(dfd, meta=meta)
 
     def copy(self, cols="*", output_cols=None, columns=None) -> 'DataFrameType':
