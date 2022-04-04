@@ -281,19 +281,20 @@ class BaseFunctions(ABC):
         """
         Converts a series values to strings
         """
-        if not str(series.dtype) in self.constants.OBJECT_INTERNAL_TYPES:
-            return series.astype(str)
+        if not str(series.dtype) in self.constants.STRING_INTERNAL_TYPES:
+            return series.astype("string")
         else:
-
             return series
 
-    @staticmethod
-    def to_string_accessor(series):
+    def to_string_accessor(self, series):
         """
         Converts a series values to strings and returns it's main functions
         accessor
         """
-        return series.astype(str).str
+        if not str(series.dtype) in self.constants.STRING_INTERNAL_TYPES:
+            return series.astype(str).str
+        else:
+            return series.str
 
     @staticmethod
     def duplicated(dfd, keep, subset):

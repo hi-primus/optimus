@@ -38,7 +38,7 @@ class CUDFBaseFunctions(BaseFunctions, ABC):
         return series.astype(str).str.isfloat()
 
     def is_string(self, series):
-        if str(series.dtype) in [*self.constants.STRING_INTERNAL_TYPES, *self.constants.OBJECT_INTERNAL_TYPES]:
+        if str(series.dtype) in self.constants.STRING_INTERNAL_TYPES:
             return cudf.Series([True] * len(series))
         return cudf.Series([False] * len(series))
 
