@@ -1,8 +1,7 @@
 from optimus.engines.base.basedataframe import BaseDataFrame
-
 from optimus.engines.cudf.dataframe import CUDFDataFrame
-from optimus.engines.vaex.io.save import Save
 from optimus.engines.pandas.dataframe import PandasDataFrame
+from optimus.engines.vaex.io.save import Save
 from optimus.helpers.converter import pandas_to_vaex_dataframe
 
 
@@ -23,6 +22,15 @@ class VaexDataFrame(BaseDataFrame):
         for col_name, expr in kw_columns.items():
             _dfd[col_name] = expr
         return _dfd
+
+    def visualize(self):
+        pass
+
+    def stratified_sample(self, col_name, seed: int = 1) -> 'DataFrameType':
+        pass
+
+    def graph(self) -> dict:
+        pass
 
     def to_pandas(self):
         return self.data.to_pandas_df().reset_index(drop=True)
@@ -60,12 +68,12 @@ class VaexDataFrame(BaseDataFrame):
 
     @property
     def mask(self):
-        from optimus.engines.dask.mask import DaskMask
-        return DaskMask(self)
+        from optimus.engines.vaex.mask import VaexMask
+        return VaexMask(self)
 
     @property
     def ml(self):
-        from optimus.engines.dask.ml.models import ML
+        from optimus.engines.pandas.ml.models import ML
         return ML(self)
 
     @property

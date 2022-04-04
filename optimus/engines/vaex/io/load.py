@@ -1,8 +1,8 @@
 import ntpath
 
-import vaex
 import pandas as pd
-from optimus.engines.base.basedataframe import BaseDataFrame
+import vaex
+
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.vaex.dataframe import VaexDataFrame
@@ -11,6 +11,10 @@ from optimus.helpers.logger import logger
 
 
 class Load(BaseLoad):
+
+    @staticmethod
+    def df(*args, **kwargs):
+        return VaexDataFrame(*args, **kwargs)
 
     def hdf5(self, path, columns=None, *args, **kwargs):
         path = unquote_path(path)
@@ -40,9 +44,10 @@ class Load(BaseLoad):
             raise
         return df
 
-    def csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8", n_rows=-1, cache=False,
-            quoting=0, lineterminator=None, on_bad_lines='warn', engine="c", keep_default_na=False,
-            na_filter=False, null_value=None, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
+    def _csv(self, filepath_or_buffer, sep=',', header=True, infer_schema=True, na_values=None, encoding="utf-8",
+             n_rows=-1, cache=False, quoting=0, lineterminator=None, on_bad_lines='warn', engine="c",
+             keep_default_na=False, na_filter=False, null_value=None, storage_options=None, conn=None,
+             n_partitions=1, *args, **kwargs):
 
         filepath_or_buffer = unquote_path(filepath_or_buffer)
 
@@ -60,23 +65,22 @@ class Load(BaseLoad):
             kwargs.pop(remove_param)
 
         try:
+            print("header", header)
             # From the panda docs using na_filter
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
-            dfd = vaex.read_csv(filepath_or_buffer, sep=sep, header=0 if header else None, encoding=encoding,
+            df = vaex.read_csv(filepath_or_buffer, sep=sep, header=header, encoding=encoding,
                                 quoting=quoting, lineterminator=lineterminator, on_bad_lines=on_bad_lines,
                                 keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
                                 storage_options=storage_options, *args, **kwargs)
 
             if n_rows > -1:
-                dfd = vaex.from_pandas(dfd.head(n=n_rows), npartitions=1).reset_index(drop=True)
+                df = vaex.from_pandas(df.head(n=n_rows), npartitions=1).reset_index(drop=True)
 
-            df = VaexDataFrame(dfd, op=self.op)
-            df.meta = Meta.set(df.meta, value={"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)})
         except IOError as error:
             logger.print(error)
             raise
-
+        # print(df)
         return df
 
     @staticmethod

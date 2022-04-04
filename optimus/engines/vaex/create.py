@@ -1,15 +1,17 @@
+import vaex
+
+from optimus.engines.base.create import BaseCreate
+from optimus.engines.vaex.dataframe import VaexDataFrame
 from optimus.helpers.converter import pandas_to_vaex_dataframe
 from optimus.helpers.types import *
-from optimus.engines.base.create import BaseCreate
-
-from optimus.engines.vaex.dataframe import VaexDataFrame
-import vaex
 
 try:
     import pandas as pd
+
     InternalPandasDataFrame = pd.DataFrame
 except:
     InternalPandasDataFrame = type(None)
+
 
 class Create(BaseCreate):
 
@@ -20,7 +22,6 @@ class Create(BaseCreate):
                 dtype = self.op.constants.COMPATIBLE_DTYPES.get(dtype, dtype)
                 dfd[name] = dfd[name].astype(dtype)
         return dfd
-
 
     def _df_from_dfd(self, dfd, n_partitions=1, *args, **kwargs) -> 'DataFrameType':
         if isinstance(dfd, (InternalPandasDataFrame,)):

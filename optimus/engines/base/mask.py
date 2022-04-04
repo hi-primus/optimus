@@ -307,7 +307,7 @@ class Mask(ABC):
             mask = subset_df.isnull().all(axis=1).rename(col_name)
         else:
             mask = subset_df.isnull()
-
+        
         return self.root.new(self._to_frame(mask))
 
     def none(self, cols="*") -> 'MaskDataFrameType':
