@@ -319,6 +319,36 @@ class TestStringPandas(TestBase):
         expected = self.create_dataframe(data={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): ['sumitpO', '  éébe#lbmub', '&edihnori', 'zzaJ', 'nortageM', '$^)_xelporteM']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
+    def test_cols_strip(self):
+        df = self.create_dataframe(data={('strip_test', 'object'): ['[[ThIs iS A TEST]', '[foo]', ' [bar]', '[baz ]-', 'zo[o]o', 'test]]]]][]']}, force_data_types=True)
+        result = df.cols.strip(cols=['strip_test'], chars=['[', ']'])
+        expected = self.create_dataframe(data={('strip_test', 'object'): ['ThIs iS A TEST', 'foo', ' [bar', 'baz ]-', 'zo[o]o', 'test']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
+    def test_cols_strip_all(self):
+        df = self.df.copy()
+        result = df.cols.strip(cols='*')
+        expected = self.create_dataframe(data={('NullType', 'object'): ['None', 'None', 'None', 'None', 'None', 'None'], ('attributes', 'object'): ['[8.5344, 4300.0]', '[5.334, 2000.0]', '[7.9248, 4000.0]', '[3.9624, 1800.0]', '[None, 5700.0]', '[91.44, None]'], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): ["bytearray(b'Leader')", "bytearray(b'Espionage')", "bytearray(b'Security')", "bytearray(b'First Lieutenant')", "bytearray(b'None')", "bytearray(b'Battle Station')"], ('height(ft)', 'object'): ['-28.0', '17.0', '26.0', '13.0', 'nan', '300.0'], ('japanese name', 'object'): ["['Inochi', 'Convoy']", "['Bumble', 'Goldback']", "['Roadbuster']", "['Meister']", "['Megatron']", "['Metroflex']"], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', 'None', 'None'], ('rank', 'object'): ['10', '7', '7', '8', '10', '8'], ('Cybertronian', 'object'): ['True', 'True', 'True', 'True', 'True', 'False'], ('Date Type', 'object'): ['2016-09-10', '2015-08-10', '2014-06-24', '2013-06-24', '2012-05-10', '2011-04-10'], ('age', 'object'): ['5000000', '5000000', '5000000', '5000000', '5000000', '5000000'], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'object'): ['2014-06-24', '2014-06-24', '2014-06-24', '2014-06-24', '2014-06-24', '2014-06-24'], ('weight(t)', 'object'): ['4.3', '2.0', '4.0', '1.8', '5.7', 'nan']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
+    def test_cols_strip_multiple(self):
+        df = self.df.copy()
+        result = df.cols.strip(cols=['NullType', 'weight(t)', 'japanese name'], output_cols=['nt', 'wt', 'jn'])
+        expected = self.create_dataframe(data={('NullType', 'object'): [None, None, None, None, None, None], ('nt', 'object'): ['None', 'None', 'None', 'None', 'None', 'None'], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('jn', 'object'): ["['Inochi', 'Convoy']", "['Bumble', 'Goldback']", "['Roadbuster']", "['Meister']", "['Megatron']", "['Metroflex']"], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('wt', 'object'): ['4.3', '2.0', '4.0', '1.8', '5.7', 'nan']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
+    def test_cols_strip_numeric(self):
+        df = self.df.copy().cols.select(['height(ft)'])
+        result = df.cols.strip(cols=['height(ft)'])
+        expected = self.create_dataframe(data={('height(ft)', 'object'): ['-28.0', '17.0', '26.0', '13.0', 'nan', '300.0']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
+    def test_cols_strip_string(self):
+        df = self.df.copy().cols.select(['names'])
+        result = df.cols.strip(cols=['names'], output_cols=['names_2'])
+        expected = self.create_dataframe(data={('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('names_2', 'object'): ['Optimus', 'bumbl#ebéé', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$']}, force_data_types=True)
+        self.assertTrue(result.equals(expected, decimal=True, assertion=True))
+
     def test_cols_title(self):
         df = self.create_dataframe(data={('title_test', 'object'): ['ThIs iS A TEST', 'ThIs', 'iS', 'a ', ' TEST', 'this is a test']}, force_data_types=True)
         result = df.cols.title(cols=['title_test'])
@@ -350,7 +380,7 @@ class TestStringPandas(TestBase):
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_cols_trim(self):
-        df = self.create_dataframe(data={('trim_test', 'object'): ['ThIs iS A TEST', 'foo', '     bar', 'baz      ', '      zoo     ', '   t e   s   t   ']}, force_data_types=True)
+        df = self.create_dataframe(data={('trim_test', 'object'): ['ThIs iS A TEST', 'foo', '  \n   bar', 'baz      ', '      zoo     ', '   t e   s   t   ']}, force_data_types=True)
         result = df.cols.trim(cols=['trim_test'])
         expected = self.create_dataframe(data={('trim_test', 'object'): ['ThIs iS A TEST', 'foo', 'bar', 'baz', 'zoo', 't e   s   t']}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))

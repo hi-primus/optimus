@@ -2301,14 +2301,37 @@ class BaseColumns(ABC):
 
     def trim(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        Remove leading and trailing characters.
+        Remove leading and trailing whitespaces.
 
-        Strip whitespaces (including newlines) or a set of specified characters from each string in the column from left and right sides.
+        Strip whitespaces (including newlines) from each string in the column from left and right sides.
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         return self.apply(cols, self.F.trim, func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
+
+    def strip(self, cols="*", chars=None, side="both", output_cols=None) -> 'DataFrameType':
+        """
+        Remove leading and trailing characters.
+
+        Strip whitespaces (including newlines) or a set of specified characters from each string in the column from left and/or right sides.
+        :param cols: "*", column name or list of column names to be processed.
+        :param chars: the set of characters to be stripped.
+        :param side: strip the left, the right side or both sides.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        if side not in ["left", "right", "both"]:
+            RaiseIt.value_error(side, ["left", "right", "both"])
+
+        if chars and is_list_of_str(chars):
+            chars = "".join(chars)
+
+        if chars and is_list(chars):
+            raise ValueError("'chars' should be a string, a list of characters or None")
+
+        return self.apply(cols, self.F.strip, args=(chars, side), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
     def strip_html(self, cols="*", output_cols=None) -> 'DataFrameType':
@@ -3384,6 +3407,10 @@ class BaseColumns(ABC):
             else:
                 final_columns = [output_cols + "_" +
                                  str(i) for i in range(splits)]
+
+            
+            if is_list_of_str(separator):
+                separator = "|".join([re.escape(sep) for sep in separator])
 
             dfd_new = self._unnest(
                 dfd, input_col, final_columns, separator, splits, mode, output_cols)

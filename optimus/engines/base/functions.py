@@ -720,6 +720,15 @@ class BaseFunctions(ABC):
         return self.to_string_accessor(series).strip()
 
     @apply_to_categories
+    def strip(self, series, chars=None, side="both"):
+        if side == "left":
+            return self.to_string_accessor(series).lstrip(to_strip=chars)
+        elif side == "right":
+            return self.to_string_accessor(series).rstrip(to_strip=chars)
+        else:
+            return self.to_string_accessor(series).strip(to_strip=chars)
+
+    @apply_to_categories
     def strip_html(self, series):
         return self.to_string(series).replace('<.*?>', '', regex=True)
 

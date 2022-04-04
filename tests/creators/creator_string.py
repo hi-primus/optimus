@@ -78,7 +78,7 @@ def create():
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
-        {"trim_test": ["ThIs iS A TEST", "foo", "     bar", "baz      ", "      zoo     ", "   t e   s   t   "]})
+        {"trim_test": ["ThIs iS A TEST", "foo", "  \n   bar", "baz      ", "      zoo     ", "   t e   s   t   "]})
 
     t.create(df=df2, method="cols.trim", cols=["trim_test"], select_cols=True)
     t.create(method="cols.trim", variant="all", cols="*")
@@ -87,6 +87,18 @@ def create():
     t.create(method="cols.trim", variant="string", cols=[
              "names"], output_cols=["names_2"], select_cols=True)
     t.create(method="cols.trim", variant="multiple", cols=[
+             "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
+    
+    df2 = df.cols.append(
+        {"strip_test": ["[[ThIs iS A TEST]", "[foo]", " [bar]", "[baz ]-", "zo[o]o", "test]]]]][]"]})
+
+    t.create(df=df2, method="cols.strip", cols=["strip_test"], chars=["[", "]"], select_cols=True)
+    t.create(method="cols.strip", variant="all", cols="*")
+    t.create(method="cols.strip", variant="numeric",
+             cols=["height(ft)"], select_cols=True)
+    t.create(method="cols.strip", variant="string", cols=[
+             "names"], output_cols=["names_2"], select_cols=True)
+    t.create(method="cols.strip", variant="multiple", cols=[
              "NullType", "weight(t)", "japanese name"], output_cols=["nt", "wt", "jn"])
 
     df2 = df.cols.append(
