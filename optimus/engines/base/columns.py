@@ -2844,14 +2844,12 @@ class BaseColumns(ABC):
         elif is_list_of_tuples(search) and replace_by is None:
             # This can handle search = [(["k","kilos"],("kg")),("g", "gr")]
 
-            cols = val_to_list(cols)
+            cols = parse_columns(df, cols)
             output_cols = val_to_list(get_output_cols(cols, output_cols))
 
-            for input_col, output_col in zip(cols, output_cols):
-                df = df.cols.copy(input_col, output_col)
+            for i, (_search, _replace_by) in enumerate(search):
+                df = df.cols._replace(cols if i == 0 else output_cols, _search, _replace_by, search_by, ignore_case, output_cols)
 
-            for _search, _replace_by in search:
-                df = df.cols._replace(output_cols, _search, _replace_by, search_by, ignore_case, output_cols)
         else:
             df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
         return df
@@ -2881,8 +2879,13 @@ class BaseColumns(ABC):
         search = val_to_list(search, convert_tuple=True)
         replace_by = one_list_to_val(replace_by, convert_tuple=True)
 
-        if search_by == "full" and (not is_list_of_str(search) or not is_list_of_str(replace_by)):
-            search_by = "values"
+        if search_by == "full":
+            
+            search_is_value = not is_str(search) and not is_list_of_str(search)
+            replace_by_is_value = not is_str(replace_by) and not is_list_of_str(replace_by)
+
+            if search_is_value or replace_by_is_value:
+                search_by = "values"
 
         if search_by == "chars":
             func = self.F.replace_chars

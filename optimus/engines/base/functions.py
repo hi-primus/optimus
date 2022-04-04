@@ -752,10 +752,12 @@ class BaseFunctions(ABC):
     def replace_full(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
         if ignore_case:
-            str_regex = [r'(?i)^%s$' % re.escape(s) for s in search]
+            regex = True
+            str_search = [r'(?i)%s' % re.escape(s) for s in search]
         else:
-            str_regex = [r'^%s$' % re.escape(s) for s in search]
-        return series.replace(str_regex, replace_by, regex=True)
+            regex = False
+            str_search = search
+        return series.replace(str_search, replace_by, regex=regex)
 
     def replace_values(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
