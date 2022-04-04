@@ -3751,10 +3751,10 @@ class BaseColumns(ABC):
 
         def kc(x):
             f = x[0] if is_numeric(x[0]) else float("inf")
-            return (-x[1], f, str(x[0]))
+            return -x[1], f, str(x[0])
 
         @self.F.delayed
-        def series_to_dict(_series):
+        def series_to_dict(_series, _cols):
 
             if is_tuple(_series):
                 _series, _total_freq_count = _series
@@ -3766,10 +3766,9 @@ class BaseColumns(ABC):
                        for value, count in series_items]
 
             if _total_freq_count is None:
-                _result = {_series.name: {"values": _result}}
+                _result = {_cols: {"values": _result}}
             else:
-                _result = {_series.name: {"values": _result,
-                                          "count_uniques": int(_total_freq_count)}}
+                _result = {_cols: {"values": _result, "count_uniques": int(_total_freq_count)}}
 
             return _result
 
@@ -3779,7 +3778,6 @@ class BaseColumns(ABC):
 
         @self.F.delayed
         def freq_percentage(_value_counts: dict, _total_rows):
-
             for col in _value_counts["frequency"]:
                 for x in _value_counts["frequency"][col]["values"]:
                     x['percentage'] = round(x['count'] * 100 / _total_rows, 2)
@@ -3788,7 +3786,7 @@ class BaseColumns(ABC):
 
         n_largest = [calculate_n_largest(df.data[col], count_uniques) for col in cols]
 
-        b = [series_to_dict(_n_largest) for _n_largest in n_largest]
+        b = [series_to_dict(_n_largest, _cols) for _n_largest, _cols in zip(n_largest, cols)]
 
         c = flat_dict(b)
 
