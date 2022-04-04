@@ -100,4 +100,4 @@ class PandasFunctions(PandasBaseFunctions, DataFrameBaseFunctions):
         return np.ceil(self.to_float(series))
         
     def normalize_chars(self, series):
-        return series.str.normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
+        return self.to_string_accessor(series).normalize("NFKD").str.encode('ascii', errors='ignore').str.decode('utf8')
