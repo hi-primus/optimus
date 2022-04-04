@@ -951,24 +951,34 @@ class BaseColumns(ABC):
             if patterns_update_time is None:
                 patterns_update_time = 0
 
-            patterns_more = Meta.get(
+            incomplete_cache = Meta.get(
                 df.meta, f"profile.columns.{input_col}.patterns.more")
-            if column_modified_time > patterns_update_time \
-                    or patterns_update_time == 0 \
-                    or flush is True \
-                    or patterns_more is False:
+
+            values = Meta.get(df.meta,
+                              f"profile.columns.{input_col}.patterns.values")
+
+            if (column_modified_time > patterns_update_time or
+                patterns_update_time == 0 or
+                flush is True or
+                (n is None and incomplete_cache) or
+                (
+                    values is not None and
+                    n is not None and
+                    len(values) < n and
+                    incomplete_cache
+                )):
                 # Plus n + 1 so we can could let the user know if there are more patterns
+                result[input_col] = df.cols.pattern(input_col, mode=mode) \
+                    .cols.frequency(input_col, n=n + 1 if n is not None else None) \
+                    ["frequency"][input_col]
 
-                result[input_col] = \
-                    df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n + 1 if n is not None else None)[
-                        "frequency"][
-                        input_col]
-
-                if n is None and len(result[input_col]["values"]) > n:
-                    result[input_col].update({"more": True})
-
+                if n is not None and len(result[input_col]["values"]) > n:
                     # Remove extra element from list
                     result[input_col]["values"].pop()
+                    result[input_col].update({"more": True})
+
+                else:
+                    result[input_col].update({"more": False})
 
                 df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
                 df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
@@ -976,6 +986,9 @@ class BaseColumns(ABC):
             else:
                 result[input_col] = Meta.get(
                     df.meta, f"profile.columns.{input_col}.patterns")
+
+                if n is not None:
+                    result[input_col]["values"] = result[input_col]["values"][:n]
 
         return df
 
@@ -1121,7 +1134,6 @@ class BaseColumns(ABC):
                 result[input_col].update({"more": True})
                 result[input_col]["values"] = result[input_col]["values"][0:n]
             else:
-                result[input_col].update({"more": False})
                 result[input_col]["values"] = result[input_col]["values"]
 
         return result
@@ -3408,7 +3420,7 @@ class BaseColumns(ABC):
                 final_columns = [output_cols + "_" +
                                  str(i) for i in range(splits)]
 
-            
+
             if is_list_of_str(separator):
                 separator = "|".join([re.escape(sep) for sep in separator])
 
