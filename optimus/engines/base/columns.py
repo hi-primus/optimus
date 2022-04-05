@@ -3504,6 +3504,8 @@ class BaseColumns(ABC):
         df = self.root
         cols = parse_columns(df, cols)
 
+        dfn = df.cols.select(cols).cols.to_numeric()
+
         @self.F.delayed
         def _bins_col(_cols, _min, _max):
             return {
@@ -3518,8 +3520,8 @@ class BaseColumns(ABC):
             _min = {"min": {col: range[col][0] for col in cols}}
             _max = {"max": {col: range[col][1] for col in cols}}
         else:
-            _min = df.cols.min(cols, numeric=True, compute=compute, tidy=False)
-            _max = df.cols.max(cols, numeric=True, compute=compute, tidy=False)
+            _min = dfn.cols.min(cols, numeric=True, compute=compute, tidy=False)
+            _max = dfn.cols.max(cols, numeric=True, compute=compute, tidy=False)
 
         _bins_edges = _bins_col(cols, _min, _max)
 
@@ -3549,7 +3551,7 @@ class BaseColumns(ABC):
 
             return {"hist": _result}
 
-        partitions = self.F.to_delayed(df.cols.select(cols).cols.to_numeric().data)
+        partitions = self.F.to_delayed(dfn.data)
         result = [
             get_hist(part[col_name], col_name, [_min["min"][col_name], _max["max"][col_name]], buckets, _bins_edges) for
             part
