@@ -116,41 +116,43 @@ class BaseRows(ABC):
 
         all_cols = df.cols.names()
 
-        if expr == "*":
+        if is_str(expr) and expr == "*":
             expr = all_cols
 
         expr = val_to_list(expr)
 
-        if is_list_of_str(expr):
 
-            if all([col in all_cols for col in expr]):
-                if contains is not None:
-                    expr = [df.mask.contains(expr, value=contains, case=case, flags=flags, na=na, regex=regex).mask.any()]
-                else:
-                    expr = [df[expr].mask.any()]
-            
+        if is_list_of_str(expr) and all([col in all_cols for col in expr]):
+            if contains is not None:
+                expr = [df.mask.contains(expr, value=contains, case=case, flags=flags, na=na, regex=regex).mask.any()]
             else:
-                for i, expr_ in enumerate(expr):
-                    if expr_ not in all_cols:
-                        expr[i] = eval(expr_)
-                    elif contains is not None:
-                        expr[i] = df.mask.contains(expr_, value=contains, case=case, flags=flags, na=na, regex=regex)
-                    else:
-                        expr[i] = df[expr_]
+                expr = [df[expr].mask.any()]
+        else:
+            for i, expr_ in enumerate(expr):
+                if not is_str(expr_):
+                    continue
+                elif expr_ not in all_cols:
+                    expr[i] = eval(expr_)
+                elif contains is not None:
+                    expr[i] = df.mask.contains(expr_, value=contains, case=case, flags=flags, na=na, regex=regex)
+                else:
+                    expr[i] = df[expr_]
         
         if len(expr) > 1:
-            
             def _reduce_exprs(a, b):
                 if hasattr(a, "get_series"):
                     a = a.get_series() 
                 if hasattr(b, "get_series"):
                     b = b.get_series()
-                return a & b
-            
+                return df.functions.to_boolean(a) & df.functions.to_boolean(b)
             expr = reduce(_reduce_exprs, expr)
-        
         else:
-            expr = expr[0].get_series()
+            expr = expr[0]
+        
+            if hasattr(expr, "get_series"):
+                expr = expr.get_series()
+
+            expr = df.functions.to_boolean(expr)
         
         dfd = dfd.reset_index(drop=True)[expr.reset_index(drop=True)].reset_index(drop=True)
 
