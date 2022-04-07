@@ -678,8 +678,13 @@ l_g.add('INTEGER', r'\d+')
 # Ignore spaces
 l_g.ignore('\s+')
 
+def frame_function(func):
+    def wrapper(df, *args, **kwargs):
+        return df.cols.apply(func=func, args=args)
 
-def parse(text_input, df_name="df"):
+    return wrapper
+
+def parse(text_input, df_name="df", data=True):
     """
 
     :param text_input: string to be parsed
@@ -687,6 +692,7 @@ def parse(text_input, df_name="df"):
 
     :return:
     """
+
     tokens = lexer.lex(text_input)
     result = []
     for token in tokens:
@@ -695,9 +701,16 @@ def parse(text_input, df_name="df"):
             for r in (("{", ""), ("}", "")):
                 token_value = token_value.replace(*r)
 
-            result_element = f"""{df_name}.data['{token_value}']"""
+            if data:
+                result_element = f"""{df_name}.data['{token_value}']"""
+            else:
+                result_element = f"""{df_name}['{token_value}']"""
         elif token.name in functions:
-            result_element = f"""{df_name}.functions.{token_value.lower()}"""
+            if data:
+                result_element = f"""{df_name}.functions.{token_value.lower()}"""
+            else:
+                result_element = f"""frame_function({df_name}.functions.{token_value.lower()})"""
+
         else:
             result_element = token_value
         result.append(result_element)
