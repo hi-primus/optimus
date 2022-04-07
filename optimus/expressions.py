@@ -661,6 +661,16 @@ l_g.add('SUB_OPERATOR', r'\-')
 l_g.add('MUL_OPERATOR', r'\*')
 l_g.add('DIV_OPERATOR', r'\/')
 
+# Logic Operators
+l_g.add('GTE_OPERATOR', r'\>\=')
+l_g.add('LTE_OPERATOR', r'\<\=')
+l_g.add('GT_OPERATOR', r'\>')
+l_g.add('LT_OPERATOR', r'\<')
+l_g.add('EQ_OPERATOR', r'\=\=')
+l_g.add('NEQ_OPERATOR', r'\!\=')
+l_g.add('AND_OPERATOR', r'\&')
+l_g.add('OR_OPERATOR', r'\|')
+
 # Number
 l_g.add('FLOAT', r'[-+]?[0-9]*\.?[0-9]+')
 l_g.add('INTEGER', r'\d+')
