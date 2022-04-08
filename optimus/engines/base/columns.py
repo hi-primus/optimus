@@ -517,30 +517,24 @@ class BaseColumns(ABC):
                     default = self.F._new_series(default, index=dfd.index)
             if _eval_value and is_str(_value):
                 _value = eval(_value)
-                if hasattr(_value, "get_series"):
-                    _value = _value.get_series()
 
             if is_str(where):
                 if where in df.cols.names():
                     where = df[where]
                 else:
                     where = eval(where)
-                    if hasattr(where, "get_series"):
-                        where = where.get_series()
 
             if callable(_value):
                 args = val_to_list(args)
                 _value = _value(default, *args)
 
-            if where is not None:
-                if isinstance(_value, self.root.__class__):
-                    _value = _value.get_series()
-                else:
-                    _value = default.mask(where.get_series(), _value)
+            if hasattr(_value, "get_series"):
+                _value = _value.get_series()
 
-            else:
-                if isinstance(_value, self.root.__class__):
-                    _value = _value.data[_value.cols.names()[0]]
+            if where is not None:
+                if hasattr(where, "get_series"):
+                    where = where.get_series()
+                _value = default.mask(where, _value)
 
             assign_dict[col_name] = _value
 
