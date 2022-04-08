@@ -460,6 +460,9 @@ class BaseColumns(ABC):
         if is_list_of_list(value_func) or is_list_of_tuples(value_func):
             where, value_func = zip(*value_func)
 
+        where = val_to_list(where, allow_none=True)
+        value_func = val_to_list(value_func, allow_none=True)
+
         if each:
             each = (value_func is not None and len(cols) == len(value_func)) or (where is not None and len(cols) == len(where))
 
@@ -514,12 +517,16 @@ class BaseColumns(ABC):
                     default = self.F._new_series(default, index=dfd.index)
             if _eval_value and is_str(_value):
                 _value = eval(_value)
+                if hasattr(_value, "get_series"):
+                    _value = _value.get_series()
 
             if is_str(where):
                 if where in df.cols.names():
                     where = df[where]
                 else:
                     where = eval(where)
+                    if hasattr(where, "get_series"):
+                        where = where.get_series()
 
             if callable(_value):
                 args = val_to_list(args)
