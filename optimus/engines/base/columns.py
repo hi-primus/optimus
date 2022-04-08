@@ -486,6 +486,8 @@ class BaseColumns(ABC):
         df = self.root
         dfd = df.data
 
+        cols = val_to_list(cols)
+
         values = val_to_list(value_func, allow_none=True)
         eval_values = val_to_list(eval_value, allow_none=True)
 
