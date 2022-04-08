@@ -437,7 +437,7 @@ class BaseColumns(ABC):
         return self.set(cols, value_func=func, args=args, where=mask)
 
     def set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
-            eval_value: bool = False) -> 'DataFrameType':
+            eval_value: bool = False, each=True) -> 'DataFrameType':
         """
         Set a column value using a number, string or an expression.
 
@@ -447,6 +447,7 @@ class BaseColumns(ABC):
         :param args: Argument when 'value_func' param is a function.
         :param default: Entries where 'where' is False are replaced with corresponding value from other.
         :param eval_value: Parse 'value_func' param in case a string is passed.
+        :param mode: If possible, apply the function using one argument for each column, if not, applies every argument to every element.
         :return:
         """
         if args is None:
@@ -456,18 +457,26 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols) if cols == "*" else cols
         cols = val_to_list(cols)
 
-        value_func = val_to_list(value_func, allow_none=True)
-        eval_values = val_to_list(eval_value, allow_none=True)
-        where = val_to_list(where, allow_none=True)
-
         if is_list_of_list(value_func) or is_list_of_tuples(value_func):
             where, value_func = zip(*value_func)
 
-        for _where, _values in zip(where, value_func):
-            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values,
-                              args=args)
-            # drops default value after the first iteration to avoid overwriting
-            default = None
+        if each:
+            each = (value_func is not None and len(cols) == len(value_func)) or (where is not None and len(cols) == len(where))
+
+        if each:
+            where, value_func = prepare_columns_arguments(cols, where, value_func)
+
+            for col, _where, _values in zip(cols, where, value_func):
+                df = df.cols._set(cols=col, value_func=_values, where=_where,
+                                  default=default, eval_value=eval_value, args=args)
+                # drops default value after the first iteration to avoid overwriting
+                default = None
+
+        else:
+            for _where, _values in zip(where, value_func):
+                df = df.cols._set(cols=cols, value_func=_values, where=_where,
+                                  default=default, eval_value=eval_value, args=args)
+                default = None
 
         return df
 
@@ -480,11 +489,7 @@ class BaseColumns(ABC):
         values = val_to_list(value_func, allow_none=True)
         eval_values = val_to_list(eval_value, allow_none=True)
 
-        if len(cols) > len(values):
-            values = [value_func] * len(cols)
-
-        if len(cols) > len(eval_value):
-            eval_values = [eval_value] * len(cols)
+        eval_values, values = prepare_columns_arguments(cols, eval_values, values)
 
         assign_dict = {}
         move_cols = []
