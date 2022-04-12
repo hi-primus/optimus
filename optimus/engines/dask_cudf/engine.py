@@ -1,4 +1,4 @@
-import dask
+import dask, distributed
 from distributed import Client, get_client
 
 from optimus.engines.base.engine import BaseEngine
