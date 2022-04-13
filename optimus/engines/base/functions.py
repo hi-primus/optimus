@@ -54,8 +54,9 @@ class BaseFunctions(ABC):
             self.root = None
 
     def __getattr__(self, name):
-        type_msg = "" if self.root is None else f" using {type(self.root).__name__}"
-        raise NotImplementedError(f"\"{name}\" is not available" + type_msg)
+        if "__" not in name:
+            type_msg = "" if self.root is None else f" using {type(self.root).__name__}"
+            raise NotImplementedError(f"\"{name}\" is not available" + type_msg)
 
     @property
     def _functions(self):
