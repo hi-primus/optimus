@@ -733,13 +733,16 @@ class BaseFunctions(ABC):
     def strip_html(self, series):
         return self.to_string(series).replace('<.*?>', '', regex=True)
 
+    def _replace_string(self, series, to_replace, value, regex):
+        return self.replace(to_replace, value, regex=regex)
+
     def replace_chars(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
         if ignore_case:
             str_regex = [r'(?i)%s' % re.escape(s) for s in search]
         else:
             str_regex = [r'%s' % re.escape(s) for s in search]
-        return self.to_string(series).replace(str_regex, replace_by, regex=True)
+        return self._replace_string(self.to_string(series), str_regex, replace_by, regex=True)
 
     def replace_words(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
@@ -747,13 +750,13 @@ class BaseFunctions(ABC):
             str_regex = [r'(?i)\b%s\b' % re.escape(s) for s in search]
         else:
             str_regex = [r'\b%s\b' % re.escape(s) for s in search]
-        return self.to_string(series).replace(str_regex, replace_by, regex=True)
+        return self._replace_string(self.to_string(series), str_regex, replace_by, regex=True)
 
     def replace_full(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
         if ignore_case:
             regex = True
-            str_search = [r'(?i)%s' % re.escape(s) for s in search]
+            str_search = [r'(?i)^%s$' % re.escape(s) for s in search]
         else:
             regex = False
             str_search = search
@@ -764,7 +767,7 @@ class BaseFunctions(ABC):
 
         if ignore_case:
             regex = True
-            search = [(r'(?i)%s' % re.escape(s)) for s in search]
+            search = [(r'(?i)^%s$' % re.escape(s)) for s in search]
         else:
             regex = False
 
@@ -783,7 +786,7 @@ class BaseFunctions(ABC):
             str_regex = [r'(?i)%s' % s for s in search]
         else:
             str_regex = [r'%s' % s for s in search]
-        return self.to_string(series).replace(str_regex, replace_by, regex=True)
+        return self._replace_string(self.to_string(series), str_regex, replace_by, regex=True)
 
     def replace_regex_words(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
@@ -791,7 +794,7 @@ class BaseFunctions(ABC):
             str_regex = [r'(?i)\b%s\b' % s for s in search]
         else:
             str_regex = [r'\b%s\b' % s for s in search]
-        return self.to_string(series).replace(str_regex, replace_by, regex=True)
+        return self._replace_string(self.to_string(series), str_regex, replace_by, regex=True)
 
     def replace_regex_full(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)

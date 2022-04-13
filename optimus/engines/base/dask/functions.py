@@ -1,4 +1,5 @@
 from abc import abstractmethod
+import re
 
 import dask
 import dask.dataframe as dd
@@ -9,7 +10,8 @@ from dask_ml.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.preprocessing import MaxAbsScaler
 from dask_ml.impute import SimpleImputer
 from optimus.engines.base.distributed.functions import DistributedBaseFunctions
-from optimus.helpers.core import one_tuple_to_val
+from optimus.helpers.core import one_tuple_to_val, val_to_list
+from optimus.infer import is_list
 
 
 class DaskBaseFunctions(DistributedBaseFunctions):
@@ -198,3 +200,18 @@ class DaskBaseFunctions(DistributedBaseFunctions):
     def port(self, series):
         return self.to_string(series).map(lambda v: hiurlparser.parse_url(v)["port"], na_action=None,
                                           meta=(series.name, "str"))
+
+    def _replace_string(self, series, to_replace, value, regex):
+        
+        if is_list(to_replace) and not is_list(value):
+            if not regex:
+                to_replace = [re.escape(x) for x in to_replace]
+            to_replace = "|".join(to_replace)
+            regex = True
+        
+        elif is_list(to_replace) and is_list(value):
+            for _to_replace, _value in zip(to_replace, value):
+                series = self._replace_string(series, _to_replace, _value, regex)
+            return series
+
+        return series.replace(to_replace, value, regex=regex)
