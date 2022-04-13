@@ -22,8 +22,19 @@ class DaskBaseFunctions(DistributedBaseFunctions):
 
     @staticmethod
     def _new_series(series, *args, **kwargs):
+
         if isinstance(series, dd.Series):
             return series
+        
+        index = kwargs.pop("index", None)
+
+        if index is not None and hasattr(index, "to_frame"):
+            index = index.to_frame()
+            index["temp"] = series
+            series = index["temp"]
+            series.name = None
+            return series
+
         return dd.from_array(series, *args, **kwargs)
 
     @staticmethod
