@@ -53,6 +53,12 @@ class BaseFunctions(ABC):
         else:
             self.root = None
 
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     def __getattr__(self, name):
         if "__" not in name:
             type_msg = "" if self.root is None else f" using {type(self.root).__name__}"
