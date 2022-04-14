@@ -15,39 +15,43 @@ from .prepare import prepare
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.base.stringclustering import Clusters
 
-from optimus.engines.base.create import BaseCreate
-from optimus.engines.base.io.load import BaseLoad
-from optimus.engines.base.io.save import BaseSave
-from optimus.engines.base.io.connect import Connect
 
-from optimus.engines.base.columns import BaseColumns
-from optimus.engines.base.rows import BaseRows
-from optimus.engines.base.set import BaseSet
-from optimus.engines.base.mask import Mask
-from optimus.engines.base.ml.models import BaseML
-from optimus.plots.plots import Plot
-from optimus.outliers.outliers import Outliers
-from optimus.engines.base.profile import BaseProfile
+def engine_accessors():
+    from optimus.engines.base.create import BaseCreate
+    from optimus.engines.base.io.load import BaseLoad
+    from optimus.engines.base.io.save import BaseSave
+    from optimus.engines.base.io.connect import Connect
 
-engine_accessors = {
-    "create": BaseCreate,
-    "load": BaseLoad,
-    "save": BaseSave,
-    "connect": Connect
-}
+    return {
+        "create": BaseCreate,
+        "load": BaseLoad,
+        "save": BaseSave,
+        "connect": Connect
+    }
 
-dataframe_accessors = {
-    "cols": BaseColumns,
-    "rows": BaseRows,
-    "set": BaseSet,
-    "mask": Mask,
-    "ml": BaseML,
-    "plot": Plot,
-    "outliers": Outliers,
-    "profile": BaseProfile
-}
+def dataframe_accessors():
+    from optimus.engines.base.columns import BaseColumns
+    from optimus.engines.base.rows import BaseRows
+    from optimus.engines.base.set import BaseSet
+    from optimus.engines.base.mask import Mask
+    from optimus.engines.base.ml.models import BaseML
+    from optimus.plots.plots import Plot
+    from optimus.outliers.outliers import Outliers
+    from optimus.engines.base.profile import BaseProfile
 
-accessors = {**engine_accessors, **dataframe_accessors}
+    return {
+        "cols": BaseColumns,
+        "rows": BaseRows,
+        "set": BaseSet,
+        "mask": Mask,
+        "ml": BaseML,
+        "plot": Plot,
+        "outliers": Outliers,
+        "profile": BaseProfile
+    }
+
+def accessors():
+    return {**engine_accessors(), **dataframe_accessors()}
 
 def _create_new_variable(base_name: str, names: List[str]):
     while base_name in names:
@@ -186,9 +190,9 @@ def _get_generator(func_properties, method_root_type):
         return _generate_code_output
         
 def _get_method_root_type(accessor):
-    if accessor in engine_accessors:
+    if accessor in engine_accessors():
         return "engine"
-    if accessor in dataframe_accessors:
+    if accessor in dataframe_accessors():
         return "dataframe"
 
 def _init_methods(engine):
@@ -228,13 +232,15 @@ def _generate_code(body=None, variables=[], **kwargs):
 
     method = None
     method_root_type = None
+
+    _accessors = accessors()
     
     if operation[0] == "Optimus":
         method = _init_methods(body["engine"])
         method_root_type = "optimus"
         operation = []
-    elif operation[0] in accessors:
-        method = accessors[operation[0]]
+    elif operation[0] in _accessors:
+        method = _accessors[operation[0]]
         method_root_type = _get_method_root_type(operation[0])
         operation = operation[1:]
     elif getattr(BaseDataFrame, operation[0], None):
