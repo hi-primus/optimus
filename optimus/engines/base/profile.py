@@ -93,7 +93,6 @@ class BaseProfile(ABC):
 
         return profile
 
-    @time_it
     def _calculate(self, cols="*", bins: int = MAX_BUCKETS, force_hist=None, flush: bool = False, size=False):
         """
         Returns a new dataframe with the profile data in its added to the meta property
