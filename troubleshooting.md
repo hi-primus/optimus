@@ -12,6 +12,13 @@ Install libmagic [from conda](https://anaconda.org/conda-forge/libmagic)
 conda install -c conda-forge libmagic
 ```
 
+## Installing libmagic requirements.txt
+
+```
+python-magic>=0.4.15; sys_platform != 'win32'
+python-magic-bin==0.4.14; sys_platform == 'win32'
+```
+
 ## Getting MySQL up and running on macOS
 
 1. Make sure your password encryption for “root” user is set on legacy, when you initialize your database on MySQL.prefPane 
