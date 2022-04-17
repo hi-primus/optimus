@@ -1,33 +1,30 @@
-import re
 import inspect
+import re
 from inspect import signature
 from pprint import pformat
-from typing import List, Union, Optional
+from typing import Union, Optional
+
 from multipledispatch.dispatcher import MethodDispatcher
 
 from optimus.engines.base.basedataframe import BaseDataFrame
-from optimus.infer import is_list, is_str
-from optimus.helpers.types import *
-from optimus.helpers.core import val_to_list, one_list_to_val
-
-from .prepare import prepare
-
-from optimus.engines.base.engine import BaseEngine
-from optimus.engines.base.stringclustering import Clusters
-
+from optimus.engines.base.columns import BaseColumns
 from optimus.engines.base.create import BaseCreate
+from optimus.engines.base.engine import BaseEngine
+from optimus.engines.base.io.connect import Connect
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.io.save import BaseSave
-from optimus.engines.base.io.connect import Connect
-
-from optimus.engines.base.columns import BaseColumns
-from optimus.engines.base.rows import BaseRows
-from optimus.engines.base.set import BaseSet
 from optimus.engines.base.mask import Mask
 from optimus.engines.base.ml.models import BaseML
-from optimus.plots.plots import Plot
-from optimus.outliers.outliers import Outliers
 from optimus.engines.base.profile import BaseProfile
+from optimus.engines.base.rows import BaseRows
+from optimus.engines.base.set import BaseSet
+from optimus.engines.base.stringclustering import Clusters
+from optimus.helpers.core import val_to_list, one_list_to_val
+from optimus.helpers.types import *
+from optimus.infer import is_list, is_str
+from optimus.outliers.outliers import Outliers
+from optimus.plots.plots import Plot
+from .prepare import prepare
 
 engine_accessors = {
     "create": BaseCreate,
@@ -49,31 +46,33 @@ dataframe_accessors = {
 
 accessors = {**engine_accessors, **dataframe_accessors}
 
+
 def _create_new_variable(base_name: str, names: List[str]):
     while base_name in names:
         base_name = _increment_variable_name(base_name)
-        
+
     return base_name
-    
+
+
 def _increment_variable_name(variable_name: str):
     match = re.search(r'\d+$', variable_name)
     if match:
-        variable_name = variable_name[0:match.start()] + str(int(variable_name[match.start():match.endpos])+1)
+        variable_name = variable_name[0:match.start()] + str(int(variable_name[match.start():match.endpos]) + 1)
     else:
         variable_name = variable_name + "2"
     return variable_name
 
-def _arguments(args: dict, args_properties: Optional[dict]=None):
-    
+
+def _arguments(args: dict, args_properties: Optional[dict] = None):
     args_list = []
-    
+
     # It doesn't find properties or allows kwargs
     if not args_properties or "kwargs" in args_properties:
         args_list = list(args.keys())
         for key in ["source", "target", "operation", "operation_options"]:
             if key in args_list:
                 args_list.remove(key)
-    
+
     # Properties from declaration
     else:
         args_list = args_properties.keys()
@@ -93,30 +92,29 @@ def _arguments(args: dict, args_properties: Optional[dict]=None):
             else:
                 args[arg] = pformat(args[arg])
 
-        
     return ", ".join([f'{arg}={args[arg]}' for arg in args_list if arg in args])
 
-def _generate_code_target(body: dict, properties: dict, target: str):
 
+def _generate_code_target(body: dict, properties: dict, target: str):
     arguments = _arguments(body, properties["arguments"])
-    
+
     code = ''
 
     if target:
         code += f'{target} = '
-    
+
     if body.get("source", None):
         code += f'{body["source"]}.'
 
     code += f'{body["operation"]}({arguments})'
-    
+
     if target:
         return code, [target]
     else:
         return code, []
 
-def _generate_code_dataframe_transformation(body: dict, properties: dict, variables):
 
+def _generate_code_dataframe_transformation(body: dict, properties: dict, variables):
     target = body.get("target")
 
     if target is None:
@@ -124,38 +122,44 @@ def _generate_code_dataframe_transformation(body: dict, properties: dict, variab
 
     options = body.get("operation_options", None)
     if options:
-      if options.get("creates_new", False):
-        target = available_variable("df", variables)
+        if options.get("creates_new", False):
+            target = available_variable("df", variables)
     return _generate_code_target(body, properties, target)
+
 
 def _generate_code_dataframe_mask(body, properties, variables):
     target = body.get("target", available_variable("mask", variables))
     return _generate_code_target(body, properties, target)
 
-def _generate_code_dataframe_clusters(body, properties, variables):    
+
+def _generate_code_dataframe_clusters(body, properties, variables):
     target = body.get("target", available_variable("clusters", variables))
     return _generate_code_target(body, properties, target)
 
-def _generate_code_output(body, properties, variables):    
+
+def _generate_code_output(body, properties, variables):
     target = body.get("target", "result")
     return _generate_code_target(body, properties, target)
 
-def _generate_code_engine_dataframe(body, properties, variables):    
+
+def _generate_code_engine_dataframe(body, properties, variables):
     target = body.get("target", available_variable("df", variables))
     return _generate_code_target(body, properties, target)
 
-def _generate_code_engine_connection(body, properties, variables):    
+
+def _generate_code_engine_connection(body, properties, variables):
     target = body.get("target", available_variable("conn", variables))
     return _generate_code_target(body, properties, target)
 
-def _generate_code_engine(body, properties, variables):    
+
+def _generate_code_engine(body, properties, variables):
     target = body.get("target", available_variable("op", variables))
     return _generate_code_target(body, properties, target)
 
-def _get_generator(func_properties, method_root_type):
 
+def _get_generator(func_properties, method_root_type):
     if method_root_type == "dataframe":
-    
+
         # If the method returns a dataframe, it's a transformation
         if 'DataFrameType' == func_properties["return_annotation"]:
             return _generate_code_dataframe_transformation
@@ -167,32 +171,33 @@ def _get_generator(func_properties, method_root_type):
             return _generate_code_dataframe_clusters
         else:
             return _generate_code_output
-    
+
     elif method_root_type == "engine":
-    
+
         if 'DataFrameType' == func_properties["return_annotation"]:
             return _generate_code_engine_dataframe
         elif 'ConnectionType' == func_properties["return_annotation"]:
             return _generate_code_engine_connection
         else:
             return _generate_code_output
-        
+
     elif method_root_type == "optimus":
-        
+
         return _generate_code_engine
-    
+
     elif method_root_type == "clusters":
-    
+
         return _generate_code_output
-        
+
+
 def _get_method_root_type(accessor):
     if accessor in engine_accessors:
         return "engine"
     if accessor in dataframe_accessors:
         return "dataframe"
 
-def _init_methods(engine):
 
+def _init_methods(engine):
     method = ""
 
     if engine == "pandas":
@@ -216,11 +221,11 @@ def _init_methods(engine):
     if engine == "dask_cudf":
         from optimus.engines.dask_cudf.engine import DaskCUDFEngine
         method = DaskCUDFEngine
-        
+
     return method
 
+
 def _generate_code(body=None, variables=[], **kwargs):
-    
     if not body:
         body = kwargs
 
@@ -228,7 +233,7 @@ def _generate_code(body=None, variables=[], **kwargs):
 
     method = None
     method_root_type = None
-    
+
     if operation[0] == "Optimus":
         method = _init_methods(body["engine"])
         method_root_type = "optimus"
@@ -253,19 +258,20 @@ def _generate_code(body=None, variables=[], **kwargs):
     properties = method_properties(method, method_root_type)
 
     code, updated = properties["generator"](body, properties, variables)
-    
+
     return code, updated
+
 
 def optimus_variables():
     from optimus.helpers.functions import list_engines, list_dataframes, list_clusters, list_connections
-    return [ *list_engines(), *list_dataframes(), *list_clusters(), *list_connections() ]
+    return [*list_engines(), *list_dataframes(), *list_clusters(), *list_connections()]
+
 
 def available_variable(name: str, variables: dict):
     return _create_new_variable(name, [*variables, *optimus_variables()])
 
 
-def method_properties(func: Union[callable, MethodDispatcher], method_root_type):
-    
+def method_properties(func: Union[callable], method_root_type):
     try:
         fp = signature(func)
         func_properties = {"parameters": fp.parameters, "return_annotation": fp.return_annotation}
@@ -287,26 +293,26 @@ def method_properties(func: Union[callable, MethodDispatcher], method_root_type)
     arguments_list = list(func_properties["parameters"].items())
     arguments = {}
     for key, arg in arguments_list:
-        
+
         if arg.name in ['self', 'cls']:
             continue
-        
+
         arguments[arg.name] = {}
-        
+
         if arg.annotation is not inspect._empty:
             arguments[arg.name].update({"type": arg.annotation})
-            
+
         if arg.default is not inspect._empty:
             arguments[arg.name].update({"value": arg.default})
-                        
+
     return {
-        "arguments": arguments, 
+        "arguments": arguments,
         "returns": func_properties["return_annotation"],
         "generator": _get_generator(func_properties, method_root_type)
     }
 
-def generate_code(body: Optional[dict]=None, variables: List[str]=[], get_updated: bool=False, **kwargs):
 
+def generate_code(body: Optional[dict] = None, variables: List[str] = [], get_updated: bool = False, **kwargs):
     if not body:
         body = kwargs
 
@@ -317,7 +323,6 @@ def generate_code(body: Optional[dict]=None, variables: List[str]=[], get_update
     code = []
 
     for operation in body:
-        
         operation = prepare(operation)
         operation_code, operation_updated = _generate_code(operation, [*updated, *variables])
         updated.extend(operation_updated)
@@ -327,4 +332,3 @@ def generate_code(body: Optional[dict]=None, variables: List[str]=[], get_update
         return "\n".join(code), one_list_to_val(updated)
     else:
         return "\n".join(code)
-    

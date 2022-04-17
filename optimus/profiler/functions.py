@@ -10,7 +10,7 @@ def fill_missing_var_types(var_types, data_types):
     """
     Fill missing data types with 0
     :param var_types:
-    :param dtypes:
+    :param data_types:
     :return:
     """
     for k, v in var_types.items():
@@ -69,9 +69,9 @@ def write_html(data, path):
 def sample_size(population_size, confidence_level, confidence_interval):
     """
     Get a sample number of the whole population
-    :param population_size:
-    :param confidence_level:
-    :param confidence_interval:
+    :param population_size: The size of the population
+    :param confidence_level: Confidence level you want to get from 0 to 100
+    :param confidence_interval: Confidence interval you want to get
     :return:
     """
     z = 0.0

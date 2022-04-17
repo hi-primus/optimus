@@ -1,4 +1,3 @@
-import numpy as np
 import seaborn as sns
 import statsmodels.api as sm
 from matplotlib import pyplot as plt

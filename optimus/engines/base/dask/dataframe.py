@@ -92,36 +92,6 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         """
         return self.data.__dask_graph__().layers
 
-    def sample(self, n=10, random=False):
-        """
-        Return a n number of sample from a dataFrame
-        :param n: Number of samples
-        :param random: if true get a semi random sample
-        :return:
-        """
-        if not is_int(n):
-            RaiseIt.type_error(n, ["int"])
-
-        if random is True:
-            seed = int(random_int())
-        elif random is False:
-            seed = 0
-        elif is_int(random):
-            seed = random
-        else:
-            RaiseIt.type_error(random, ["bool", "int"])
-
-        df = self.root
-        rows_count = df.rows.count()
-        if n < rows_count:
-            # n/rows_count can return a number that represent less the total number we expect. multiply by 1.001
-            fraction = (n / rows_count) * 1.001
-        else:
-            fraction = 1.0
-
-        dfd = df.data.sample(frac=fraction, random_state=seed).reset_index(drop=True)
-
-        return self.root.new(dfd)
 
     def stratified_sample(self, col_name, seed: int = 1):
         """

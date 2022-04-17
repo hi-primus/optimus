@@ -93,5 +93,4 @@ class BaseCreate:
             for (name, dtype, nulls, force_dtype) in data_dict:
                 if dtype and not force_dtype:
                     df = df.cols.set_data_type(name, dtype)
-
         return df

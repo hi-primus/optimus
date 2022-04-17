@@ -1,7 +1,5 @@
 from collections.abc import Iterable
 
-import humanize
-
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.helpers.functions import random_int
 from optimus.helpers.raiseit import RaiseIt
@@ -122,18 +120,6 @@ class DataFrameBaseDataFrame(BaseDataFrame):
         dfd = self.root.data
         dfd = dfd.melt(id_vars=id_cols, value_vars=value_cols, var_name=var_name, value_name=value_name)
         return self.root.new(dfd)
-
-    def size(self, deep=False, format=None):
-        """
-        Get the size of a dask in bytes
-        :return:
-        """
-        df = self.data
-        result = df.memory_usage(index=True, deep=deep).sum()
-        if format == "human":
-            result = humanize.naturalsize(result)
-
-        return result
 
     def run(self):
         """
