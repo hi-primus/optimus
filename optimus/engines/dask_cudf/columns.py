@@ -45,8 +45,8 @@ class Cols(CUDFBaseColumns, DaskBaseColumns):
 
         def _bins_col(_columns, _min, _max):
             # In some cases a string can be passed as min or max values. Try to convert them to numeric if not nan
-            return {col_name: cp.linspace(fastnumbers.fast_float(_min["min"][col_name], default=cp.nan),
-                                          fastnumbers.fast_float(_max["max"][col_name], default=cp.nan),
+            return {col_name: cp.linspace(float(_min["min"][col_name], default=cp.nan),
+                                          float(_max["max"][col_name], default=cp.nan),
                                           num=buckets) for
                     col_name in _columns}
 
