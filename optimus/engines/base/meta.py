@@ -1,5 +1,3 @@
-import copy
-
 from glom import glom, assign, delete
 
 from optimus.helpers.core import val_to_list
@@ -21,7 +19,7 @@ class Meta:
         :return:
         """
         if spec is not None:
-            data = copy.deepcopy(meta)
+            data = meta.copy()
             assign(data, spec, value, missing=missing)
         else:
             data = value
@@ -34,12 +32,10 @@ class Meta:
         Set metadata in a dataframe columns
         :param meta: Meta data to be modified
         :param spec: path to the key to be modified
-        :param value: dict value
-        :param missing:
         :return:
         """
         if spec is not None:
-            data = copy.deepcopy(meta)
+            data = meta.copy()
             delete(data, spec, ignore_missing=True)
         else:
             data = meta
@@ -58,7 +54,7 @@ class Meta:
             data = glom(meta, spec, skip_exc=KeyError)
         else:
             data = meta
-        return copy.deepcopy(data)
+        return data.copy() if isinstance(data, dict) else data
 
     @staticmethod
     def reset_actions(meta, cols="*"):
@@ -74,7 +70,6 @@ class Meta:
             actions = Meta.get(meta, ACTIONS_PATH) or []
             actions = [action for action in actions if action["columns"] not in (cols or [])]
             return Meta.set(meta, ACTIONS_PATH, actions)
-
 
     @staticmethod
     def columns(meta, value) -> dict:
@@ -115,7 +110,7 @@ class Meta:
         :return: dict (Meta)
         """
 
-        new_meta = copy.deepcopy(meta)
+        new_meta = meta.copy()
 
         if new_meta is None:
             new_meta = {}
