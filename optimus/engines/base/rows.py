@@ -1,4 +1,5 @@
 from abc import ABC
+from functools import reduce
 from typing import Callable
 from optimus.helpers.types import *
 
@@ -113,19 +114,47 @@ class BaseRows(ABC):
         df = self.root
         dfd = df.data
 
-        if is_str(expr) or is_list_of_str(expr):
-            if expr in df.cols.names() or is_list_of_str(expr) or expr == "*":
-                if contains is not None:
-                    expr = df.mask.contains(expr, value=contains, case=case, flags=flags, na=na, regex=regex).mask.any()
-                else:
-                    expr = df[expr].mask.any()
-            elif is_str(expr):
-                expr = eval(expr)
+        all_cols = df.cols.names()
 
-        if not hasattr(expr, "get_series"):
-            raise ValueError(f"Invalid value for 'expr': {expr}")
-                
-        dfd = dfd.reset_index(drop=True)[expr.get_series().reset_index(drop=True)].reset_index(drop=True)
+        if is_str(expr) and expr == "*":
+            expr = all_cols
+
+        expr = val_to_list(expr)
+
+
+        if is_list_of_str(expr) and all([col in all_cols for col in expr]):
+            if contains is not None:
+                expr = [df.mask.contains(expr, value=contains, case=case, flags=flags, na=na, regex=regex).mask.any()]
+            else:
+                expr = [df[expr].mask.any()]
+        else:
+            for i, expr_ in enumerate(expr):
+                if not is_str(expr_):
+                    continue
+                elif expr_ not in all_cols:
+                    expr[i] = eval(expr_)
+                elif contains is not None:
+                    expr[i] = df.mask.contains(expr_, value=contains, case=case, flags=flags, na=na, regex=regex)
+                else:
+                    expr[i] = df[expr_]
+        
+        if len(expr) > 1:
+            def _reduce_exprs(a, b):
+                if hasattr(a, "get_series"):
+                    a = a.get_series() 
+                if hasattr(b, "get_series"):
+                    b = b.get_series()
+                return df.functions.to_boolean(a) & df.functions.to_boolean(b)
+            expr = reduce(_reduce_exprs, expr)
+        else:
+            expr = expr[0]
+        
+            if hasattr(expr, "get_series"):
+                expr = expr.get_series()
+
+            expr = df.functions.to_boolean(expr)
+        
+        dfd = dfd.reset_index(drop=True)[expr.reset_index(drop=True)].reset_index(drop=True)
 
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 

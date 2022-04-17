@@ -106,6 +106,11 @@ class BaseConstants:
                                                 item[1] == ProfilerDataTypes.INT.value]
 
     @property
+    def FLOAT_INTERNAL_TYPES(self):
+        return [ProfilerDataTypes.FLOAT.value] + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if
+                                                  item[1] == ProfilerDataTypes.FLOAT.value]
+
+    @property
     def NUMERIC_INTERNAL_TYPES(self):
         types = [ProfilerDataTypes.INT.value, ProfilerDataTypes.FLOAT.value]
         return types + [item[0] for item in self.INTERNAL_TO_OPTIMUS.items() if item[1] in types]

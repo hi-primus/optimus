@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 import numpy as np
 
+from optimus import Optimus
 from optimus.engines.base.constants import BaseConstants
 from optimus.engines.base.functions import BaseFunctions
 from optimus.engines.base.io.connect import Connect
@@ -20,6 +21,13 @@ class BaseEngine:
         """
 
         logger.active(verbose)
+
+    def __getstate__(self):
+        return self.engine
+
+    def __setstate__(self, state):
+        return Optimus(state)
+
 
     @staticmethod
     def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",

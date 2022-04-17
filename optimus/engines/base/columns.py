@@ -437,7 +437,7 @@ class BaseColumns(ABC):
         return self.set(cols, value_func=func, args=args, where=mask)
 
     def set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
-            eval_value: bool = False) -> 'DataFrameType':
+            eval_value: bool = False, each=True) -> 'DataFrameType':
         """
         Set a column value using a number, string or an expression.
 
@@ -447,6 +447,7 @@ class BaseColumns(ABC):
         :param args: Argument when 'value_func' param is a function.
         :param default: Entries where 'where' is False are replaced with corresponding value from other.
         :param eval_value: Parse 'value_func' param in case a string is passed.
+        :param mode: If possible, apply the function using one argument for each column, if not, applies every argument to every element.
         :return:
         """
         if args is None:
@@ -456,18 +457,29 @@ class BaseColumns(ABC):
         cols = parse_columns(df, cols) if cols == "*" else cols
         cols = val_to_list(cols)
 
-        value_func = val_to_list(value_func, allow_none=True)
-        eval_values = val_to_list(eval_value, allow_none=True)
-        where = val_to_list(where, allow_none=True)
-
         if is_list_of_list(value_func) or is_list_of_tuples(value_func):
             where, value_func = zip(*value_func)
 
-        for _where, _values in zip(where, value_func):
-            df = df.cols._set(cols=cols, value_func=_values, where=_where, default=default, eval_value=eval_values,
-                              args=args)
-            # drops default value after the first iteration to avoid overwriting
-            default = None
+        where = val_to_list(where, allow_none=True)
+        value_func = val_to_list(value_func, allow_none=True)
+
+        if each:
+            each = (value_func is not None and len(cols) == len(value_func)) or (where is not None and len(cols) == len(where))
+
+        if each:
+            where, value_func = prepare_columns_arguments(cols, where, value_func)
+
+            for col, _where, _values in zip(cols, where, value_func):
+                df = df.cols._set(cols=col, value_func=_values, where=_where,
+                                  default=default, eval_value=eval_value, args=args)
+                # drops default value after the first iteration to avoid overwriting
+                default = None
+
+        else:
+            for _where, _values in zip(where, value_func):
+                df = df.cols._set(cols=cols, value_func=_values, where=_where,
+                                  default=default, eval_value=eval_value, args=args)
+                default = None
 
         return df
 
@@ -477,14 +489,12 @@ class BaseColumns(ABC):
         df = self.root
         dfd = df.data
 
+        cols = val_to_list(cols)
+
         values = val_to_list(value_func, allow_none=True)
         eval_values = val_to_list(eval_value, allow_none=True)
 
-        if len(cols) > len(values):
-            values = [value_func] * len(cols)
-
-        if len(cols) > len(eval_value):
-            eval_values = [eval_value] * len(cols)
+        eval_values, values = prepare_columns_arguments(cols, eval_values, values)
 
         assign_dict = {}
         move_cols = []
@@ -518,15 +528,13 @@ class BaseColumns(ABC):
                 args = val_to_list(args)
                 _value = _value(default, *args)
 
-            if where is not None:
-                if isinstance(_value, self.root.__class__):
-                    _value = _value.get_series()
-                else:
-                    _value = default.mask(where.get_series(), _value)
+            if hasattr(_value, "get_series"):
+                _value = _value.get_series()
 
-            else:
-                if isinstance(_value, self.root.__class__):
-                    _value = _value.data[_value.cols.names()[0]]
+            if where is not None:
+                if hasattr(where, "get_series"):
+                    where = where.get_series()
+                _value = default.mask(where, _value)
 
             assign_dict[col_name] = _value
 
@@ -950,24 +958,34 @@ class BaseColumns(ABC):
             if patterns_update_time is None:
                 patterns_update_time = 0
 
-            patterns_more = Meta.get(
+            incomplete_cache = Meta.get(
                 df.meta, f"profile.columns.{input_col}.patterns.more")
-            if column_modified_time > patterns_update_time \
-                    or patterns_update_time == 0 \
-                    or flush is True \
-                    or patterns_more is False:
+
+            values = Meta.get(df.meta,
+                              f"profile.columns.{input_col}.patterns.values")
+
+            if (column_modified_time > patterns_update_time or
+                patterns_update_time == 0 or
+                flush is True or
+                (n is None and incomplete_cache) or
+                (
+                    values is not None and
+                    n is not None and
+                    len(values) < n and
+                    incomplete_cache
+                )):
                 # Plus n + 1 so we can could let the user know if there are more patterns
+                result[input_col] = df.cols.pattern(input_col, mode=mode) \
+                    .cols.frequency(input_col, n=n + 1 if n is not None else None) \
+                    ["frequency"][input_col]
 
-                result[input_col] = \
-                    df.cols.pattern(input_col, mode=mode).cols.frequency(input_col, n=n + 1 if n is not None else None)[
-                        "frequency"][
-                        input_col]
-
-                if n is None and len(result[input_col]["values"]) > n:
-                    result[input_col].update({"more": True})
-
+                if n is not None and len(result[input_col]["values"]) > n:
                     # Remove extra element from list
                     result[input_col]["values"].pop()
+                    result[input_col].update({"more": True})
+
+                else:
+                    result[input_col].update({"more": False})
 
                 df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
                 df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
@@ -975,6 +993,9 @@ class BaseColumns(ABC):
             else:
                 result[input_col] = Meta.get(
                     df.meta, f"profile.columns.{input_col}.patterns")
+
+                if n is not None:
+                    result[input_col]["values"] = result[input_col]["values"][:n]
 
         return df
 
@@ -1120,7 +1141,6 @@ class BaseColumns(ABC):
                 result[input_col].update({"more": True})
                 result[input_col]["values"] = result[input_col]["values"][0:n]
             else:
-                result[input_col].update({"more": False})
                 result[input_col]["values"] = result[input_col]["values"]
 
         return result
@@ -2301,14 +2321,37 @@ class BaseColumns(ABC):
 
     def trim(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        Remove leading and trailing characters.
+        Remove leading and trailing whitespaces.
 
-        Strip whitespaces (including newlines) or a set of specified characters from each string in the column from left and right sides.
+        Strip whitespaces (including newlines) from each string in the column from left and right sides.
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         return self.apply(cols, self.F.trim, func_return_type=str,
+                          output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
+
+    def strip(self, cols="*", chars=None, side="both", output_cols=None) -> 'DataFrameType':
+        """
+        Remove leading and trailing characters.
+
+        Strip whitespaces (including newlines) or a set of specified characters from each string in the column from left and/or right sides.
+        :param cols: "*", column name or list of column names to be processed.
+        :param chars: the set of characters to be stripped.
+        :param side: strip the left, the right side or both sides.
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
+        :return:
+        """
+        if side not in ["left", "right", "both"]:
+            RaiseIt.value_error(side, ["left", "right", "both"])
+
+        if chars and is_list_of_str(chars):
+            chars = "".join(chars)
+
+        if chars and is_list(chars):
+            raise ValueError("'chars' should be a string, a list of characters or None")
+
+        return self.apply(cols, self.F.strip, args=(chars, side), func_return_type=str,
                           output_cols=output_cols, meta_action=Actions.TRIM.value, mode="vectorized")
 
     def strip_html(self, cols="*", output_cols=None) -> 'DataFrameType':
@@ -2809,14 +2852,12 @@ class BaseColumns(ABC):
         elif is_list_of_tuples(search) and replace_by is None:
             # This can handle search = [(["k","kilos"],("kg")),("g", "gr")]
 
-            cols = val_to_list(cols)
+            cols = parse_columns(df, cols)
             output_cols = val_to_list(get_output_cols(cols, output_cols))
 
-            for input_col, output_col in zip(cols, output_cols):
-                df = df.cols.copy(input_col, output_col)
+            for i, (_search, _replace_by) in enumerate(search):
+                df = df.cols._replace(cols if i == 0 else output_cols, _search, _replace_by, search_by, ignore_case, output_cols)
 
-            for _search, _replace_by in search:
-                df = df.cols._replace(output_cols, _search, _replace_by, search_by, ignore_case, output_cols)
         else:
             df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
         return df
@@ -2846,8 +2887,13 @@ class BaseColumns(ABC):
         search = val_to_list(search, convert_tuple=True)
         replace_by = one_list_to_val(replace_by, convert_tuple=True)
 
-        if search_by == "full" and (not is_list_of_str(search) or not is_list_of_str(replace_by)):
-            search_by = "values"
+        if search_by == "full":
+            
+            search_is_value = not is_str(search) and not is_list_of_str(search)
+            replace_by_is_value = not is_str(replace_by) and not is_list_of_str(replace_by)
+
+            if search_is_value or replace_by_is_value:
+                search_by = "values"
 
         if search_by == "chars":
             func = self.F.replace_chars
@@ -3385,6 +3431,10 @@ class BaseColumns(ABC):
                 final_columns = [output_cols + "_" +
                                  str(i) for i in range(splits)]
 
+
+            if is_list_of_str(separator):
+                separator = "|".join([re.escape(sep) for sep in separator])
+
             dfd_new = self._unnest(
                 dfd, input_col, final_columns, separator, splits, mode, output_cols)
 
@@ -3462,6 +3512,8 @@ class BaseColumns(ABC):
         df = self.root
         cols = parse_columns(df, cols)
 
+        dfn = df.cols.select(cols).cols.to_numeric()
+
         @self.F.delayed
         def _bins_col(_cols, _min, _max):
             return {
@@ -3476,8 +3528,8 @@ class BaseColumns(ABC):
             _min = {"min": {col: range[col][0] for col in cols}}
             _max = {"max": {col: range[col][1] for col in cols}}
         else:
-            _min = df.cols.min(cols, numeric=True, compute=compute, tidy=False)
-            _max = df.cols.max(cols, numeric=True, compute=compute, tidy=False)
+            _min = dfn.cols.min(cols, numeric=True, compute=compute, tidy=False)
+            _max = dfn.cols.max(cols, numeric=True, compute=compute, tidy=False)
 
         _bins_edges = _bins_col(cols, _min, _max)
 
@@ -3507,7 +3559,7 @@ class BaseColumns(ABC):
 
             return {"hist": _result}
 
-        partitions = self.F.to_delayed(df.cols.select(cols).cols.to_numeric().data)
+        partitions = self.F.to_delayed(dfn.data)
         result = [
             get_hist(part[col_name], col_name, [_min["min"][col_name], _max["max"][col_name]], buckets, _bins_edges) for
             part

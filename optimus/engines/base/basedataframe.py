@@ -14,9 +14,7 @@ from optimus.engines.base.io.save import *
 from optimus.engines.base.mask import Mask
 from optimus.engines.base.ml.encoding import BaseEncoding
 from optimus.engines.base.ml.models import BaseML
-from optimus.engines.base.profile import BaseProfile
 from optimus.engines.base.rows import *
-from optimus.engines.base.set import BaseSet
 from optimus.helpers.check import is_notebook
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
@@ -43,6 +41,8 @@ class BaseDataFrame(ABC):
         self.le = label_encoder
         self.op = op
 
+        from optimus.engines.base.profile import BaseProfile
+        from optimus.engines.base.set import BaseSet
         # .profile and .set are properties to support docstrings
         self.profile = BaseProfile(self)
         self.set = BaseSet(self)

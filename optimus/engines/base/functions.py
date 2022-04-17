@@ -57,9 +57,16 @@ class BaseFunctions(ABC):
         else:
             self.root = None
 
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     def __getattr__(self, name):
-        type_msg = "" if self.root is None else f" using {type(self.root).__name__}"
-        raise NotImplementedError(f"\"{name}\" is not available" + type_msg)
+        if "__" not in name:
+            type_msg = "" if self.root is None else f" using {type(self.root).__name__}"
+            raise NotImplementedError(f"\"{name}\" is not available" + type_msg)
 
     @property
     def _functions(self):
@@ -285,19 +292,20 @@ class BaseFunctions(ABC):
         """
         Converts a series values to strings
         """
-        if not str(series.dtype) in self.constants.OBJECT_INTERNAL_TYPES:
-            return series.astype(str)
+        if not str(series.dtype) in self.constants.STRING_INTERNAL_TYPES:
+            return series.astype("string")
         else:
-
             return series
 
-    @staticmethod
-    def to_string_accessor(series):
+    def to_string_accessor(self, series):
         """
         Converts a series values to strings and returns it's main functions
         accessor
         """
-        return series.astype(str).str
+        if not str(series.dtype) in self.constants.STRING_INTERNAL_TYPES:
+            return series.astype(str).str
+        else:
+            return series.str
 
     @staticmethod
     def duplicated(dfd, keep, subset):
@@ -724,8 +732,20 @@ class BaseFunctions(ABC):
         return self.to_string_accessor(series).strip()
 
     @apply_to_categories
+    def strip(self, series, chars=None, side="both"):
+        if side == "left":
+            return self.to_string_accessor(series).lstrip(to_strip=chars)
+        elif side == "right":
+            return self.to_string_accessor(series).rstrip(to_strip=chars)
+        else:
+            return self.to_string_accessor(series).strip(to_strip=chars)
+
+    @apply_to_categories
     def strip_html(self, series):
         return self.to_string(series).replace('<.*?>', '', regex=True)
+
+    def _replace_string(self, series, to_replace, value, regex):
+        return self.replace(to_replace, value, regex=regex)
 
     def replace_chars(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
@@ -733,7 +753,7 @@ class BaseFunctions(ABC):
             str_regex = [r'(?i)%s' % re.escape(s) for s in search]
         else:
             str_regex = [r'%s' % re.escape(s) for s in search]
-        return self.to_string(series).replace(str_regex, replace_by, regex=True)
+        return self._replace_string(self.to_string(series), str_regex, replace_by, regex=True)
 
     def replace_words(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
@@ -741,22 +761,24 @@ class BaseFunctions(ABC):
             str_regex = [r'(?i)\b%s\b' % re.escape(s) for s in search]
         else:
             str_regex = [r'\b%s\b' % re.escape(s) for s in search]
-        return self.to_string(series).replace(str_regex, replace_by, regex=True)
+        return self._replace_string(self.to_string(series), str_regex, replace_by, regex=True)
 
     def replace_full(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
         if ignore_case:
-            str_regex = [r'(?i)^%s$' % re.escape(s) for s in search]
+            regex = True
+            str_search = [r'(?i)^%s$' % re.escape(s) for s in search]
         else:
-            str_regex = [r'^%s$' % re.escape(s) for s in search]
-        return series.replace(str_regex, replace_by, regex=True)
+            regex = False
+            str_search = search
+        return series.replace(str_search, replace_by, regex=regex)
 
     def replace_values(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
 
         if ignore_case:
             regex = True
-            search = [(r'(?i)%s' % re.escape(s)) for s in search]
+            search = [(r'(?i)^%s$' % re.escape(s)) for s in search]
         else:
             regex = False
 
@@ -775,7 +797,7 @@ class BaseFunctions(ABC):
             str_regex = [r'(?i)%s' % s for s in search]
         else:
             str_regex = [r'%s' % s for s in search]
-        return self.to_string(series).replace(str_regex, replace_by, regex=True)
+        return self._replace_string(self.to_string(series), str_regex, replace_by, regex=True)
 
     def replace_regex_words(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
@@ -783,7 +805,7 @@ class BaseFunctions(ABC):
             str_regex = [r'(?i)\b%s\b' % s for s in search]
         else:
             str_regex = [r'\b%s\b' % s for s in search]
-        return self.to_string(series).replace(str_regex, replace_by, regex=True)
+        return self._replace_string(self.to_string(series), str_regex, replace_by, regex=True)
 
     def replace_regex_full(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)
