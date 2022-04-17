@@ -1,17 +1,23 @@
+import copy
 import math
 import re
+from collections import Counter
 from typing import Union
-
-from ordered_set import OrderedSet
-
-# from optimus.helpers.check import is_spark_dataframe, is_pandas_dataframe, is_dask_dataframe, is_cudf_dataframe
 
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_data_types
 from optimus.helpers.raiseit import RaiseIt
-from optimus.infer import is_list_value, is_tuple, is_list_of_str, is_list_of_list, is_list_of_tuples, is_str, is_list, \
-    is_int, is_list_of_int
+from optimus.infer import is_list_value, is_tuple, is_list_of_str, is_list_of_list, is_list_of_tuples, is_str, is_int, \
+    is_list_of_int
+
+
+class OrderedSet:
+    def __init__(self, value):
+        self.value = copy.deepcopy(list(dict.fromkeys(value)))
+
+    def __sub__(self, other):
+        return copy.deepcopy([v for c in [Counter(other.value)] for v in self.value if not c[v] or c.subtract([v])])
 
 
 def replace_columns_special_characters(df, replace_by="_"):
@@ -145,7 +151,7 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_types=None, acc
 
     :return: A list of columns string names
     """
-    
+
     # if columns value is * get all dataframes columns
 
     df_columns = df.cols._names()
@@ -210,7 +216,6 @@ def parse_columns(df, cols_args, is_regex=None, filter_by_column_types=None, acc
     else:
         final_columns = cols
 
-    cols_params = []
     if invert:
         final_columns = list(OrderedSet(df_columns) - OrderedSet(final_columns))
 
@@ -260,7 +265,7 @@ def prepare_columns(df, cols: Union[str, list], output_cols: Union[str, list] = 
         result = zip(*cols_dict)
     else:
         cols = parse_columns(df, cols, is_regex, filter_by_column_types,
-                                   accepts_missing_cols, invert)
+                             accepts_missing_cols, invert)
         merge = False
         if output_cols is None and default is not None:
             output_cols = default
@@ -367,8 +372,8 @@ def names_by_data_types(df, data_type):
     for col_name in df.cols.names():
         found_parsed_data_type = df.cols.schema_data_type(col_name)
         found_data_type = df.cols.data_type(col_name)
-        if any([dt in found_parsed_data_type for dt in parsed_data_type])\
-        or any([dt in found_data_type for dt in data_type]):
+        if any([dt in found_parsed_data_type for dt in parsed_data_type]) \
+                or any([dt in found_data_type for dt in data_type]):
             result.append(col_name)
     return result
 
@@ -404,7 +409,7 @@ def prepare_columns_arguments(cols, *args):
 
     cols = val_to_list(cols)
     args = list(args)
-    
+
     for i, arg in enumerate(args):
         arg = val_to_list(arg, allow_none=True, convert_tuple=True)
         if len(cols) > len(arg):
