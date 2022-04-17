@@ -7,8 +7,9 @@ from optimus.helpers.functions import match_date
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
 from optimus.infer import is_dict, is_str, regex_http_code, regex_social_security_number, regex_phone_number, \
-    regex_credit_card_number, regex_zip_code, regex_gender, regex_ip, regex_email, \
-    is_datetime, is_list, is_bool, is_object, regex_url
+    regex_credit_card_number, regex_zip_code, regex_gender, regex_ipv4_address, regex_email, \
+    is_datetime, is_list, is_bool, is_object, regex_url, regex_ipv6_address, regex_uuid, regex_address, regex_BAN, \
+    regex_mac_address, regex_driver_license, regex_list, regex_dict, regex_tuple
 
 
 class Mask(ABC):
@@ -307,7 +308,7 @@ class Mask(ABC):
             mask = subset_df.isnull().all(axis=1).rename(col_name)
         else:
             mask = subset_df.isnull()
-        
+
         return self.root.new(self._to_frame(mask))
 
     def none(self, cols="*") -> 'MaskDataFrameType':
@@ -378,8 +379,35 @@ class Mask(ABC):
     def email(self, cols="*") -> 'MaskDataFrameType':
         return self.match_regex(cols, regex_email)
 
-    def ip(self, cols="*") -> 'MaskDataFrameType':
-        return self.match_regex(cols, regex_ip)
+    def ipv4(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_ipv4_address)
+
+    def ipv6(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_ipv6_address)
+
+    def address(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_address)
+
+    def uuid(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_uuid)
+
+    def ban(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_BAN)
+
+    def mac_address(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_mac_address)
+
+    def drive_license(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_driver_license)
+
+    def list(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_list)
+
+    def dict(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_dict)
+
+    def tuple(self, cols="*") -> 'MaskDataFrameType':
+        return self.match_regex(cols, regex_tuple)
 
     def url(self, cols="*", schemes="default", allow_schemeless=True) -> 'MaskDataFrameType':
         """
