@@ -1,7 +1,7 @@
 import glob
 
 import pandas as pd
-import simplejson as json
+import json
 from glom import glom
 
 import optimus.helpers.functions_spark
