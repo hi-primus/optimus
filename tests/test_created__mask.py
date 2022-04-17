@@ -627,31 +627,31 @@ class TestMaskPandas(TestBase):
 
     def test_mask_ip(self):
         df = self.create_dataframe(data={('NullType', 'object'): [None, None, None, None, None, None], ('Code', 'object'): ['123A', '456', 456, 'e', None, '{code}'], ('Multiple', 'object'): ['12/12/12', 'True', 1, '0.0', 'None', '{}'], ('attributes', 'object'): [[8.5344, 4300.0], [5.334, 2000.0], [7.9248, 4000.0], [3.9624, 1800.0], [None, 5700.0], [91.44, None]], ('date arrival', 'object'): ['1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10', '1980/04/10'], ('function(binary)', 'object'): [bytearray(b'Leader'), bytearray(b'Espionage'), bytearray(b'Security'), bytearray(b'First Lieutenant'), bytearray(b'None'), bytearray(b'Battle Station')], ('height(ft)', 'float64'): [-28.0, 17.0, 26.0, 13.0, nan, 300.0], ('japanese name', 'object'): [['Inochi', 'Convoy'], ['Bumble', 'Goldback'], ['Roadbuster'], ['Meister'], ['Megatron'], ['Metroflex']], ('last date seen', 'object'): ['2016/09/10', '2015/08/10', '2014/07/10', '2013/06/10', '2012/05/10', '2011/04/10'], ('last position seen', 'object'): ['19.442735,-99.201111', '10.642707,-71.612534', '37.789563,-122.400356', '33.670666,-117.841553', None, None], ('rank', 'int64'): [10, 7, 7, 8, 10, 8], ('Cybertronian', 'bool'): [True, True, True, True, True, False], ('Date Type', 'datetime64[ns]'): [Timestamp('2016-09-10 00:00:00'), Timestamp('2015-08-10 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2013-06-24 00:00:00'), Timestamp('2012-05-10 00:00:00'), Timestamp('2011-04-10 00:00:00')], ('age', 'int64'): [5000000, 5000000, 5000000, 5000000, 5000000, 5000000], ('function', 'object'): ['Leader', 'Espionage', 'Security', 'First Lieutenant', 'None', 'Battle Station'], ('names', 'object'): ['Optimus', 'bumbl#ebéé  ', 'ironhide&', 'Jazz', 'Megatron', 'Metroplex_)^$'], ('timestamp', 'datetime64[ns]'): [Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00'), Timestamp('2014-06-24 00:00:00')], ('weight(t)', 'float64'): [4.3, 2.0, 4.0, 1.8, 5.7, nan], ('ip_test', 'object'): ['192.0.2.1', '192.158.1.38', '192.168.136.52', '172.16.92.107', '10.63.215.5', '10.0.5.0']}, force_data_types=True)
-        result = df.mask.ip(cols=['ip_test'])
+        result = df.mask.ipv4(cols=['ip_test'])
         expected = self.create_dataframe(data={('ip_test', 'bool'): [True, True, True, True, True, True]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_ip_all(self):
         df = self.df.copy()
-        result = df.mask.ip(cols='*')
+        result = df.mask.ipv4(cols='*')
         expected = self.create_dataframe(data={('NullType', 'bool'): [False, False, False, False, False, False], ('Code', 'bool'): [False, False, False, False, False, False], ('Multiple', 'bool'): [False, False, False, False, False, False], ('attributes', 'bool'): [False, False, False, False, False, False], ('date arrival', 'bool'): [False, False, False, False, False, False], ('function(binary)', 'bool'): [False, False, False, False, False, False], ('height(ft)', 'bool'): [False, False, False, False, False, False], ('japanese name', 'bool'): [False, False, False, False, False, False], ('last date seen', 'bool'): [False, False, False, False, False, False], ('last position seen', 'bool'): [False, False, False, False, False, False], ('rank', 'bool'): [False, False, False, False, False, False], ('Cybertronian', 'bool'): [False, False, False, False, False, False], ('Date Type', 'bool'): [False, False, False, False, False, False], ('age', 'bool'): [False, False, False, False, False, False], ('function', 'bool'): [False, False, False, False, False, False], ('names', 'bool'): [False, False, False, False, False, False], ('timestamp', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_ip_multiple(self):
         df = self.df.copy()
-        result = df.mask.ip(cols=['NullType', 'weight(t)', 'japanese name'])
+        result = df.mask.ipv4(cols=['NullType', 'weight(t)', 'japanese name'])
         expected = self.create_dataframe(data={('NullType', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [False, False, False, False, False, False], ('japanese name', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_ip_numeric(self):
         df = self.df.copy()
-        result = df.mask.ip(cols=['height(ft)'])
+        result = df.mask.ipv4(cols=['height(ft)'])
         expected = self.create_dataframe(data={('height(ft)', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_ip_string(self):
         df = self.df.copy()
-        result = df.mask.ip(cols=['names'])
+        result = df.mask.ipv4(cols=['names'])
         expected = self.create_dataframe(data={('names', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
