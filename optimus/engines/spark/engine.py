@@ -15,7 +15,6 @@ from optimus.engines.spark.io.load import Load
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.constants import *
 from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import absolute_path
 from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
 from optimus.helpers.output import output_json

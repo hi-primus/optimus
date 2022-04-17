@@ -5,16 +5,14 @@ import zipfile
 import databricks.koalas as ks
 from packaging import version
 
-from optimus.helpers.types import *
-from optimus.optimus import EnginePretty
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.spark.dataframe import SparkDataFrame
 from optimus.engines.spark.spark import Spark
-from optimus.helpers.core import val_to_list
 from optimus.helpers.columns import replace_columns_special_characters
 from optimus.helpers.functions import prepare_path
 from optimus.helpers.logger import logger
+from optimus.optimus import EnginePretty
 
 
 class Load(BaseLoad):
@@ -51,13 +49,13 @@ class Load(BaseLoad):
 
     @staticmethod
     def _parquet(filepath_or_buffer, nrows=None, engine="pyarrow", *args, **kwargs):
-        kwargs.pop("n_partitions", None)        
+        kwargs.pop("n_partitions", None)
         kwargs.pop("storage_options", None)
         df = ks.read_parquet(filepath_or_buffer, engine=engine, *args, **kwargs)
         if nrows:
             logger.warn(f"'load.parquet' on {EnginePretty.SPARK.value} loads the whole dataset and then truncates it")
             df = df[:nrows]
-        
+
         return df
 
     @staticmethod

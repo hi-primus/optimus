@@ -1,11 +1,10 @@
 import builtins
 import os
 import re
+import string
 import sys
 import unicodedata
 
-import pyspark
-from multipledispatch import dispatch
 from pyspark.ml import Pipeline
 from pyspark.ml.feature import Imputer, QuantileDiscretizer, StringIndexer, IndexToString
 from pyspark.ml.feature import VectorAssembler
@@ -22,7 +21,7 @@ from optimus.engines.base.meta import Meta
 from optimus.engines.base.pandas.columns import PandasBaseColumns
 from optimus.helpers.check import has_, is_column_a, is_spark_dataframe
 from optimus.helpers.columns import get_output_cols, parse_columns, check_column_numbers, name_col, prepare_columns
-from optimus.helpers.constants import RELATIVE_ERROR, Actions
+from optimus.helpers.constants import Actions
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.functions \
@@ -32,8 +31,8 @@ from optimus.helpers.logger import logger
 from optimus.helpers.parser import compress_list
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
-
 # Add the directory containing your module to the Python path (wants absolute paths)
+from optimus.infer_spark import is_list_of_spark_dataframes
 from optimus.profiler.constants import MAX_BUCKETS
 
 sys.path.append(os.path.abspath(ROOT_DIR))
@@ -59,7 +58,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
     def _names(self):
         return list(self.root.data.columns)
 
-    @dispatch(str, object)
     def append(self, col_name=None, value=None):
         """
         Append a column to a Dataframe
@@ -74,44 +72,33 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
                 temp.append(F.lit(v))
             return F.array(temp)
 
+        df = self.root
         dfd = self.root.data
 
-        if is_num_or_str(value):
-            value = F.lit(value)
-        elif is_list_value(value):
-            value = lit_array(value)
-        elif is_tuple(value):
-            value = lit_array(list(value))
-
-        if is_(value, F.Column):
-            dfd = dfd.withColumn(col_name, value)
-
-        return self.root.new(dfd)
-
-    @dispatch((list, pyspark.sql.dataframe.DataFrame))
-    def append(self, cols_values=None):
-        """
-        Append a column or a Dataframe to a Dataframe
-        :param cols_values: New Column Names and data values
-        :type cols_values: List of tuples
-        :return:
-        """
-        df = self.root
         df_result = None
-        if is_list_of_tuples(cols_values):
+        if is_list_of_tuples(col_name):
 
-            for c in cols_values:
+            for c in col_name:
                 col_name = c[0]
                 value = c[1]
                 df_result = optimus.helpers.functions_spark.append(col_name, value)
 
-        elif is_list_of_spark_dataframes(cols_values) or is_spark_dataframe(cols_values):
-            cols_values = val_to_list(cols_values)
+        elif is_list_of_spark_dataframes(col_name) or is_spark_dataframe(col_name):
+            cols_values = val_to_list(col_name)
             cols_values.insert(0, df)
             df_result = append_df(cols_values, like="columns")
 
         else:
-            RaiseIt.type_error(cols_values, ["list of tuples", "dataframes"])
+            if is_num_or_str(value):
+                value = F.lit(value)
+            elif is_list_value(value):
+                value = lit_array(value)
+            elif is_tuple(value):
+                value = lit_array(list(value))
+
+            if is_(value, F.Column):
+                dfd = dfd.withColumn(col_name, value)
+                df_result = self.root.new(dfd)
 
         return df_result
 
@@ -124,6 +111,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         :return:
         """
         df = self.root
+        dfd = df.data
 
         if is_list_of_str(columns):
             output_cols = [col_name + "_copy" for col_name in columns]
@@ -143,8 +131,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return self.root.new(dfd, meta=meta)
 
-    @staticmethod
-    def to_timestamp(input_cols, date_format=None, output_cols=None):
+    def to_timestamp(self, input_cols, date_format=None, output_cols=None):
         """
         Convert a string to timestamp
         :param input_cols:
@@ -203,8 +190,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
     #
     #     return self.root.new(dfd)
 
-    @staticmethod
-    def apply_by_data_type(columns, func, func_return_type, args=None, func_type=None, data_type=None):
+    def apply_by_data_type(self, columns, func, func_return_type, args=None, func_type=None, data_type=None):
         """
         Apply a function using pandas udf or udf if apache arrow is not available
         :param columns: Columns in which the function is going to be applied
@@ -322,38 +308,6 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return r
 
-    # # Descriptive Analytics
-    # @staticmethod
-    # # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
-    # def mad(columns, relative_error=RELATIVE_ERROR, more=None):
-    #     """
-    #     Return the Median Absolute Deviation
-    #     :param columns: Column to be processed
-    #     :param more: Return some extra computed values (Median).
-    #     :param relative_error: Relative error calculating the media
-    #     :return:
-    #     """
-    #     columns = parse_columns(
-    #         self.root, columns, filter_by_column_types=self.root.constants.NUMERIC_TYPES)
-    #     check_column_numbers(columns, "*")
-    #
-    #     result = {}
-    #     for col_name in columns:
-    #
-    #         _mad = {}
-    #         median_value = self.root.cols.median(col_name, relative_error)
-    #         mad_value = self.root.data.withColumn(col_name, F.abs(F.col(col_name) - median_value)) \
-    #             .cols.median(col_name, relative_error)
-    #
-    #         if more:
-    #             _mad = {"mad": mad_value, "median": median_value}
-    #         else:
-    #             _mad = {"mad": mad_value}
-    #
-    #         result[col_name] = _mad
-    #
-    #     return format_dict(result)
-
     @staticmethod
     def reverse(columns):
         pass
@@ -450,8 +404,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return df
 
-    @staticmethod
-    def years_between(input_cols, date_format=None, output_cols=None):
+    def years_between(self, input_cols, date_format=None, output_cols=None):
         """
         Years between a date and now
         :param input_cols: Input columns
@@ -589,8 +542,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             meta = Meta.action(df.meta, None, Actions.REPLACE.value, output_col)
         return self.root.new(dfd, meta=meta)
 
-    @staticmethod
-    def replace_regex(input_cols, regex=None, value=None, output_cols=None):
+    def replace_regex(self, input_cols, regex=None, value=None, output_cols=None):
         """
         Use a Regex to replace values
         :param input_cols: '*', list of columns names or a single column name.
@@ -669,8 +621,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return self.apply(input_cols, _replace_na, output_cols=output_cols, meta_action=Actions.IS_NA.value)
 
-    @staticmethod
-    def unique(columns):
+    def unique(self, columns):
         """
         Return uniques values from a columns
         :param columns:
@@ -685,45 +636,14 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             result.update(compress_list(self.select(col_name).distinct().to_dict()))
         return result
 
-    # Stats
-    # @staticmethod
-    # def z_score(input_cols="*", output_cols=None):
-    #     """
-    #     Return the column z score
-    #     :param input_cols: '*', list of columns names or a single column name
-    #     :param output_cols:
-    #     :return:
-    #     """
-    #
-    #     df = self.root
-    #
-    #     def _z_score(col_name, attr):
-    #         mean_value = df.cols.mean(col_name)
-    #         stdev_value = df.cols.std(col_name)
-    #         return F.abs((F.col(col_name) - mean_value) / stdev_value)
-    #
-    #     input_cols = parse_columns(df, input_cols)
-    #
-    #     # Hint the user if the column has not the correct data type
-    #     for input_col in input_cols:
-    #         if not is_column_a(df, input_col, df.constants.NUMERIC_TYPES):
-    #             print(
-    #                 "'{}' column is not numeric, z-score can not be calculated. Cast column to numeric using df.cols.cast()".format(
-    #                     input_col))
-    #
-    #     return Cols.apply(input_cols, func=_z_score, filter_col_by_dtypes=df.constants.NUMERIC_TYPES,
-    #                       output_cols=output_cols,
-    #                       meta_action=Actions.Z_SCORE.value)
-
     @staticmethod
-    def standard_scaler(input_cols, output_cols=None):
+    def standard_scaler(self, cols="*", output_cols=None):
         return 1
 
-    @staticmethod
-    def min_max_scaler(input_cols, output_cols=None):
+    def min_max_scaler(self, cols="*", output_cols=None):
         """
         Return the column min max scaler result
-        :param input_cols: '*', list of columns names or a single column name
+        :param cols: '*', list of columns names or a single column name
         :param output_cols:
         :return:
         """
@@ -735,12 +655,11 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             max_value = range_value[col_name]["range"]["max"]
             return F.abs((F.col(col_name) - min_value) / max_value - min_value)
 
-        return Cols.apply(input_cols, func=_min_max, filter_col_by_dtypes=self.root.constants.NUMERIC_TYPES,
+        return Cols.apply(cols, func=_min_max, filter_col_by_dtypes=self.root.constants.NUMERIC_TYPES,
                           output_cols=output_cols,
                           meta_action=Actions.MIN_MAX_SCALER.value)
 
-    @staticmethod
-    def max_abs_scaler(input_cols, output_cols=None):
+    def max_abs_scaler(self, input_cols, output_cols=None):
         """
         Return the max abs scaler result
         :param input_cols: '*', list of columns names or a single column name
@@ -765,9 +684,8 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
         dfd = self.data.withColumn(col, F.monotonically_increasing_id())
         return self.root.new(dfd)
 
-    @staticmethod
     # TODO: Maybe we should create nest_to_vector and nest_array, nest_to_string
-    def nest(input_cols, separator="", output_col=None, drop=True, shape="string"):
+    def nest(self, input_cols, separator="", output_col=None, drop=True, shape="string"):
         """
         Concat multiple columns to one with the format specified
         :param input_cols: columns to be nested
@@ -828,8 +746,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         return df.cols.select(output_ordered_columns)
 
-    @staticmethod
-    def unnest(input_cols, separator=None, splits=None, index=None, output_cols=None, drop=False) -> DataFrame:
+    def unnest(self, input_cols, separator=None, splits=None, index=None, output_cols=None, drop=False) -> DataFrame:
         """
         Split an array or string in different columns
         :param input_cols: Columns to be un-nested
@@ -937,8 +854,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             df.meta = Meta.action(df.meta, None, Actions.UNNEST.value, [v for k, v in final_columns])
         return df
 
-    @staticmethod
-    def heatmap(columns, buckets=10):
+    def heatmap(self, columns, buckets=10):
         """
         Returns heat map data in a dictionary
         :param columns:
@@ -1092,8 +1008,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
             df = discretizer.fit(df).transform(df)
         return df
 
-    @staticmethod
-    def clip(columns, lower_bound, upper_bound):
+    def clip(self, cols, lower_bound, upper_bound, output_cols=None):
         """
         Trim values at input thresholds
         :param columns: Columns to be trimmed
@@ -1104,8 +1019,7 @@ class Cols(PandasBaseColumns, DistributedBaseColumns):
 
         df = self.root
 
-        columns = parse_columns(
-            df, columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
+        columns = parse_columns(df, cols, filter_by_column_types=df.constants.NUMERIC_TYPES)
         check_column_numbers(columns, "*")
 
         def _clip(_col_name, args):

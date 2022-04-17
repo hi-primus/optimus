@@ -84,25 +84,26 @@ class SparkDataFrame(BaseDataFrame):
     #     """
     #     return collect_as_dict(self.parent.data)
 
-    @staticmethod
-    def export():
+    def export(self, n="all", data_types="inferred"):
         """
         Helper function to export all the dataframe in text format. Aimed to be used in test functions
         :return:
         """
+        df = self.root
+        dfd = df.data
         dict_result = {}
-        value = self.collect()
+        value = dfd.collect()
         schema = []
-        for col_names in self.cols.names():
+        for col_names in df.cols.names():
             name = col_names
 
-            data_type = self.cols.schema_data_type(col_names)
+            data_type = df.cols.schema_data_type(col_names)
             if isinstance(data_type, ArrayType):
                 data_type = "ArrayType(" + str(data_type.elementType) + "()," + str(data_type.containsNull) + ")"
             else:
                 data_type = str(data_type) + "()"
 
-            nullable = self.schema[col_names].nullable
+            nullable = df.schema[col_names].nullable
 
             schema.append(
                 "('{name}', {dataType}, {nullable})".format(name=name, dataType=data_type, nullable=nullable))
@@ -129,14 +130,15 @@ class SparkDataFrame(BaseDataFrame):
 
         return "{schema}, {dict_result}".format(schema=schema, dict_result=dict_result)
 
-    @staticmethod
-    def sample(n=10, random=False):
+
+    def sample(self, n=10, random=False):
         """
         Return a n number of sample from a dataFrame
         :param n: Number of samples
         :param random: if true get a semi random sample
         :return:
         """
+        df = self.root
         if random is True:
             seed = random_int()
         elif random is False:
@@ -144,14 +146,14 @@ class SparkDataFrame(BaseDataFrame):
         else:
             RaiseIt.value_error(random, ["True", "False"])
 
-        rows_count = self.rows.count()
+        rows_count = df.rows.count()
         if n < rows_count:
             # n/rows_count can return a number that represent less the total number we expect. multiply by 1.1 bo
             fraction = (n / rows_count) * 1.1
         else:
             fraction = 1.0
 
-        return self.data.sample(False, fraction, seed=seed).limit(n)
+        return self.new(self.data.sample(False, fraction, seed=seed).limit(n))
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
@@ -197,8 +199,7 @@ class SparkDataFrame(BaseDataFrame):
         """
         Return reshaped DataFrame organized by given index / column values.
         :param self: Spark Dataframe
-        :param index: Column to use to make new frame's index.
-        :param column: Column to use to make new frame's columns.
+        :param col: Column to use to make new frame's columns.
         :param values: Column(s) to use for populating new frame's values.
         :return:
         """
