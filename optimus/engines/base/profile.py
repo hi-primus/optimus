@@ -2,7 +2,7 @@ import time
 from abc import ABC
 
 from glom import assign
-from optimus.helpers.decorators import time_it
+
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import one_list_to_val
@@ -93,10 +93,9 @@ class BaseProfile(ABC):
 
         return profile
 
-    @time_it
     def _calculate(self, cols="*", bins: int = MAX_BUCKETS, force_hist=None, flush: bool = False, size=False):
         """
-        Returns a new dataframe with the profile data in its added to the meta property
+        Returns a new dataframe with the profile data added to the meta property
         :param cols: "*", column name or list of column names to be processed.
         :param bins:
         :param flush:

@@ -2,34 +2,31 @@ import collections
 import functools
 import glob
 import ntpath
-from typing import Union
-from optimus.helpers.constants import DATE_FORMAT_ITEMS, DATE_FORMAT_ITEMS_MONTH, PYTHON_DATE_TO_FORMAT
 import os
 import random
 import re
 import subprocess
 import sys
 import tempfile
-from collections import Counter
 from pathlib import Path
+from typing import Union
 from urllib.parse import unquote
 from urllib.request import Request, urlopen
 
-import numpy as np
-import fastnumbers
 import humanize
-import pandas as pd
+import numpy as np
 import six
 from fastnumbers import isint, isfloat
 
 from optimus import ROOT_DIR
+from optimus.helpers.constants import DATE_FORMAT_ITEMS, DATE_FORMAT_ITEMS_MONTH, PYTHON_DATE_TO_FORMAT
 from optimus.helpers.core import val_to_list, one_list_to_val
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 from optimus.infer import is_dict, is_list_with_dicts, is_numeric, is_url
 
+
 def _list_variables(ins, namespace=None):
-    
     if not namespace:
         try:
             import IPython
@@ -309,10 +306,10 @@ def update_dict(d, u):
 
 def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=False):
     """
-    Change the columns datatypes to reduce the memory usage. Also identify
-    :param df:
+    Change the columns datatype to reduce the memory usage.
+    :param df: Dataframe to reduce the memory usage
     :param categorical:
-    :param categorical_threshold:
+    :param categorical_threshold: Max number to categorical features to me considered a categorical column
     :param verbose:
     :return:
     """
@@ -491,7 +488,7 @@ def path_is_local(path):
 
 def prepare_url_schema(path: str, schema="https", force=False):
     """
-    Prepare a url and include a schema if neccessary.
+    Prepare a url and include a schema if necessary.
     :param path: Url path to prepare.
     :param schema: schema to include if none is found in 'path'.
     :param force: forces the schema passed to 'schema'.
@@ -518,6 +515,7 @@ def month_names(directive="%B"):
     """
     import datetime
     return [datetime.datetime.strptime(str(n + 1), '%m').strftime(directive) for n in range(12)]
+
 
 def weekday_names(directive="%B"):
     """
@@ -691,12 +689,11 @@ def df_dicts_equal(df1, df2, decimal: Union[int, bool] = True, assertion=False):
 
 
 def results_equal(r1, r2, decimal: Union[int, bool] = True, assertion=False):
-    
     if decimal is True:
         decimal = 7
 
     try:
-        
+
         if hasattr(r1, "__len__") and len(r1) != len(r2):
             raise AssertionError(f"Lengths '{len(r1)}' and '{len(r2)}' do not match ('{r1}', '{r2}')")
 
@@ -706,9 +703,9 @@ def results_equal(r1, r2, decimal: Union[int, bool] = True, assertion=False):
 
             if not is_dict(r2):
                 raise AssertionError(f"Types '{str(type(r1))}' and '{str(type(r2))}' do not match")
-                
+
             matching = True
-            
+
             for key in r1:
                 if not results_equal(r1[key], r2.get(key, None), decimal, assertion):
                     matching = False
@@ -722,7 +719,7 @@ def results_equal(r1, r2, decimal: Union[int, bool] = True, assertion=False):
 
         if matching is not None:
             return matching
-        
+
         try:
             np.testing.assert_almost_equal(r1, r2, decimal=decimal)
         except AssertionError as e:
@@ -739,6 +736,7 @@ def results_equal(r1, r2, decimal: Union[int, bool] = True, assertion=False):
         return False
 
     return True
+
 
 # Taken from https://github.com/Kemaweyan/singleton_decorator/
 class _SingletonWrapper:
