@@ -1,4 +1,5 @@
 from time import time
+
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,17 +16,25 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-from optimus.helpers.types import *
 from optimus.engines.base.ml.models import BaseML
-
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.converter import format_dict
 from optimus.helpers.core import val_to_list
+from optimus.helpers.types import *
 from optimus.infer import is_numeric
 
 
 class Model:
-    def __init__(self, model, X_train, y_train, X_test, y_test, **kwargs):
+    def __init__(self, model, X_train=None, y_train=None, X_test=None, y_test=None, **kwargs):
+        """
+
+        :param model: ML Model
+        :param X_train: Training data
+        :param y_train: Training labels
+        :param X_test: Test data
+        :param y_test: Test labels
+        :param kwargs:
+        """
         self.model = model
         self.X_train = X_train
         self.y_train = y_train
@@ -36,7 +45,6 @@ class Model:
         self.score = None
         self.evaluation = None
         self.kwargs = kwargs
-        # print("111",self.kwargs)
 
     def predict(self, value):
         """
@@ -190,6 +198,7 @@ class Model:
 
 class ML(BaseML):
     def __init__(self, root: 'DataFrameType'):
+        super().__init__(root)
         self.root = root
 
     @staticmethod
@@ -482,5 +491,3 @@ class ML(BaseML):
         # y_pred = regressor.predict(X_test
 
         return model
-
-

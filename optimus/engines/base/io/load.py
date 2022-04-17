@@ -6,6 +6,7 @@ from abc import abstractmethod
 import psutil
 
 from optimus.engines.base.meta import Meta
+from optimus.engines.pandas.ml.models import Model
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
@@ -203,7 +204,7 @@ class BaseLoad:
                     df_list.append(df)
                 df = self.op.F.df_concat(df_list)
                 df = self.df(df, op=self.op)
-                
+
                 file_name = local_file_names[0][1]
                 df.meta = Meta.set(df.meta, "file_name", file_name)
 
@@ -467,7 +468,7 @@ class BaseLoad:
                 for k in properties:
                     if k not in kwargs:
                         kwargs.update({k: properties[k]})
-                
+
                 mime_info.update({"properties": properties})
                 kwargs.update({"encoding": mime_info.get("encoding", None)})
 
@@ -503,4 +504,4 @@ class BaseLoad:
         :return:
         """
         import joblib
-        return joblib.load(path)
+        return Model(model=joblib.load(path))
