@@ -13,20 +13,19 @@ class PandasBaseFunctions(BaseFunctions, ABC):
 
     @staticmethod
     def is_string(series):
-        def _is_string(value):
-            if isinstance(value, str):
-                return True
-            else:
-                return False
+        mask = series.apply(type) == str
+        series[mask] = True
+        series[~mask] = False
 
-        return np.vectorize(_is_string)(series.values).flatten()
+        return series
 
     def is_integer(self, series):
         if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
             return False
         if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
             return True
-        return np.vectorize(isintlike)(series).flatten()
+        self.intlike = isintlike
+        return np.vectorize(self.intlike)(series).flatten()
 
     def is_float(self, series):
         if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
@@ -38,6 +37,7 @@ class PandasBaseFunctions(BaseFunctions, ABC):
         if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
             return False
         return np.vectorize(isreal)(series).flatten()
+
 
     @classmethod
     def _to_integer(cls, series, default=0):
@@ -73,12 +73,12 @@ class PandasBaseFunctions(BaseFunctions, ABC):
 
         return series
 
-    @classmethod
-    def _to_float(cls, series):
-        try:
-            return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
-        except:
-            return pd.Series(pd.to_numeric(series, errors='coerce')).astype('float')
+    # @classmethod
+    # def _to_float(cls, series):
+    #     try:
+    #         return pd.Series(np.vectorize(fast_float)(series, default=np.nan).flatten())
+    #     except:
+    #         return pd.Series(pd.to_numeric(series, errors='coerce')).astype('float')
 
     @classmethod
     def _to_datetime(cls, value, format=None):
