@@ -3,7 +3,6 @@ import ntpath
 import zipfile
 
 import databricks.koalas as ks
-from packaging import version
 
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
@@ -64,10 +63,7 @@ class Load(BaseLoad):
         file, file_name = prepare_path(path, "avro")
 
         try:
-            if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
-                avro_version = "com.databricks.spark.avro"
-            else:
-                avro_version = "avro "
+            avro_version = "avro"
             df = Spark.instance.spark.read.format(avro_version).load(file, *args, **kwargs)
 
             df.meta = Meta.set(df.meta, "file_name", file_name)

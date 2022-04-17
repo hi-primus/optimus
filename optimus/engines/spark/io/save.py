@@ -1,6 +1,3 @@
-from packaging import version
-
-from optimus.engines.base.io.save import BaseSave, DEFAULT_MODE
 from optimus.engines.spark.spark import Spark
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.functions import path_is_local, prepare_path_local
@@ -113,10 +110,7 @@ class Save(BaseSave):
 
         df = self.root
         try:
-            if version.parse(Spark.instance.spark.version) < version.parse("2.4"):
-                avro_version = "com.databricks.spark.avro"
-            else:
-                avro_version = "avro"
+            avro_version = "avro"
             df.coalesce(num_partitions) \
                 .write.format(avro_version) \
                 .mode(mode) \
