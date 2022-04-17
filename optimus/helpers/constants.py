@@ -142,6 +142,43 @@ class ProfilerDataTypesQuality(Enum):
     MATCH = 2
 
 
+class ProfilerDataTypesNumeric(Enum):
+    OBJECT = 0
+    STR = 1
+    FLOAT = 2
+    INT = 3
+    BOOL = 4
+    BOOLEAN = 5
+    DATETIME = 6
+    ARRAY = 7
+    ZIP_CODE = 8
+    GENDER = 9
+    IP = 10
+    URL = 11
+    EMAIL = 12
+    CREDIT_CARD_NUMBER = 13
+    PHONE_NUMBER = 14
+    SOCIAL_SECURITY_NUMBER = 15
+    HTTP_CODE = 16
+    US_STATE = 17
+    CATEGORICAL = 18
+    MISSING = 19
+    NULL = 20
+    LIST = 21
+    DICT = 22
+    TUPLE = 23
+    ADDRESS = 24
+    BAN = 25
+    UUID = 26
+    MAC_ADDRESS = 27
+    IPV4_ADDRESS = 28
+    IPV6_ADDRESS = 29
+
+    @staticmethod
+    def list():
+        return list(map(lambda c: c.value, ProfilerDataTypesNumeric))
+
+
 class ProfilerDataTypes(Enum):
     OBJECT = "object"
     STRING = "str"
@@ -153,22 +190,33 @@ class ProfilerDataTypes(Enum):
     ARRAY = "array"
     ZIP_CODE = "zip_code"
     GENDER = "gender"
-    IP = "ip"
+    IPV4_ADDRESS = "ipv4"
+    IPV6_ADDRESS = "ipv6"
     URL = "url"
     EMAIL = "email"
     CREDIT_CARD_NUMBER = "credit_card_number"
     PHONE_NUMBER = "phone_number"
+    ADDRESS = "address"
+    UUID = "UUID"
+    BAN = "bank_account_number"
     SOCIAL_SECURITY_NUMBER = "social_security_number"
     HTTP_CODE = "http_code"
+    MAC_ADDRESS = "mac_address"
+    DRIVER_LICENSE = "driver_license"
     US_STATE = "us_state"
     CATEGORICAL = "categorical"
     MISSING = "missing"
     NULL = "null"
+    LIST = "list"
+    DICT = "dict"
+    TUPLE = "tuple"
+    UNKNOWN = "unknown"
 
     @staticmethod
     def list():
         return list(map(lambda c: c.value, ProfilerDataTypes))
 
+INDEX_TO_DATA_TYPE_FUNC = {i.value: i.name.lower() for i in ProfilerDataTypesNumeric}
 
 class Schemas(Enum):
     S3 = 's3://'
@@ -191,7 +239,7 @@ PROFILER_NUMERIC_DTYPES = [ProfilerDataTypes.INT.value, ProfilerDataTypes.FLOAT.
 PROFILER_STRING_DTYPES = [ProfilerDataTypes.STRING.value, ProfilerDataTypes.BOOLEAN.value,
                           ProfilerDataTypes.DATETIME.value, ProfilerDataTypes.ARRAY.value,
                           ProfilerDataTypes.OBJECT.value, ProfilerDataTypes.GENDER.value,
-                          ProfilerDataTypes.IP.value, ProfilerDataTypes.URL.value,
+                          ProfilerDataTypes.IPV4_ADDRESS.value, ProfilerDataTypes.URL.value,
                           ProfilerDataTypes.EMAIL.value, ProfilerDataTypes.CREDIT_CARD_NUMBER.value,
                           ProfilerDataTypes.ZIP_CODE.value, ProfilerDataTypes.PHONE_NUMBER,
                           ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value,
@@ -409,7 +457,7 @@ PYTHON_TO_PROFILER = {"string": "categorical", "boolean": "categorical", "int": 
 PROFILER_CATEGORICAL_DTYPES = [ProfilerDataTypes.BOOL.value,
                                ProfilerDataTypes.BOOLEAN.value, ProfilerDataTypes.ZIP_CODE.value,
                                ProfilerDataTypes.STRING.value, ProfilerDataTypes.HTTP_CODE.value,
-                               ProfilerDataTypes.IP.value, ProfilerDataTypes.GENDER.value,
+                               ProfilerDataTypes.IPV4_ADDRESS.value, ProfilerDataTypes.GENDER.value,
                                ProfilerDataTypes.PHONE_NUMBER.value, ProfilerDataTypes.US_STATE.value,
                                ProfilerDataTypes.SOCIAL_SECURITY_NUMBER.value
                                ]
@@ -684,3 +732,5 @@ CONTRACTIONS = [
     ("you're", "you are"),
     ("you've", "you have")
 ]
+
+UNKNOWN_THRESHOLD = 5

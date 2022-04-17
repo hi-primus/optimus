@@ -27,7 +27,7 @@ from optimus.helpers.columns import parse_columns, check_column_numbers, prepare
     prepare_columns_arguments, \
     validate_columns_names
 from optimus.helpers.constants import Actions, CONTRACTIONS, PROFILER_CATEGORICAL_DTYPES, ProfilerDataTypes, \
-    RELATIVE_ERROR
+    RELATIVE_ERROR, UNKNOWN_THRESHOLD, ProfilerDataTypesNumeric, INDEX_TO_DATA_TYPE_FUNC
 from optimus.helpers.converter import convert_numpy, format_dict
 from optimus.helpers.core import unzip, val_to_list, one_list_to_val
 from optimus.helpers.functions import transform_date_format
@@ -39,8 +39,8 @@ from optimus.infer import is_dict, is_int_like, is_list_of_list, is_numeric, is_
     is_list_of_tuples, is_int, is_list_of_str, is_tuple, is_null, is_list, str_to_int
 from optimus.optimus import Engine, EnginePretty
 from optimus.profiler.constants import MAX_BUCKETS
-
 # from optimus.engines.dask.functions import DaskFunctions as F
+from optimus.profiler.functions import sample_size
 
 TOTAL_PREVIEW_ROWS = 30
 CATEGORICAL_RELATIVE_THRESHOLD = 0.10
@@ -922,7 +922,6 @@ class BaseColumns(ABC):
 
         meta = Meta.action(df.meta, Actions.SET.value,
                            list(kw_columns.keys()))
-
         return self.root.new(df._assign(kw_columns), meta=meta)
 
     # TODO: Consider implement lru_cache for caching
@@ -1277,6 +1276,7 @@ class BaseColumns(ABC):
 
         :param cols: Columns to be processed
         :param names: Returns aliases for every type instead of its internal name
+        :param tidy: Tidy format.
         :return: Return a dict of column and its respective data type.
         """
         df = self.root
@@ -2213,10 +2213,10 @@ class BaseColumns(ABC):
         :param output_cols:
         :return:
         """
-        dtypes = self.root[cols].cols.data_type(tidy=False)
-        return self.apply(cols, self.F.infer_data_types, args=(dtypes,), func_return_type=str,
+        # dtypes = self.root[cols].cols.data_type(tidy=False)
+        return self.apply(cols, self.F.infer_data_types, func_return_type=str,
                           output_cols=output_cols,
-                          meta_action=Actions.INFER.value, mode="map", func_type="column_expr")
+                          meta_action=Actions.INFER.value, mode="vectorized", func_type="column_expr")
 
     def date_formats(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
@@ -3560,8 +3560,8 @@ class BaseColumns(ABC):
 
             dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
 
-            matches_mismatches = getattr(df[col_name].mask, dtype)(
-                col_name).cols.frequency()
+            matches_mismatches = getattr(df[col_name].mask, dtype)(col_name).cols.frequency()
+
             missing = df.mask.null(col_name).cols.sum()
             values = {list(j.values())[0]: list(j.values())[1] for j in
                       matches_mismatches["frequency"][col_name]["values"]}
@@ -3586,14 +3586,14 @@ class BaseColumns(ABC):
 
         return result
 
-    def infer_type(self, cols="*", sample=INFER_PROFILER_ROWS, tidy=True) -> dict:
+    def infer_type(self, cols="*", sample_count=None, tidy=True) -> dict:
         """
         Infer data types in a dataframe from a sample. First it identify the data type of every value in every cell.
-        After that it takes all ghe values apply som heuristic to try to better identify the datatype.
+        After that it takes all the values and will apply some heuristic to try to better identify the datatype.
         This function use Pandas no matter the engine you are using.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param sample:
+        :param sample_count: number of rows to sample.
         :param tidy: The result format. If True it will return a value if you
             process a column or column name and value if not. If False it will return the functions name, the column name
             and the value.
@@ -3601,14 +3601,14 @@ class BaseColumns(ABC):
         """
 
         df = self.root
-
         cols = parse_columns(df, cols)
+        if sample_count is None:
+            sample_count = sample_size(df.rows.count(), 95, 5)
 
         # Infer the data type from every element in a Series.
-        sample_df = df.cols.select(cols).rows.limit(sample).to_optimus_pandas()
+        sample_df = df.cols.select(cols).sample(sample_count).to_optimus_pandas()
         rows_count = sample_df.rows.count()
         sample_dtypes = sample_df.cols.infer_data_types().cols.frequency()
-
         unique_counts = sample_df.cols.count_uniques(tidy=False)['count_uniques']
 
         cols_and_inferred_dtype = {}
@@ -3624,23 +3624,25 @@ class BaseColumns(ABC):
             if not len(infer_value_counts):
                 infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
 
-            if not len(infer_value_counts):
-                continue
+            # if not len(infer_value_counts):
+            #     continue
 
             dtypes = [value_count["value"] for value_count in infer_value_counts]
             dtypes_counts = [value_count["count"] for value_count in infer_value_counts]
 
-            dtype_i = 0
+            if len(dtypes) > UNKNOWN_THRESHOLD:
+                dtype = ProfilerDataTypes.UNKNOWN.value
+            else:
+                dtype_index = 0
+                if len(dtypes) > 1:
+                    if dtypes[0] == ProfilerDataTypes.INT.value and dtypes[1] == ProfilerDataTypes.FLOAT.value:
+                        dtype_index = 1
 
-            if len(dtypes) > 1:
-                if dtypes[0] == ProfilerDataTypes.INT.value and dtypes[1] == ProfilerDataTypes.FLOAT.value:
-                    dtype_i = 1
+                    if dtypes[0] == ProfilerDataTypes.ZIP_CODE.value and dtypes[1] == ProfilerDataTypes.INT.value:
+                        if dtypes_counts[0] / rows_count < ZIPCODE_THRESHOLD:
+                            dtype_index = 1
 
-                if dtypes[0] == ProfilerDataTypes.ZIP_CODE.value and dtypes[1] == ProfilerDataTypes.INT.value:
-                    if dtypes_counts[0] / rows_count < ZIPCODE_THRESHOLD:
-                        dtype_i = 1
-
-            dtype = dtypes[dtype_i]
+                dtype = dtypes[dtype_index]
 
             # Is the column categorical?. Try to infer the datatype using the column name
             is_categorical = False
@@ -3655,7 +3657,7 @@ class BaseColumns(ABC):
                 is_categorical = True
 
             cols_and_inferred_dtype[col_name] = {
-                "data_type": dtype, "categorical": is_categorical}
+                "data_type": INDEX_TO_DATA_TYPE_FUNC[dtype], "categorical": is_categorical}
 
             if dtype == ProfilerDataTypes.DATETIME.value:
                 # pydatainfer do not accepts None value so we must filter them
@@ -4294,7 +4296,7 @@ class BaseColumns(ABC):
         return self._any_mask(cols, self.root.mask.email, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_ip(self, cols="*", inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.ip, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, self.root.mask.ipv4, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_url(self, cols="*", inverse=False, tidy=True, compute=True):
         return self._any_mask(cols, self.root.mask.url, inverse=inverse, tidy=tidy, compute=compute)
@@ -4772,7 +4774,7 @@ class BaseColumns(ABC):
         and the value.
         :return: The number of elements that match the function.
         """
-        return self._count_mask(cols, ProfilerDataTypes.IP.value, inverse=inverse, tidy=tidy, compute=compute)
+        return self._count_mask(cols, ProfilerDataTypes.IPV4_ADDRESS.value, inverse=inverse, tidy=tidy, compute=compute)
 
     def count_url(self, cols="*", inverse=False, tidy=True, compute=True):
         """
@@ -5035,7 +5037,7 @@ class BaseColumns(ABC):
         return self._mask(cols, self.root.mask.email, output_cols, rename_func=not drop)
 
     def ip_values(self, cols="*", output_cols=None, drop=True) -> 'DataFrameType':
-        return self._mask(cols, self.root.mask.ip, output_cols, rename_func=not drop)
+        return self._mask(cols, self.root.mask.ipv4, output_cols, rename_func=not drop)
 
     def url_values(self, cols="*", output_cols=None, drop=True) -> 'DataFrameType':
         return self._mask(cols, self.root.mask.url, output_cols, rename_func=not drop)

@@ -1,6 +1,6 @@
 # This file need to be send to the cluster via .addPyFile to handle the pickle problem
 # This is outside the optimus folder on purpose because it cause problem importing optimus when using de udf.
-# This can not import any optimus file unless it's imported via addPyFile
+# This can not import any optimus file unless it's imported via addPyFile in Spark
 import datetime
 import math
 import os
@@ -8,45 +8,113 @@ import re
 from ast import literal_eval
 
 import fastnumbers
-import pandas as pd
-import pendulum
 import hidateinfer
-
-
+import pandas as pd
 
 # This function return True or False if a string can be converted to any datatype.
-from optimus.helpers.constants import CURRENCIES
+from optimus.helpers.constants import CURRENCIES, US_STATES_NAMES
 
 
-def is_datetime_str(_value: str):
+class Trie:
+    """Regex::Trie in Python. Creates a Trie out of a list of words. The trie can be exported to a Regex pattern.
+    The corresponding Regex should match much faster than a simple Regex union."""
+
+    def __init__(self):
+        self.data = {}
+
+    def add(self, word):
+        ref = self.data
+        for char in word:
+            ref[char] = char in ref and ref[char] or {}
+            ref = ref[char]
+        ref[''] = 1
+
+    def dump(self):
+        return self.data
+
+    def quote(self, char):
+        return re.escape(char)
+
+    def _pattern(self, pData):
+        data = pData
+        if "" in data and len(data.keys()) == 1:
+            return None
+
+        alt = []
+        cc = []
+        q = 0
+        for char in sorted(data.keys()):
+            if isinstance(data[char], dict):
+                try:
+                    recurse = self._pattern(data[char])
+                    alt.append(self.quote(char) + recurse)
+                except:
+                    cc.append(self.quote(char))
+            else:
+                q = 1
+        cconly = not len(alt) > 0
+
+        if len(cc) > 0:
+            if len(cc) == 1:
+                alt.append(cc[0])
+            else:
+                alt.append('[' + ''.join(cc) + ']')
+
+        if len(alt) == 1:
+            result = alt[0]
+        else:
+            result = "(?:" + "|".join(alt) + ")"
+
+        if q:
+            if cconly:
+                result += "?"
+            else:
+                result = "(?:%s)?" % result
+        return result
+
+    def pattern(self):
+        return self._pattern(self.dump())
+
+    def regex(self, words):
+
+        for word in words:
+            self.add(word)
+        return re.compile(r"\b" + self.pattern() + r"\b", re.IGNORECASE)
+
+
+def is_datetime_str(value: str):
     try:
-        pdi = hidateinfer.infer([_value])
+        pdi = hidateinfer.infer([value])
         code_count = pdi.count('%')
-        value_code_count = _value.count('%')
-        return code_count >= 2 and value_code_count < code_count and code_count >= len(_value) / 7 and any(
+        value_code_count = value.count('%')
+        return code_count >= 2 and value_code_count < code_count and code_count >= len(value) / 7 and any(
             [c in pdi for c in ['/', '-', ':', '%b', '%B']])
     except Exception:
         return False
 
-def str_to_date_format(_value, date_format):
+
+def str_to_date_format(value, date_format):
     # Check this https://stackoverflow.com/questions/17134716/convert-dataframe-column-type-from-string-to-datetime-dd-mm-yyyy-format
     try:
-        pendulum.from_format(_value, date_format)
+        pd.to_datetime(value).dt.strftime(date_format)
         return True
     except ValueError:
         return False
 
 
-def str_to_null(_value):
-    _value = _value.lower()
-    if _value == "null":
+def str_to_null(value):
+    value = value.lower()
+    if value == "null":
         return True
     else:
         return False
 
 
-def is_null(_value):
-    return pd.isnull(_value)
+def is_null(value):
+    return pd.isnull(value)
+
+
+regex_us_state_compiled = Trie().regex(US_STATES_NAMES)
 
 
 def str_to_data_type(_value, _data_types):
@@ -74,24 +142,42 @@ def is_list_value(value):
     return isinstance(value, list)
 
 
-def is_list_str(_value):
-    return False
-    # return str_to_data_type(_value, (list, tuple))
+def is_list_str(value):
+    # try:
+    #     json.loads(value)
+    #     return True
+    # except JSONDecodeError:
+    #     return False
+    # ^ \[. *\]$
+    return str_to_data_type(value, (list, tuple))
 
 
-def is_object_str(_value):
-    return False
-    # return str_to_data_type(_value, (dict, set))
+def is_object_str(value):
+    # return False
+    return str_to_data_type(value, (dict, set))
 
 
 regex_str = r"."
 
-regex_int = r"(^\d+\.[0]+$)|(^\d+$)"  # For cudf 0.14 regex_int = r"^\d+$" # For cudf 0.14
+regex_int = r"(^\d+\.[0]+$)|(^\d+$)"  # For cudf 0.14 regex_int = r"^\d+$"
+regex_int_compiled = re.compile(regex_int)
+
 regex_decimal = r"(^\d+\.\d+$)|(^\d+$)"
+regex_decimal_compiled = re.compile(regex_decimal)
+
 regex_non_int_decimal = r"^(\d+\.\d+)$"
 
-regex_boolean = r"true|false|0|1"
+regex_boolean = r"\bTrue\b|\bFalse\b|\btrue\b|\bfalse\b|\b0\b|\b1\b"
 regex_boolean_compiled = re.compile(regex_boolean)
+
+regex_list = r"^\[.*\]$"
+regex_list_compiled = re.compile(regex_list)
+
+regex_dict = r"^\{.*\}$"
+regex_dict_compiled = re.compile(regex_dict)
+
+regex_tuple = r"^\(.*\)$"
+regex_tuple_compiled = re.compile(regex_tuple)
 
 
 def is_bool_str(value, compile=False):
@@ -106,9 +192,21 @@ def is_gender(value, compile=False):
     return str_to(value, regex_gender, regex_gender_compiled, compile)
 
 
-regex_full_url = r"^(?:([A-Za-z0-9]*)\://)?(?:(\w+)\.)?([A-Za-z0-9\-\.]+):?(\d+)?(?:/|$)?(\w+\.?\w+)?\??(\w.+)?$"
+regex_full_url = (r'^(?:http|ftp)s?://'  # http:// or https://
+                  r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+                  r'localhost|'  # localhost...
+                  r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+                  r'(?::\d+)?'  # optional port
+                  r'(?:/?|[/?]\S+)$')
 
-regex_url = r"([a-zA-Z]+\.)?([a-zA-Z0-9]+\.)+([a-zA-Z]+)\/?"
+regex_full_url_compiled = re.compile(regex_full_url, re.IGNORECASE)
+
+
+def str_to_full_url(value, compile=False):
+    return str_to(value, regex_url, regex_url_compiled, compile)
+
+
+regex_url = r"([a-zA-Z]+\.)?([a-zA-Z0-9-]+\.)+([a-zA-Z]+)\/?"
 
 regex_url_compiled = re.compile(regex_url, re.IGNORECASE)
 
@@ -117,12 +215,37 @@ def str_to_url(value, compile=False):
     return str_to(value, regex_url, regex_url_compiled, compile)
 
 
-regex_ip = r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
-regex_ip_compiled = re.compile(regex_ip, re.IGNORECASE)
+regex_ipv4_address = r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+regex_ipv4_address_compiled = re.compile(regex_ipv4_address, re.IGNORECASE)
+
+# regex_ipv6_address = r"(?i)(?:[\da-f]{0,4}:){1,7}(?:(?<ipv4>(?:(?:25[0-5]|2[0-4]\d|1?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|1?\d\d?))|[\da-f]{0,4})"
+IPV4SEG = r'(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9]){0,1}[0-9])'
+IPV4ADDR = r'(?:(?:' + IPV4SEG + r'\.){3,3}' + IPV4SEG + r')'
+IPV6SEG = r'(?:(?:[0-9a-fA-F]){1,4})'
+IPV6GROUPS = (
+    r'(?:' + IPV6SEG + r':){7,7}' + IPV6SEG,  # 1:2:3:4:5:6:7:8
+    r'(?:' + IPV6SEG + r':){1,7}:',  # 1::                                 1:2:3:4:5:6:7::
+    r'(?:' + IPV6SEG + r':){1,6}:' + IPV6SEG,  # 1::8               1:2:3:4:5:6::8   1:2:3:4:5:6::8
+    r'(?:' + IPV6SEG + r':){1,5}(?::' + IPV6SEG + r'){1,2}',  # 1::7:8             1:2:3:4:5::7:8   1:2:3:4:5::8
+    r'(?:' + IPV6SEG + r':){1,4}(?::' + IPV6SEG + r'){1,3}',  # 1::6:7:8           1:2:3:4::6:7:8   1:2:3:4::8
+    r'(?:' + IPV6SEG + r':){1,3}(?::' + IPV6SEG + r'){1,4}',  # 1::5:6:7:8         1:2:3::5:6:7:8   1:2:3::8
+    r'(?:' + IPV6SEG + r':){1,2}(?::' + IPV6SEG + r'){1,5}',  # 1::4:5:6:7:8       1:2::4:5:6:7:8   1:2::8
+    IPV6SEG + r':(?:(?::' + IPV6SEG + r'){1,6})',  # 1::3:4:5:6:7:8     1::3:4:5:6:7:8   1::8
+    r':(?:(?::' + IPV6SEG + r'){1,7}|:)',  # ::2:3:4:5:6:7:8    ::2:3:4:5:6:7:8  ::8       ::
+    r'fe80:(?::' + IPV6SEG + r'){0,4}%[0-9a-zA-Z]{1,}',
+    # fe80::7:8%eth0     fe80::7:8%1  (link-local IPv6 addresses with zone index)
+    r'::(?:ffff(?::0{1,4}){0,1}:){0,1}[^\s:]' + IPV4ADDR,
+    # ::255.255.255.255  ::ffff:255.255.255.255  ::ffff:0:255.255.255.255 (IPv4-mapped IPv6 addresses and IPv4-translated addresses)
+    r'(?:' + IPV6SEG + r':){1,4}:[^\s:]' + IPV4ADDR,
+    # 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33 (IPv4-Embedded IPv6 Address)
+)
+regex_ipv6_address = '|'.join(['(?:{})'.format(g) for g in IPV6GROUPS[::-1]])  # Reverse rows for greedy match
+
+regex_ipv6_address_compiled = re.compile(regex_ipv6_address, re.IGNORECASE)
 
 
 def str_to_ip(value, compile=False):
-    return str_to(value, regex_ip, regex_ip_compiled, compile)
+    return str_to(value, regex_ipv4_address, regex_ipv4_address_compiled, compile)
 
 
 # regex_email = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)" # This do not work in CUDF/RE2
@@ -170,8 +293,8 @@ def is_social_security_number(value, compile=False):
     return str_to(value, regex_social_security_number, regex_social_security_number_compiled, compile)
 
 
-regex_http_code = "/^[1-5][0-9][0-9]$/"
-regex_http_code_compiled = re.compile(regex_http_code, re.IGNORECASE)
+regex_http_code = "^[1-5][0-9][0-9]$"
+regex_http_code_compiled = re.compile(regex_http_code)
 
 
 def is_http_code(value, compile=False):
@@ -179,13 +302,29 @@ def is_http_code(value, compile=False):
 
 
 # Reference https://stackoverflow.com/questions/8634139/phone-validation-regex
-regex_phone_number = r"\+?\(?([0-9]{3})\)?[-.]?\(?([0-9]{3})\)?[-.]?\(?([0-9]{4})\)?"
+regex_phone_number = r"^(\+\d{1,2}\s?)?1?\-?\.?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$"
 regex_phone_number_compiled = re.compile(regex_phone_number, re.IGNORECASE)
 
 
 def is_phone_number(value, compile=False):
     # print("value",value, str_to(value, regex_phone_number, regex_phone_number_compiled, compile))
     return str_to(value, regex_phone_number, regex_phone_number_compiled, compile)
+
+
+regex_BAN = r"^^[0-9]{7,14}$"
+regex_BAN_compiled = re.compile(regex_BAN, re.IGNORECASE)
+
+regex_uuid = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+regex_uuid_compiled = re.compile(regex_uuid, re.IGNORECASE)
+
+regex_mac_address = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
+regex_mac_address_compiled = re.compile(regex_mac_address, re.IGNORECASE)
+
+regex_driver_license = r"\b[A-Z](?:\d[- ]*){14}\b"
+regex_driver_license_compiled = re.compile(regex_driver_license, re.IGNORECASE)
+
+regex_address = r"\d+(\s+\w+){1,}\s+(?:st(?:\.|reet)?|dr(?:\.|ive)?|pl(?:\.|ace)?|ave(?:\.|nue)?|rd|road|lane|drive|way|court|plaza|square|run|parkway|point|pike|square|driveway|trace|park|terrace|blvd)"
+regex_address_compiled = re.compile(regex_address, re.IGNORECASE)
 
 
 def str_to(value, regex, compiled_regex, compile=False):
@@ -202,16 +341,16 @@ def str_to(value, regex, compiled_regex, compile=False):
     return result
 
 
-def str_to_int(_value):
-    return True if fastnumbers.isint(_value) else False
+def str_to_int(value):
+    return True if fastnumbers.isint(value) else False
 
 
-def str_to_decimal(_value):
-    return True if fastnumbers.isfloat(_value) else False
+def str_to_decimal(value):
+    return True if fastnumbers.isfloat(value) else False
 
 
-def str_to_str(_value):
-    return True if isinstance(_value, str) else False
+def str_to_str(value):
+    return True if isinstance(value, str) else False
 
 
 regex_currencies = "|".join(list(CURRENCIES.keys()))
@@ -325,18 +464,18 @@ def is_empty_function(value):
         )
 
     return (
-            value.__code__.co_code == empty_func.__code__.co_code and
-            constants(value) == constants(empty_func)
-        ) or (
-            value.__code__.co_code == empty_func_with_docstring.__code__.co_code and
-            constants(value) == constants(empty_func_with_docstring)
-        ) or (
-            value.__code__.co_code == empty_lambda.__code__.co_code and
-            constants(value) == constants(empty_lambda)
-        ) or (
-            value.__code__.co_code == empty_lambda_with_docstring.__code__.co_code and
-            constants(value) == constants(empty_lambda_with_docstring)
-        )
+                   value.__code__.co_code == empty_func.__code__.co_code and
+                   constants(value) == constants(empty_func)
+           ) or (
+                   value.__code__.co_code == empty_func_with_docstring.__code__.co_code and
+                   constants(value) == constants(empty_func_with_docstring)
+           ) or (
+                   value.__code__.co_code == empty_lambda.__code__.co_code and
+                   constants(value) == constants(empty_lambda)
+           ) or (
+                   value.__code__.co_code == empty_lambda_with_docstring.__code__.co_code and
+                   constants(value) == constants(empty_lambda_with_docstring)
+           )
 
 
 def is_list(value, mode=None):
@@ -396,6 +535,7 @@ def is_tuple(value):
     """
     return isinstance(value, tuple)
 
+
 def is_list_or_tuple(value):
     """
     Check if an object is a list or a tuple
@@ -403,6 +543,7 @@ def is_list_or_tuple(value):
     :return:
     """
     return isinstance(value, list)
+
 
 def is_list_of_int(value):
     """
@@ -412,6 +553,7 @@ def is_list_of_int(value):
     """
     return isinstance(value, list) and all(isinstance(elem, int) for elem in value)
 
+
 def is_list_of_dicts(value):
     """
     Check if an object is a list of dictionaries
@@ -419,6 +561,7 @@ def is_list_of_dicts(value):
     :return:
     """
     return isinstance(value, list) and all(isinstance(elem, dict) for elem in value)
+
 
 def is_list_with_dicts(value):
     """
@@ -483,13 +626,13 @@ def is_filepath(file_path):
         return False
 
 
-def is_ip(value):
+def is_ipv4(value):
     """
     Check if a value is valid ip
     :param value:
     :return:
     """
-    return re.match(regex_ip_compiled, value)
+    return re.match(regex_ipv4_address_compiled, value)
 
 
 def is_list_of_str(value):
@@ -586,6 +729,7 @@ def is_numeric(value):
     """
     return isinstance(value, (int, float))
 
+
 def is_numeric_like(value):
     """
     Check if a var is a single element
@@ -657,6 +801,7 @@ def is_int_like(value):
     """
     return fastnumbers.isintlike(value)
 
+
 def is_float_like(value):
     """
     Check if a var is a float
@@ -664,6 +809,7 @@ def is_float_like(value):
     :return:
     """
     return fastnumbers.isfloat(value)
+
 
 def is_url(value):
     regex = re.compile(

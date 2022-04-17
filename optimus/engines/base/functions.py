@@ -6,21 +6,25 @@ import hiurlparser
 import jellyfish
 import numpy as np
 import pandas as pd
-from fastnumbers import fast_float, fast_int
-from jsonschema._format import is_email
 from metaphone import doublemetaphone
 
-from optimus.helpers.constants import ProfilerDataTypes
+from optimus.helpers.constants import ProfilerDataTypes, ProfilerDataTypesNumeric
 from optimus.helpers.core import one_list_to_val, one_tuple_to_val, val_to_list
 from optimus.helpers.decorators import apply_to_categories
 from optimus.helpers.logger import logger
-from optimus.infer import is_datetime_str, is_list, is_list_of_list, is_null, is_bool, \
-    is_credit_card_number, is_zip_code, is_float_like, is_datetime, is_valid_datetime_format, \
-    is_object_value, is_ip, is_url, is_missing, is_gender, is_list_of_int, is_list_of_str, \
-    is_str, is_phone_number, is_int_like
+from optimus.infer import is_list, is_list_of_list, is_valid_datetime_format, \
+    is_list_of_int, is_list_of_str, \
+    regex_int_compiled, regex_decimal_compiled, regex_credit_card_compiled, regex_email_compiled, \
+    regex_phone_number_compiled, regex_http_code_compiled, \
+    regex_gender_compiled, regex_social_security_number_compiled, regex_us_state_compiled, regex_zip_code_compiled, \
+    regex_ipv4_address_compiled, regex_boolean_compiled, regex_full_url_compiled, \
+    regex_BAN_compiled, \
+    regex_uuid_compiled, regex_ipv6_address_compiled, regex_mac_address_compiled, regex_address_compiled, \
+    regex_list_compiled, regex_dict_compiled, regex_tuple_compiled
 
 
 # ^(?:(?P<protocol>[\w\d]+)(?:\:\/\/))?(?P<sub_domain>(?P<www>(?:www)?)(?:\.?)(?:(?:[\w\d-]+|\.)*?)?)(?:\.?)(?P<domain>[^./]+(?=\.))\.(?P<top_domain>com(?![^/|:?#]))?(?P<port>(:)(\d+))?(?P<path>(?P<dir>\/(?:[^/\r\n]+(?:/))+)?(?:\/?)(?P<file>[^?#\r\n]+)?)?(?:\#(?P<fragment>[^#?\r\n]*))?(?:\?(?P<query>.*(?=$)))*$
+
 
 class BaseFunctions(ABC):
     """
@@ -994,52 +998,79 @@ class BaseFunctions(ABC):
     def email_domain(self, series):
         return self.to_string_accessor(series).split('@').str[1]
 
-    def infer_data_types(self, value, cols_data_types):
-        """
-        Infer the data types.
-        Please be aware that the order in which the value is checked is important and will change the final result
-        :param value:
-        :param cols_data_types:
-        :return:
-        """
+    def infer_data_types(self, series):
+        temp = ProfilerDataTypesNumeric
+        default_value = 255
 
-        if is_list(value):
-            dtype = ProfilerDataTypes.ARRAY.value
-        elif is_null(value):
-            dtype = ProfilerDataTypes.NULL.value
-        elif is_bool(value):
-            dtype = ProfilerDataTypes.BOOLEAN.value
-        elif is_credit_card_number(value):
-            dtype = ProfilerDataTypes.CREDIT_CARD_NUMBER.value
-        elif is_zip_code(value):
-            dtype = ProfilerDataTypes.ZIP_CODE.value
-        elif is_int_like(value):
-            dtype = ProfilerDataTypes.INT.value
-        elif is_float_like(value):
-            dtype = ProfilerDataTypes.FLOAT.value
-        elif is_datetime(value):
-            dtype = ProfilerDataTypes.DATETIME.value
-        elif is_missing(value):
-            dtype = ProfilerDataTypes.MISSING.value
-        elif is_str(value):
-            if is_datetime_str(value):
-                dtype = ProfilerDataTypes.DATETIME.value
-            elif is_ip(value):
-                dtype = ProfilerDataTypes.IP.value
-            elif is_url(value):
-                dtype = ProfilerDataTypes.URL.value
-            elif is_email(value):
-                dtype = ProfilerDataTypes.EMAIL.value
-            elif is_gender(value):
-                dtype = ProfilerDataTypes.GENDER.value
-            elif is_phone_number(value):
-                dtype = ProfilerDataTypes.PHONE_NUMBER.value
-            else:
-                dtype = ProfilerDataTypes.STRING.value
-        elif is_object_value(value):
-            dtype = ProfilerDataTypes.OBJECT.value
+        if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
+            series_result = temp.INT.value
+        elif str(series.dtype) in self.constants.NUMERIC_INTERNAL_TYPES:
+            series_result = pd.Series([0] * len(series), dtype=np.uint8)
+            series_result[series.isna()] = temp.NULL.value
+            mask = series % 1 == 0
+            series_result[mask | ~series.isna()] = temp.INT.value
+            series_result[~mask & ~series.isna()] = temp.FLOAT.value
+        elif str(series.dtype) in self.constants.BOOLEAN_INTERNAL_TYPES:
+            series_result = ProfilerDataTypes.BOOL.value
+        # elif str(series.dtype) in self.constants.CATEGORY_INTERNAL_TYPES:
+        #     series_result = ProfilerDataTypes.CATEGORICAL.value
+        elif str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
+            series_result = ProfilerDataTypes.DATETIME.value
+        elif str(series.dtype) in self.constants.OBJECT_INTERNAL_TYPES:
+            dftypes = series.apply(type)
+            series_result = pd.Series([default_value] * len(series), dtype=np.uint8)
+            series_result[dftypes == bool] = temp.BOOL.value
+            series_result[dftypes == int] = temp.INT.value
+            series_result[dftypes == float] = temp.FLOAT.value
+            series_result[dftypes == list] = temp.LIST.value
+            series_result[dftypes == dict] = temp.DICT.value
+            series_result[dftypes == tuple] = temp.TUPLE.value
+            series_result[dftypes == datetime.datetime] = temp.DATETIME.value
+            series_result[series.isna()] = temp.NULL.value
 
-        return dtype
+            series_result[series == ""] = temp.MISSING.value
+            mask_str = (series_result == default_value)
+            series_result[mask_str] = temp.STR.value
+
+            new_mask = mask_str
+            for i, (regex, type_value) in enumerate(
+                    [
+                        (regex_credit_card_compiled, temp.CREDIT_CARD_NUMBER.value),
+                        (regex_phone_number_compiled, temp.PHONE_NUMBER.value),
+                        (regex_address_compiled, temp.ADDRESS.value),
+
+                        (regex_BAN_compiled, temp.BAN.value),
+                        (regex_uuid_compiled, temp.UUID.value),
+                        (regex_mac_address_compiled, temp.MAC_ADDRESS.value),
+                        (regex_http_code_compiled, temp.HTTP_CODE.value),
+                        (regex_gender_compiled, temp.GENDER.value),
+                        (regex_social_security_number_compiled, temp.SOCIAL_SECURITY_NUMBER.value),
+                        (regex_us_state_compiled, temp.US_STATE.value),
+                        #
+                        (regex_list_compiled, temp.LIST.value),
+                        (regex_dict_compiled, temp.DICT.value),
+                        (regex_tuple_compiled, temp.TUPLE.value),
+                        #
+                        (regex_zip_code_compiled, temp.ZIP_CODE.value),
+                        (regex_email_compiled, temp.EMAIL.value),
+                        (regex_ipv4_address_compiled, temp.IPV4_ADDRESS.value),
+                        (regex_ipv6_address_compiled, temp.IPV6_ADDRESS.value),
+                        (regex_full_url_compiled, temp.URL.value),
+                        #
+                        # # regex_date_compiled,
+                        # # regex_time_compiled,
+
+                        (regex_int_compiled, temp.INT.value),
+                        (regex_decimal_compiled, temp.FLOAT.value),
+                        (regex_boolean_compiled, temp.BOOLEAN.value),
+
+                    ]):
+                # This will only apply the regex over the data that did not match the previous regex
+                next_mask = series[new_mask].str.match(regex)
+                series_result.loc[next_mask | ~mask_str] = type_value
+                new_mask = ~next_mask | ~mask_str
+
+        return series_result
 
     def date_formats(self, series):
         return series.map(lambda v: hidateinfer.infer([v]))
