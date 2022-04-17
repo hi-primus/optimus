@@ -1,6 +1,6 @@
 import datetime
 
-import simplejson as json
+import json
 import pandas as pd
 import numpy as np
 

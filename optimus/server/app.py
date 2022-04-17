@@ -1,8 +1,8 @@
-from optimus.server.functions import run, code, engine, session, create_session, delete_session, features
+import json
 from flask import Flask
 from flask import request, render_template
 
-import json
+from optimus.server.functions import run, code, engine, session, create_session, delete_session, features
 
 app = Flask(__name__)
 

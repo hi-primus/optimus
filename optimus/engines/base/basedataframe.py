@@ -4,7 +4,7 @@ from pprint import pformat
 import humanize
 import imgkit
 import jinja2
-import simplejson as json
+import json
 from tabulate import tabulate
 
 from optimus.engines.base.columns import *

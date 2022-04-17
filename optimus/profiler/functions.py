@@ -1,6 +1,6 @@
 import math
 
-import simplejson as json
+import json
 
 from optimus.helpers.constants import ProfilerDataTypes, CONFIDENCE_LEVEL_CONSTANT, PROFILER_COLUMN_TYPES
 from optimus.helpers.json import json_converter
