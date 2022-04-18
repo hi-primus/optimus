@@ -740,7 +740,7 @@ class BaseFunctions(ABC):
         return self.to_string(series).replace('<.*?>', '', regex=True)
 
     def _replace_string(self, series, to_replace, value, regex):
-        return self.replace(to_replace, value, regex=regex)
+        return series.replace(to_replace, value, regex=regex)
 
     def replace_chars(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)

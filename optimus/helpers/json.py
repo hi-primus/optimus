@@ -41,10 +41,12 @@ def dump_json(value, *args, **kwargs):
             return {k: _replace(v) for k, v in data.items()}
         elif isinstance(data, (list, set, tuple,)):
             return [_replace(i) for i in data]
+        elif data is np.nan:
+            return None
         elif data == float("inf"):
             return "Infinity"
         elif data == float("-inf"):
             return "-Infinity"
         else:
             return data
-    return json.dumps(_replace(value), ignore_nan=True, default=json_converter, *args, **kwargs)
+    return json.dumps(_replace(value), default=json_converter, *args, **kwargs)

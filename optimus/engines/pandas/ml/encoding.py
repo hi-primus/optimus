@@ -28,8 +28,11 @@ class Encoding(BaseEncoding):
         :return: Dataframe with encoded columns.
         """
         df = self.root
+        cols = parse_columns(df, cols)
 
-        df = df.new(pd.concat([df.data, pd.get_dummies(df[cols].cols.to_string().data, prefix=prefix)], axis=1))
+        # TODO: repeated values in different input columns will replace output columns' content
+        for col in cols:
+            df = df.new(pd.concat([df.data, pd.get_dummies(df[col].cols.to_string().data[col], prefix=prefix or col)], axis=1))
 
         if drop:
             df = df.cols.drop(cols)
