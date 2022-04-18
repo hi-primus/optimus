@@ -13,12 +13,25 @@ from optimus.infer import is_list_value, is_tuple, is_list_of_str, is_list_of_li
 
 
 class OrderedSet:
-    def __init__(self, value):
-        self.value = copy.deepcopy(list(dict.fromkeys(value)))
+    def __init__(self, data):
+        self.data = copy.deepcopy(list(dict.fromkeys(data)))
 
     def __sub__(self, other):
-        return copy.deepcopy([v for c in [Counter(other.value)] for v in self.value if not c[v] or c.subtract([v])])
+        return copy.deepcopy([v for c in [Counter(other.data)] for v in self.data if not c[v] or c.subtract([v])])
 
+    def __iter__(self):
+        self.current_index = 0
+        return self
+
+    def __next__(self):
+        if self.current_index < len(self.data):
+            x = self.data[self.current_index]
+            self.current_index += 1
+            return x
+        raise StopIteration
+
+    def intersection(self, other):
+        return copy.deepcopy([v for c in [Counter(other)] for v in self.data if c[v]])
 
 def replace_columns_special_characters(df, replace_by="_"):
     """
@@ -334,7 +347,7 @@ def validate_columns_names(df, col_names: Union[str, list], index=0):
     # Remove duplicates in the list
 
     if is_list_of_str(columns):
-        columns = OrderedSet(columns)
+        columns = list(OrderedSet(columns))
 
     check_for_missing_columns(df, columns)
 
