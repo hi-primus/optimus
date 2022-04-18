@@ -10,7 +10,6 @@ from typing import Callable, Union, Optional, Tuple
 import nltk
 import numpy as np
 import pandas as pd
-import wordninja
 from fast_histogram import histogram1d
 from glom import glom
 from nltk import LancasterStemmer, ngrams
@@ -3699,13 +3698,9 @@ class BaseColumns(ABC):
             # Is the column categorical?. Try to infer the datatype using the column name
             is_categorical = False
 
-            # if any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
-            #     is_categorical = False
-
             if dtype in PROFILER_CATEGORICAL_DTYPES \
                     or unique_counts[col_name] / rows_count < CATEGORICAL_RELATIVE_THRESHOLD \
-                    or unique_counts[col_name] < CATEGORICAL_THRESHOLD \
-                    or any(x in [word.lower() for word in wordninja.split(col_name)] for x in ["id", "type"]):
+                    or unique_counts[col_name] < CATEGORICAL_THRESHOLD:
                 is_categorical = True
 
             cols_and_inferred_dtype[col_name] = {
