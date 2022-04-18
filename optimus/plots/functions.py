@@ -187,7 +187,6 @@ def plot_correlation(cols_data, output=None, path=None):
     sns_plot = sns.heatmap(df, cmap=sns.diverging_palette(220, 10, as_cmap=True), annot=True)
 
     if output == "base64":
-        # fig = sns.get_figure()
         fig = sns_plot.get_figure()
         return output_base64(fig)
     elif output == "image":
