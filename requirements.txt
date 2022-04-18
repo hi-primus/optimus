@@ -1,13 +1,12 @@
 pandas==1.3.5
 numpy>=1.21.2
-dask[complete]==2021.12.0
-distributed==2021.12.0
+nltk>=3.6.2
+
 requests>=2.24.0
 fastnumbers>=3.1.0
 setuptools>=50.3.1
 Jinja2>=3.0.1
 humanize>=3.9.0
-psutil>=5.8.0
 deepdiff>=5.5.0
 glom>=20.11.0
 
@@ -20,9 +19,7 @@ tabulate>=0.8.9
 matplotlib>=3.4.2
 seaborn>=0.11.1
 
-# NLP and formats
-nltk>=3.6.2
-wordninja==2.0.0
+# NLP and data formats
 jellyfish>=0.8.7
 Metaphone==0.6
 num2words==0.5.10
