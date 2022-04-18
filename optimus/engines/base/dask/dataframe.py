@@ -1,8 +1,8 @@
 from abc import abstractmethod
 
-import dask, distributed
 import dask.array as da
 import dask.dataframe as dd
+import distributed
 import humanize
 import numpy as np
 import pandas as pd
@@ -11,10 +11,7 @@ from dask.utils import parse_bytes
 from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.base.distributed.dataframe import DistributedBaseDataFrame
 from optimus.helpers.core import val_to_list
-from optimus.helpers.functions import random_int
-from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
-from optimus.infer import is_int
 
 
 class DaskBaseDataFrame(DistributedBaseDataFrame):
@@ -89,7 +86,6 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         :return:
         """
         return self.data.__dask_graph__().layers
-
 
     def stratified_sample(self, col_name, seed: int = 1):
         """
