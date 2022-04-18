@@ -1,3 +1,4 @@
+import datetime
 import re
 from abc import abstractmethod, ABC
 
@@ -237,10 +238,7 @@ class BaseFunctions(ABC):
         """
         Converts a series values to floats
         """
-        try:
-            return self._new_series(np.vectorize(fast_float)(series, default=np.nan).flatten())
-        except:
-            return self._new_series(self._functions.to_numeric(series, errors='coerce')).astype('float')
+        return pd.to_numeric(series, errors='coerce', downcast='float')
 
     def to_float(self, series):
         """
@@ -259,10 +257,7 @@ class BaseFunctions(ABC):
         :param default:
         :return:
         """
-        try:
-            return self._new_series(np.vectorize(fast_int)(series, default=default).flatten())
-        except:
-            return self._new_series(self._functions.to_numeric(series, errors='coerce').fillna(default)).astype('int')
+        return pd.to_numeric(series, errors='coerce', downcast='int')
 
     def to_numeric(self, series, default=0):
         if not str(series.dtype) in self.constants.NUMERIC_INTERNAL_TYPES:
