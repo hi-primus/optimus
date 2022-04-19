@@ -2,6 +2,7 @@ import json
 # from copy import deepcopy
 
 from glom import glom, assign, delete
+import copy
 
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_dict, is_list_value
@@ -116,7 +117,7 @@ class Meta:
         """
         Update meta data in a key
         :param meta: Meta data to be modified
-        :param path: Path indise the dict to be modified
+        :param path: Path inside the dict to be modified
         :param value: New key value
         :param default:
         :return: dict (Meta)
