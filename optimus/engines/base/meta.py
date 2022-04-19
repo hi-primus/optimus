@@ -20,6 +20,7 @@ class Meta:
         :return:
         """
         if spec is not None:
+            # TODO only copy the spec instead of the whole data
             data = copy.deepcopy(meta)
             assign(data, spec, value, missing=missing)
         else:
@@ -36,6 +37,7 @@ class Meta:
         :return:
         """
         if spec is not None:
+            # TODO only copy the spec instead of the whole data
             data = copy.deepcopy(meta)
             delete(data, spec, ignore_missing=True)
         else:
@@ -55,7 +57,7 @@ class Meta:
             data = glom(meta, spec, skip_exc=KeyError)
         else:
             data = meta
-        return data.copy() if isinstance(data, dict) else data
+        return copy.deepcopy(data) if isinstance(data, dict) else data
 
     @staticmethod
     def reset_actions(meta, cols="*"):
@@ -105,7 +107,7 @@ class Meta:
         """
         Update meta data in a key
         :param meta: Meta data to be modified
-        :param path: Path indise the dict to be modified
+        :param path: Path inside the dict to be modified
         :param value: New key value
         :param default:
         :return: dict (Meta)
