@@ -48,7 +48,7 @@ class Model:
 
     def predict(self, value):
         """
-
+        Predict a value
         :param value: Can be a value a list of features inside a list
         :return:
         """
@@ -57,8 +57,14 @@ class Model:
 
         return list(self.model.predict(value))
 
-    def predict_proba(self, value):
-        return self.model.predict_proba(value).tolist()
+    def predict_proba(self, df, output_col=None):
+        """
+        Predict probabilities for a list of features
+        :param df: Dataframe used to predict
+        :param output_col: Col name to save the prediction
+        :return:
+        """
+        return df.cols.assign({output_col: self.model.predict_proba(df.data)})
 
     def roc_auc(self):
         from yellowbrick.classifier import ROCAUC
