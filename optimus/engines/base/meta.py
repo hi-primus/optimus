@@ -1,9 +1,21 @@
+import json
+# from copy import deepcopy
+
 from glom import glom, assign, delete
 
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_dict, is_list_value
 
 ACTIONS_PATH = "transformations.actions"
+
+import orjson
+def deepcopy(data):
+    """
+    Deep copy of a dictionary or list. Standard deepcopy is 10x slower.
+    :param data:
+    :return:
+    """
+    return orjson.loads(orjson.dumps(data))
 
 
 class Meta:
@@ -19,7 +31,7 @@ class Meta:
         :return:
         """
         if spec is not None:
-            data = meta.copy()
+            data = deepcopy(meta)
             assign(data, spec, value, missing=missing)
         else:
             data = value
@@ -35,7 +47,7 @@ class Meta:
         :return:
         """
         if spec is not None:
-            data = meta.copy()
+            data = deepcopy(meta)
             delete(data, spec, ignore_missing=True)
         else:
             data = meta
@@ -54,7 +66,7 @@ class Meta:
             data = glom(meta, spec, skip_exc=KeyError)
         else:
             data = meta
-        return data.copy() if isinstance(data, dict) else data
+        return deepcopy(data) if isinstance(data, dict) else data
 
     @staticmethod
     def reset_actions(meta, cols="*"):
@@ -110,7 +122,7 @@ class Meta:
         :return: dict (Meta)
         """
 
-        new_meta = meta.copy()
+        new_meta = deepcopy(meta)
 
         if new_meta is None:
             new_meta = {}
