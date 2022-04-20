@@ -82,6 +82,11 @@ class BaseCreate:
             data_dict = self._dictionary(data, force_dtypes=force_data_types)
             data = self._dfd_from_dict(data_dict)
 
+        import numpy as np
+        if isinstance(data, np.ndarray):
+            data = self._pd.DataFrame(data)
+            data.columns = data.columns.astype(str)
+
         df = self._df_from_dfd(data, n_partitions=n_partitions, *args, **kwargs)
 
         try:
