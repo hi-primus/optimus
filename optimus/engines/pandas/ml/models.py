@@ -25,7 +25,7 @@ from optimus.infer import is_numeric
 
 
 class Model:
-    def __init__(self, model, X_train=None, y_train=None, X_test=None, y_test=None, **kwargs):
+    def __init__(self, model, X_train=None, y_train=None, X_test=None, y_test=None, op=None,**kwargs):
         """
 
         :param model: ML Model
@@ -35,6 +35,7 @@ class Model:
         :param y_test: Test labels
         :param kwargs:
         """
+        self.op = op
         self.model = model
         self.X_train = X_train
         self.y_train = y_train
@@ -57,14 +58,21 @@ class Model:
 
         return list(self.model.predict(value))
 
-    def predict_proba(self, df, output_col=None):
+    def predict_proba(self, df, output_col=None, index=None):
         """
         Predict probabilities for a list of features
         :param df: Dataframe used to predict
-        :param output_col: Col name to save the prediction
+        :param output_col: Column name to save the prediction
+        :param index: Only get and specific columns from the prediction
         :return:
         """
-        return df.cols.assign({output_col: self.model.predict_proba(df.data)})
+        import pandas as pd
+        prediction = self.model.predict_proba(df.data)
+
+        if index is not None:
+            prediction = prediction[:, index:index+1]
+        temp = self.op.create.dataframe(prediction)
+        return df.cols.concat(self.op.create.dataframe(prediction).cols.rename(func=lambda x: f"{x}_{output_col}"))
 
     def roc_auc(self):
         from yellowbrick.classifier import ROCAUC

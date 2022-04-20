@@ -495,8 +495,7 @@ class BaseLoad:
 
         return df
 
-    @staticmethod
-    def model(path):
+    def model(self, path):
         """
         Load a machine learning model from a file.
 
@@ -504,4 +503,4 @@ class BaseLoad:
         :return:
         """
         import joblib
-        return Model(model=joblib.load(path))
+        return Model(model=joblib.load(path), op=self.op)
