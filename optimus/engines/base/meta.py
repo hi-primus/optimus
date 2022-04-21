@@ -1,5 +1,5 @@
 import json
-# from copy import deepcopy
+from copy import deepcopy as deep_copy
 
 from glom import glom, assign, delete
 import copy
@@ -16,7 +16,10 @@ def deepcopy(data):
     :param data:
     :return:
     """
-    return orjson.loads(orjson.dumps(data))
+    try:
+        return orjson.loads(orjson.dumps(data))
+    except:
+        return deep_copy(data)
 
 
 class Meta:
