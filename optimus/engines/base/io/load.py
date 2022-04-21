@@ -486,9 +486,13 @@ class BaseLoad:
             mime_info["file_type"] = "excel"
             df = self.excel(full_path, **kwargs)
 
+        elif file_type == "parquet":
+            mime_info["file_type"] = "parquet"
+            df = self.parquet(full_path, **kwargs)
+
         else:
             RaiseIt.value_error(
-                file_type, ["csv", "json", "xml", "excel"])
+                file_type, ["csv", "json", "xml", "excel","parquet"])
 
         if file_name:
             df.meta = Meta.set(df.meta, "file_name", file_name)

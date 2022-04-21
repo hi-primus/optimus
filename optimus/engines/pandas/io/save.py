@@ -72,10 +72,10 @@ class Save(BaseSave):
                 col_name = col_name.replace(i, "_")
             return col_name
 
-        df = self.root.cols.rename(func)
+        df = self.root.cols.rename(func=func)
 
         try:
-            df.data.to_parquet(path, mode=mode)
+            df.data.to_parquet(path)
         except IOError as e:
             logger.print(e)
             raise
