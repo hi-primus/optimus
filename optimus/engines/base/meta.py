@@ -1,8 +1,6 @@
-import json
 from copy import deepcopy as deep_copy
 
 from glom import glom, assign, delete
-import copy
 
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_dict, is_list_value
@@ -10,6 +8,8 @@ from optimus.infer import is_dict, is_list_value
 ACTIONS_PATH = "transformations.actions"
 
 import orjson
+
+
 def deepcopy(data):
     """
     Deep copy of a dictionary or list. Standard deepcopy is 10x slower.

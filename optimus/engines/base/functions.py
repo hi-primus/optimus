@@ -1016,76 +1016,78 @@ class BaseFunctions(ABC):
         return self.to_string_accessor(series).split('@').str[1]
 
     def infer_data_types(self, series):
-        temp = ProfilerDataTypesNumeric
-        default_value = 255
+        PDTN = ProfilerDataTypesNumeric
+        default_value = 127
 
         if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
-            series_result = temp.INT.value
+            series_result = PDTN.INT.value
         elif str(series.dtype) in self.constants.NUMERIC_INTERNAL_TYPES:
             series_result = pd.Series([0] * len(series), dtype=np.uint8)
-            series_result[series.isna()] = temp.NULL.value
+            series_result[series.isna()] = PDTN.NULL.value
             mask = series % 1 == 0
-            series_result[mask | ~series.isna()] = temp.INT.value
-            series_result[~mask & ~series.isna()] = temp.FLOAT.value
+            series_result[mask | ~series.isna()] = PDTN.INT.value
+            series_result[~mask & ~series.isna()] = PDTN.FLOAT.value
         elif str(series.dtype) in self.constants.BOOLEAN_INTERNAL_TYPES:
-            series_result = ProfilerDataTypes.BOOL.value
+            series_result = PDTN.BOOLEAN.value
         # elif str(series.dtype) in self.constants.CATEGORY_INTERNAL_TYPES:
-        #     series_result = ProfilerDataTypes.CATEGORICAL.value
+        #     series_result = PDTN.CATEGORICAL.value
         elif str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
-            series_result = ProfilerDataTypes.DATETIME.value
+            series_result = PDTN.DATETIME.value
         elif str(series.dtype) in self.constants.OBJECT_INTERNAL_TYPES:
             dftypes = series.apply(type)
             series_result = pd.Series([default_value] * len(series), dtype=np.uint8)
-            series_result[dftypes == bool] = temp.BOOL.value
-            series_result[dftypes == int] = temp.INT.value
-            series_result[dftypes == float] = temp.FLOAT.value
-            series_result[dftypes == list] = temp.LIST.value
-            series_result[dftypes == dict] = temp.DICT.value
-            series_result[dftypes == tuple] = temp.TUPLE.value
-            series_result[dftypes == datetime.datetime] = temp.DATETIME.value
-            series_result[series.isna()] = temp.NULL.value
+            series_result[dftypes == bool] = PDTN.BOOL.value
+            series_result[dftypes == int] = PDTN.INT.value
+            series_result[dftypes == float] = PDTN.FLOAT.value
+            series_result[dftypes == list] = PDTN.LIST.value
+            series_result[dftypes == dict] = PDTN.DICT.value
+            series_result[dftypes == tuple] = PDTN.TUPLE.value
+            series_result[dftypes == datetime.datetime] = PDTN.DATETIME.value
+            series_result[series.isna()] = PDTN.NULL.value
 
-            series_result[series == ""] = temp.MISSING.value
+            series_result[series == ""] = PDTN.MISSING.value
             mask_str = (series_result == default_value)
-            series_result[mask_str] = temp.STR.value
+            series_result[mask_str] = PDTN.STR.value
 
             new_mask = mask_str
             for i, (regex, type_value) in enumerate(
                     [
-                        (regex_credit_card_compiled, temp.CREDIT_CARD_NUMBER.value),
-                        (regex_phone_number_compiled, temp.PHONE_NUMBER.value),
-                        (regex_address_compiled, temp.ADDRESS.value),
+                        (regex_credit_card_compiled, PDTN.CREDIT_CARD_NUMBER.value),
+                        (regex_phone_number_compiled, PDTN.PHONE_NUMBER.value),
+                        (regex_address_compiled, PDTN.ADDRESS.value),
 
-                        (regex_BAN_compiled, temp.BAN.value),
-                        (regex_uuid_compiled, temp.UUID.value),
-                        (regex_mac_address_compiled, temp.MAC_ADDRESS.value),
-                        (regex_http_code_compiled, temp.HTTP_CODE.value),
-                        (regex_gender_compiled, temp.GENDER.value),
-                        (regex_social_security_number_compiled, temp.SOCIAL_SECURITY_NUMBER.value),
-                        (regex_us_state_compiled, temp.US_STATE.value),
+                        (regex_BAN_compiled, PDTN.BAN.value),
+                        (regex_uuid_compiled, PDTN.UUID.value),
+                        (regex_mac_address_compiled, PDTN.MAC_ADDRESS.value),
+                        (regex_http_code_compiled, PDTN.HTTP_CODE.value),
+                        (regex_gender_compiled, PDTN.GENDER.value),
+                        (regex_social_security_number_compiled, PDTN.SOCIAL_SECURITY_NUMBER.value),
+                        (regex_us_state_compiled, PDTN.US_STATE.value),
                         #
-                        (regex_list_compiled, temp.LIST.value),
-                        (regex_dict_compiled, temp.DICT.value),
-                        (regex_tuple_compiled, temp.TUPLE.value),
+                        (regex_list_compiled, PDTN.LIST.value),
+                        (regex_dict_compiled, PDTN.DICT.value),
+                        (regex_tuple_compiled, PDTN.TUPLE.value),
                         #
-                        (regex_zip_code_compiled, temp.ZIP_CODE.value),
-                        (regex_email_compiled, temp.EMAIL.value),
-                        (regex_ipv4_address_compiled, temp.IPV4_ADDRESS.value),
-                        (regex_ipv6_address_compiled, temp.IPV6_ADDRESS.value),
-                        (regex_full_url_compiled, temp.URL.value),
+                        (regex_zip_code_compiled, PDTN.ZIP_CODE.value),
+                        (regex_email_compiled, PDTN.EMAIL.value),
+                        (regex_ipv4_address_compiled, PDTN.IPV4_ADDRESS.value),
+                        (regex_ipv6_address_compiled, PDTN.IPV6_ADDRESS.value),
+                        (regex_full_url_compiled, PDTN.URL.value),
                         #
                         # # regex_date_compiled,
                         # # regex_time_compiled,
 
-                        (regex_int_compiled, temp.INT.value),
-                        (regex_decimal_compiled, temp.FLOAT.value),
-                        (regex_boolean_compiled, temp.BOOLEAN.value),
+                        (regex_int_compiled, PDTN.INT.value),
+                        (regex_decimal_compiled, PDTN.FLOAT.value),
+                        (regex_boolean_compiled, PDTN.BOOLEAN.value),
 
                     ]):
                 # This will only apply the regex over the data that did not match the previous regex
                 next_mask = series[new_mask].str.match(regex)
                 series_result.loc[next_mask | ~mask_str] = type_value
                 new_mask = ~next_mask | ~mask_str
+            else:
+                series_result = PDTN.STR.value
 
         return series_result
 
