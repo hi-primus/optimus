@@ -1086,8 +1086,8 @@ class BaseFunctions(ABC):
                 next_mask = series[new_mask].str.match(regex)
                 series_result.loc[next_mask | ~mask_str] = type_value
                 new_mask = ~next_mask | ~mask_str
-            else:
-                series_result = PDTN.STR.value
+        else:
+            series_result = PDTN.STR.value
 
         return series_result
 
