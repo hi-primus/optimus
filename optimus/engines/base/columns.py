@@ -187,7 +187,6 @@ class BaseColumns(ABC):
         :param cols:
         :return:
         """
-        # print(type(self.root.data))
         return self.root.data[cols]
 
     def select(self, cols="*", regex=None, data_type=None, invert=False, accepts_missing_cols=False) -> 'DataFrameType':
@@ -1333,7 +1332,7 @@ class BaseColumns(ABC):
         :param args:
         :param compute: Compute the result or return a delayed function.
         :param tidy: Compact the dict output.
-        :param parallel: Execute the function in every column or apply it over the whole dataframe.
+        :param parallel: Execute the function in every c3olumn or apply it over the whole dataframe.
         :return: Return the calculates values from a list of aggregations functions.
         """
         df = self.root

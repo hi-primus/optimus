@@ -432,10 +432,6 @@ class BaseDataFrame(ABC):
 
         return dfd.to_dict(orient)
 
-    @staticmethod
-    @abstractmethod
-    def sample(n=10, random=False):
-        pass
 
     def columns_sample(self, cols="*") -> dict:
         """

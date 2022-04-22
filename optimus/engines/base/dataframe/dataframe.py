@@ -12,6 +12,9 @@ class DataFrameBaseDataFrame(BaseDataFrame):
         df = self.data
         return self.new(df, meta=self.meta)
 
+    def _sample(self, n=10, seed=False):
+        return self.root.data.sample(n=n, random_state=seed).reset_index(drop=True)
+
     def sample(self, n=10, random=False):
         """
         Return a n number of sample from a dataFrame
@@ -36,7 +39,7 @@ class DataFrameBaseDataFrame(BaseDataFrame):
 
         if n > rows_count:
             n = rows_count
-        dfd = df.data.sample(n=n, random_state=seed).reset_index(drop=True)
+        dfd = self._sample(n, seed)
 
         return self.root.new(dfd)
 

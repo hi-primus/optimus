@@ -1,11 +1,12 @@
 from optimus.engines.base.basedataframe import BaseDataFrame
+from optimus.engines.base.dataframe.dataframe import DataFrameBaseDataFrame
 from optimus.engines.cudf.dataframe import CUDFDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.engines.vaex.io.save import Save
 from optimus.helpers.converter import pandas_to_vaex_dataframe
 
 
-class VaexDataFrame(BaseDataFrame):
+class VaexDataFrame(DataFrameBaseDataFrame):
 
     def _base_to_dfd(self, pdf, n_partitions):
         return pandas_to_vaex_dataframe(pdf, n_partitions)
@@ -22,6 +23,9 @@ class VaexDataFrame(BaseDataFrame):
         for col_name, expr in kw_columns.items():
             _dfd[col_name] = expr
         return _dfd
+
+    def _sample(self, n=10, seed=False):
+        return self.root.data.sample(n=n, random_state=seed)
 
     def visualize(self):
         pass
@@ -92,9 +96,7 @@ class VaexDataFrame(BaseDataFrame):
     def to_optimus_cudf(self):
         return CUDFDataFrame(self.root.to_pandas(), op=self.op)
 
-    @staticmethod
-    def sample(n=10, random=False):
-        pass
+
 
     def partitions(self):
         pass
