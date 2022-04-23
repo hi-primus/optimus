@@ -13,7 +13,7 @@ class PandasBaseFunctions(BaseFunctions, ABC):
 
     @staticmethod
     def is_string(series):
-        return series.apply(lambda x: False if type(x) == str else True)
+        return series.apply(lambda x: True if type(x) == str else False)
 
     def is_integer(self, series):
         if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
