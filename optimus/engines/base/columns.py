@@ -3694,7 +3694,7 @@ class BaseColumns(ABC):
                         if dtypes_counts[0] / rows_count < ZIPCODE_THRESHOLD:
                             dtype_index = 1
 
-                    dtype = dtypes[dtype_index]
+                dtype = dtypes[dtype_index]
             # Is the column categorical?. Try to infer the datatype using the column name
             is_categorical = False
             if dtype in PROFILER_CATEGORICAL_DTYPES \
