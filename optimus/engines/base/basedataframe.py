@@ -169,6 +169,9 @@ class BaseDataFrame(ABC):
         df1_is_df = isinstance(df1, (BaseDataFrame,))
         df2_is_df = isinstance(df2, (BaseDataFrame,))
 
+        if df1_is_df and df2_is_df:
+            df2.cols.cast("*", df1.cols.infer_type()["data_type"])
+
         if not df1_is_df or not df2_is_df:
             multiple_columns = True
             if data_type == "auto":
