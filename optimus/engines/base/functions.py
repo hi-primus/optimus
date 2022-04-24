@@ -1033,7 +1033,7 @@ class BaseFunctions(ABC):
         #     series_result = PDTN.CATEGORICAL.value
         elif str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
             series_result = PDTN.DATETIME.value
-        elif str(series.dtype) in self.constants.OBJECT_INTERNAL_TYPES:
+        elif str(series.dtype) in self.constants.OBJECT_INTERNAL_TYPES + self.constants.STRING_INTERNAL_TYPES:
             dftypes = series.apply(type)
             series_result = pd.Series([default_value] * len(series), dtype=np.uint8)
             series_result[dftypes == bool] = PDTN.BOOL.value
@@ -1047,7 +1047,7 @@ class BaseFunctions(ABC):
 
             series_result[series == ""] = PDTN.MISSING.value
             mask_str = (series_result == default_value)
-            series_result[mask_str] = PDTN.STR.value
+            series_result[mask_str] = PDTN.STRING.value
 
             new_mask = mask_str
             for i, (regex, type_value) in enumerate(
@@ -1087,7 +1087,7 @@ class BaseFunctions(ABC):
                 series_result.loc[next_mask | ~mask_str] = type_value
                 new_mask = ~next_mask | ~mask_str
         else:
-            series_result = PDTN.STR.value
+            series_result = PDTN.STRING.value
 
         return series_result
 
