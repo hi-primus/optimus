@@ -1,10 +1,10 @@
+import json
 import operator
 from pprint import pformat
 
 import humanize
 import imgkit
 import jinja2
-import json
 from tabulate import tabulate
 
 from optimus.engines.base.columns import *
@@ -17,14 +17,14 @@ from optimus.engines.base.ml.models import BaseML
 from optimus.engines.base.rows import *
 from optimus.helpers.check import is_notebook
 from optimus.helpers.constants import RELATIVE_ERROR
-from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage, update_dict
+from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
 from optimus.outliers.outliers import Outliers
 from optimus.plots.functions import plot_hist, plot_frequency
 from optimus.plots.plots import Plot
-from optimus.profiler.templates.html import HEADER, FOOTER
 from optimus.profiler.constants import MAX_BUCKETS
+from optimus.profiler.templates.html import HEADER, FOOTER
 
 
 class BaseDataFrame(ABC):
@@ -169,8 +169,15 @@ class BaseDataFrame(ABC):
         df1_is_df = isinstance(df1, (BaseDataFrame,))
         df2_is_df = isinstance(df2, (BaseDataFrame,))
 
-        if df1_is_df and df2_is_df:
-            df2.cols.cast("*", df1.cols.infer_type()["data_type"])
+        c = df1.constants.OPTIMUS_TO_INTERNAL
+        if df1_is_df:
+            if df1.cols.names() == 1:
+                if c[df2.cols.infer_type(tidy=True)["data_type"]] == ProfilerDataTypes.STRING.value:
+                    df2 = df2.cols.cast("*", c[df1.cols.infer_type()["data_type"]])
+        elif df2_is_df:
+            if df2.cols.names() == 1:
+                if c[df1.cols.infer_type(tidy=True)["data_type"]] == ProfilerDataTypes.STRING.value:
+                    df1 = df1.cols.cast("*", c[df2.cols.infer_type()["data_type"]])
 
         if not df1_is_df or not df2_is_df:
             multiple_columns = True
@@ -197,7 +204,7 @@ class BaseDataFrame(ABC):
         if (is_spark(df1) or is_spark(df2)) and opb == operator.__or__:
             # We use multiple_columns to extract the series
             multiple_columns = False
-            
+
         df1 = BaseDataFrame.__operator__(df1, data_type, multiple_columns)
         df2 = BaseDataFrame.__operator__(df2, data_type, multiple_columns)
 
@@ -234,10 +241,10 @@ class BaseDataFrame(ABC):
         return self.operation(df2, self, operator.add, "auto")
 
     def __sub__(self, df2) -> 'DataFrameType':
-        return self.operation(self, df2, operator.sub, "float")
+        return self.operation(self, df2, operator.sub, "auto")
 
     def __rsub__(self, df2) -> 'DataFrameType':
-        return self.operation(self, df2, operator.sub, "float")
+        return self.operation(self, df2, operator.sub, "auto")
 
     def __mul__(self, df2) -> 'DataFrameType':
         return self.operation(self, df2, operator.mul, "float")
@@ -434,7 +441,6 @@ class BaseDataFrame(ABC):
             dfd = self.cols.select(cols).iloc(0, n).to_pandas()
 
         return dfd.to_dict(orient)
-
 
     def columns_sample(self, cols="*") -> dict:
         """

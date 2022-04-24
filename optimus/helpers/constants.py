@@ -198,7 +198,7 @@ class ProfilerDataTypes(Enum):
     PHONE_NUMBER = "phone_number"
     ADDRESS = "address"
     UUID = "UUID"
-    BAN = "bank_account_number"
+    BAN = "ban"
     SOCIAL_SECURITY_NUMBER = "social_security_number"
     HTTP_CODE = "http_code"
     MAC_ADDRESS = "mac_address"
