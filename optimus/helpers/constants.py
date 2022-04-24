@@ -144,7 +144,7 @@ class ProfilerDataTypesQuality(Enum):
 
 class ProfilerDataTypesNumeric(Enum):
     OBJECT = 0
-    STR = 1
+    STRING = 1
     FLOAT = 2
     INT = 3
     BOOL = 4
