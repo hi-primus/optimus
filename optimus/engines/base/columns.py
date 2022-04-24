@@ -26,7 +26,7 @@ from optimus.helpers.columns import parse_columns, check_column_numbers, prepare
     prepare_columns_arguments, \
     validate_columns_names
 from optimus.helpers.constants import Actions, CONTRACTIONS, PROFILER_CATEGORICAL_DTYPES, ProfilerDataTypes, \
-    RELATIVE_ERROR, UNKNOWN_THRESHOLD, ProfilerDataTypesNumeric, INDEX_TO_DATA_TYPE_FUNC
+    RELATIVE_ERROR, UNKNOWN_THRESHOLD, INDEX_TO_DATA_TYPE_FUNC, ProfilerDataTypesNumeric
 from optimus.helpers.converter import convert_numpy, format_dict
 from optimus.helpers.core import unzip, val_to_list, one_list_to_val
 from optimus.helpers.functions import transform_date_format
@@ -462,7 +462,8 @@ class BaseColumns(ABC):
         value_func = val_to_list(value_func, allow_none=True)
 
         if each:
-            each = (value_func is not None and len(cols) == len(value_func)) or (where is not None and len(cols) == len(where))
+            each = (value_func is not None and len(cols) == len(value_func)) or (
+                    where is not None and len(cols) == len(where))
 
         if each:
             where, value_func = prepare_columns_arguments(cols, where, value_func)
@@ -963,15 +964,15 @@ class BaseColumns(ABC):
                               f"profile.columns.{input_col}.patterns.values")
 
             if (column_modified_time > patterns_update_time or
-                patterns_update_time == 0 or
-                flush is True or
-                (n is None and incomplete_cache) or
-                (
-                    values is not None and
-                    n is not None and
-                    len(values) < n and
-                    incomplete_cache
-                )):
+                    patterns_update_time == 0 or
+                    flush is True or
+                    (n is None and incomplete_cache) or
+                    (
+                            values is not None and
+                            n is not None and
+                            len(values) < n and
+                            incomplete_cache
+                    )):
                 # Plus n + 1 so we can could let the user know if there are more patterns
                 result[input_col] = df.cols.pattern(input_col, mode=mode) \
                     .cols.frequency(input_col, n=n + 1 if n is not None else None) \
@@ -2854,7 +2855,8 @@ class BaseColumns(ABC):
             output_cols = val_to_list(get_output_cols(cols, output_cols))
 
             for i, (_search, _replace_by) in enumerate(search):
-                df = df.cols._replace(cols if i == 0 else output_cols, _search, _replace_by, search_by, ignore_case, output_cols)
+                df = df.cols._replace(cols if i == 0 else output_cols, _search, _replace_by, search_by, ignore_case,
+                                      output_cols)
 
         else:
             df = df.cols._replace(cols, search, replace_by, search_by, ignore_case, output_cols)
@@ -2886,7 +2888,7 @@ class BaseColumns(ABC):
         replace_by = one_list_to_val(replace_by, convert_tuple=True)
 
         if search_by == "full":
-            
+
             search_is_value = not is_str(search) and not is_list_of_str(search)
             replace_by_is_value = not is_str(replace_by) and not is_list_of_str(replace_by)
 
@@ -3429,7 +3431,6 @@ class BaseColumns(ABC):
                 final_columns = [output_cols + "_" +
                                  str(i) for i in range(splits)]
 
-
             if is_list_of_str(separator):
                 separator = "|".join([re.escape(sep) for sep in separator])
 
@@ -3657,7 +3658,7 @@ class BaseColumns(ABC):
 
         # Infer the data type from every element in a Series.
         sample_df = df.cols.select(cols).sample(sample_count).to_optimus_pandas()
-        rows_count = sample_df.rows.count()
+        rows_count = sample_count
         sample_dtypes = sample_df.cols.infer_data_types().cols.frequency()
         unique_counts = sample_df.cols.count_uniques(tidy=False)['count_uniques']
 
@@ -3684,23 +3685,25 @@ class BaseColumns(ABC):
                 dtype = ProfilerDataTypes.UNKNOWN.value
             else:
                 dtype_index = 0
+
                 if len(dtypes) > 1:
-                    if dtypes[0] == ProfilerDataTypes.INT.value and dtypes[1] == ProfilerDataTypes.FLOAT.value:
+                    if dtypes[0] == ProfilerDataTypesNumeric.INT.value and dtypes[1] == ProfilerDataTypesNumeric.FLOAT.value:
                         dtype_index = 1
 
-                    if dtypes[0] == ProfilerDataTypes.ZIP_CODE.value and dtypes[1] == ProfilerDataTypes.INT.value:
+                    elif dtypes[0] == ProfilerDataTypesNumeric.ZIP_CODE.value:
                         if dtypes_counts[0] / rows_count < ZIPCODE_THRESHOLD:
                             dtype_index = 1
 
-                dtype = dtypes[dtype_index]
-
+                    dtype = dtypes[dtype_index]
             # Is the column categorical?. Try to infer the datatype using the column name
             is_categorical = False
-
             if dtype in PROFILER_CATEGORICAL_DTYPES \
                     or unique_counts[col_name] / rows_count < CATEGORICAL_RELATIVE_THRESHOLD \
-                    or unique_counts[col_name] < CATEGORICAL_THRESHOLD:
+                    or unique_counts[col_name] < CATEGORICAL_THRESHOLD \
+                    or re.match(r"([_-](id|type)|(id|type)[_-])",
+                                col_name.lower()):  # If the column name contains id or type in its name
                 is_categorical = True
+
 
             cols_and_inferred_dtype[col_name] = {
                 "data_type": INDEX_TO_DATA_TYPE_FUNC[dtype], "categorical": is_categorical}
