@@ -1,3 +1,4 @@
+import fastnumbers
 import numpy as np
 import vaex
 from fastnumbers import fast_float, fast_int, isintlike
@@ -9,12 +10,19 @@ from optimus.engines.base.vaex.functions import VaexBaseFunctions
 class VaexFunctions(VaexBaseFunctions, BaseFunctions):
     _engine = vaex
 
-    # def is_integer(self, series):
-    #     # if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
-    #     #     return False
-    #     # if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
-    #     #     return True
-    #     return np.vectorize(isintlike)(series).flatten()
+    def is_integer(self, series):
+        def func(x):
+            return isintlike(x, on_fail=on_fail)
+
+        def on_fail(x):
+            return np.nan
+        # if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
+        #     return False
+        # if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
+        #     return True
+        return series.str.match(r"^\d+$")
+
+
 
     @staticmethod
     def count_zeros(series, *args):
@@ -52,15 +60,25 @@ class VaexFunctions(VaexBaseFunctions, BaseFunctions):
     def ceil(series):
         pass
 
-    def to_float(self, series):
-        def to_float_vaex(series):
-            return fast_float(series, default=np.nan)
+    def _to_float(self, series):
+        def to_float_vaex(value):
+            # Faster than fastnumbers
+            try:
+                value = float(value)
+            except ValueError:
+                value = np.nan
+            return value
 
         return series.apply(to_float_vaex)
 
-    def to_integer(self, series):
-        def to_integer_vaex(series):
-            return fast_int(series, default=np.nan)
+    def _to_integer(self, series):
+        def to_integer_vaex(value):
+            # Faster than fastnumbers
+            try:
+                value = int(value)
+            except ValueError:
+                value = np.nan
+            return value
 
         return series.apply(to_integer_vaex)
 

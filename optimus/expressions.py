@@ -678,11 +678,13 @@ l_g.add('INTEGER', r'\d+')
 # Ignore spaces
 l_g.ignore('\s+')
 
+
 def frame_function(func):
     def wrapper(df, *args, **kwargs):
         return df.cols.apply(func=func, args=args)
 
     return wrapper
+
 
 def parse(text_input, df_name="df", data=True):
     """

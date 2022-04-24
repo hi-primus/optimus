@@ -72,7 +72,7 @@ class Save(BaseSave):
                 col_name = col_name.replace(i, "_")
             return col_name
 
-        df = self.root.cols.rename(func)
+        df = self.root.cols.rename(func=func)
 
         if conn is not None:
             path = conn.path(path)
