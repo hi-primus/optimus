@@ -154,8 +154,7 @@ class BaseRows(ABC):
 
             expr = df.functions.to_boolean(expr)
 
-        dfd = dfd[expr]
-        # dfd = dfd.reset_index(drop=True)[expr.reset_index(drop=True)].reset_index(drop=True)
+        dfd = dfd.reset_index(drop=True)[expr.reset_index(drop=True)].reset_index(drop=True)
 
         meta = Meta.action(df.meta, Actions.SELECT_ROW.value, df.cols.names())
 
