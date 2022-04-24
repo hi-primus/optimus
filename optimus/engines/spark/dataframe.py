@@ -1,3 +1,5 @@
+import math
+
 from pyspark.ml.feature import SQLTransformer
 from pyspark.serializers import AutoBatchedSerializer, PickleSerializer
 from pyspark.sql import functions as F
@@ -6,17 +8,16 @@ from optimus.engines.base.basedataframe import BaseDataFrame
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import random_int
+from optimus.helpers.functions_spark import traverse
 from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import *
+from optimus.infer import is_str
 
 
 class SparkDataFrame(BaseDataFrame):
     def _base_to_dfd(self, pdf, n_partitions) -> 'InternalDataFrameType':
         pass
 
-    # def get_series(self):
-    #     print("self.data-----------",type(self.data),self.data)
-    #     return self.data.iloc[:, 0]
 
     # Koalas do not support the 'or' operation over the whole dataframe.
     # def __or__(self, df2) -> 'DataFrameType':
@@ -68,21 +69,6 @@ class SparkDataFrame(BaseDataFrame):
         df = self.data
         return self.new(df.cache(), meta=self.meta)
 
-    # @staticmethod
-    # def to_json():
-    #     """
-    #     Return a json from a Spark Dataframe
-    #
-    #     :return:
-    #     """
-    #     return json.dumps(collect_as_dict(self), ensure_ascii=False, default=json_converter)
-
-    # def to_dict(self, index=True):
-    #     """
-    #     Return a Python object from a Spark Dataframe
-    #     :return:
-    #     """
-    #     return collect_as_dict(self.parent.data)
 
     def export(self, n="all", data_types="inferred"):
         """
@@ -264,9 +250,6 @@ class SparkDataFrame(BaseDataFrame):
 
         return n_bytes
 
-    def execute(self) -> 'DataFrameType':
-        self.data.spark.cache()
-        return self
 
     def compute(self):
         """
@@ -285,8 +268,8 @@ class SparkDataFrame(BaseDataFrame):
         self.data.cache().count()
         return self
 
-    @staticmethod
-    def query(sql_expression):
+
+    def query(self, sql_expression):
         """
         Implements the transformations which are defined by SQL statement. Currently we only support
         SQL syntax like "SELECT ... FROM __THIS__ ..." where "__THIS__" represents the
@@ -295,24 +278,26 @@ class SparkDataFrame(BaseDataFrame):
         :param sql_expression: SQL expression.
         :return: Dataframe with columns changed by SQL statement.
         """
+        dfd = self.root.data
         sql_transformer = SQLTransformer(statement=sql_expression)
-        return sql_transformer.transform(self)
+        return sql_transformer.transform(dfd)
 
-    @staticmethod
-    def set_name(value=None):
+
+    def set_name(self, value=None):
         """
         Create a temp view for a data frame also used in the json output profiling
         :param value:
         :return:
         """
-        self._name = value
+        dfd = self.root.data
+        dfd._name = value
         if not is_str(value):
             RaiseIt.type_error(value, ["string"])
 
         if len(value) == 0:
             RaiseIt.value_error(value, ["> 0"])
 
-        self.createOrReplaceTempView(value)
+        dfd.createOrReplaceTempView(value)
 
     def partitions(self):
         """
@@ -323,14 +308,15 @@ class SparkDataFrame(BaseDataFrame):
 
         return df.to_spark().rdd.getNumPartitions()
 
-    @staticmethod
-    def partitioner():
+
+    def partitioner(self):
         """
         Return the algorithm used to partition the dataframe
         :param self: Spark Dataframe
         :return:
         """
-        return self.rdd.partitioner
+        dfd = self.root.data
+        return dfd.rdd.partitioner
 
     def repartition(self, n=None, *args, **kwargs):
         df = self.data
@@ -360,24 +346,25 @@ class SparkDataFrame(BaseDataFrame):
             df = self.repartition(partitions_number, col_name)
         return df
 
-    def show(self):
+    def show(self, n=10):
         """
         :return:
         """
-        self.data.show()
+        self.data.show(n)
 
-    @staticmethod
-    def random_split(weights: list = None, seed: int = 1):
+
+    def random_split(self, weights: list = None, seed: int = 1):
         """
         Create 2 random splited DataFrames
         :param weights:
         :param seed:
         :return:
         """
+        dfd = self.root.data
         if weights is None:
             weights = [0.8, 0.2]
 
-        return self.randomSplit(weights, seed)
+        return dfd.randomSplit(weights, seed)
 
     def debug(self):
         """
