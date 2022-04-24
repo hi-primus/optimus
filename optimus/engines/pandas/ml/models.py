@@ -25,7 +25,7 @@ from optimus.infer import is_numeric
 
 
 class Model:
-    def __init__(self, model, X_train=None, y_train=None, X_test=None, y_test=None, op=None,**kwargs):
+    def __init__(self, model, X_train=None, y_train=None, X_test=None, y_test=None, op=None, **kwargs):
         """
 
         :param model: ML Model
@@ -66,13 +66,15 @@ class Model:
         :param index: Only get and specific columns from the prediction
         :return:
         """
-        import pandas as pd
         prediction = self.model.predict_proba(df.data)
 
         if index is not None:
-            prediction = prediction[:, index:index+1]
-        temp = self.op.create.dataframe(prediction)
-        return df.cols.concat(self.op.create.dataframe(prediction).cols.rename(func=lambda x: f"{x}_{output_col}"))
+            prediction = prediction[:, index:index + 1]
+
+        prediction = self.op.create.dataframe(prediction)
+        names = [f"{output_col}_{i}" for i, name in enumerate(prediction.cols.names())]
+
+        return df.cols.concat(prediction.cols.rename(names = names))
 
     def roc_auc(self):
         from yellowbrick.classifier import ROCAUC
