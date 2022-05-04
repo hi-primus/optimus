@@ -16,7 +16,7 @@ from optimus.infer import is_empty_function, is_list, is_str, is_url
 
 XML_THRESHOLD = 10
 JSON_THRESHOLD = 20
-BYTES_SIZE = 327680
+BYTES_SIZE = 1310720
 
 
 class BaseLoad:
