@@ -407,7 +407,7 @@ class BaseFunctions(ABC):
         """
         Get the sum of a series
         """
-        return self.to_float(series).sum()
+        return float(self.to_float(series).sum())
 
     def prod(self, series):
         """
