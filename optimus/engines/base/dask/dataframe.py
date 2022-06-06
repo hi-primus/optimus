@@ -213,12 +213,7 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         raise NotImplementedError
 
     def to_dict(self, cols="*", n=10, orient="list"):
-        """
-        Create a dict
-        :param n:
-        :param orient:
-        :return:
-        """
+
 
         if n == "all":
             series = self.cols.select(cols).to_pandas()

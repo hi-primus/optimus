@@ -12,7 +12,7 @@ import orjson
 
 def deepcopy(data):
     """
-    Deep copy of a dictionary or list. Standard deepcopy is 10x slower.
+    Deep copy of a dictionary or list. Standard python deepcopy is 10x slower.
     :param data:
     :return:
     """

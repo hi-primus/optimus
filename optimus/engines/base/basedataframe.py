@@ -33,6 +33,7 @@ class BaseDataFrame(ABC):
     """
 
     def __init__(self, data: 'InternalDataFrameType', op: 'EngineType', label_encoder=None):
+
         data = self._compatible_data(data)
         self.data = data
         self.cache = {}
@@ -90,6 +91,7 @@ class BaseDataFrame(ABC):
         return self.rows.count()
 
     def new(self, dfd, meta=None) -> 'DataFrameType':
+
         df = self.__class__(dfd, op=self.op)
         if meta is not None:
             df.meta = meta
@@ -432,9 +434,9 @@ class BaseDataFrame(ABC):
     def to_dict(self, cols="*", n: Union[int, str] = 10, orient="list") -> dict:
         """
             Return a dict from a Collect result
-            :param cols:
-            :param n:
-            :param orient:
+            :param cols: Columns to include in the dict
+            :param n: Number of rows to include in the dict
+            :param orient: Format of the dict
             :return:
         """
         if n == "all":
@@ -650,14 +652,13 @@ class BaseDataFrame(ABC):
         df = self
 
         total_rows = df.rows.approx_count()
-
         if limit == "all":
             limit = total_rows
             data = df.cols.select(cols).to_dict(n="all", orient="records")
         else:
             limit = min(limit, total_rows)
-            data = df.cols.select(cols).rows.limit(
-                limit + 1).to_dict(n="all", orient="records")
+
+            data = df.cols.select(cols).to_dict(n=limit+1, orient="records")
         # Load the Jinja template
         template_loader = jinja2.FileSystemLoader(
             searchpath=absolute_path("/templates/out"))
@@ -745,7 +746,6 @@ class BaseDataFrame(ABC):
         df = self
         if not cols:
             cols = "*"
-
         limit = min(limit, df.rows.approx_count())
         return tabulate(df.rows.limit(limit + 1).cols.select(cols).to_pandas(),
                         headers=[f"""{i}\n({j})""" for i,

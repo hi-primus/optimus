@@ -307,6 +307,7 @@ class BaseLoad:
 
         :param filepath_or_buffer: path or location of the file. Must be string dataType
         :param columns: select the columns that will be loaded. In this way you do not need to load all the dataframe
+        :param n_rows: number of rows to load
         :param storage_options: A dict with the connection params.
         :param conn: A connection object.
         :param args: custom argument to be passed to the spark parquet function

@@ -51,13 +51,6 @@ class CUDFDataFrame(CUDFBaseDataFrame, DataFrameBaseDataFrame):
         return self.data.to_pandas().reset_index(drop=True)
 
     def to_dict(self, cols="*", n=10, orient="list"):
-        """
-        Create a dict
-        :param cols:
-        :param n: number of rows
-        :param orient:
-        :return:
-        """
 
         if n == "all":
             series = self.cols.select(cols).to_pandas()

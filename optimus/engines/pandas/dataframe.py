@@ -1,6 +1,5 @@
 from optimus.engines.base.dataframe.dataframe import DataFrameBaseDataFrame
 from optimus.engines.base.pandas.dataframe import PandasBaseDataFrame
-# from optimus.engines.dask.dataframe import DaskDataFrame
 from optimus.engines.pandas.io.save import Save
 
 
@@ -53,7 +52,7 @@ class PandasDataFrame(PandasBaseDataFrame, DataFrameBaseDataFrame):
         return Encoding(self)
 
     def _iloc(self, lower_bound, upper_bound, copy=True):
-        dfd = self.data[lower_bound: upper_bound]  
+        dfd = self.data[lower_bound: upper_bound]
         if copy:
             dfd = dfd.reset_index(drop=True)
         return self.root.new(dfd, meta=self.root.meta)

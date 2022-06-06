@@ -203,6 +203,7 @@ class BaseColumns(ABC):
 
         df = self.root
         meta = self.root.meta
+
         cols = parse_columns(df, cols if regex is None else regex, is_regex=regex is not None,
                              filter_by_column_types=data_type, invert=invert,
                              accepts_missing_cols=accepts_missing_cols)
@@ -3610,7 +3611,6 @@ class BaseColumns(ABC):
             dtype = props if is_str(props) else props["data_type"]
 
             dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
-
             matches_mismatches = getattr(df[col_name].mask, dtype)(col_name).cols.frequency()
 
             missing = df.mask.null(col_name).cols.sum()
@@ -3639,13 +3639,13 @@ class BaseColumns(ABC):
 
     def infer_type(self, cols="*", sample_count=None, tidy=True) -> dict:
         """
-        Infer data types in a dataframe from a sample. First it identify the data type of every value in every cell.
+        Infer data types in a dataframe from a sample. First it identifies the data type of every value in every cell.
         After that it takes all the values and will apply some heuristic to try to better identify the datatype.
         This function use Pandas no matter the engine you are using.
 
         :param cols: "*", column name or list of column names to be processed.
         :param sample_count: number of rows to sample.
-        :param tidy: The result format. If True it will return a value if you
+        :param tidy: The result format. If True it returns a value if you
             process a column or column name and value if not. If False it will return the functions name, the column name
             and the value.
         :return: dict with the column and the inferred data type.
@@ -3687,7 +3687,8 @@ class BaseColumns(ABC):
                 dtype_index = 0
 
                 if len(dtypes) > 1:
-                    if dtypes[0] == ProfilerDataTypesNumeric.INT.value and dtypes[1] == ProfilerDataTypesNumeric.FLOAT.value:
+                    if dtypes[0] == ProfilerDataTypesNumeric.INT.value and dtypes[
+                        1] == ProfilerDataTypesNumeric.FLOAT.value:
                         dtype_index = 1
 
                     elif dtypes[0] == ProfilerDataTypesNumeric.ZIP_CODE.value:
@@ -3703,7 +3704,6 @@ class BaseColumns(ABC):
                     or re.match(r"([_-](id|type)|(id|type)[_-])",
                                 col_name.lower()):  # If the column name contains id or type in its name
                 is_categorical = True
-
 
             cols_and_inferred_dtype[col_name] = {
                 "data_type": INDEX_TO_DATA_TYPE_FUNC[dtype], "categorical": is_categorical}
