@@ -8,7 +8,7 @@ from typing import Tuple
 import pandavro as pdx
 import polars as pl
 import requests
-
+import pandas as pd
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.polars.dataframe import PolarsDataFrame
@@ -23,6 +23,7 @@ class Load(BaseLoad):
 
     @staticmethod
     def df(*args, **kwargs):
+        print("vvvv",args)
         return PolarsDataFrame(*args, **kwargs)
 
     @staticmethod

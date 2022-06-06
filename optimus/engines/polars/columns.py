@@ -1,11 +1,11 @@
-import pandas as pd
 from sklearn import preprocessing
 
+import polars as pl
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
 from optimus.engines.base.polars.columns import PolarsBaseColumns
 
-DataFrame = pd.DataFrame
+DataFrame = pl.DataFrame
 
 
 class Cols(PolarsBaseColumns, DataFrameBaseColumns):
@@ -16,7 +16,6 @@ class Cols(PolarsBaseColumns, DataFrameBaseColumns):
         return series
 
     def _select(self, cols):
-        print(cols)
         return self.root.data.select(cols)
 
     def _names(self):
@@ -56,3 +55,8 @@ class Cols(PolarsBaseColumns, DataFrameBaseColumns):
         df = index_to_string(df, cols, output_cols, df.le)
 
         return df
+
+    def _data_type(self):
+        # We need to collect the data to get the columns data types.
+        return [(col_name, dtype) for col_name, dtype in
+                zip(self.root.cols.names(), [t.__name__.lower() for t in self.root.data.fetch(10).dtypes])]

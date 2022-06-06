@@ -12,6 +12,7 @@ class Rows(DataFrameBaseRows, PandasBaseRows, BaseRows):
         :return:
         """
 
+        # return self.root.data.select([pl.count()]).collect()[0, 0]
         return self.root.data.select([pl.count()]).collect()[0, 0]
 
     def limit(self, count=10) -> 'DataFrameType':
@@ -20,6 +21,6 @@ class Rows(DataFrameBaseRows, PandasBaseRows, BaseRows):
         :param count:
         :return:
         """
-        # Ensure that count is an integer. Ibis complains otherwise
+
         count = int(count)
-        return self.root.new(self.root.data.collect()[0, count])
+        return self.root.new(self.root.data.head(count))

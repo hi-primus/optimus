@@ -34,6 +34,7 @@ class PolarsDataFrame(DataFrameBaseDataFrame):
     @property
     def cols(self):
         from optimus.engines.polars.columns import Cols
+        print(self.root.data,"sdf")
         return Cols(self)
 
     @property
@@ -65,11 +66,12 @@ class PolarsDataFrame(DataFrameBaseDataFrame):
         from optimus.engines.polars.ml.encoding import Encoding
         return Encoding(self)
 
-    def _iloc(self, input_cols, lower_bound, upper_bound):
-        return self.root.new(self.data[input_cols][lower_bound: upper_bound].reset_index(drop=True), meta=self.root.meta)
+    def _iloc(self, lower_bound, upper_bound, copy=True):
+        return self.root.new(self.data.collect()[lower_bound: upper_bound], meta=self.root.meta)
 
     def to_optimus_pandas(self):
         return self.root
 
     def to_pandas(self):
-        return self.root.data
+        print("ASADASDASD",self.root.data)
+        return self.root.data.collect().to_pandas()
