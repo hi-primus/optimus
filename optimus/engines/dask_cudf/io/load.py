@@ -87,7 +87,7 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
+    def _parquet(path, columns=None, storage_options=None, conn=None, *args, **kwargs):
 
         path = unquote_path(path)
 
