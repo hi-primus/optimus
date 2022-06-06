@@ -15,6 +15,7 @@ class Engine(Enum):
     VAEX = "vaex"
     IBIS = "ibis"
     POLARS = "polars"
+    PYSCRIPT = "pyscript"
 
     @classmethod
     def list(cls):
@@ -89,6 +90,11 @@ def start_polars(*args, **kwargs):
     return PolarsEngine(*args, **kwargs)
 
 
+def start_pyscript(*args, **kwargs):
+    from optimus.engines.pyscript.engine import PyScriptEngine
+    return PyScriptEngine(*args, **kwargs)
+
+
 def optimus(engine=Engine.DASK.value, *args, **kwargs):
     """
     This is the entry point to initialize the selected engine.
@@ -115,7 +121,8 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
              Engine.IBIS.value: start_ibis,
              Engine.CUDF.value: start_cudf,
              Engine.DASK_CUDF.value: start_dask_cudf,
-             Engine.POLARS.value: start_polars
+             Engine.POLARS.value: start_polars,
+             Engine.PYSCRIPT.value: start_polars
 
              }
 

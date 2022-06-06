@@ -75,7 +75,9 @@ class BaseConstants:
                            "category": ProfilerDataTypes.CATEGORICAL.value,
                            "list": ProfilerDataTypes.ARRAY.value,
                            "vector": ProfilerDataTypes.OBJECT.value,
-                           "dict": ProfilerDataTypes.OBJECT.value}
+                           "dict": ProfilerDataTypes.OBJECT.value,
+                           "utf8": ProfilerDataTypes.OBJECT.value # Polars
+                           }
 
     # short to internal 
     SHORT_DTYPES = {"str": "string",
