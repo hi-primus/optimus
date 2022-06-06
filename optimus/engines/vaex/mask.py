@@ -1,3 +1,5 @@
+import vaex
+
 from optimus.engines.base.mask import Mask
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import val_to_list
@@ -6,6 +8,7 @@ from optimus.helpers.core import val_to_list
 class VaexMask(Mask):
 
     def null(self, cols="*", how="any") -> 'MaskDataFrameType':
+
         """
         Find the rows that have null values
         :param how:
@@ -14,17 +17,12 @@ class VaexMask(Mask):
         """
         df = self.root
         dfd = self.root.data
-        cols = val_to_list(parse_columns(df, cols))
-        # subset_df = dfd[cols]
+        col = val_to_list(parse_columns(df, cols))
+        col = col[0]
+        # for col in cols:
+        dfd[col] = dfd[col].isna()
 
-        for col in cols:
-            mask = dfd[col].isna()
+        return self.root.new(self._to_frame(dfd[[col]]))
 
-
-        # if how == "all":
-        #     col_name = cols[0] if len(cols) == 1 else "__null__"
-        #     mask = subset_df.isnull().all(axis=1).rename(col_name)
-        # else:
-        #     mask = subset_df.isnull()
-
-        return self.root.new(self._to_frame(mask))
+    def _to_frame(self, series):
+        return series

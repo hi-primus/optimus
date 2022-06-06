@@ -1,7 +1,7 @@
-import fastnumbers
+import numpy as np
 import numpy as np
 import vaex
-from fastnumbers import fast_float, fast_int, isintlike
+from fastnumbers import isintlike
 
 from optimus.engines.base.functions import BaseFunctions
 from optimus.engines.base.vaex.functions import VaexBaseFunctions
@@ -11,18 +11,25 @@ class VaexFunctions(VaexBaseFunctions, BaseFunctions):
     _engine = vaex
 
     def is_integer(self, series):
-        def func(x):
-            return isintlike(x, on_fail=on_fail)
+        # def func(x):
+        #     return isintlike(x, on_fail=on_fail)
+        #
+        # def on_fail(x):
+        #     return np.nan
 
-        def on_fail(x):
-            return np.nan
         # if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
         #     return False
         # if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
         #     return True
-        return series.str.match(r"^\d+$")
+        return self.to_string(series).str.match(r"^\d+$")
 
+    def is_float(self, series):
 
+        # if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
+        #     return False
+        # if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
+        #     return True
+        return self.to_string(series).str.match(r"^\d+\.\d+$")
 
     @staticmethod
     def count_zeros(series, *args):
@@ -82,11 +89,14 @@ class VaexFunctions(VaexBaseFunctions, BaseFunctions):
 
         return series.apply(to_integer_vaex)
 
-    def to_string(self, series):
-        def to_string_vaex(series):
-            return series.astype(str)
+    # def to_string(self, series):
+    #     if not str(series.dtype) in self.constants.STRING_INTERNAL_TYPES:
+    #         return series.astype(str)
+    #     else:
+    #         return series
 
-        return series.apply(to_string_vaex)
+    # def to_string(self, series):
+    #     return series.astype(str)
 
     def sin(self, series):
         return np.sin(self.to_float(series))

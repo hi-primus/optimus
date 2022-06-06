@@ -70,9 +70,9 @@ class Load(BaseLoad):
             # Detect missing value markers (empty strings and the value of na_values). In data without any NAs,
             # passing na_filter=False can improve the performance of reading a large file.
             df = vaex.read_csv(filepath_or_buffer, sep=sep, header=header, encoding=encoding,
-                                quoting=quoting, lineterminator=lineterminator, on_bad_lines=on_bad_lines,
-                                keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
-                                storage_options=storage_options, *args, **kwargs)
+                               quoting=quoting, lineterminator=lineterminator, on_bad_lines=on_bad_lines,
+                               keep_default_na=True, na_values=None, engine=engine, na_filter=na_filter,
+                               storage_options=storage_options, *args, **kwargs)
 
             if n_rows > -1:
                 df = vaex.from_pandas(df.head(n=n_rows), npartitions=1).reset_index(drop=True)
@@ -80,17 +80,12 @@ class Load(BaseLoad):
         except IOError as error:
             logger.print(error)
             raise
-        # print(df)
         return df
 
-    @staticmethod
-    def parquet(path, columns=None, *args, **kwargs):
-
-        file, file_name = prepare_path(path, "parquet")
-
+    # @staticmethod
+    def _parquet(self, filepath_or_buffer, columns, *args, **kwargs):
         try:
-            df = vaex.open(path, columns=columns, engine='pyarrow', *args, **kwargs)
-            df.meta = Meta.set(df.meta, "file_name", file_name)
+            df = vaex.open(filepath_or_buffer, columns=columns, engine='pyarrow', *args, **kwargs)
 
         except IOError as error:
             logger.print(error)

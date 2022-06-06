@@ -1,8 +1,6 @@
 import vaex
 
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
-
-
 # @vaex.register_dataframe_accessor('cols', override=True)
 from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import val_to_list
@@ -25,7 +23,7 @@ class Cols(DataFrameBaseColumns):
         pass
 
     @staticmethod
-    def impute(input_cols, data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
+    def impute(cols="*", data_type="continuous", strategy="mean", fill_value=None, output_cols=None):
         pass
 
     @staticmethod
@@ -36,13 +34,13 @@ class Cols(DataFrameBaseColumns):
     def index_to_string(cols=None, output_cols=None):
         pass
 
-    def agg_exprs(self, cols="*", funcs=None, *args, compute=True, tidy=True, parallel=True):
-
-        df = self.root
-        dfd = df.data
-        funcs = val_to_list(funcs)
-        cols = parse_columns(df, cols)
-        print(dfd)
-        result = {col:func(dfd[col]) for col in cols for func in funcs}
-        # print(result)
-        return result
+    # def agg_exprs(self, cols="*", funcs=None, *args, compute=True, tidy=True, parallel=True):
+    #     df = self.root
+    #     dfd = df.data
+    #     funcs = val_to_list(funcs)
+    #     cols = parse_columns(df, cols)
+    #     result = {}
+    #
+    #     agg_result = {func.__name__: {col_name: self.exec_agg(func(df.data[col_name], *args), compute=False) for
+    #                                   col_name in cols} for func in funcs}
+    #     return agg_result

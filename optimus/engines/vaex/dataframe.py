@@ -96,7 +96,10 @@ class VaexDataFrame(DataFrameBaseDataFrame):
     def to_optimus_cudf(self):
         return CUDFDataFrame(self.root.to_pandas(), op=self.op)
 
+    def new(self, dfd, meta=None) -> 'DataFrameType':
 
+        df = self.__class__(dfd, op=self.op)
+        return df
 
     def partitions(self):
         pass
