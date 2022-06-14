@@ -3597,7 +3597,7 @@ class BaseColumns(ABC):
         quality_props = ["match", "missing", "mismatch"]
 
         transformed = self._transformed(quality_props)
-
+        # print("cols_types",cols_types)
         for col_name, props in cols_types.items():
 
             # Gets cached quality
@@ -3611,18 +3611,26 @@ class BaseColumns(ABC):
             dtype = props if is_str(props) else props["data_type"]
 
             dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
-            matches_mismatches = getattr(df[col_name].mask, dtype)(col_name).cols.frequency()
 
-            missing = df.mask.null(col_name).cols.sum()
-            values = {list(j.values())[0]: list(j.values())[1] for j in
-                      matches_mismatches["frequency"][col_name]["values"]}
-            matches = values.get(True)
-            mismatches = values.get(False, missing) - missing
+            if dtype!=ProfilerDataTypes.UNKNOWN.value:
+                matches_mismatches = getattr(df[col_name].mask, dtype)(col_name).cols.frequency()
+                missing = df.mask.null(col_name).cols.sum()
+                values = {list(j.values())[0]: list(j.values())[1] for j in
+                          matches_mismatches["frequency"][col_name]["values"]}
+                matches = values.get(True)
+                mismatches = values.get(False, missing) - missing
 
-            # Ensure that value are not None
-            matches = 0 if matches is None else int(matches)
-            mismatches = 0 if mismatches is None else int(mismatches)
-            missing = 0 if missing is None else int(missing)
+                # Ensure that value are not None
+                matches = 0 if matches is None else int(matches)
+                mismatches = 0 if mismatches is None else int(mismatches)
+                missing = 0 if missing is None else int(missing)
+            else:
+                missing = df.mask.null(col_name).cols.sum()
+                missing = 0 if missing is None else int(missing)
+
+                matches = 0
+                mismatches =  self.root.rows.count()- missing
+
 
             result[col_name] = {"match": matches,
                                 "missing": missing, "mismatch": mismatches}
@@ -3663,9 +3671,10 @@ class BaseColumns(ABC):
         unique_counts = sample_df.cols.count_uniques(tidy=False)['count_uniques']
 
         cols_and_inferred_dtype = {}
+        # print(cols)
         for col_name in cols:
             infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
-
+            print(infer_value_counts)
             infer_value_counts = [
                 vc for vc in infer_value_counts if vc["value"] not in [
                     ProfilerDataTypes.NULL.value, ProfilerDataTypes.MISSING.value
@@ -3682,13 +3691,16 @@ class BaseColumns(ABC):
             dtypes_counts = [value_count["count"] for value_count in infer_value_counts]
 
             if len(dtypes) > UNKNOWN_THRESHOLD:
-                dtype = ProfilerDataTypes.UNKNOWN.value
+                if dtypes[0] == ProfilerDataTypesNumeric.MISSING.value:
+                    dtype_index = 1
+                else:
+                    dtype_index = 0
+                dtype = dtypes[dtype_index]
             else:
                 dtype_index = 0
 
                 if len(dtypes) > 1:
-                    if dtypes[0] == ProfilerDataTypesNumeric.INT.value and dtypes[
-                        1] == ProfilerDataTypesNumeric.FLOAT.value:
+                    if dtypes[0] == ProfilerDataTypesNumeric.INT.value and dtypes[1] == ProfilerDataTypesNumeric.FLOAT.value:
                         dtype_index = 1
 
                     elif dtypes[0] == ProfilerDataTypesNumeric.ZIP_CODE.value:
@@ -3704,6 +3716,8 @@ class BaseColumns(ABC):
                     or re.match(r"([_-](id|type)|(id|type)[_-])",
                                 col_name.lower()):  # If the column name contains id or type in its name
                 is_categorical = True
+
+            # print("dtype",dtype,col_name)
 
             cols_and_inferred_dtype[col_name] = {
                 "data_type": INDEX_TO_DATA_TYPE_FUNC[dtype], "categorical": is_categorical}

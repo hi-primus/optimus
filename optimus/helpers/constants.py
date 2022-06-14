@@ -173,6 +173,7 @@ class ProfilerDataTypesNumeric(Enum):
     MAC_ADDRESS = 27
     IPV4_ADDRESS = 28
     IPV6_ADDRESS = 29
+    UNKNOWN = 30
 
     @staticmethod
     def list():
