@@ -625,8 +625,8 @@ class BaseDataFrame(ABC):
         """
         try:
             import imgkit
-        except ImportError:
-            raise ImportError("`imgkit` is required to use the `table_image` function. Please install it with `pip install imgkit`")
+        except ImportError as e:
+            raise ImportError("`imgkit` is required to use the `table_image` function. Please install it with `pip install imgkit`") from e
 
         css = absolute_path("/css/styles.css")
 
