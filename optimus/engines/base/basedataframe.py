@@ -3,7 +3,6 @@ import operator
 from pprint import pformat
 
 import humanize
-import imgkit
 import jinja2
 from tabulate import tabulate
 
@@ -624,6 +623,10 @@ class BaseDataFrame(ABC):
         :param path:
         :return:
         """
+        try:
+            import imgkit
+        except ImportError:
+            raise ImportError("`imgkit` is required to use the `table_image` function. Please install it with `pip install imgkit`")
 
         css = absolute_path("/css/styles.css")
 
