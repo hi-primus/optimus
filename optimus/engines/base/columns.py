@@ -3514,12 +3514,17 @@ class BaseColumns(ABC):
 
         dfn = df.cols.select(cols).cols.to_numeric()
 
-        @self.F.delayed
         def _bins_col(_cols, _min, _max):
-            return {
-                col_name: list(np.linspace(float(_min["min"][col_name]), float(_max["max"][col_name]), num=buckets + 1))
-                for
-                col_name in _cols}
+            result = {}
+            for col_name in _cols:
+                __min = _min["min"][col_name]
+                __max = _max["max"][col_name]
+                if __min < __max:
+                    result[col_name] = list(
+                        np.linspace(float(__min), float(__max), num=buckets + 1))
+                else:
+                    result[col_name] = [__min, __max]
+            return result
 
         if range is not None and (is_tuple(range) or is_list(range)):
             _min = {"min": {col: range[0] for col in cols}}
@@ -3535,12 +3540,18 @@ class BaseColumns(ABC):
 
         @self.F.delayed
         def get_hist(pdf, col_name, range, bins, bins_edges):
-            _count = histogram1d(pdf.values, range=range, bins=bins)
+            __min, __max = range
+            # histogram1 can not handle min and max with the same values
+            if __min < __max:
+                _count = histogram1d(pdf.values, range=range, bins=bins)
+            else:
+                _count = [df.rows.count()]
             return col_name, [list(_count), list(bins_edges[col_name])]
 
         @self.F.delayed
         def format_histograms(values):
             _result = {}
+            buckets = len(values[0][1][0])
             x = np.zeros(buckets)
             for col_name, count_edges in values:
                 if count_edges is not None:
@@ -3671,10 +3682,8 @@ class BaseColumns(ABC):
         unique_counts = sample_df.cols.count_uniques(tidy=False)['count_uniques']
 
         cols_and_inferred_dtype = {}
-        # print(cols)
         for col_name in cols:
             infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
-            print(infer_value_counts)
             infer_value_counts = [
                 vc for vc in infer_value_counts if vc["value"] not in [
                     ProfilerDataTypes.NULL.value, ProfilerDataTypes.MISSING.value
