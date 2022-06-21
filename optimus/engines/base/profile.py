@@ -245,7 +245,7 @@ class BaseProfile(ABC):
 
                 return {"columns": _c}
 
-            # Nulls
+            # TO-DO: this should be always 0?
             total_count_na = 0
 
             data_types = df.cols.data_type("*", tidy=False)["data_type"]
