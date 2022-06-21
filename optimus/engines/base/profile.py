@@ -19,6 +19,19 @@ class BaseProfile(ABC):
     def __init__(self, root: 'DataFrameType'):
         self.root = root
 
+    def _columns_summary(self):
+        df = self.root
+
+        data_types_list = list(set(df.cols.data_type("*", tidy=False)["data_type"].values()))
+
+        data_types = df.cols.data_type("*", tidy=False)["data_type"]
+
+        return {
+            'cols_count': df.cols.count(),
+            'data_types_list': data_types_list,
+            'total_count_data_types': len(set([i for i in data_types.values()]))
+        }
+
     def summary(self, cols="*"):
 
         df = self.root
@@ -87,6 +100,10 @@ class BaseProfile(ABC):
                 profile = Meta.get(df.meta, "profile")
                 self.root.meta = df.meta
             profile["columns"] = {key: profile["columns"][key] for key in cols}
+        
+        profile["summary"].update(df.profile._columns_summary())
+        
+        self.root.meta = Meta.set(df.meta, "profile.summary", profile["summary"])
 
         if output == "json":
             profile = dump_json(profile)
@@ -251,19 +268,18 @@ class BaseProfile(ABC):
             assign(profiler_data, "file_name",
                    Meta.get(df.meta, "file_name"), dict)
 
-            data_set_info = {'cols_count': df.cols.count(),
-                             'rows_count': df.rows.count(),
-                             }
+            summary = {
+                'rows_count': df.rows.count(),
+                'missing_count': total_count_na
+            }
+
             if size is True:
-                data_set_info.update({'size': df.size(format="human")})
+                summary.update({'size': df.size(format="human")})
 
-            assign(profiler_data, "summary", data_set_info, dict)
+            summary.update(df.profile._columns_summary())
 
-            data_types_list = list(set(df.cols.data_type("*", tidy=False)["data_type"].values()))
+            assign(profiler_data, "summary", summary, dict)
 
-            assign(profiler_data, "summary.data_types_list", data_types_list, dict)
-            assign(profiler_data, "summary.total_count_data_types",
-                   len(set([i for i in data_types.values()])), dict)
             assign(profiler_data, "summary.missing_count", total_count_na, dict)
 
             rows_count = df.rows.count()
