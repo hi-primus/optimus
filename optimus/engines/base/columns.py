@@ -3693,9 +3693,6 @@ class BaseColumns(ABC):
             if not len(infer_value_counts):
                 infer_value_counts = sample_dtypes["frequency"][col_name]["values"]
 
-            # if not len(infer_value_counts):
-            #     continue
-
             dtypes = [value_count["value"] for value_count in infer_value_counts]
             dtypes_counts = [value_count["count"] for value_count in infer_value_counts]
 
