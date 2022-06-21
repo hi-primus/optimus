@@ -24,7 +24,7 @@ RUN sudo chown -R root ~/anaconda3/bin && \
     conda install -c conda-forge jupyter_kernel_gateway && \
     conda clean -afy
 
-RUN echo "Version 22.6.0-beta"
+RUN echo "Version 22.6.0-beta2"
 
 RUN pip install cytoolz && \
     pip install llvmlite --ignore-installed && \
