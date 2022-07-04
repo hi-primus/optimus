@@ -178,7 +178,7 @@ Become a [backer](https://opencollective.com/optimus#backer) or a [sponsor](http
 This will recreate README.md
 
 
-The bellow script process the ```readme_.md``` that is ouputed from this notebook and remove the header from jupytext, python comments and convert/add table to images and output ```readme.md```.
+The bellow script process the ```readme_.md``` that is outputted from this notebook and remove the header from jupytext, python comments and convert/add table to images and output ```readme.md```.
 
 To make ```table_image()``` function be sure to install imagekit ```pip install imgkit```
 Also install wkhtmltopdf https://wkhtmltopdf.org/downloads.html. This is responsible to generate the optimus tables as images

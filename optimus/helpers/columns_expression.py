@@ -60,7 +60,7 @@ def hist_agg(col_name, df, buckets, min_max=None, data_type=None):
     :param col_name:
     :param df:
     :param buckets:
-    :param min_max: Min and max vaule neccesary to calculate the buckets
+    :param min_max: Min and max vaule necessary to calculate the buckets
     :param data_type: Column datatype to calculate the related histogram. Int, String and Dates return different histograms
 
     :return:

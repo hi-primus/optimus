@@ -269,7 +269,7 @@ optimus.helpers.functions_spark.append("new_col_1", 1) \
 
 # ## Unnest  Columns
 #
-# With unnest you can convert one column into multiple ones. it can hadle string, array and vectors
+# With unnest you can convert one column into multiple ones. it can handle string, array and vectors
 #
 # ### Spark
 # Can split strings with split()
