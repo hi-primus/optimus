@@ -3624,9 +3624,18 @@ class BaseColumns(ABC):
 
             dtype = df.constants.INTERNAL_TO_OPTIMUS.get(dtype, dtype)
 
-            if dtype!=ProfilerDataTypes.UNKNOWN.value:
-                matches_mismatches = getattr(df[col_name].mask, dtype)(col_name).cols.frequency()
+            if dtype == ProfilerDataTypes.UNKNOWN.value:
                 missing = df.mask.null(col_name).cols.sum()
+                missing = 0 if missing is None else int(missing)
+
+                matches = 0
+                mismatches =  self.root.rows.count()- missing
+            else:
+                matches_mismatches = getattr(df[col_name].mask, dtype)(col_name).cols.frequency()
+                if dtype == ProfilerDataTypes.NULL.value:
+                    missing = 0
+                else:
+                    missing = df.mask.null(col_name).cols.sum()
                 values = {list(j.values())[0]: list(j.values())[1] for j in
                           matches_mismatches["frequency"][col_name]["values"]}
                 matches = values.get(True)
@@ -3636,13 +3645,6 @@ class BaseColumns(ABC):
                 matches = 0 if matches is None else int(matches)
                 mismatches = 0 if mismatches is None else int(mismatches)
                 missing = 0 if missing is None else int(missing)
-            else:
-                missing = df.mask.null(col_name).cols.sum()
-                missing = 0 if missing is None else int(missing)
-
-                matches = 0
-                mismatches =  self.root.rows.count()- missing
-
 
             result[col_name] = {"match": matches,
                                 "missing": missing, "mismatch": mismatches}
@@ -3809,7 +3811,7 @@ class BaseColumns(ABC):
 
         @self.F.delayed
         def calculate_n_largest(_series, include_uniques):
-            _value_counts = _series.value_counts()
+            _value_counts = _series.value_counts(dropna=False)
             if n is not None:
                 _n_largest = _value_counts.nlargest(n)
             else:
