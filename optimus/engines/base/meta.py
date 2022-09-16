@@ -1,13 +1,14 @@
 from copy import deepcopy as deep_copy
 
-from glom import glom, assign, delete
+from glom import Path, glom, assign, delete
 
 from optimus.helpers.core import val_to_list
 from optimus.infer import is_dict, is_list_value
 
 ACTIONS_PATH = "transformations.actions"
+COLUMNS_PATH = "transformations.columns"
 
-import orjson
+import marshal
 
 
 def deepcopy(data):
@@ -17,9 +18,12 @@ def deepcopy(data):
     :return:
     """
     try:
-        return orjson.loads(orjson.dumps(data))
+        # Speed deep copying. marshal > orjson > ujson
+        return marshal.loads(marshal.dumps(data))
+
     except:
         return deep_copy(data)
+
 
 
 class Meta:
@@ -77,6 +81,7 @@ class Meta:
         """
         Reset the data frame metadata
         :param meta: Meta data to be modified
+        :param cols: Columns to be reset
         :return:
         """
 
@@ -97,7 +102,7 @@ class Meta:
         """
         value = val_to_list(value)
         for v in value:
-            meta = Meta.update(meta, "transformations.columns", v, list)
+            meta = Meta.update(meta, COLUMNS_PATH, v, list)
         return meta
 
     @staticmethod
