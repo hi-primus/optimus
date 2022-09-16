@@ -8,8 +8,7 @@ setuptools>=50.3.1
 Jinja2>=3.0.1
 humanize>=3.9.0
 deepdiff>=5.5.0
-glom>=20.11.0
-orjson>=3.6.7
+glom>=22.1.0
 
 # Stats
 statsmodels>=0.12.2
