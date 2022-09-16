@@ -19,6 +19,7 @@ from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage
 from optimus.helpers.json import json_converter
 from optimus.helpers.output import print_html
+from optimus.infer import is_list_or_tuple
 from optimus.outliers.outliers import Outliers
 from optimus.plots.functions import plot_hist, plot_frequency
 from optimus.plots.plots import Plot
@@ -568,7 +569,7 @@ class BaseDataFrame(ABC):
                     action_name = action.get("name", "action")
                     column = action.get("columns", None)
 
-                    if is_tuple(column):
+                    if is_list_or_tuple(column):
                         source, target = column
 
                     else:
