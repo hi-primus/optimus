@@ -29,17 +29,17 @@ class BaseEngine:
         return Optimus(state)
 
 
-    @staticmethod
-    def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
+
+    def connect(self, driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
                 oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None,
-                cassandra_keyspace=None, cassandra_table=None, bigquery_project=None, bigquery_dataset=None):
+                cassandra_keyspace=None, cassandra_table=None, bigquery_project=None, bigquery_dataset=None, ):
         """
         Create the JDBC string connection
         :return: JDBC object
         """
 
         return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
-                    presto_catalog, cassandra_keyspace, cassandra_table, bigquery_project, bigquery_dataset)
+                    presto_catalog, cassandra_keyspace, cassandra_table, bigquery_project, bigquery_dataset, op=self)
 
     @property
     def nan(self):
