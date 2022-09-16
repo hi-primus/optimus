@@ -12,4 +12,4 @@ RUN conda install libmagic && \
 RUN pip install aiohttp --no-cache-dir && \
     pip install cupy-cuda102 --no-cache-dir && \
     pip install dask-cuda --no-cache-dir && \
-    pip install git+https://github.com/hi-primus/optimus.git@develop-22.6 --no-cache-dir
+    pip install git+https://github.com/hi-primus/optimus.git@develop-22.9 --no-cache-dir

@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: 
       - main
-      - develop-22.6
+      - develop-22.9
 
 jobs:
   build:
