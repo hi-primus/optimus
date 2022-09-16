@@ -1,4 +1,5 @@
 import builtins
+import copy
 import re
 import string
 import time
@@ -57,15 +58,15 @@ class BaseColumns(ABC):
 
     def _series_to_dict(self, series):
         """
-
-        :param series:
+        Transform a series to a dictionary
+        :param series: A series dataframe
         :return:
         """
         return self._series_to_pandas(series).to_dict()
 
     def _series_to_pandas(self, series):
         """
-
+        Transform a series to a pandas dataframe
         :param series:
         :return:
         """
@@ -244,7 +245,7 @@ class BaseColumns(ABC):
         kw_columns = {}
 
         dfd = df.data
-        meta = df.meta
+        meta = copy.deepcopy(df.meta)
 
         for input_col, output_col in zip(cols, output_cols):
             kw_columns[output_col] = dfd[input_col]
