@@ -156,11 +156,11 @@ class Meta:
 
     @staticmethod
     def drop_columns(meta, cols):
+        meta = deepcopy(meta)
         for col in cols:
-            meta = Meta.reset(meta, f'columns_data_types.{col}')
-            meta = Meta.reset(meta, f'max_cell_length.{col}')
-            meta = Meta.reset(meta, f'profile.columns.{col}')
-        return meta
+            delete(meta, Path('columns_data_types', col), ignore_missing=True)
+            delete(meta, Path('max_cell_length', col), ignore_missing=True)
+            delete(meta, Path('profile', 'columns', col), ignore_missing=True)
 
     @staticmethod
     def select_columns(meta, cols):
