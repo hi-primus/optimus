@@ -13,7 +13,8 @@ class MySQLDriver(AbstractDriver):
         return DriverProperties.MYSQL
 
     def uri(self, *args, **kwargs) -> str:
-        return f"""{kwargs["driver"]}://{kwargs["user"]}:{kwargs["password"]}@{kwargs["host"]}:{kwargs["port"]}/{kwargs[
+        password = kwargs["password"]
+        return f"""{kwargs["driver"]}://{kwargs["user"]}:{password if password is not None else ""}@{kwargs["host"]}:{kwargs["port"]}/{kwargs[
             "database"]}"""
 
     def url(self, *args, **kwargs) -> str:

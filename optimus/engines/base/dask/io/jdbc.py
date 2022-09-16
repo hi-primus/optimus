@@ -81,7 +81,6 @@ class DaskBaseJDBC:
         self.user = user
         self.password = password
         self.schema = schema
-        print(self.uri)
         logger.print(self.uri)
 
     def tables(self, schema=None, database=None, limit=None):
@@ -89,17 +88,6 @@ class DaskBaseJDBC:
         Return all the tables in a database
         :return:
         """
-
-        # Override the schema used in the constructor
-        # if database is None:
-        #     database = self.database
-        #
-        # if schema is None:
-        #     schema = self.schema
-        # query = self.driver_context.table_names_query(schema=schema, database=database)
-        # df = self.execute(query, limit)
-        # return df.display(limit)
-
         engine = create_engine(self.uri)
         return engine.table_names()
 
