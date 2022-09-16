@@ -162,6 +162,8 @@ class Meta:
             delete(meta, Path('max_cell_length', col), ignore_missing=True)
             delete(meta, Path('profile', 'columns', col), ignore_missing=True)
 
+        return meta
+
     @staticmethod
     def select_columns(meta, cols):
         all_cols = []
