@@ -9,7 +9,7 @@ from sqlalchemy.sql import elements
 
 # Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
-from optimus.engines.base.constants import NUM_PARTITIONS, LIMIT_TABLE
+from optimus.engines.base.constants import NUM_PARTITIONS, TABLE_LIMIT
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.base.io.properties import DriverProperties
@@ -416,7 +416,7 @@ class DaskBaseJDBC:
         """
         # we use a default limit here in case the query will return a huge chunk of data
         if limit is None:
-            return df.limit(LIMIT_TABLE)
+            return df.limit(TABLE_LIMIT)
         elif limit == "all":
             return df
         else:

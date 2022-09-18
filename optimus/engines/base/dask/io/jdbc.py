@@ -1,18 +1,13 @@
-import numpy as np
-import pandas as pd
-import sqlalchemy as sa
-from dask.dataframe import from_delayed, from_pandas
-from dask.delayed import delayed
-from sqlalchemy import create_engine
-from sqlalchemy import sql
-from sqlalchemy.sql import elements
+import connectorx as cx
+from sqlalchemy import create_engine, text, select
 
 # Optimus plays defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
 # only will retrieve the LIMIT value
-from optimus.engines.base.constants import NUM_PARTITIONS, LIMIT_TABLE
+from optimus.engines.base.constants import NUM_PARTITIONS, TABLE_LIMIT
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.base.io.properties import DriverProperties
+from optimus.engines.base.meta import Meta
 from optimus.helpers.core import val_to_list
 from optimus.helpers.logger import logger
 
@@ -83,37 +78,66 @@ class DaskBaseJDBC:
         self.schema = schema
         logger.print(self.uri)
 
-    def tables(self, schema=None, database=None, limit=None):
+    def table_names(self, schema=None, database=None, limit=None):
         """
         Return all the tables in a database
         :return:
         """
         engine = create_engine(self.uri)
-        return engine.table_names()
+        result = engine.table_names()
+        engine.dispose()
+        return result
 
-    @property
-    def table(self):
+    def tables(self, tables: list = None, limit=TABLE_LIMIT):
         """
         Print n rows of every table in a database
         :return: Table Object
         """
-        return Table(self)
+        db = self
+        if tables is None:
+            table_names = db.tables()
+        else:
+            table_names = tables
 
-    def table_to_df(self, table_name: str, columns="*", partition_column =None,limit=None, n_partitions=1):
+        for table_name in table_names:
+            q = self._compile(select(text("*")).select_from(text(table_name)).limit(limit))
+            db.execute(q, title=table_name).display()
+
+    def desc(self):
+        """
+        Return a description of the database. Table names, columns names and other metadata
+        :return: dict
+        """
+        import sqlalchemy as db
+
+        engine = db.create_engine(self.uri)
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+
+        result = {}
+        for table_name in inspector.get_table_names():
+            result[table_name] = inspector.get_columns(table_name)
+        return result
+
+    def _compile(self, query):
+        """
+        Compile a SQLAlchemy query to string
+        :param query: SQLAlchemy query
+        :return: String
+        """
+        engine = create_engine(self.uri)
+        query = str(query.compile(engine, compile_kwargs={"literal_binds": True}))
+        return query
+
+    def table_to_df(self, table_name: str, columns="*", partition_on=None, limit=TABLE_LIMIT, partition_num=1):
         """
         Return cols as Spark data frames from a specific table
         :type table_name: object
-        :param columns:
-        :param limit: how many rows will be retrieved
+        :param columns: Columns to be retrieved
+        :param partition_on:, Column to partition the data
+        :param partition_num: Number of partitions
+        :param limit: Number of rows to be retrieved
         """
-        db_table = table_name
-
-        if limit == "all":
-            query = self.driver_context.count_query(db_table=db_table)
-            count = self.execute(query, "all").first()[0]
-
-            # We want to count the number of rows to warn the users how much it can take to bring the whole data
-            print(str(int(count)) + " rows")
 
         if columns == "*":
             columns_sql = "*"
@@ -121,231 +145,39 @@ class DaskBaseJDBC:
             columns = val_to_list(columns)
             columns_sql = ",".join(columns)
 
-        query = "SELECT " + columns_sql + " FROM " + db_table
+        query = select(text(columns_sql)).select_from(text(table_name))
+        if (limit != "all") and (limit != -1):
+            query = query.limit(limit)
+        query = self._compile(query)
 
         logger.print(query)
+        df = self.execute(query, partition_on=partition_on, partition_num=partition_num, title=table_name)
+        # df.meta = Meta.set(df.meta, value={"name": table_name})
 
-        dfd = self.execute(query, limit, n_partitions=n_partitions)
-        # Bring the data to local machine if not every time we call an action is going to be
-        # retrieved from the remote server
-        # dfd = dfd.run()
-        # dfd = dask_pandas_to_dask_cudf(dfd)
-        # print(dfd)
-        # print(self.op.F.dask_to_compatible(dfd).head())
-        return self.op.create.dataframe(self.op.F.dask_to_compatible(dfd))
+        return df
 
-    def execute(self, query, limit=None, n_partitions: int = NUM_PARTITIONS, partition_column: str = None,
-                table_name=None):
+    def execute(self, query, partition_on: str = None, partition_num: int = NUM_PARTITIONS, limit=TABLE_LIMIT,
+                title=None):
         """
         Execute a SQL query
-        :param limit: default limit the whole query. We play defensive here in case the result is a big chunk of data
-        :param n_partitions:
-        :param partition_column:
         :param query: SQL query string
-        :param table_name:
-        :return:
+        :param partition_num: Number of partitions
+        :param partition_on: Colum to partition the data
+        :return: DataFrame
         """
 
-        dfd = DaskBaseJDBC.read_sql_table(table_name=table_name, uri=self.uri, index_col=partition_column,
-                                          npartitions=n_partitions, query=query)
+        # Play defensive with the number of rows to be retrieved from the server so if a limit is not specified it will
+        # query = f"{query} LIMIT {limit}"
 
-        return self.op.create.dataframe(self.op.F.dask_to_compatible(dfd))
+        dfd = cx.read_sql(self.uri, query=query, partition_on=partition_on, partition_num=partition_num,
+                          return_type="pandas")
 
-    @staticmethod
-    def read_sql_table(
-            table_name,
-            uri,
-            index_col=None,
-            divisions=None,
-            npartitions=None,
-            limits=None,
-            columns=None,
-            bytes_per_chunk=256 * 2 ** 20,
-            head_rows=5,
-            schema=None,
-            meta=None,
-            engine_kwargs=None,
-            query=None,
-            **kwargs
-    ):
+        df = self.op.create.dataframe(dfd)
+        if title is None:
+            title = query
+        df.meta = Meta.set(df.meta, value={"name": title})
 
-        engine_kwargs = {} if engine_kwargs is None else engine_kwargs
-        engine = sa.create_engine(uri, **engine_kwargs)
-        m = sa.MetaData()
-
-        # print("table", table)
-        if isinstance(table_name, str):
-            table_name = sa.Table(table_name, m, autoload=True, autoload_with=engine, schema=schema)
-
-            columns = (
-                [(table_name.columns[c] if isinstance(c, str) else c) for c in columns]
-                if columns
-                else list(table_name.columns)
-            )
-        index = None
-        if index_col:
-            # raise ValueError("Must specify index column to partition on")
-            # else:
-
-            index = table_name.columns[index_col] if isinstance(index_col, str) else index_col
-            if not isinstance(index_col, (str, elements.Label)):
-                raise ValueError(
-                    "Use label when passing an SQLAlchemy instance as the index (%s)" % index
-                )
-            if divisions and npartitions:
-                raise TypeError("Must supply either divisions or npartitions, not both")
-
-            if index_col not in columns:
-                columns.append(
-                    table_name.columns[index_col] if isinstance(index_col, str) else index_col
-                )
-
-            if isinstance(index_col, str):
-                kwargs["index_col"] = index_col
-            else:
-                # function names get pandas auto-named
-                kwargs["index_col"] = index_col.name
-        parts = []
-
-        if meta is None:
-            # derive metadata from first few rows
-            # q = sql.select(columns).limit(head_rows).select_from(table)
-            head = pd.read_sql(query, engine, **kwargs)
-
-            if head.empty:
-                # no results at all
-                # name = table_name.name
-                # schema = table_name.schema
-                # head = pd.read_sql_table(name, uri, schema=schema, index_col=index_col)
-
-                return from_pandas(head, npartitions=1)
-
-            bytes_per_row = (head.memory_usage(deep=True, index=True)).sum() / head_rows
-            meta = head.iloc[:0]
-            # print(list(head.columns.values))
-        else:
-            if divisions is None and npartitions is None:
-                raise ValueError(
-                    "Must provide divisions or npartitions when using explicit meta."
-                )
-
-        # if divisions is None and index_col is not None:
-        if divisions is None:
-            # print(index)
-            # print("LIMITS",limits)
-            if index is not None and limits is None:
-                # calculate max and min for given index
-                q = sql.select([sql.func.max(index), sql.func.min(index)]).select_from(
-                    table_name
-                )
-                minmax = pd.read_sql(q, engine)
-                maxi, mini = minmax.iloc[0]
-                dtype = minmax.dtypes["max_1"]
-            elif index is None and npartitions:
-                # User for Limit offset
-                mini = 0
-                q = f"SELECT COUNT(*) AS count FROM ({query}) AS query"
-                maxi = pd.read_sql(q, engine)["count"][0]
-                limit = maxi / npartitions
-                dtype = pd.Series((mini, maxi,)).dtype
-
-                #  Use for ntile calculation
-                # mini = 0
-                # maxi = npartitions
-                # print(pd.Series((mini, maxi,)))
-                # dtype = pd.Series((mini, maxi,)).dtype
-                # ntile_columns = ", ".join(list(head.columns.values))
-
-            else:
-                mini, maxi = limits
-                dtype = pd.Series(limits).dtype
-
-            if npartitions is None:
-                q = sql.select([sql.func.count(index)]).select_from(table_name)
-                count = pd.read_sql(q, engine)["count_1"][0]
-                npartitions = int(round(count * bytes_per_row / bytes_per_chunk)) or 1
-
-            if dtype.kind == "M":
-                divisions = pd.date_range(
-                    start=mini,
-                    end=maxi,
-                    freq="%iS" % ((maxi - mini).total_seconds() / npartitions),
-                ).tolist()
-                divisions[0] = mini
-                divisions[-1] = maxi
-            elif dtype.kind in ["i", "u", "f"]:
-                divisions = np.linspace(mini, maxi, npartitions + 1).tolist()
-            # else:
-            #     print(dtype)
-            #     raise TypeError(
-            #         'Provided index column is of type "{}".  If divisions is not provided the '
-            #         "index column type must be numeric or datetime.".format(dtype)
-            #     )
-
-            lowers, uppers = divisions[:-1], divisions[1:]
-            for i, (lower, upper) in enumerate(zip(lowers, uppers)):
-
-                if index_col:
-                    if i == len(lowers) - 1:
-                        where = f" WHERE {index} > {lower} AND {index} <= {upper}"
-                    else:
-                        where = f" WHERE {index} >= {lower} AND {index} < {upper}"
-                    q = query + where
-                else:
-                    if i == len(lowers) - 1:
-                        where = f" LIMIT {int(upper) - int(lower)} OFFSET {int(lower)}"
-                    else:
-                        where = f" LIMIT {int(limit)} OFFSET {int(lower)}"
-                    q = query + where
-
-                    # Ntile calculation
-                    # print("Using Ntile query")
-                    # ntile_column = "temp"
-                    # ntile_sql = f"SELECT *, NTILE({npartitions}) OVER(ORDER BY id DESC) AS {ntile_column} FROM ({query}) AS t";
-                    # q = f"SELECT {ntile_columns} FROM ({ntile_sql}) AS r"
-                    # if i == len(lowers) - 1:
-                    #     where = f" WHERE {ntile_column} > {lower} AND {ntile_column} <= {upper}"
-                    # else:
-                    #     where = f" WHERE {ntile_column} >= {lower} AND {ntile_column} < {upper}"
-                    # q = q + where
-
-                    # table = "test_data"
-                    # q = f'SELECT {ntile_columns} FROM {table} WHERE  NTILE({npartitions}) OVER (ORDER BY {ntile_column}) = i'
-
-                # When we do not have and index
-                parts.append(
-                    delayed(DaskBaseJDBC._read_sql_chunk)(
-                        q, uri, meta, engine_kwargs=engine_kwargs, **kwargs
-                    )
-                )
-        else:
-
-            # JDBC._read_sql_chunk(q, uri, meta, engine_kwargs=engine_kwargs, **kwargs)
-
-            parts.append(
-                delayed(DaskBaseJDBC._read_sql_chunk)(
-                    query, uri, meta, engine_kwargs=engine_kwargs, **kwargs
-                )
-            )
-
-        engine.dispose()
-
-        return from_delayed(parts, meta, divisions=divisions)
-
-    @staticmethod
-    def _read_sql_chunk(q, uri, meta, engine_kwargs=None, **kwargs):
-        import sqlalchemy as sa
-
-        engine_kwargs = engine_kwargs or {}
-        engine = sa.create_engine(uri, **engine_kwargs)
-        df = pd.read_sql(q, engine, **kwargs)
-        engine.dispose()
-
-        if df.empty:
-            return meta
-        else:
-            # df.reset_index()
-            return df.astype(meta.dtypes.to_dict(), copy=False)
+        return df
 
     def df_to_table(self, df, table, mode="overwrite"):
         """
@@ -360,9 +192,8 @@ class DaskBaseJDBC:
         df = df.cols.cast(columns, "str")
 
         conf = df.write \
-            .format(
-            "jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
-            DriverProperties.CASSANDRA.value["java_class"]) \
+            .format("jdbc" if not self.db_driver == DriverProperties.CASSANDRA.value["name"] else
+                    DriverProperties.CASSANDRA.value["java_class"]) \
             .mode(mode) \
             .option("url", self.uri) \
             .option("dbtable", table) \
@@ -372,38 +203,3 @@ class DaskBaseJDBC:
         if self.db_driver == DriverProperties.ORACLE.value["name"]:
             conf.option("driver", self.driver_option)
         conf.save()
-
-    @staticmethod
-    def _limit(df, limit=None):
-        """
-        Handle limit defensive so we do not retrieve the whole at we explicit want
-        :param limit:
-        :param df:
-        :return a limited DataFrame if specified
-        """
-        # we use a default limit here in case the query will return a huge chunk of data
-        if limit is None:
-            return df.limit(LIMIT_TABLE)
-        elif limit == "all":
-            return df
-        else:
-            return df.limit(int(limit))
-
-
-class Table:
-    def __init__(self, db):
-        self.db = db
-
-    def show(self, table_names="*", limit=None):
-        db = self.db
-
-        if table_names == "*":
-            table_names = db.tables()
-        else:
-            table_names = val_to_list(table_names)
-
-        print("Total Tables:" + str(len(table_names)))
-
-        for table_name in table_names:
-            db.table_to_df(table_name, "*", limit) \
-                .table(title=table_name)

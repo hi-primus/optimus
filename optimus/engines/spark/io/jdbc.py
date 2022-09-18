@@ -1,4 +1,4 @@
-from optimus.engines.base.constants import LIMIT_TABLE, NUM_PARTITIONS
+from optimus.engines.base.constants import TABLE_LIMIT, NUM_PARTITIONS
 from optimus.engines.base.io.driver_context import DriverContext
 from optimus.engines.base.io.factory import DriverFactory
 from optimus.engines.base.io.properties import DriverProperties
@@ -131,7 +131,7 @@ class JDBC:
         :return:
         """
         if limit is None:
-            limit = "LIMIT " + str(LIMIT_TABLE)
+            limit = "LIMIT " + str(TABLE_LIMIT)
         elif limit == "all":
             limit = ""
         else:

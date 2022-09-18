@@ -34,6 +34,8 @@ class BaseDataFrame(ABC):
 
     def __init__(self, data: 'InternalDataFrameType', op: 'EngineType', label_encoder=None):
 
+        self.json = None
+        self.html = None
         data = self._compatible_data(data)
         self.data = data
         self.cache = {}

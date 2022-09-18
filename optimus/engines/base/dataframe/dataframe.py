@@ -154,10 +154,7 @@ class DataFrameBaseDataFrame(BaseDataFrame):
 
     @staticmethod
     def debug():
-        """
 
-        :return:
-        """
         raise NotImplementedError
 
     def to_pandas(self):
