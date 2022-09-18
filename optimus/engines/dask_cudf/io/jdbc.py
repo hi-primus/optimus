@@ -12,8 +12,3 @@ class JDBC(DaskBaseJDBC):
                          presto_catalog=presto_catalog,
                          cassandra_keyspace=cassandra_keyspace,
                          cassandra_table=cassandra_table)
-
-
-    # def execute(self, query, limit=None, num_partitions: int = NUM_PARTITIONS, partition_column: str = None,
-    #             table_name=None):
-    #     return super().execute(query, limit, num_partitions, partition_column, table_name).compute()

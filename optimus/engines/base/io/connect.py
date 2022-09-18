@@ -1,9 +1,9 @@
-from optimus.helpers.functions import prepare_url_schema
-from optimus.helpers.types import *
 from optimus.engines.base.dask.io.jdbc import DaskBaseJDBC
 from optimus.engines.base.io.properties import DriverProperties
 from optimus.helpers.constants import Schemas
+from optimus.helpers.functions import prepare_url_schema
 from optimus.helpers.raiseit import RaiseIt
+from optimus.helpers.types import *
 
 
 class Connection:
@@ -164,23 +164,30 @@ class Connect:
     def __init__(self, op):
         self.op = op
 
-    def mysql(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    # MariaDB,Clickhouse
+    def mysql(self, host=None, database=None, user=None, password=None, port=None, schema="public",
+              sso=None) -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.MYSQL.value["name"],
                             schema=schema, op=self.op, sso=sso)
 
-    def postgres(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    def postgres(self, host=None, database=None, user=None, password=None, port=None,
+                 schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.POSTGRESQL.value["name"],
                             schema=schema, op=self.op)
 
-    def mssql(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    # Azure SQL
+    def mssql(self, host=None, database=None, user=None, password=None, port=None, schema="public",
+              sso=False) -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.SQLSERVER.value["name"],
-                            schema=schema, op=self.op)
+                            schema=schema, sso=sso, op=self.op)
 
-    def redshift(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    def redshift(self, host=None, database=None, user=None, password=None, port=None,
+                 schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.REDSHIFT.value["name"],
                             schema=schema, op=self.op)
 
-    def sqlite(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    def sqlite(self, host=None, database=None, user=None, password=None, port=None,
+               schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.SQLITE.value["name"],
                             schema=schema, op=self.op)
 
@@ -189,7 +196,8 @@ class Connect:
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.BIGQUERY.value["name"],
                             schema=schema, bigquery_project=project, bigquery_dataset=dataset, op=self.op)
 
-    def presto(self, host=None, database=None, user=None, password=None, port=None, schema="public", catalog=None) -> 'ConnectionType':
+    def presto(self, host=None, database=None, user=None, password=None, port=None, schema="public",
+               catalog=None) -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.PRESTO.value["name"],
                             schema=schema, presto_catalog=catalog, op=self.op)
 
