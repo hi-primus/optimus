@@ -687,6 +687,9 @@ class BaseDataFrame(ABC):
         total_partitions = df.partitions()
         df_type = type(df)
         highlight = val_to_list(highlight)
+
+        title=Meta.get(df.meta, "name")
+
         output = template.render(df_type=df_type, cols=final_columns, data=data, limit=limit, total_rows=total_rows,
                                  total_cols=total_cols,
                                  partitions=total_partitions, title=title, truncate=truncate, highlight=highlight)
