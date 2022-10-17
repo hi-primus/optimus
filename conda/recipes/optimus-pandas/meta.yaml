@@ -1,4 +1,4 @@
-{% set version = "22.9.0" %}
+{% set version = "22.10.0" %}
 
 package:
   name: optimus
@@ -6,7 +6,7 @@ package:
 
 source:
   git_url: https://github.com/hi-primus/optimus
-  git_rev: develop-22.9
+  git_rev: develop-22.10
   git_depth: 1 # (Defaults to -1/not shallow)
 
 build:
