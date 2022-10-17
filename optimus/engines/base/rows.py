@@ -261,12 +261,42 @@ class BaseRows(ABC):
         df = self.root
         dfd = df.data
 
-        if is_str(where):
-            if where in df.cols.names():
-                where = df[where]
-            else:
-                where = eval(where)
-        dfd = dfd.reset_index(drop=True)[where.get_series().reset_index(drop=True) == 0]
+        all_cols = df.cols.names()
+
+        if is_str(where) and where == "*":
+            where = all_cols
+
+        where = val_to_list(where)
+
+        if is_list_of_str(where) and all([col in all_cols for col in where]):
+            where = [df[where].mask.any()]
+        else:
+            for i, where_ in enumerate(where):
+                if not is_str(where_):
+                    continue
+                elif where_ not in all_cols:
+                    where[i] = eval(where_)
+                else:
+                    where[i] = df[where_]
+
+        if len(where) > 1:
+            def _reduce_exprs(a, b):
+                if hasattr(a, "get_series"):
+                    a = a.get_series()
+                if hasattr(b, "get_series"):
+                    b = b.get_series()
+                return df.functions.to_boolean(a) | df.functions.to_boolean(b)
+
+            where = reduce(_reduce_exprs, where)
+        else:
+            where = where[0]
+
+            if hasattr(where, "get_series"):
+                where = where.get_series()
+
+            where = df.functions.to_boolean(where)
+            
+        dfd = dfd.reset_index(drop=True)[where.reset_index(drop=True) == 0]
         meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 
