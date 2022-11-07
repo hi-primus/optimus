@@ -7,7 +7,6 @@ import os
 import re
 from ast import literal_eval
 
-import fastnumbers
 import hidateinfer
 import pandas as pd
 
@@ -342,11 +341,11 @@ def str_to(value, regex, compiled_regex, compile=False):
 
 
 def str_to_int(value):
-    return True if fastnumbers.isint(value) else False
+    return value % 1 == 0
 
 
 def str_to_decimal(value):
-    return True if fastnumbers.isfloat(value) else False
+    return value % 1 > 0
 
 
 def str_to_str(value):
@@ -736,7 +735,7 @@ def is_numeric_like(value):
     :param value:
     :return:
     """
-    return fastnumbers.isfloat(value) or fastnumbers.isintlike(value)
+    return value % 1 >= 0
 
 
 def is_str(value):
@@ -781,7 +780,7 @@ def is_dask_future(value):
 
 
 def is_float(value):
-    return fastnumbers.isfloat(value, allow_nan=True)
+    return value % 1 > 0
 
 
 def is_int(value):
@@ -799,7 +798,7 @@ def is_int_like(value):
     :param value:
     :return:
     """
-    return fastnumbers.isintlike(value)
+    return value % 1 == 0
 
 
 def is_float_like(value):
@@ -808,7 +807,7 @@ def is_float_like(value):
     :param value:
     :return:
     """
-    return fastnumbers.isfloat(value)
+    return value % 1 > 0
 
 
 def is_url(value):

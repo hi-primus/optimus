@@ -1,7 +1,5 @@
 import os
 
-
-
 from optimus.engines.base.io.save import BaseSave
 from optimus.helpers.logger import logger
 from optimus.helpers.types import *

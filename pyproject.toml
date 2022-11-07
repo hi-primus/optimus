@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "pyoptimus"
+version = "0.1.4016"
+description = ""
+authors = ["Argenis Leon <argenisleon@gmail.com>", "Luis Aguirre <luisaguirre027@gmail.com>"]
+maintainers = ["Argenis Leon <argenisleon@gmail.com>", "Luis Aguirre <luisaguirre027@gmail.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+homepage = "https://hi-optimus.com"
+repository = "https://github.com/hi-primus/optimus"
+documentation = "https://docs.hi-optimus.com/"
+keywords = ["data-processing, data science, duckdb, ibis, data-wrangling, data-exploration", "data-profiling", "data-analysis"]
+packages = [{ include = "optimus"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.11"
+pandas = "^1.4.2"
+numpy = "^1.22.4"
+nltk = "^3.7"
+requests = "^2.28.1"
+jinja2 = "^3.1.2"
+humanize = "^4.4.0"
+glom = "^22.1.0"
+statsmodels = "^0.13.2"
+rply = "^0.7.8"
+tabulate = "^0.9.0"
+matplotlib = "^3.5.2"
+hi-dateinfer = "^0.4.6"
+hi-urlparser = "^3.0.4"
+openpyxl = "^3.0.10"
+xlrd = "^2.0.1"
+scikit-learn = "^1.1.1"
+jellyfish = "^0.8.7"
+seaborn = "^0.12.1"
+sqlalchemy = "^1.4.37"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "^6.2.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

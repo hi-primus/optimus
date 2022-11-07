@@ -36,3 +36,6 @@ node_modules/
 dask-worker-space/
 conda/recipes/conda
 conda/recipes/conda-build
+
+main.py
+notebook.ipynb

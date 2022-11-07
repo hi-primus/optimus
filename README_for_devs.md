@@ -364,3 +364,65 @@ Install the read the docs theme
 `pip install sphinx_rtd_theme`
 
 go to `docs/` in the package and run `make html`
+
+## Packaging
+
+`poetry build` will build the package and put it in the `dist` folder.
+`poetry publish` will publish the package to pypi.
+
+### Publishing to PyPi
+
+To see the list of poetry items
+`poetry config --list`
+
+Authenticate with the `pypi` repo
+`poetry config http-basic.pypi <username> <password>`
+
+or if you want to use a token
+`poetry config pypi-token.pypi <API Token>`
+
+`poetry build`
+`poetry publish`
+
+### Publishing to Test PyPi
+
+Configure the `testpypi` repository
+`poetry config repositories.testpypi https://test.pypi.org/legacy/`
+
+This will set the url for repository `testpypi` to `https://test.pypi.org/legacy/`.
+
+Authenticate with the `testpypi` repo
+`poetry config http-basic.testpypi <username> <password>`
+
+or if you want to use a token
+
+`poetry config pypi-token.testpypi <API Token>`
+
+`poetry build`
+
+`poetry publish -r testpypi`
+
+## Pyodide
+
+### Testing if a pip library works in pyodide
+
+Go to https://pyodide.org/en/stable/console.html and install the library you want to test. For Example:
+
+```
+import micropip
+await micropip.install("ibis-framework")
+````
+
+### Install from a testpypi package
+
+Go to
+https://test.pypi.org/project/pyoptimus/#files
+
+copy the link to the `tar.gz` file and use it with `micropip.install`
+
+```
+import micropip
+await micropip.install("https://test-files.pythonhosted.org/packages/60/b4/2fa547de5bb2cb93eb83a5e7ff90cebbd42981f28377d8f40e3412c46145/pyoptimus-0.1.2-py3-none-any.whl")
+```
+
+### Install from a github repo

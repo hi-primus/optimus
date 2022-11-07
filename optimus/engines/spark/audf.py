@@ -1,7 +1,7 @@
 from pyspark.sql import functions as F
 
 from optimus.helpers.core import one_list_to_val
-from optimus.helpers.functions import is_pyarrow_installed
+from optimus.helpers.check_env import is_pyarrow_installed
 from optimus.helpers.logger import logger
 from optimus.helpers.parser import parse_python_dtypes
 from optimus.helpers.raiseit import RaiseIt

@@ -1,10 +1,10 @@
-import fastnumbers
 from pyspark.ml.linalg import VectorUDT
 from pyspark.sql import DataFrame as SparkDataFrame, functions as F
 from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType, BooleanType, StructType, ArrayType, \
     LongType, DateType, ByteType, ShortType, TimestampType, BinaryType, NullType
 
-from optimus.infer import is_bool_value, is_list_value, is_datetime, is_date, is_binary, is_str, is_bool_str, str_to_date, \
+from optimus.infer import is_bool_value, is_list_value, is_datetime, is_date, is_binary, is_str, is_bool_str, \
+    str_to_date, \
     is_list_str
 
 SPARK_DTYPES_DICT = {"string": StringType, "int": IntegerType, "float": FloatType,
@@ -85,10 +85,10 @@ def to_spark(value):
     elif is_bool_value(value):
         result = "bool"
 
-    elif fastnumbers.isint(value):
+    elif value % 1 == 0:
         result = "int"
 
-    elif fastnumbers.isfloat(value):
+    elif value%1>0:
         result = "float"
 
     elif is_list_value(value):

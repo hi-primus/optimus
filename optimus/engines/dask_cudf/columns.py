@@ -1,6 +1,5 @@
 import builtins
 import dask
-import fastnumbers
 from dask_ml import preprocessing
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, impute

@@ -3,7 +3,6 @@ import ntpath
 import os
 from abc import abstractmethod
 
-import psutil
 
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.ml.models import Model
@@ -59,7 +58,7 @@ class BaseLoad:
         :param header: Tell the function whether dataset has a header row. True default.
         :param infer_schema: Infers the input schema automatically from data.
         :param n_rows:
-        :param null_value: Whether or not to include the default NaN values when parsing the data
+        :param null_value: Whether to include the default NaN values when parsing the data
         :param quoting: Control field quoting behavior
         :param cache:
         :param na_filter: Detect missing value markers (empty strings and the value of na_values).
@@ -102,7 +101,7 @@ class BaseLoad:
             if kwargs.get("chunk_size") == "auto":
                 # Chunk size is going to be 75% of the memory available
                 kwargs.pop("chunk_size")
-                kwargs["chunksize"] = psutil.virtual_memory().free * 0.75
+                # kwargs["chunksize"] = psutil.virtual_memory().free * 0.75
 
             na_filter = na_filter if null_value else False
 

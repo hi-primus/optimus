@@ -1,7 +1,6 @@
 """
 Helpers to check if an object match a date type
 """
-import re
 
 import pandas as pd
 
@@ -9,6 +8,8 @@ from optimus.helpers.core import val_to_list, one_list_to_val
 # TODO: can be confused with is_type
 from optimus.helpers.parser import parse_data_types
 from optimus.helpers.raiseit import RaiseIt
+
+
 # from optimus.new_optimus import SparkDataFrame
 
 def has_(value, _type):
@@ -49,38 +50,6 @@ def is_column_a(df, column=None, data_types="str"):
     return result
 
 
-#
-# def is_column_a(df, column, dtypes):
-#     """
-#     Check if column match a list of data types
-#     :param df: spark
-#     :param column: column to be compared with
-#     :param dtypes: types to be checked
-#     :return:
-#     """
-#     column = val_to_list(column)
-#
-#     if len(column) > 1:
-#         RaiseIt.length_error(column, 1)
-#
-#     data_type = tuple(val_to_list(parse_spark_dtypes(df, dtypes)))
-#     column = one_list_to_val(column)
-#
-#     # Filter columns by data type
-#     return isinstance(df.schema[column].dataType, data_type)
-# def is_cudf_series(value):
-#     return cudf.core.series.Series
-
-# def is_cudf_dataframe(value):
-#     from cudf.core import DataFrame as CUDFDataFrame
-#     return isinstance(value, CUDFDataFrame)
-#
-#
-# def is_cudf_series(value):
-#     import cudf
-#     return isinstance(value, cudf.core.series.Series)
-#
-#
 def is_dask_cudf_dataframe(value):
     """
     Check if an object is a Dask cuDF DataFrame
@@ -92,6 +61,7 @@ def is_dask_cudf_dataframe(value):
         return isinstance(value, DaskCUDFDataFrame)
     except:
         return False
+
 
 #
 # def is_dask_cudf_series(value):
@@ -154,14 +124,3 @@ def equal_function(f1, f2):
         if f1.__name__ == func.__name__:
             return True
     return False
-
-
-def is_notebook():
-    try:
-        shell = get_ipython().__class__.__name__
-        if shell in ['ZMQInteractiveShell', 'Shell']:
-            return True
-        else:
-            return False
-    except NameError:
-        return False

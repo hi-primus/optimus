@@ -7,9 +7,8 @@ import hiurlparser
 import jellyfish
 import numpy as np
 import pandas as pd
-from metaphone import doublemetaphone
 
-from optimus.helpers.constants import ProfilerDataTypes, ProfilerDataTypesNumeric
+from optimus.helpers.constants import ProfilerDataTypesNumeric
 from optimus.helpers.core import one_list_to_val, one_tuple_to_val, val_to_list
 from optimus.helpers.decorators import apply_to_categories
 from optimus.helpers.logger import logger
@@ -1098,6 +1097,7 @@ class BaseFunctions(ABC):
         return self.to_string(series).map(jellyfish.metaphone, na_action='ignore')
 
     def double_metaphone(self, series):
+        from metaphone import doublemetaphone
         return self.to_string(series).map(doublemetaphone, na_action='ignore')
 
     def nysiis(self, series):

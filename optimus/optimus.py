@@ -2,6 +2,8 @@ from enum import Enum
 
 import nltk
 
+from optimus.exceptions import PyScriptNotFound
+from optimus.helpers.check_env import is_pyodide
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
 
@@ -91,11 +93,13 @@ def start_polars(*args, **kwargs):
 
 
 def start_pyscript(*args, **kwargs):
+    if not is_pyodide():
+        raise PyScriptNotFound("PyScript not Found")
     from optimus.engines.pyscript.engine import PyScriptEngine
     return PyScriptEngine(*args, **kwargs)
 
 
-def optimus(engine=Engine.DASK.value, *args, **kwargs):
+def optimus(engine=Engine.PANDAS.value, *args, **kwargs):
     """
     This is the entry point to initialize the selected engine.
     :param engine: A string identifying an engine :classL`Engine`.
@@ -105,14 +109,18 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
     """
     logger.print("ENGINE", engine)
 
-    # lemmatizer
-    nltk.download('wordnet', quiet=True)
+    if not is_pyodide():
+        # This should be installed using javascript over pyodide
+        # https://stackoverflow.com/questions/68835360/pyodide-filesystem-for-nltk-resources-missing-files
 
-    # Stopwords
-    nltk.download('stopwords', quiet=True)
+        # lemmatizer
+        nltk.download('wordnet', quiet=True)
 
-    # POS
-    nltk.download('averaged_perceptron_tagger', quiet=True)
+        # Stopwords
+        nltk.download('stopwords', quiet=True)
+
+        # POS
+        nltk.download('averaged_perceptron_tagger', quiet=True)
 
     funcs = {Engine.PANDAS.value: start_pandas,
              Engine.VAEX.value: start_vaex,
@@ -122,7 +130,7 @@ def optimus(engine=Engine.DASK.value, *args, **kwargs):
              Engine.CUDF.value: start_cudf,
              Engine.DASK_CUDF.value: start_dask_cudf,
              Engine.POLARS.value: start_polars,
-             Engine.PYSCRIPT.value: start_polars
+             Engine.PYSCRIPT.value: start_pyscript
 
              }
 

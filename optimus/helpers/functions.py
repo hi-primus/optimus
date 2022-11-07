@@ -16,7 +16,6 @@ from urllib.request import Request, urlopen
 import humanize
 import numpy as np
 import six
-from fastnumbers import isint, isfloat
 
 from optimus import ROOT_DIR
 from optimus.helpers.constants import DATE_FORMAT_ITEMS, DATE_FORMAT_ITEMS_MONTH, PYTHON_DATE_TO_FORMAT
@@ -172,20 +171,6 @@ def setup_google_colab():
             os.environ["SPARK_HOME"] = SPARK_PATH_COLAB
 
 
-def is_pyarrow_installed():
-    """
-    Check if pyarrow is installed
-    :return:
-    """
-    try:
-        import pyarrow
-        have_arrow = True
-    except ImportError as e:
-        print(e)
-        have_arrow = False
-    return have_arrow
-
-
 def check_env_vars(env_vars):
     """
     Check if a environment var exist
@@ -318,8 +303,8 @@ def reduce_mem_usage(df, categorical=True, categorical_threshold=50, verbose=Fal
 
     start_mem_usg = df.size()
     dfd = df.data
-    ints = df.cols.exec_agg(dfd.applymap(isint).sum(), True)
-    floats = df.cols.exec_agg(dfd.applymap(isfloat).sum(), True)
+    # ints = df.cols.exec_agg(dfd.applymap(isint).sum(), True)
+    # floats = df.cols.exec_agg(dfd.applymap(isfloat).sum(), True)
     nulls = df.cols.exec_agg(dfd.isnull().sum(), True)
     total_rows = len(dfd)
 

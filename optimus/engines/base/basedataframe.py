@@ -14,7 +14,7 @@ from optimus.engines.base.mask import Mask
 from optimus.engines.base.ml.encoding import BaseEncoding
 from optimus.engines.base.ml.models import BaseML
 from optimus.engines.base.rows import *
-from optimus.helpers.check import is_notebook
+from optimus.helpers.check_env import is_notebook
 from optimus.helpers.constants import RELATIVE_ERROR
 from optimus.helpers.functions import df_dicts_equal, absolute_path, reduce_mem_usage
 from optimus.helpers.json import json_converter

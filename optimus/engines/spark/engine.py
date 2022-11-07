@@ -3,11 +3,10 @@ import platform
 import sys
 from shutil import rmtree
 
-from deepdiff import DeepDiff
-from optimus._version import __version__
 from pyspark.sql import DataFrame
 
 import optimus.helpers.functions_spark
+from optimus._version import __version__
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.spark.create import Create
 from optimus.engines.spark.io.jdbc import JDBC
@@ -17,7 +16,6 @@ from optimus.helpers.constants import *
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions_spark import append as append_df
 from optimus.helpers.logger import logger
-from optimus.helpers.output import output_json
 from optimus.helpers.raiseit import RaiseIt
 from optimus.optimus import Engine, EnginePretty
 
@@ -425,26 +423,3 @@ class SparkEngine(BaseEngine):
         """
 
         logger.active(verbose)
-
-    @staticmethod
-    def compare(df1, df2, method="json"):
-        """
-        Compare 2 Spark dataframes
-        :param df1:
-        :param df2:
-        :param method: json or a
-        :return:
-        """
-        if method == "json":
-            diff = DeepDiff(df1.to_json(), df2.to_json(), ignore_order=False)
-            print(output_json(diff))
-        elif method == "collect":
-            if df1.collect() == df2.collect():
-                print("Dataframes are equal")
-                return True
-            else:
-                print("Dataframes not equal. Use 'json' param to check for differences")
-                return False
-
-        else:
-            RaiseIt.type_error(method, ["json", "collect"])

@@ -1,24 +1,21 @@
 import glob
-from optimus.infer import is_url
 import uuid
 import zipfile
+from io import StringIO
 from pathlib import Path
 from typing import Tuple
 
-from io import StringIO
+import pandas as pd
 import requests
 
-import pandas as pd
-import pandavro as pdx
-
-
-from optimus.optimus import EnginePretty
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.dataframe import PandasDataFrame
+from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
-from optimus.helpers.core import val_to_list
+from optimus.infer import is_url
+from optimus.optimus import EnginePretty
 
 
 class Load(BaseLoad):
@@ -34,11 +31,9 @@ class Load(BaseLoad):
         try:
             # resp = requests.get(filepath_or_buffer)
             df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
-
+            return df
         except requests.exceptions.HTTPError as err:
             print(err)
-
-        return df
 
     @staticmethod
     def _json(filepath_or_buffer, *args, **kwargs):
@@ -65,13 +60,16 @@ class Load(BaseLoad):
         if not truncated:
             nrows = kwargs.get("nrows", None)
             if nrows:
-                logger.warn(f"'load.json' on {EnginePretty.PANDAS.value} loads the whole dataset and then truncates it if file is not multiline.")
+                logger.warn(
+                    f"'load.json' on {EnginePretty.PANDAS.value} loads the whole dataset and then truncates it if file is not multiline.")
                 df = df[:nrows]
 
         return df
 
     @staticmethod
     def _avro(filepath_or_buffer, nrows=None, *args, **kwargs):
+        import pandavro as pdx
+
         kwargs.pop("n_partitions", None)
 
         if is_url(filepath_or_buffer):
@@ -105,7 +103,7 @@ class Load(BaseLoad):
     @staticmethod
     def _xml(filepath_or_buffer, nrows=None, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        
+
         if is_url(filepath_or_buffer):
             s = requests.get(filepath_or_buffer).text
             df = pd.read_xml(StringIO(s), *args, **kwargs)
@@ -130,7 +128,7 @@ class Load(BaseLoad):
         sheet_names = list(pd.read_excel(filepath_or_buffer, None, storage_options=storage_options).keys())
         df = pd.concat(val_to_list(dfs), axis=0).reset_index(drop=True)
 
-        return df, sheet_names    
+        return df, sheet_names
 
     def orc(self, path, columns, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
 
@@ -154,7 +152,8 @@ class Load(BaseLoad):
         return df
 
     @staticmethod
-    def zip(zip_path, filename, dest=None, merge=False, storage_options=None, conn=None, n_partitions=1, *args, **kwargs):
+    def zip(zip_path, filename, dest=None, merge=False, storage_options=None, conn=None, n_partitions=1, *args,
+            **kwargs):
         if dest is None:
             dest = str(uuid.uuid4()) + "/"
 

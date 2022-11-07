@@ -1,7 +1,5 @@
 import numpy as np
-import numpy as np
 import vaex
-from fastnumbers import isintlike
 
 from optimus.engines.base.functions import BaseFunctions
 from optimus.engines.base.vaex.functions import VaexBaseFunctions

@@ -11,13 +11,12 @@ from typing import Callable, Union, Optional, Tuple
 import nltk
 import numpy as np
 import pandas as pd
-from fast_histogram import histogram1d
 from glom import glom
 from nltk import LancasterStemmer, ngrams
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import SnowballStemmer
-from num2words import num2words
+
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 
 from optimus.engines.base.meta import Meta
@@ -2995,6 +2994,7 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return: Column with number converted to its string representation.
         """
+        from num2words import num2words
         w_tokenizer = nltk.tokenize.WhitespaceTokenizer()
 
         def _num_to_words(text):
@@ -3544,7 +3544,7 @@ class BaseColumns(ABC):
             __min, __max = range
             # histogram1 can not handle min and max with the same values
             if __min < __max:
-                _count = histogram1d(pdf.values, range=range, bins=bins)
+                _count = np.histogram(pdf.values, range=range, bins=bins)[0]
             else:
                 _count = [df.rows.count()]
             return col_name, [list(_count), list(bins_edges[col_name])]

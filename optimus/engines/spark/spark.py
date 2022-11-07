@@ -2,7 +2,8 @@ from pyspark.sql import SparkSession
 
 from optimus.engines.spark.constants import STARTING_SPARK
 from optimus.helpers.constants import *
-from optimus.helpers.functions import is_pyarrow_installed, check_env_vars
+from optimus.helpers.functions import check_env_vars
+from optimus.helpers.check_env import is_pyarrow_installed
 from optimus.helpers.logger import logger
 
 

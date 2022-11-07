@@ -2,7 +2,6 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
-from fastnumbers import isintlike, isreal, fast_forceint, fast_float
 
 from optimus.engines.base.functions import BaseFunctions
 from optimus.helpers.logger import logger
@@ -20,20 +19,18 @@ class PandasBaseFunctions(BaseFunctions, ABC):
             return False
         if str(series.dtype) in self.constants.INT_INTERNAL_TYPES:
             return True
-        self.intlike = isintlike
-        return np.vectorize(self.intlike)(series).flatten()
+        return pd.to_numeric(series, errors="coerce") % 1 == 0
 
     def is_float(self, series):
         if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
             return False
         # use isreal to allow strings like "0"
-        return np.vectorize(isreal)(series).flatten()
+        return pd.to_numeric(series, errors="coerce") % 1 > 0
 
     def is_numeric(self, series):
         if str(series.dtype) in self.constants.DATETIME_INTERNAL_TYPES:
             return False
-        return np.vectorize(isreal)(series).flatten()
-
+        return pd.to_numeric(series, errors="coerce") % 1 >= 0
 
     @classmethod
     def _to_integer(cls, series, default=0):
@@ -51,10 +48,11 @@ class PandasBaseFunctions(BaseFunctions, ABC):
         try:
             if default is not None:
                 series = series.fillna(default)
-            series = pd.Series(np.vectorize(fast_forceint,
-                                            otypes=otypes)(series, default=default,
-                                                           on_fail=lambda x: default).flatten())
+            # series = pd.Series(np.vectorize(fast_forceint,
+            #                                 otypes=otypes)(series, default=default,
+            #                                                on_fail=lambda x: default).flatten())
 
+            series = pd.to_numeric(series, errors="coerce", downcast="float")
         except Exception:
             series = series.replace([np.inf, -np.inf], default)
             if int_type:
