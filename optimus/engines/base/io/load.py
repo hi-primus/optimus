@@ -3,7 +3,6 @@ import ntpath
 import os
 from abc import abstractmethod
 
-
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.ml.models import Model
 from optimus.helpers.core import val_to_list
@@ -80,13 +79,15 @@ class BaseLoad:
 
         unquoted_path = None
 
-        if not is_url(filepath_or_buffer):
-            unquoted_path = glob.glob(unquote_path(filepath_or_buffer))
+        meta = {}
+        if is_str(filepath_or_buffer):
+            if not is_url(filepath_or_buffer):
+                unquoted_path = glob.glob(unquote_path(filepath_or_buffer))
 
-        if unquoted_path and len(unquoted_path):
-            meta = {"file_name": unquoted_path[0], "name": ntpath.basename(unquoted_path[0])}
-        else:
-            meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
+            if unquoted_path and len(unquoted_path):
+                meta = {"file_name": unquoted_path[0], "name": ntpath.basename(unquoted_path[0])}
+            else:
+                meta = {"file_name": filepath_or_buffer, "name": ntpath.basename(filepath_or_buffer)}
 
         try:
 
@@ -492,7 +493,7 @@ class BaseLoad:
 
         else:
             RaiseIt.value_error(
-                file_type, ["csv", "json", "xml", "excel","parquet"])
+                file_type, ["csv", "json", "xml", "excel", "parquet"])
 
         if file_name:
             df.meta = Meta.set(df.meta, "file_name", file_name)
