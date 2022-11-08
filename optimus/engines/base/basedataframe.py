@@ -717,7 +717,7 @@ class BaseDataFrame(ABC):
     def print(self, limit=10, cols=None):
         print(self.ascii(limit, cols))
 
-    def table(self, limit=None, cols=None, title=None, truncate=True, highlight=None):
+    def table(self, limit=10, cols=None, title=None, truncate=True, highlight=None):
         """
         Print a dataframe in html format
         :param limit: The number of files that will be printed
