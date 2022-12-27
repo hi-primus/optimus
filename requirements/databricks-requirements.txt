@@ -11,7 +11,7 @@ numpy==1.22.4
 matplotlib==1.5.3
 seaborn==0.7.1
 deprecated==1.2.5
-setuptools==41.6.0
+setuptools==65.5.1
 pyarrow==0.15.0
 Jinja2==2.11.3
 tensorflow==2.9.1
