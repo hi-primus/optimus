@@ -15,24 +15,24 @@ class DataFrameBaseDataFrame(BaseDataFrame):
     def _sample(self, n=10, seed=False):
         return self.root.data.sample(n=n, random_state=seed).reset_index(drop=True)
 
-    def sample(self, n=10, random=False):
+    def sample(self, n=10, seed: [bool | int] = False):
         """
-        Return a n number of sample from a dataFrame
+        Return number of sample from a dataFrame
         :param n: Number of samples
-        :param random: if true get a semi random sample
+        :param seed: if true get a semi random sample. If int get a random sample
         :return:
         """
         if not is_int(n):
             RaiseIt.type_error(n, ["int"])
 
-        if random is True:
+        if seed is True:
             seed = int(random_int())
-        elif random is False:
+        elif seed is False:
             seed = 0
-        elif is_int(random):
-            seed = random
+        elif is_int(seed):
+            seed = seed
         else:
-            RaiseIt.type_error(random, ["bool", "int"])
+            RaiseIt.type_error(seed, ["bool", "int"])
 
         df = self.root
         rows_count = df.rows.count()
