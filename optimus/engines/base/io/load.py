@@ -47,6 +47,7 @@ class BaseLoad:
     def csv(self, filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3, lineterminator='\r\n', on_bad_lines='warn', cache=False, na_filter=False,
             storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
+
         """
         Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
         params.

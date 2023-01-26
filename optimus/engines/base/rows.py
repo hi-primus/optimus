@@ -246,7 +246,7 @@ class BaseRows(ABC):
 
     def reverse(self) -> 'DataFrameType':
         """
-
+        Reverse Rows
         :return:
         """
         dfd = self.root.functions.reverse_df(self.root.data)
@@ -295,15 +295,15 @@ class BaseRows(ABC):
                 where = where.get_series()
 
             where = df.functions.to_boolean(where)
-            
+
         dfd = dfd.reset_index(drop=True)[where.reset_index(drop=True) == 0]
         meta = Meta.action(df.meta, Actions.DROP_ROW.value, df.cols.names())
         return self.root.new(dfd, meta=meta)
 
-    def between_index(self, lower_bound=None, upper_bound=None, cols="*"):
+    def between(self, lower_bound=None, upper_bound=None, cols="*"):
         """
-
-        :param columns:
+        Select rows between lower and upper bound
+        :param cols:
         :param lower_bound:
         :param upper_bound:
         :return:
@@ -315,9 +315,9 @@ class BaseRows(ABC):
 
     def limit(self, count=10) -> 'DataFrameType':
         """
-        Limit the number of rows
-        :param count:
-        :return:
+        Limit the number of rows to be returned
+        :param count: Number of rows to be returned
+        :return: Optimus Dataframe
         """
         # Ensure that count is an integer. Ibis complains otherwise
         count = int(count)
@@ -334,16 +334,16 @@ class BaseRows(ABC):
 
     def approx_count(self) -> 'DataFrameType':
         """
-        Aprox count
+        Approx count
         :return:
         """
         return self.root.rows.count()
 
     def _mask(self, cols, func: Callable, drop=False, how="any", *args, **kwargs) -> 'DataFrameType':
         """
-
-        :param cols:
-        :param method:
+        Select rows that match a function
+        :param cols: Columns to be used
+        :param func:  Function to be applied
         :param drop:
         :param how:
         :param args:
@@ -369,11 +369,11 @@ class BaseRows(ABC):
 
     def str(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-        #TODO:?
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows that contains a string
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a string
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.str, drop=drop, how=how)
 
@@ -804,7 +804,7 @@ class BaseRows(ABC):
 
     def expression(self, where=None, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
+        Filter by expression
         :param where:
         :param cols:
         :param drop:
@@ -902,7 +902,7 @@ class BaseRows(ABC):
         :param how:
         :return:
         """
-        return self._mask(cols, func=self.root.mask.between, drop=True, how=how, lower_bound=lower_bound,
+        return self._mask(cols, func=self.root.mask.between_values, drop=True, how=how, lower_bound=lower_bound,
                           upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def drop_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
@@ -983,9 +983,9 @@ class BaseRows(ABC):
     def drop_uniques(self, cols="*", keep="first", how="any") -> 'DataFrameType':
         """
         Drops first (passed to keep) matches of duplicates and unique values.
-        :param cols: 
-        :param keep: 
-        :param how: 
+        :param cols:
+        :param keep:
+        :param how:
         :return: Dataframe
         """
         return self._mask(cols, func=self.root.mask.unique, drop=True, keep=keep, how=how)

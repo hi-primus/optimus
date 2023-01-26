@@ -18,7 +18,6 @@ class SparkDataFrame(BaseDataFrame):
     def _base_to_dfd(self, pdf, n_partitions) -> 'InternalDataFrameType':
         pass
 
-
     # Koalas do not support the 'or' operation over the whole dataframe.
     # def __or__(self, df2) -> 'DataFrameType':
     #     return self.new(((self.get_series()) | (df2.get_series())).to_frame())
@@ -69,7 +68,6 @@ class SparkDataFrame(BaseDataFrame):
         df = self.data
         return self.new(df.cache(), meta=self.meta)
 
-
     def export(self, n="all", data_types="inferred"):
         """
         Helper function to export all the dataframe in text format. Aimed to be used in test functions
@@ -116,10 +114,9 @@ class SparkDataFrame(BaseDataFrame):
 
         return "{schema}, {dict_result}".format(schema=schema, dict_result=dict_result)
 
-
     def sample(self, n=10, random=False):
         """
-        Return a n number of sample from a dataFrame
+        Return n number of sample from a dataFrame
         :param n: Number of samples
         :param random: if true get a semi random sample
         :return:
@@ -141,16 +138,11 @@ class SparkDataFrame(BaseDataFrame):
 
         return self.new(self.data.sample(False, fraction, seed=seed).limit(n))
 
-    def stratified_sample(self, col_name, seed: int = 1):
-        """
-        Stratified Sampling
-        :param col_name:
-        :param seed:
-        :return:
-        """
+    def stratified_sample(self, cols, seed: int = 1):
+
         df = self.root.data.to_spark()
-        fractions = df.select(col_name).distinct().withColumn("fraction", F.lit(0.8)).rdd.collectAsMap()
-        df = df.stat.sampleBy(col_name, fractions, seed).to_koalas()
+        fractions = df.select(cols).distinct().withColumn("fraction", F.lit(0.8)).rdd.collectAsMap()
+        df = df.stat.sampleBy(cols, fractions, seed).to_koalas()
         return self.new(df)
 
     def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None,
@@ -250,7 +242,6 @@ class SparkDataFrame(BaseDataFrame):
 
         return n_bytes
 
-
     def compute(self):
         """
         This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
@@ -268,7 +259,6 @@ class SparkDataFrame(BaseDataFrame):
         self.data.cache().count()
         return self
 
-
     def query(self, sql_expression):
         """
         Implements the transformations which are defined by SQL statement. Currently we only support
@@ -281,7 +271,6 @@ class SparkDataFrame(BaseDataFrame):
         dfd = self.root.data
         sql_transformer = SQLTransformer(statement=sql_expression)
         return sql_transformer.transform(dfd)
-
 
     def set_name(self, value=None):
         """
@@ -307,7 +296,6 @@ class SparkDataFrame(BaseDataFrame):
         df = self.data
 
         return df.to_spark().rdd.getNumPartitions()
-
 
     def partitioner(self):
         """
@@ -351,7 +339,6 @@ class SparkDataFrame(BaseDataFrame):
         :return:
         """
         self.data.show(n)
-
 
     def random_split(self, weights: list = None, seed: int = 1):
         """
