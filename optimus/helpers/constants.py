@@ -263,7 +263,7 @@ def print_check_point_config(filesystem):
 
 # For Google Colab
 JAVA_PATH_COLAB = "/usr/lib/jvm/java-8-openjdk-amd64"
-RELATIVE_ERROR = 10000
+RELATIVE_ERROR = 10_000
 
 US_STATES_NAMES = ["alabama",
                    "alaska",

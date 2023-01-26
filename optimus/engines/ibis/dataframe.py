@@ -14,7 +14,7 @@ class IbisDataFrame(BaseDataFrame):
     def visualize(self):
         pass
 
-    def stratified_sample(self, col_name, seed: int = 1) -> 'DataFrameType':
+    def stratified_sample(self, cols, seed: int = 1) -> 'DataFrameType':
         pass
 
     def _iloc(self, lower_bound, upper_bound, copy=True):

@@ -87,25 +87,25 @@ class TestMaskPandas(TestBase):
 
     def test_mask_between_all(self):
         df = self.df.copy()
-        result = df.mask.between(cols='*', lower_bound='-inf', upper_bound='inf', equal=True)
+        result = df.mask.between_values(cols='*', lower_bound='-inf', upper_bound='inf', equal=True)
         expected = self.create_dataframe(data={('NullType', 'bool'): [False, False, False, False, False, False], ('Code', 'bool'): [False, True, True, False, False, False], ('Multiple', 'bool'): [False, False, True, True, False, False], ('attributes', 'bool'): [False, False, False, False, False, False], ('date arrival', 'bool'): [False, False, False, False, False, False], ('function(binary)', 'bool'): [False, False, False, False, False, False], ('height(ft)', 'bool'): [True, True, True, True, False, True], ('japanese name', 'bool'): [False, False, False, False, False, False], ('last date seen', 'bool'): [False, False, False, False, False, False], ('last position seen', 'bool'): [False, False, False, False, False, False], ('rank', 'bool'): [True, True, True, True, True, True], ('Cybertronian', 'bool'): [True, True, True, True, True, True], ('Date Type', 'bool'): [True, True, True, True, True, True], ('age', 'bool'): [True, True, True, True, True, True], ('function', 'bool'): [False, False, False, False, False, False], ('names', 'bool'): [False, False, False, False, False, False], ('timestamp', 'bool'): [True, True, True, True, True, True], ('weight(t)', 'bool'): [True, True, True, True, True, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_between_multiple(self):
         df = self.df.copy()
-        result = df.mask.between(cols=['age', 'NullType', 'weight(t)'], bounds=[['-inf', -10], [0, 1.9999], [300, 5000000]], equal=True)
+        result = df.mask.between_values(cols=['age', 'NullType', 'weight(t)'], bounds=[['-inf', -10], [0, 1.9999], [300, 5000000]], equal=True)
         expected = self.create_dataframe(data={('age', 'bool'): [True, True, True, True, True, True], ('NullType', 'bool'): [False, False, False, False, False, False], ('weight(t)', 'bool'): [False, False, False, True, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_between_numeric(self):
         df = self.df.copy()
-        result = df.mask.between(cols=['height(ft)'], bounds=[[26, -28]], equal=False)
+        result = df.mask.between_values(cols=['height(ft)'], bounds=[[26, -28]], equal=False)
         expected = self.create_dataframe(data={('height(ft)', 'bool'): [False, True, False, True, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 
     def test_mask_between_string(self):
         df = self.df.copy()
-        result = df.mask.between(cols=['names'], upper_bound='-inf', lower_bound=0, equal=False)
+        result = df.mask.between_values(cols=['names'], upper_bound='-inf', lower_bound=0, equal=False)
         expected = self.create_dataframe(data={('names', 'bool'): [False, False, False, False, False, False]}, force_data_types=True)
         self.assertTrue(result.equals(expected, decimal=True, assertion=True))
 

@@ -565,7 +565,7 @@ class BaseColumns(ABC):
 
         if is_list_of_tuples(cols):
             validate_columns_names(df, cols)
-            cols, names = zip(*cols)
+            cols, output_cols = zip(*cols)
         elif is_list_of_str(cols):
             cols = parse_columns(df, cols)
         elif is_str(cols):
@@ -573,19 +573,19 @@ class BaseColumns(ABC):
         else:
             cols = all_cols
 
-        if names is None:
+        if output_cols is None:
             if func is not None:
-                names = cols
+                output_cols = cols
             else:
-                RaiseIt.value_error((names, func))
+                RaiseIt.value_error((output_cols, func))
 
-        if is_list(cols) and not is_list(names):
-            names = [names] * len(cols)
+        if is_list(cols) and not is_list(output_cols):
+            output_cols = [output_cols] * len(cols)
 
         dfd = df.data
         meta = df.meta
 
-        for old_col_name, new_col_name in zip(cols, names):
+        for old_col_name, new_col_name in zip(cols, output_cols):
 
             if is_int(old_col_name):
                 old_col_name = all_cols[old_col_name]
@@ -1728,7 +1728,7 @@ class BaseColumns(ABC):
         def func(value, keys):
             return value.str[keys]
 
-        return self.apply(cols, func, args=(n,), output_cols=output_cols, meta_action=Actions.ITEM.value,
+        return self.apply(cols, func, args=(index,), output_cols=output_cols, meta_action=Actions.ITEM.value,
                           mode="vectorized")
 
     def get(self, cols="*", keys=None, output_cols=None) -> 'DataFrameType':
@@ -2239,6 +2239,7 @@ class BaseColumns(ABC):
                           output_cols=output_cols,
                           meta_action=Actions.INFER.value, mode="vectorized", func_type="column_expr")
 
+    # TODO: we have dateformat and dateformats function, we shoul dissambiguate them
     def date_formats(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Get the date format for every value in specified columns.
@@ -3628,7 +3629,7 @@ class BaseColumns(ABC):
                 missing = 0 if missing is None else int(missing)
 
                 matches = 0
-                mismatches =  self.root.rows.count()- missing
+                mismatches = self.root.rows.count() - missing
             else:
                 matches_mismatches = getattr(df[col_name].mask, dtype)(col_name).cols.frequency()
                 if dtype == ProfilerDataTypes.NULL.value:
@@ -3708,7 +3709,8 @@ class BaseColumns(ABC):
                 dtype_index = 0
 
                 if len(dtypes) > 1:
-                    if dtypes[0] == ProfilerDataTypesNumeric.INT.value and dtypes[1] == ProfilerDataTypesNumeric.FLOAT.value:
+                    if dtypes[0] == ProfilerDataTypesNumeric.INT.value and dtypes[
+                        1] == ProfilerDataTypesNumeric.FLOAT.value:
                         dtype_index = 1
 
                     elif dtypes[0] == ProfilerDataTypesNumeric.ZIP_CODE.value:
@@ -4279,7 +4281,7 @@ class BaseColumns(ABC):
 
     def any_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, inverse=False,
                     tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.between, lower_bound=lower_bound, upper_bound=upper_bound,
+        return self._any_mask(cols, self.root.mask.between_values, lower_bound=lower_bound, upper_bound=upper_bound,
                               equal=equal,
                               bounds=bounds, inverse=inverse, tidy=tidy, compute=compute)
 
@@ -4483,7 +4485,7 @@ class BaseColumns(ABC):
         :return: The number of elements that match the function.
         """
 
-        return self._count_mask(cols, self.root.mask.between, lower_bound=lower_bound, upper_bound=upper_bound,
+        return self._count_mask(cols, self.root.mask.between_values, lower_bound=lower_bound, upper_bound=upper_bound,
                                 equal=equal,
                                 bounds=bounds, inverse=inverse, tidy=tidy, compute=compute)
 
@@ -5008,7 +5010,7 @@ class BaseColumns(ABC):
                 drop=True) -> 'DataFrameType':
         value = str(bounds) if bounds else str((lower_bound, upper_bound))
         rename_func = False if drop else lambda n: f"{n}_between_{value}"
-        return self._mask(cols, self.root.mask.between, output_cols, rename_func, lower_bound=lower_bound,
+        return self._mask(cols, self.root.mask.between_values, output_cols, rename_func, lower_bound=lower_bound,
                           upper_bound=upper_bound,
                           equal=equal, bounds=bounds)
 

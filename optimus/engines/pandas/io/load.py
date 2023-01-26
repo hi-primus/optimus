@@ -29,10 +29,9 @@ class Load(BaseLoad):
         kwargs.pop("n_partitions", None)
 
         try:
-            # resp = requests.get(filepath_or_buffer)
             df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
             return df
-        except requests.exceptions.HTTPError as err:
+        except Exception as err:
             print(err)
 
     @staticmethod
