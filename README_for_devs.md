@@ -367,8 +367,14 @@ go to `docs/` in the package and run `make html`
 
 ## Packaging
 
+### General
 `poetry build` will build the package and put it in the `dist` folder.
 `poetry publish` will publish the package to pypi.
+
+### Versioning
+
+If you want to build the pachage and upload it to pypi you probably want to update the version.
+For that go to pyproject.toml and change the key 'version'
 
 ### Publishing to PyPi
 
@@ -398,9 +404,16 @@ or if you want to use a token
 
 `poetry config pypi-token.testpypi <API Token>`
 
+then build and publish the package
+
 `poetry build`
 
 `poetry publish -r testpypi`
+
+### Add optional dependencies
+If you want to add optional dependencies you can use the `group` option like:
+
+`poetry add pyodide-http --group=pyodide`
 
 ## Pyodide
 
