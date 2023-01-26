@@ -16,7 +16,6 @@ from nltk import LancasterStemmer, ngrams
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import SnowballStemmer
-
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 
 from optimus.engines.base.meta import Meta
@@ -166,16 +165,16 @@ class BaseColumns(ABC):
         """
         return self.append(dfs)
 
-    def join(self, df_right: 'DataFrameType', how="left", on=None, left_on=None, right_on=None,
-             key_middle=False) -> 'DataFrameType':
+    def join(self, df_right: 'DataFrameType', how: str = "left", on=None, left_on=None, right_on=None,
+             key_middle: bool = False) -> 'DataFrameType':
         """
         Join two dataframes using a column.
 
         :param df_right: The dataframe that will be used to join the actual dataframe.
         :param how: {‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
         :param on: The column that will be used to join the two dataframes.
-        :param left_on: The column in the actual dataframe that will be used to make to make the join.
-        :param right_on: The column in the given dataframe that will be used to make to make the join.
+        :param left_on: The column in the actual dataframe that will be used to execute the join.
+        :param right_on: The column in the given dataframe that will be used to execute the join.
         :param key_middle: Order the columns putting the left df columns before the key column and the right df columns
         :return: Dataframe
         """
@@ -272,7 +271,7 @@ class BaseColumns(ABC):
 
         :param cols: "*", column name or list of column names to be processed.
         :param regex: Regex expression to select the columns
-        :param data_type:
+        :param data_type: drop columns by data type
         :return:
         """
         df = self.root
@@ -319,9 +318,9 @@ class BaseColumns(ABC):
     def to_timestamp(cols, date_format=None, output_cols=None):
         """
 
-        :param cols:
+        :param cols: "*", column name or list of column names to be processed.
         :param date_format:
-        :param output_cols:
+        :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
         pass
@@ -446,7 +445,7 @@ class BaseColumns(ABC):
         :param args: Argument when 'value_func' param is a function.
         :param default: Entries where 'where' is False are replaced with corresponding value from other.
         :param eval_value: Parse 'value_func' param in case a string is passed.
-        :param mode: If possible, apply the function using one argument for each column, if not, applies every argument to every element.
+        :param each: If possible, apply the function using one argument for each column, if not, applies every argument to every element.
         :return:
         """
         if args is None:
@@ -545,13 +544,14 @@ class BaseColumns(ABC):
             new_df = new_df.cols.move(new_col, "after", col)
         return new_df
 
-    def rename(self, cols: Union[str, list, dict] = "*", names: Union[str, list] = None, func=None) -> 'DataFrameType':
+    def rename(self, cols: Union[str, list, dict] = "*", output_cols: Union[str, list] = None,
+               func=None) -> 'DataFrameType':
         """
         Changes the name of a column(s) dataFrame.
 
         :param cols: string, dictionary or list of strings or tuples. Each tuple may have
             following form: (oldColumnName, newColumnName).
-        :param names: string or list of strings with new names of columns. Ignored if a dictionary
+        :param output_cols: string or list of strings with new columns names. Ignored if a dictionary
             or list of tuples is passed to cols.
         :param func: can be lower, upper or any string transformation function.
         :return: Dataframe with columns names replaced.
@@ -714,7 +714,7 @@ class BaseColumns(ABC):
     def set_date_format(self, cols: Union[str, list, dict] = "*", date_formats: Union[str, list] = None,
                         inferred: bool = False) -> 'DataFrameType':
         """
-        Set date format.
+        Set user defined date format in the meta data
 
         :param cols: A dict with the form {"col_name": "date format"}, a list of columns or a single column
         :param date_formats: If a string or a list passed to cols, uses this parameter to set the date format to those columns.
@@ -732,7 +732,7 @@ class BaseColumns(ABC):
 
     def unset_date_format(self, cols="*"):
         """
-        Unset user defined date format.
+        Unset user defined date format in the meta data
 
         :param cols: '*', list of columns names or a single column name.
         :return:
@@ -752,14 +752,14 @@ class BaseColumns(ABC):
 
     def cast(self, cols=None, data_type=None, output_cols=None, *args, **kwargs) -> 'DataFrameType':
         """
-        NOTE: We have two ways to cast the data. Use the use the native .astype() this is faster but can not handle some
+        NOTE: We have two ways to cast the data. Use the native .astype() this is faster but can not handle some
         transformation like string to number in which should output nan.
 
         Cast the elements inside a column or a list of columns to a specific data type.
         Unlike 'cast' this not change the columns data type
 
-        :param cols: Columns names to be casted or, dictionary or list of tuples of column names
-                     and types to be casted with the following structure:
+        :param cols: Columns names to be cast or, dictionary or list of tuples of column names
+                     and types to be cast with the following structure:
                      cols = [('columnName1', 'integer'), ('columnName2', 'float'), ('columnName3', 'string')]
                      The first parameter in each tuple is the column name, the second is the final datatype of column after
                      the transformation is made.
@@ -1054,7 +1054,7 @@ class BaseColumns(ABC):
 
     def cross_tab(self, col_x, col_y, output="dict", compute=True) -> dict:
         """
-
+        By default, computes a frequency table of the factors unless an array of values and an aggregation function are passed.
         :param col_x:
         :param col_y:
         :param output:
@@ -1148,7 +1148,7 @@ class BaseColumns(ABC):
     def groupby(self, by: Union[str, list] = None, agg: Union[list, dict] = None) -> 'DataFrameType':
         """
         This helper function aims to help managing columns name in the aggregation output.
-        Also how to handle ordering columns because dask can order columns.
+        Also, how to handle ordering columns because dask can order columns.
 
         :param by: None, list of columns names or a single column name to group the aggregations.
         :param agg: List of tuples with the form [("agg", "col")] or
@@ -1268,8 +1268,8 @@ class BaseColumns(ABC):
         Sort one or multiple columns in asc or desc order.
 
         :param order: 'asc' or 'desc' accepted
-        :param cols:
-        :return: Column containing the cumulative sum.
+        :param cols: Sort columns by the roder s specified
+        :return: Sorted Columns
 
         """
         df = self.root
@@ -1426,7 +1426,7 @@ class BaseColumns(ABC):
 
         :param cols: "*", column name or list of column names to be processed.
         :param numeric: if True, cast to numeric before processing.
-        :param tidy: The result format. If True it will return a value if you process a column or column name and
+        :param tidy: The result format. If True it returns a value if you process a column or column name and
         value if not. If False it will return the functions name, the column name.
         and the value.
         :param compute: C
@@ -1494,6 +1494,7 @@ class BaseColumns(ABC):
         :param cols: "*", column name or list of column names to be processed.
         :param values: Percentiles values you want to calculate. 0.25,0.5,0.75
         :param relative_error:
+        :param estimate:
         :param tidy: The result format. If True it will return a value if you process a column or column name and
             value if not. If False it will return the functions name, the column name.
         :param compute: Compute the final result. False imply to return a delayed object.
@@ -1643,7 +1644,7 @@ class BaseColumns(ABC):
 
     def std(self, cols="*", tidy=True, compute=True):
         """
-        Return unbiased variance over requested columns.
+        Return unbiased Standard Variance over requested columns.
 
         :param cols: "*", column name or list of column names to be processed.
         :param tidy: The result format. If tidy it will return a value if you process a column or column name and value if not.
@@ -1714,12 +1715,12 @@ class BaseColumns(ABC):
 
         return format_dict(result, tidy=tidy)
 
-    def item(self, cols="*", n=None, output_cols=None) -> 'DataFrameType':
+    def item(self, cols="*", index=None, output_cols=None) -> 'DataFrameType':
         """
-        Return items from a list over requested columns.
+        Get an item from  a list in a cell and put it in another column.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param n: The position of the element that will be returned.
+        :param index: The position of the element that will be returned.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return: Column containing the value of the item selected.
         """
@@ -1837,7 +1838,7 @@ class BaseColumns(ABC):
 
     def reciprocal(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
-        Return the reciprocal(1/x) of of each value in a column.
+        Return the reciprocal(1/x) of each value in a column.
 
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
@@ -2554,20 +2555,20 @@ class BaseColumns(ABC):
         df = self.root
         return df.cols.replace(cols, [s for s in string.punctuation], "", "chars", output_cols=output_cols)
 
-    def to_datetime(self, cols="*", format=None, output_cols=None, transform_format=True) -> 'DataFrameType':
+    def to_datetime(self, cols="*", current_format=None, output_cols=None, output_format=True) -> 'DataFrameType':
         """
         TODO:?
 
         :param cols: "*", column name or list of column names to be processed.
-        :param format:
+        :param current_format:
         :param output_cols: Column name or list of column names where the transformed data will be saved.
-        :param transform_format:
+        :param output_format:
         :return:
         """
-        format = transform_date_format(format) if transform_format and format else format
+        current_format = transform_date_format(current_format) if output_format and current_format else current_format
 
         return self.apply(cols, self.F.to_datetime, func_return_type=str,
-                          output_cols=output_cols, args=format, mode="partitioned")
+                          output_cols=output_cols, args=current_format, mode="partitioned")
 
     def _date_format(self, cols="*", format=None, output_cols=None, func=None, meta_action=None) -> 'DataFrameType':
         """
@@ -3162,7 +3163,7 @@ class BaseColumns(ABC):
         :param cols: '*', list of columns names or a single column name.
         :param estimate:
         :param compute: Compute the result or return a delayed function.
-        :param tidy: The result format. If True it will return a value if you
+        :param tidy: The result format. If True it returns a value if you
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
         :return:
@@ -3318,21 +3319,20 @@ class BaseColumns(ABC):
         return self.root.cols.apply(cols, func=self.F.min_max_scaler, output_cols=output_cols,
                                     meta_action=Actions.MIN_MAX_SCALER.value)
 
-    def iqr(self, cols="*", more=None, relative_error=RELATIVE_ERROR, estimate=True):
+    def iqr(self, cols="*", more=None, estimate=True):
         """
         Return the column Inter Quartile Range value.
 
         :param cols: "*", column name or list of column names to be processed.
         :param more: Return info about q1 and q3
-        :param relative_error:
+        :param estimate: Use the estimated percentile or not.
         :return: Return the column Inter Quartile Range value.
         """
         df = self.root
         iqr_result = {}
         cols = parse_columns(df, cols)
 
-        quartile = df.cols.percentile(cols, [0.25, 0.5, 0.75], relative_error=relative_error,
-                                      estimate=estimate, tidy=False)["percentile"]
+        quartile = df.cols.percentile(cols, [0.25, 0.5, 0.75], estimate=estimate, tidy=False)["percentile"]
         for col_name in cols:
             if is_null(quartile[col_name]):
                 iqr_result[col_name] = np.nan
@@ -3403,8 +3403,8 @@ class BaseColumns(ABC):
         :param separator: char or regex
         :param splits: Number of columns splits.
         :param index: Return a specific index per columns. [1,2]
-        :param drop:
-        :param mode:
+        :param drop: drop source columns
+        :param mode: unnest as 'string' or 'array'
         """
         df = self.root
 
@@ -3584,14 +3584,13 @@ class BaseColumns(ABC):
 
         return result
 
-    def quality(self, cols="*", flush=False, compute=True) -> dict:
+    def quality(self, cols="*", flush=False) -> dict:
         """
         Return the data quality in the format
         {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'inferred_data_type': 'object'}}
 
         :param cols: "*", column name or list of column names to be processed.
-        :param flush:
-        :param compute:
+        :param flush: flush the cache.
         :return: dict in the format {'col_name': {'mismatch': 0, 'missing': 9, 'match': 0, 'inferred_data_type': 'object'}}
         """
 
@@ -3929,18 +3928,15 @@ class BaseColumns(ABC):
         return parse_columns(df, cols, filter_by_column_types=data_types, invert=invert,
                              is_regex=is_regex)
 
-    def count_zeros(self, cols="*", tidy=True, compute=True):
+    def count_zeros(self, cols="*", tidy=True):
         """
         Return the count of zeros by column.
-
         :param cols: "*", column name or list of column names to be processed.
         :param tidy:
         :param compute:
         :return:
         """
         return self.count_equal(cols, 0, tidy=tidy)
-        # df = self.root
-        # return df.cols.agg_exprs(cols, self.F.count_zeros, tidy=tidy, compute=compute)
 
     def qcut(self, cols="*", quantiles=None, output_cols=None):
         """
@@ -4724,7 +4720,7 @@ class BaseColumns(ABC):
 
 
         :param cols: '*', list of columns names or a single column name.
-        :param value: Value used to evaluate the function.
+        :param values: Value used to evaluate the function.
         :param inverse: Inverse the function selection.
         :param compute: Compute the result or return a delayed function.
         :param tidy: The result format. If True it will return a value if you
@@ -4756,7 +4752,7 @@ class BaseColumns(ABC):
         :param value: Value used to evaluate the function.
         :param inverse: Inverse the function selection.
         :param compute: Compute the result or return a delayed function.
-        :param tidy: The result format. If True it will return a value if you
+        :param tidy: The result format. If True it returns a value if you
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
         :return: The number of elements that match the function.
@@ -4940,7 +4936,7 @@ class BaseColumns(ABC):
         :param cols: '*', list of columns names or a single column name.
         :param inverse: Inverse the function selection.
         :param compute: Compute the result or return a delayed function.
-        :param tidy: The result format. If True it will return a value if you
+        :param tidy: The result format. If True it returns a value if you
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
         :return: The number of elements that match the function.
@@ -4954,7 +4950,7 @@ class BaseColumns(ABC):
         :param cols: '*', list of columns names or a single column name.
         :param inverse: Inverse the function selection.
         :param compute: Compute the result or return a delayed function.
-        :param tidy: The result format. If True it will return a value if you
+        :param tidy: The result format. If True it returns a value if you
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
         :return: The number of elements that match the function.
@@ -4968,7 +4964,7 @@ class BaseColumns(ABC):
         :param cols: '*', list of columns names or a single column name.
         :param inverse: Inverse the function selection.
         :param compute: Compute the result or return a delayed function.
-        :param tidy: The result format. If True it will return a value if you
+        :param tidy: The result format. If True it returns a value if you
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
         :return: The number of elements that match the function.
@@ -4983,7 +4979,7 @@ class BaseColumns(ABC):
         :param cols: '*', list of columns names or a single column name.
         :param inverse: Inverse the function selection.
         :param compute: Compute the result or return a delayed function.
-        :param tidy: The result format. If True it will return a value if you
+        :param tidy: The result format. If True it returns a value if you
         process a column or column name and value if not. If False it will return the functions name, the column name
         and the value.
         :return: The number of elements that match the function.
@@ -5375,16 +5371,16 @@ class BaseColumns(ABC):
         return self.apply(cols, self.F.soundex, func_return_type=str, output_cols=output_cols,
                           meta_action=Actions.SOUNDEX.value, mode="vectorized", func_type="column_expr")
 
-    def tf_idf(self, features) -> 'DataFrameType':
+    def tf_idf(self, cols="*") -> 'DataFrameType':
         """
 
-        :param features:
+        :param cols: '*', list of columns names or a single column name.
         :return:
         """
 
         df = self.root
         vectorizer = TfidfVectorizer()
-        X = df[features]._to_values().ravel()
+        X = df[cols]._to_values().ravel()
         vectors = vectorizer.fit_transform(X)
 
         feature_names = vectorizer.get_feature_names()
@@ -5392,12 +5388,17 @@ class BaseColumns(ABC):
         denselist = dense.tolist()
         return self.root.new(pd.DataFrame(denselist, columns=feature_names))
 
-    def bag_of_words(self, features, analyzer="word", ngram_range=2) -> 'DataFrameType':
+    def bag_of_words(self, cols, analyzer="word", ngram_range=2) -> 'DataFrameType':
         """
 
-        :param analyzer:
-        :param features:
-        :param ngram_range:
+        :param cols: '*', list of columns names or a single column name.
+        :param analyzer:Whether the feature should be made of word n-gram or character n-grams. Option ‘char_wb’
+            creates character n-grams only from text inside word boundaries; n-grams at the edges of words
+            are padded with space.
+        :param ngram_range:The lower and upper boundary of the range of n-values for different word n-grams or char
+            n-grams to be extracted. All values of n such such that min_n <= n <= max_n will be used.
+            For example an ngram_range of (1, 1) means only unigrams, (1, 2) means unigrams and bigrams,
+            and (2, 2) means only bigrams. Only applies if analyzer is not callable.
         :return:
         """
 
@@ -5405,11 +5406,11 @@ class BaseColumns(ABC):
         if is_int(ngram_range):
             ngram_range = (ngram_range, ngram_range)
 
-        features = parse_columns(df, features)
+        cols = parse_columns(df, cols)
 
-        df = df.cols.select(features).rows.drop_missings()
+        df = df.cols.select(cols).rows.drop_missings()
 
-        X = df[features]._to_values().ravel()
+        X = df[cols]._to_values().ravel()
         vectorizer = CountVectorizer(
             ngram_range=ngram_range, analyzer=analyzer)
         matrix = vectorizer.fit_transform(X)

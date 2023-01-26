@@ -507,7 +507,7 @@ class BaseDataFrame(ABC):
 
     def run(self):
         """
-        This method is a very useful function to break lineage of transformations. By default Spark uses the lazy
+        This method is a very useful function to break lineage of transformations. By default, Spark uses the lazy
         evaluation approach in processing data: transformation functions are not computed into an action is called.
         Sometimes when transformations are numerous, the computations are very extensive because the high number of
         operations that spark needs to run in order to get the results.
@@ -637,7 +637,7 @@ class BaseDataFrame(ABC):
 
     def table_html(self, limit=10, cols=None, title=None, full=False, truncate=True, count=True, highlight=[]):
         """
-        Return a HTML table with the spark cols, data types and values
+        Return an HTML table with cols names, data types and values
         :param cols: Columns to be printed
         :param limit: How many rows will be printed
         :param title: Table title
