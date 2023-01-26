@@ -5,12 +5,22 @@ from glom import assign
 
 from optimus.engines.base.meta import Meta
 from optimus.helpers.columns import parse_columns
-from optimus.helpers.core import one_list_to_val
 from optimus.helpers.functions import update_dict
 from optimus.helpers.json import dump_json
 from optimus.helpers.types import *
-from optimus.infer import is_list
 from optimus.profiler.constants import MAX_BUCKETS
+
+
+def _columns_summary(df):
+    data_types_list = list(set(df.cols.data_type("*", tidy=False)["data_type"].values()))
+
+    data_types = df.cols.data_type("*", tidy=False)["data_type"]
+
+    return {
+        'cols_count': df.cols.count(),
+        'data_types_list': data_types_list,
+        'total_count_data_types': len(set([i for i in data_types.values()]))
+    }
 
 
 class BaseProfile(ABC):
@@ -19,55 +29,14 @@ class BaseProfile(ABC):
     def __init__(self, root: 'DataFrameType'):
         self.root = root
 
-    def _columns_summary(self):
-        df = self.root
-
-        data_types_list = list(set(df.cols.data_type("*", tidy=False)["data_type"].values()))
-
-        data_types = df.cols.data_type("*", tidy=False)["data_type"]
-
-        return {
-            'cols_count': df.cols.count(),
-            'data_types_list': data_types_list,
-            'total_count_data_types': len(set([i for i in data_types.values()]))
-        }
-
-    def summary(self, cols="*"):
-
-        df = self.root
-
-        return Meta.get(df.meta, "profile.summary")
-
-    def columns(self, cols="*"):
-
-        df = self.root
-        cols = parse_columns(df, cols) if cols else []
-
-        if is_list(cols):
-            cols = [Meta.get(df.meta, f"profile.columns.{col}") for col in cols]
-        else:
-            cols = Meta.get(df.meta, f"profile.columns.{cols}")
-
-        return one_list_to_val(cols)
-
-    def data_type(self, cols="*"):
-
-        df = self.root
-        cols = parse_columns(df, cols) if cols else []
-
-        dtype = [Meta.get(
-            df.meta, f"profile.columns.{col}.stats.inferred_data_type.data_type") for col in cols]
-
-        return one_list_to_val(dtype)
-
-    def __call__(self, cols="*", bins: int = MAX_BUCKETS, force_hist=None, output: str = None, flush: bool = False,
+    def __call__(self, cols="*", bins: int = MAX_BUCKETS, force_hist=False, output: str = None, flush: bool = False,
                  size=False) -> dict:
         """
         Returns a dict the profile of the dataset
         :param cols: Columns to get the profile from
         :param bins: Number of buckets
         :param force_hist: Force histogram on selected columns
-        :param output: Output format
+        :param output: Output format 'json' or 'dict'
         :param flush: Flushes the cache of the whole profile to process it again
         :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
         :return:
@@ -100,9 +69,9 @@ class BaseProfile(ABC):
                 profile = Meta.get(df.meta, "profile")
                 self.root.meta = df.meta
             profile["columns"] = {key: profile["columns"][key] for key in cols}
-        
-        profile["summary"].update(df.profile._columns_summary())
-        
+
+        profile["summary"].update(_columns_summary(df))
+
         self.root.meta = Meta.set(df.meta, "profile.summary", profile["summary"])
 
         if output == "json":
@@ -276,7 +245,7 @@ class BaseProfile(ABC):
             if size is True:
                 summary.update({'size': df.size(format="human")})
 
-            summary.update(df.profile._columns_summary())
+            summary.update(_columns_summary(df))
 
             assign(profiler_data, "summary", summary, dict)
 
@@ -311,5 +280,4 @@ class BaseProfile(ABC):
         meta = Meta.reset_actions(meta, parse_columns(df, cols or []))
         df.meta = meta
         profiler_time["end"] = {"elapsed_time": time.process_time() - _t}
-        # print(profiler_time)
         return df
