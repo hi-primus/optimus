@@ -87,16 +87,11 @@ class DaskBaseDataFrame(DistributedBaseDataFrame):
         """
         return self.data.__dask_graph__().layers
 
-    def stratified_sample(self, col_name, seed: int = 1):
-        """
-        Stratified Sampling
-        :param col_name:
-        :param seed:
-        :return:
-        """
+    def stratified_sample(self, cols, seed: int = 1):
+
         df = self.data
-        n = min(5, df[col_name].value_counts().min())
-        df = df.groupby(col_name).apply(lambda x: x.sample(2))
+        n = min(5, df[cols].value_counts().min())
+        df = df.groupby(cols).apply(lambda x: x.sample(2))
         # df_.index = df_.index.droplevel(0)
         return self.root.new(df)
 

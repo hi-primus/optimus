@@ -506,7 +506,7 @@ class BaseFunctions(ABC):
         series = self.to_float(series)
         return {"min": series.min(), "max": series.max()}
 
-    def percentile(self, series, values=0.5, error=False, estimate=False):
+    def percentile(self, series, values=0.5, estimate=False):
 
         _series = self.to_float(series).dropna()
 
