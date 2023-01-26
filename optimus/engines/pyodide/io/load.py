@@ -1,10 +1,10 @@
-import requests
-from optimus.engines.base.io.load import BaseLoad
-from optimus.engines.pandas.dataframe import PandasDataFrame
-import pandas as pd
 import io
 
-from optimus.engines.pyscript.dataframe import PyodideDataFrame
+import pandas as pd
+import requests
+
+from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.pyodide.dataframe import PyodideDataFrame
 
 
 class Load(BaseLoad):
@@ -27,7 +27,7 @@ class Load(BaseLoad):
         try:
             response = requests.get(filepath_or_buffer)
             s = response.content
-            df = pd.read_csv(io.StringIO(s.decode('utf-8')))
+            df = pd.read_csv(io.StringIO(s.decode('utf-8')), *args, **kwargs)
 
             return df
         except requests.exceptions.HTTPError as err:
