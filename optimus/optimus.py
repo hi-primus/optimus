@@ -2,7 +2,7 @@ from enum import Enum
 
 import nltk
 
-from optimus.exceptions import PyScriptNotFound
+from optimus.exceptions import PyodideNotFound
 from optimus.helpers.check_env import is_pyodide
 from optimus.helpers.logger import logger
 from optimus.helpers.raiseit import RaiseIt
@@ -17,7 +17,7 @@ class Engine(Enum):
     VAEX = "vaex"
     IBIS = "ibis"
     POLARS = "polars"
-    PYSCRIPT = "pyscript"
+    PYODIDE = "pyodide"
 
     @classmethod
     def list(cls):
@@ -92,11 +92,16 @@ def start_polars(*args, **kwargs):
     return PolarsEngine(*args, **kwargs)
 
 
-def start_pyscript(*args, **kwargs):
+def start_pyodide(*args, **kwargs):
     if not is_pyodide():
-        raise PyScriptNotFound("PyScript not Found")
-    from optimus.engines.pyscript.engine import PyScriptEngine
-    return PyScriptEngine(*args, **kwargs)
+        raise PyodideNotFound("Pyodide not Found")
+
+    import micropip
+
+    import pyodide_http
+    pyodide_http.patch_all()  # Patch all libraries
+    from optimus.engines.pyodide.engine import PyodideEngine
+    return PyodideEngine(*args, **kwargs)
 
 
 def optimus(engine=Engine.PANDAS.value, *args, **kwargs):
@@ -130,7 +135,7 @@ def optimus(engine=Engine.PANDAS.value, *args, **kwargs):
              Engine.CUDF.value: start_cudf,
              Engine.DASK_CUDF.value: start_dask_cudf,
              Engine.POLARS.value: start_polars,
-             Engine.PYSCRIPT.value: start_pyscript
+             Engine.PYODIDE.value: start_pyodide
 
              }
 

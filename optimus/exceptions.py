@@ -16,7 +16,7 @@ class ColumnNotFound(Error):
         super().__init__(self.message)
 
 
-class PyScriptNotFound(Error):
+class PyodideNotFound(Error):
     """Exception raised when pyodide is not found.
 
     Attributes:

@@ -5,13 +5,13 @@ from optimus.engines.base.engine import BaseEngine
 from optimus.engines.pandas.create import Create
 from optimus.engines.pandas.pandas import Pandas
 # from optimus.engines.pandas.io.extract import Extract
-from optimus.engines.pyscript.io.load import Load
+from optimus.engines.pyodide.io.load import Load
 from optimus.optimus import Engine, EnginePretty
 
 Pandas.instance = None
 
 
-class PyScriptEngine(BaseEngine):
+class PyodideEngine(BaseEngine):
     __version__ = __version__
 
     def __init__(self, verbose=False, *args, **kwargs):
@@ -40,7 +40,7 @@ class PyScriptEngine(BaseEngine):
 
     @property
     def engine(self):
-        return Engine.PYSCRIPT.value
+        return Engine.PYODIDE.value
 
     @property
     def engine_label(self):
