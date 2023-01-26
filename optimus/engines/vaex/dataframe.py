@@ -30,7 +30,7 @@ class VaexDataFrame(DataFrameBaseDataFrame):
     def visualize(self):
         pass
 
-    def stratified_sample(self, col_name, seed: int = 1) -> 'DataFrameType':
+    def stratified_sample(self, cols, seed: int = 1) -> 'DataFrameType':
         pass
 
     def graph(self) -> dict:

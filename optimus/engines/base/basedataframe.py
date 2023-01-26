@@ -462,11 +462,11 @@ class BaseDataFrame(ABC):
     def to_pandas(self):
         pass
 
-    def stratified_sample(self, col_name, seed: int = 1) -> 'DataFrameType':
+    def stratified_sample(self, cols, seed: int = 1) -> 'DataFrameType':
         """
         Stratified Sampling
-        :param col_name:
-        :param seed:
+        :param cols: Columns to use for the stratification
+        :param seed: Seed for the random number generator
         :return:
         """
         raise NotImplementedError(f"\"stratified_sample\" is not available using {type(self).__name__}")

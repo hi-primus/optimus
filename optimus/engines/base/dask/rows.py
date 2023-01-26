@@ -47,8 +47,8 @@ class DaskBaseRows(DistributedBaseRows):
             return self._drop_duplicated_builtin(cols)
         return self._mask(cols, func=self.root.mask.duplicated, drop=True, keep=keep, how=how)
 
-    def between(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
-                bounds=None):
+    def between_values(self, columns, lower_bound=None, upper_bound=None, invert=False, equal=False,
+                       bounds=None):
         """
         Trim values at input thresholds
         :param upper_bound:
@@ -109,7 +109,7 @@ class DaskBaseRows(DistributedBaseRows):
         df = self.root
         return df.rows.count()
 
-    def between_index(self, lower_bound=None, upper_bound=None, cols="*"):
+    def between(self, lower_bound=None, upper_bound=None, cols="*"):
         """
 
         :param columns:

@@ -43,25 +43,25 @@ class DataFrameBaseDataFrame(BaseDataFrame):
 
         return self.root.new(dfd)
 
-    def stratified_sample(self, col_name, seed: int = 1):
+    def stratified_sample(self, cols, n: int = 1):
         """
         Stratified Sampling
-        :param col_name:
-        :param seed:
+        :param cols: Columns to use for stratified sampling
+        :param n: Number of samples
         :return:
         """
         df = self.data
-        n = min(5, df[col_name].value_counts().min())
-        df = df.groupby(col_name).apply(lambda x: x.sample(2))
-        # df_.index = df_.index.droplevel(0)
+        n = min(n, df[cols].value_counts().min())
+        df_ = df.groupby(cols).apply(lambda x: x.sample(n))
+        df_.index = df_.index.droplevel(0)
         return self.root.new(df)
 
-    def stack(self, index=None, col_name="variable", value_name="value"):
+    def stack(self, index=None, cols="variable", output_cols="value"):
         """
         Return reshaped DataFrame organized by given index / column values.
         :param index: Column(s) to use as index.
-        :param col_name: Column name for stacked columns
-        :param value_name: Column name for values        
+        :param cols: Column name for stacked columns
+        :param output_cols: Column name for values        
         :return:
         """
         dfd = self.root.data
@@ -84,8 +84,8 @@ class DataFrameBaseDataFrame(BaseDataFrame):
         dfd.columns = dfd.columns.map(_join).str.strip('_')
 
         return self.root.new(dfd).cols.rename([
-            ("level_" + new_level, col_name),
-            ("0", value_name)
+            ("level_" + new_level, cols),
+            ("0", output_cols)
         ])
 
     def unstack(self, index=None, level=-1):

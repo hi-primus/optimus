@@ -58,7 +58,7 @@ class CUDFBaseFunctions(BaseFunctions, ABC):
         return series.astype(str)
 
     def _to_datetime(self, value, format):
-        return cudf.to_datetime(value, format=format, errors="coerce")
+        return cudf.to_datetime(value, current_format=format, errors="coerce")
 
     def replace_chars(self, series, search, replace_by, ignore_case):
         search = val_to_list(search, convert_tuple=True)

@@ -74,7 +74,7 @@ class Model:
         prediction = self.op.create.dataframe(prediction)
         names = [f"{output_col}_{i}" for i, name in enumerate(prediction.cols.names())]
 
-        return df.cols.concat(prediction.cols.rename(names = names))
+        return df.cols.concat(prediction.cols.rename(output_cols= names))
 
     def roc_auc(self):
         from yellowbrick.classifier import ROCAUC

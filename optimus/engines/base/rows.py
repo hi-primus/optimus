@@ -182,15 +182,15 @@ class BaseRows(ABC):
             result = df.functions.delayed(len)(dfd)
         return result
 
-    def to_list(self, input_cols) -> list:
+    def to_list(self, cols) -> list:
         """
-
-        :param input_cols:
-        :return:
+        Return a list of values from a column
+        :param cols: Column name
+        :return: Rows values as list
         """
         df = self.root
-        input_cols = parse_columns(df, input_cols)
-        value = df.cols.select(input_cols).to_pandas().values.tolist()
+        cols = parse_columns(df, cols)
+        value = df.cols.select(cols).to_pandas().values.tolist()
 
         return value
 
@@ -407,21 +407,21 @@ class BaseRows(ABC):
         """
         return self._mask(cols, func=self.root.mask.numeric, drop=drop, how=how)
 
-    def between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None, drop=False,
-                how="any") -> 'DataFrameType':
-        """
+    def between_values(self, cols="*", lower_bound=None, upper_bound=None, include_bounds=True, bounds=None, drop=False,
+                       how="any") -> 'DataFrameType':
 
-        :param cols:
-        :param lower_bound:
-        :param upper_bound:
-        :param equal:
-        :param bounds:
-        :param drop:
+        """
+        Select rows which values are between lower and upper bound
+        :param lower_bound: Lower bound
+        :param upper_bound: Upper bound
+        :param include_bounds: If true, include the bounds
+        :param bounds: Bounds to be used. Example: (1,2)
+        :param drop: Drop rows selected
         :param how:
         :return:
         """
-        return self._mask(cols, func=self.root.mask.between, drop=drop, how=how, lower_bound=lower_bound,
-                          upper_bound=upper_bound, equal=equal, bounds=bounds)
+        return self._mask(cols, func=self.root.mask.between_values, drop=drop, how=how, lower_bound=lower_bound,
+                          upper_bound=upper_bound, equal=include_bounds, bounds=bounds)
 
     def greater_than_equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """

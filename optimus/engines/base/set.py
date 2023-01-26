@@ -114,7 +114,7 @@ class BaseSet():
         return self._mask(cols, true_value=true_value, default_value=default_value, args=args, func=self.root.mask.less_than_equal, value=value)
 
     def between(self, cols, true_value=None, default_value=None, args=[], lower_bound=None, upper_bound=None, equal=True, bounds=None) -> 'DataFrameType':
-        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, func=self.root.mask.between, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
+        return self._mask(cols, true_value=true_value, default_value=default_value, args=args, func=self.root.mask.between_values, lower_bound=lower_bound, upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def equal(self, cols, true_value=None, default_value=None, args=[], value=None) -> 'DataFrameType':
         return self._mask(cols, true_value=true_value, default_value=default_value, args=args, func=self.root.mask.equal, value=value)
