@@ -33,6 +33,7 @@ scikit-learn = "^1.1.1"
 jellyfish = "^0.8.7"
 seaborn = "^0.12.1"
 sqlalchemy = "^1.4.37"
+pyodide-http = "^0.1.0"
 
 
 [tool.poetry.group.test.dependencies]
