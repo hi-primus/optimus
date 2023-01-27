@@ -24,14 +24,13 @@ class Load(BaseLoad):
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
 
-        try:
-            response = requests.get(filepath_or_buffer)
-            s = response.content
-            df = pd.read_csv(io.StringIO(s.decode('utf-8')), *args, **kwargs)
 
-            return df
-        except requests.exceptions.HTTPError as err:
-            print(err)
+        response = requests.get(filepath_or_buffer)
+        s = response.content
+        df = pd.read_csv(io.StringIO(s.decode('utf-8')), *args, **kwargs)
+
+        return df
+
 
     @staticmethod
     def _json(filepath_or_buffer, *args, **kwargs):

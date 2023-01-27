@@ -28,11 +28,8 @@ class Load(BaseLoad):
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
 
-        try:
-            df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
-            return df
-        except Exception as err:
-            print(err)
+        df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
+        return df
 
     @staticmethod
     def _json(filepath_or_buffer, *args, **kwargs):

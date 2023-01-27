@@ -31,12 +31,11 @@ class Load(BaseLoad):
         kwargs.pop("n_partitions", None)
 
         if is_url(filepath_or_buffer):
-            try:
-                resp = requests.get(filepath_or_buffer)
-                df = pl.scan_csv(StringIO(resp.text), *args, **kwargs)
-                resp.raise_for_status()
-            except requests.exceptions.HTTPError as err:
-                print(err)
+
+            resp = requests.get(filepath_or_buffer)
+            df = pl.scan_csv(StringIO(resp.text), *args, **kwargs)
+            resp.raise_for_status()
+
 
         else:
             kwargs.pop("encoding",None)

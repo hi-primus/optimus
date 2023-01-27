@@ -78,7 +78,6 @@ class Load(BaseLoad):
                 df = vaex.from_pandas(df.head(n=n_rows), npartitions=1).reset_index(drop=True)
 
         except IOError as error:
-            logger.print(error)
             raise
         return df
 
