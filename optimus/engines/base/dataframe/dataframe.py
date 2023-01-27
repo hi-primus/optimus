@@ -15,7 +15,7 @@ class DataFrameBaseDataFrame(BaseDataFrame):
     def _sample(self, n=10, seed=False):
         return self.root.data.sample(n=n, random_state=seed).reset_index(drop=True)
 
-    def sample(self, n=10, seed: [bool | int] = False):
+    def sample(self, n=10, seed = False):
         """
         Return number of sample from a dataFrame
         :param n: Number of samples
