@@ -210,8 +210,8 @@ class BaseColumns(ABC):
         # meta = df.meta
         meta = Meta.select_columns(meta, cols)
         dfd = df.data
-        if cols is not None:
-            dfd = self._select(cols)
+
+        dfd = self._select(cols)
         return self.root.new(dfd, meta=meta)
 
     def copy(self, cols="*", output_cols=None, columns=None) -> 'DataFrameType':
@@ -5307,7 +5307,7 @@ class BaseColumns(ABC):
 
         if value is None:
             other_cols = parse_columns(df, other_cols) if other_cols else None
-            if other_cols is None and len(cols) <= 2:
+            if len(other_cols) <= 0 and len(cols) <= 2:
                 other_cols = [cols.pop(-1)]
 
             for col, other_col in zip(cols, other_cols):

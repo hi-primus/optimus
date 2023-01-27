@@ -94,7 +94,7 @@ class Plot:
         columns = parse_columns(
             df, cols_args=columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
 
-        if columns is not None:
+        if len(columns) > 0:
             sample_data = df.sample(n=n, random=True)
             for col_name in columns:
                 plot_qqplot(col_name, sample_data, output=output_format, path=output_path)
