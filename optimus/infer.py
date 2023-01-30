@@ -735,7 +735,14 @@ def is_numeric_like(value):
     :param value:
     :return:
     """
-    return value % 1 >= 0
+    if isinstance(value, (int, float)):
+        return True
+    elif isinstance(value, str):
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
 
 
 def is_str(value):
@@ -779,10 +786,6 @@ def is_dask_future(value):
     return isinstance(value, distributed.client.Future)
 
 
-def is_float(value):
-    return value % 1 > 0
-
-
 def is_int(value):
     """
     Check if an object is an integer
@@ -798,7 +801,22 @@ def is_int_like(value):
     :param value:
     :return:
     """
-    return value % 1 == 0
+    if isinstance(value, int):
+        return True
+    else:
+        try:
+            return float(value) % 1 == 0
+        except ValueError:
+            return False
+
+
+def is_float(value):
+    """
+    Check if an object is a float
+    :param value:
+    :return:
+    """
+    return isinstance(value, float) and not isinstance(value, bool) and value % 1 > 0
 
 
 def is_float_like(value):
@@ -807,7 +825,13 @@ def is_float_like(value):
     :param value:
     :return:
     """
-    return value % 1 > 0
+    if is_float(value):
+        return True
+    else:
+        try:
+            return float(value) % 1 > 0
+        except ValueError:
+            return False
 
 
 def is_url(value):
@@ -823,15 +847,6 @@ def is_url(value):
     else:
         result = False
     return result
-
-
-def is_float(value):
-    """
-    Check if an object is an integer
-    :param value:
-    :return:
-    """
-    return isinstance(value, float)
 
 
 def is_bool_value(value):
