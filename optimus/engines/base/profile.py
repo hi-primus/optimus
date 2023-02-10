@@ -29,7 +29,7 @@ class BaseProfile(ABC):
     def __init__(self, root: 'DataFrameType'):
         self.root = root
 
-    def __call__(self, cols="*", bins: int = MAX_BUCKETS, force_hist=False, output: str = None, flush: bool = False,
+    def __call__(self, cols="*", bins: int = MAX_BUCKETS, force_hist=None, output: str = None, flush: bool = False,
                  size=False) -> dict:
         """
         Returns a dict the profile of the dataset
@@ -49,6 +49,9 @@ class BaseProfile(ABC):
 
         if not profile:
             flush = True
+
+        if force_hist is None:
+            force_hist = []
 
         if cols or flush:
             cols = parse_columns(df, cols) if cols else []
@@ -83,8 +86,8 @@ class BaseProfile(ABC):
         """
         Returns a new dataframe with the profile data added to the meta property
         :param cols: "*", column name or list of column names to be processed.
-        :param bins:
-        :param flush:
+        :param bins: Number of buckets.
+        :param flush: Flushes the cache of the whole profile to process it again.
         :param size: get the dataframe size in memory. Use with caution this could be slow for big data frames.
         :return:
         """
@@ -95,7 +98,7 @@ class BaseProfile(ABC):
         df = self.root
         meta = df.meta
 
-        force_hist = df.cols.names(force_hist) if force_hist is not None else []
+        df.cols.names(force_hist)
 
         if flush is False:
             cols_to_profile = df._cols_to_profile(cols) or []
@@ -153,6 +156,7 @@ class BaseProfile(ABC):
             freq = {}
             sliced_freq = {}
             count_uniques = None
+
             if len(hist_cols) and bins > 0:
                 _t = time.process_time()
                 hist = df.cols.hist(hist_cols, buckets=bins, compute=False)
@@ -164,7 +168,7 @@ class BaseProfile(ABC):
                 sliced_cols = []
                 non_sliced_cols = []
 
-                # Extract the columns with cells larger thatn
+                # Extract the columns with cells larger than
                 max_cell_length = getattr(df.meta, "max_cell_length", None)
 
                 if max_cell_length:
@@ -184,7 +188,6 @@ class BaseProfile(ABC):
                         non_sliced_cols, n=bins, count_uniques=True, compute=False)
 
                 if len(sliced_cols) > 0:
-                    # print("sliced_cols", sliced_cols)
                     sliced_freq = df.cols.slice(sliced_cols, 0, 50).cols.frequency(sliced_cols, n=bins,
                                                                                    count_uniques=True,
                                                                                    compute=False)
