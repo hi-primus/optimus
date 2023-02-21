@@ -3,6 +3,8 @@ import ntpath
 import os
 from abc import abstractmethod
 
+import requests
+
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.ml.models import Model
 from optimus.helpers.core import val_to_list
@@ -402,10 +404,20 @@ class BaseLoad:
             file_name = os.path.basename(path)
 
         else:
-
-            full_path, file_name = prepare_path(path)[0]
-            file = open(full_path, "rb")
-            buffer = file.read(BYTES_SIZE)
+            if is_url(path):
+                # Download a chunk of the file to detect the file encoding
+                response = requests.get(
+                    path, stream=True)
+                buffer = b''
+                for chunk in response.iter_content(chunk_size=1024):
+                    if len(buffer) >= BYTES_SIZE:
+                        break
+                    buffer += chunk
+                file_name = full_path= path
+            else:
+                full_path, file_name = prepare_path(path)[0]
+                file = open(full_path, "rb")
+                buffer = file.read(BYTES_SIZE)
 
         ext_to_type = {
             "xls": "excel",
