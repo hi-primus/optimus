@@ -33,6 +33,7 @@ class OrderedSet:
     def intersection(self, other):
         return copy.deepcopy([v for c in [Counter(other)] for v in self.data if c[v]])
 
+
 def replace_columns_special_characters(df, replace_by="_"):
     """
     Remove special character from Spark column name
@@ -90,7 +91,7 @@ def escape_columns(columns):
 def get_output_cols(cols, output_cols=None, merge=False, auto_increment=False):
     """
     Construct output columns taking the input columns.
-    If it receive a list of input columns and on output column the function will append the output_col name to the input cols list
+    If it receives a list of input columns and on output column the function will append the output_col name to the input cols list
 
     If
     cols = ['col1'] to output_cols = None
@@ -246,7 +247,8 @@ def prepare_columns(df, cols: Union[str, list], output_cols: Union[str, list] = 
                     filter_by_column_types=None, accepts_missing_cols=False, invert: bool = False, default=None,
                     cols_dict=None, auto_increment=False, args=None):
     """
-    One input columns- > Same output column. lower(), upper()
+    This function can be in these scenarios:
+    One input column- > Same output column. lower(), upper()
     One input column -> One output column. copy()
     One input column -> Multiple output column. unnest()
     Multiple input columns -> One output column. nest()
@@ -256,17 +258,17 @@ def prepare_columns(df, cols: Union[str, list], output_cols: Union[str, list] = 
     See get_output_cols() for more info
 
     Accepts Return an iterator with input and output columns
+    :param args:
     :param df: dataframe against to check that the input columns are valid
     :param cols: intput columns names
     :param output_cols: output columns names
     :param is_regex: input columns is a regex
     :param filter_by_column_types: filter column selection by data type
-    :param accepts_missing_cols: dont check the input columns exist
+    :param accepts_missing_cols: do not check the input columns exist
     :param invert: Invert selection
     :param default: Default column name if output_cols is not provider
     :param cols_dict: In case you have a input output dictionary already defined. {incol:outcol1 , incol2:outcol2}
     :param auto_increment:
-    :param merge:
     :return:
     """
     if cols_dict:

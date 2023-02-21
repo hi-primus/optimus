@@ -431,9 +431,8 @@ def unquote_path(path):
 
 @functools.lru_cache(maxsize=128)
 def prepare_path(path, file_format=None):
-    """d
+    """
     Helper to return the file to be loaded and the file name.
-    This will memoise
     :param path: Path to the file to be loaded
     :param file_format: format file
     :return:
