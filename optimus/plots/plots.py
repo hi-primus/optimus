@@ -1,6 +1,6 @@
 from optimus.helpers.columns import parse_columns
 from optimus.plots.functions import plot_heatmap, plot_boxplot, plot_frequency, plot_hist, \
-    plot_correlation, plot_qqplot
+    plot_correlation
 
 
 class Plot:
@@ -79,24 +79,3 @@ class Plot:
         df = self.df
         cols_data = df.cols.correlation(cols, method, tidy=False)
         plot_correlation(cols_data, output=output_format, path=output_path)
-
-    def qqplot(self, columns, n=100, output_format="plot", output_path=None):
-        """
-        QQ plot
-        :param columns:
-        :param n: Sample size
-        :param output_format: Output format
-        :param output_path: Path to the output file
-        :return:
-        """
-        df = self.df
-
-        columns = parse_columns(
-            df, cols_args=columns, filter_by_column_types=df.constants.NUMERIC_TYPES)
-
-
-        if len(columns) > 0:
-            sample_data = df.sample(n=n, seed=True)
-
-            for col_name in columns:
-                plot_qqplot(col_name, sample_data, output=output_format, path=output_path)
