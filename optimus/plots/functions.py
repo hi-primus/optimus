@@ -1,5 +1,4 @@
 import seaborn as sns
-import statsmodels.api as sm
 from matplotlib import pyplot as plt
 from numpy.core._multiarray_umath import array
 
@@ -237,22 +236,3 @@ def plot_missing_values(column_data=None, output=None, path=None):
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
 
 
-def plot_qqplot(col_name, sample_data, output="plot", path=None):
-    """
-    Plot a qqplot
-    :param col_name:
-    :param sample_data:
-    :param output:
-    :param path:
-    :return:
-    """
-    fig = plt.figure(figsize=(12, 5))
-
-    sm.qqplot(sample_data.toPandas()[col_name], line='q', color='C0', alpha=0.3)
-
-    plt.title("qqplot '" + col_name + "' ")
-
-    if output == "base64":
-        return output_base64(fig)
-    elif output == "image":
-        output_image(plt, path)
