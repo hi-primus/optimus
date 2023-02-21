@@ -1,31 +1,25 @@
-pandas==1.5.1
-numpy>=1.21.2
-nltk>=3.6.2
-
-requests>=2.24.0
-setuptools>=50.3.1
+pandas==1.5.3
+numpy==1.24.2
+nltk==3.8.1
+python-magic==0.4.27
+requests==2.28.2
+setuptools==67.3.2
 Jinja2>=3.0.1
-humanize>=3.9.0
-glom>=22.1.0
-
-# Stats
-statsmodels>=0.13.1
+humanize==4.6.0
+glom==23.1.1
 
 rply>=0.7.8
 tabulate>=0.8.9
-matplotlib>=3.4.2
-seaborn>=0.11.1
 
 # NLP and data formats
-jellyfish>=0.8.7
+jellyfish==0.9.0
 hi-dateinfer
 hi-urlparser
 
 
 # IO Libraries
 # Used by Pandas. Can read Excel 2007+ (.xlsx) files using the openpyxl.
-openpyxl>=3.0.7
+openpyxl==3.1.1
 
 # Used by Pandas. Can read Excel 2003 (.xls) files can be read using xlrd.
 xlrd>=2.0.1
-
