@@ -1,12 +1,12 @@
 import pandas as pd
 
-from optimus.optimus import Engine, EnginePretty
+from optimus._version import __version__
 from optimus.engines.base.engine import BaseEngine
 from optimus.engines.pandas.create import Create
 from optimus.engines.pandas.io.extract import Extract
 from optimus.engines.pandas.io.load import Load
 from optimus.engines.pandas.pandas import Pandas
-from optimus._version import __version__
+from optimus.optimus import Engine, EnginePretty
 
 Pandas.instance = None
 

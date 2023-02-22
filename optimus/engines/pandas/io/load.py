@@ -27,7 +27,6 @@ class Load(BaseLoad):
     @staticmethod
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-
         df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
         return df
 

@@ -5,14 +5,8 @@ from optimus.helpers.functions import prepare_path
 
 
 def getfile_and_infer(path):
-    temp_filename = str(uuid.uuid4())
-
-    # local_filename = urllib.request.urlretrieve(path, temp_filename)
-    # print(local_filename)
 
     full_file_name, file_name = prepare_path(path)
-
-    # temp_filename = "data/crime.csv"
 
     file_ext = os.path.splitext(file_name)[1]
 
