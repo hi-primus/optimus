@@ -144,6 +144,7 @@ class ProfilerDataTypesQuality(Enum):
 
 class ProfilerDataTypesNumeric(Enum):
     OBJECT = 0
+    STR = 1
     STRING = 1
     FLOAT = 2
     INT = 3
@@ -217,7 +218,9 @@ class ProfilerDataTypes(Enum):
     def list():
         return list(map(lambda c: c.value, ProfilerDataTypes))
 
+
 INDEX_TO_DATA_TYPE_FUNC = {i.value: i.name.lower() for i in ProfilerDataTypesNumeric}
+
 
 class Schemas(Enum):
     S3 = 's3://'
