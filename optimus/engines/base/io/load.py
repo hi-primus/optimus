@@ -6,7 +6,6 @@ from abc import abstractmethod
 import requests
 
 from optimus.engines.base.meta import Meta
-from optimus.engines.pandas.ml.models import Model
 from optimus.helpers.core import val_to_list
 from optimus.helpers.functions import prepare_path, unquote_path
 from optimus.helpers.logger import logger
@@ -14,10 +13,10 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import DataFrameType, InternalDataFrameType
 from optimus.infer import is_empty_function, is_list, is_str, is_url
 
-XML_THRESHOLD = 10
-JSON_THRESHOLD = 20
-BYTES_SIZE = 1310720
+import csv
+import chardet
 
+BYTES_SIZE = 80000
 
 class BaseLoad:
 
@@ -413,64 +412,52 @@ class BaseLoad:
                     if len(buffer) >= BYTES_SIZE:
                         break
                     buffer += chunk
-                file_name = full_path= path
-            else:
+                file_name = full_path = path
+            elif is_str(path):
                 full_path, file_name = prepare_path(path)[0]
                 file = open(full_path, "rb")
                 buffer = file.read(BYTES_SIZE)
+            elif isinstance(path, bytes):
+                buffer = path
+            else:
+                RaiseIt.value_error(
+                    path, ["filepath", "url", "buffer"])
 
         ext_to_type = {
             "xls": "excel",
-            "xlsx": "excel"
+            "xlsx": "excel",
+            "csv": "csv",
+            "json": "json",
+            "xml": "xml",
         }
 
         # Detect the file type
-        try:
-            file_ext = os.path.splitext(file_name)[1].replace(".", "")
-            import magic
-            mime, encoding = magic.Magic(
-                mime=True, mime_encoding=True).from_buffer(buffer).split(";")
-            mime_info = {"mime": mime, "encoding": encoding.strip().split("=")[
-                1], "file_ext": file_ext}
-
-        except Exception as e:
-            print(getattr(e, 'message', repr(e)))
-            full_path = path
-            file_name = path.split('/')[-1]
-            file_ext = file_name.split('.')[-1]
-            mime = False
-            mime_info = {"file_type": ext_to_type.get(file_ext, file_ext), "encoding": False}
-
+        file_ext = os.path.splitext(file_name)[1].replace(".", "")
+        mime_type=ext_to_type[file_ext]
+        print("1")
+        mime_encoding = chardet.detect(buffer)["encoding"]
+        print(mime_encoding)
+        mime_info = {"mime": mime_type, "encoding": mime_encoding, "file_ext": file_ext}
         file_type = ext_to_type.get(file_ext, file_ext)
 
-        if mime:
-            if mime in ["text/plain", "application/csv"]:
-                if mime_info["file_ext"] == "json":
-                    file_type = "json"
-                else:
-                    file_type = "csv"
-            elif mime == "application/json":
-                file_type = "json"
-            elif mime == "text/xml":
-                file_type = "xml"
-            elif mime in ["application/vnd.ms-excel",
-                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]:
-                file_type = "excel"
-            elif not file_type:
-                RaiseIt.value_error(
-                    mime, ["csv", "json", "xml", "xls", "xlsx"])
 
         # Detect the file encoding
-        if file_type == "csv":
-            # In some case magic get a "unknown-8bit" which can not be use to decode the file use latin-1 instead
-            if mime_info.get("encoding", None) == "unknown-8bit":
-                mime_info["encoding"] = "latin-1"
+        file_type_to_func = {
+            "csv": self.csv,
+            "json": self.json,
+            "xml": self.xml,
+            "excel": self.excel,
+            "parquet": self.parquet
+        }
 
-            if mime:
-                import csv
+        if file_type in file_type_to_func:
+            func = file_type_to_func[file_type]
+
+            if file_type == "csv":
+                if mime_info.get("encoding", None) == "unknown-8bit":
+                    mime_info["encoding"] = "latin-1"
+
                 dialect = csv.Sniffer().sniff(str(buffer))
-                mime_info["file_type"] = "csv"
-
                 properties = {"sep": dialect.delimiter,
                               "doublequote": dialect.doublequote,
                               "escapechar": dialect.escapechar,
@@ -486,24 +473,7 @@ class BaseLoad:
                 mime_info.update({"properties": properties})
                 kwargs.update({"encoding": mime_info.get("encoding", None)})
 
-            df = self.csv(full_path, *args, **kwargs)
-
-        elif file_type == "json":
-            mime_info["file_type"] = "json"
-            df = self.json(full_path, *args, **kwargs)
-
-        elif file_type == "xml":
-            mime_info["file_type"] = "xml"
-            df = self.xml(full_path, **kwargs)
-
-        elif file_type == "excel":
-            mime_info["file_type"] = "excel"
-            df = self.excel(full_path, **kwargs)
-
-        elif file_type == "parquet":
-            mime_info["file_type"] = "parquet"
-            df = self.parquet(full_path, **kwargs)
-
+            df = func(full_path, *args, **kwargs)
         else:
             RaiseIt.value_error(
                 file_type, ["csv", "json", "xml", "excel", "parquet"])
@@ -520,5 +490,6 @@ class BaseLoad:
         :param path: Path to the file we want to load.
         :return:
         """
+        from optimus.engines.pandas.ml.models import Model
         import joblib
         return Model(model=joblib.load(path), op=self.op)
