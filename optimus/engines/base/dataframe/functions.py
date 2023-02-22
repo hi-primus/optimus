@@ -1,7 +1,6 @@
 from abc import ABC
 
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, StandardScaler
 
 from optimus.engines.base.commons.functions import word_tokenize
 from optimus.engines.base.functions import BaseFunctions
@@ -46,12 +45,15 @@ class DataFrameBaseFunctions(BaseFunctions, ABC):
         return self.to_string(series).map(word_tokenize, na_action=None)
 
     def standard_scaler(self, series):
+        from sklearn.preprocessing import StandardScaler
         return StandardScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
 
     def max_abs_scaler(self, series):
+        from sklearn.preprocessing import MaxAbsScaler
         return MaxAbsScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
 
     def min_max_scaler(self, series):
+        from sklearn.preprocessing import MinMaxScaler
         return MinMaxScaler().fit_transform(self.to_float(series).values.reshape(-1, 1))
 
     @staticmethod

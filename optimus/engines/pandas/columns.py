@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn import preprocessing
+
 
 from optimus.engines.base.commons.functions import string_to_index, index_to_string, find
 from optimus.engines.base.dataframe.columns import DataFrameBaseColumns
@@ -37,6 +37,7 @@ class Cols(PandasBaseColumns, DataFrameBaseColumns):
         raise NotImplementedError('Not implemented yet')
 
     def string_to_index(self, cols="*", output_cols=None):
+        from sklearn import preprocessing
         df = self.root
         df.le = df.le or preprocessing.LabelEncoder()
         df = string_to_index(df, cols, output_cols, df.le)
@@ -44,6 +45,7 @@ class Cols(PandasBaseColumns, DataFrameBaseColumns):
         return df
 
     def index_to_string(self, cols="*", output_cols=None):
+        from sklearn import preprocessing
         df = self.root
         df.le = df.le or preprocessing.LabelEncoder()
         df = index_to_string(df, cols, output_cols, df.le)

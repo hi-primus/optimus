@@ -16,7 +16,7 @@ from nltk import LancasterStemmer, ngrams
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import SnowballStemmer
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+
 
 from optimus.engines.base.meta import Meta
 from optimus.engines.base.stringclustering import Clusters
@@ -5379,7 +5379,7 @@ class BaseColumns(ABC):
         :param cols: '*', list of columns names or a single column name.
         :return:
         """
-
+        from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
         df = self.root
         vectorizer = TfidfVectorizer()
         X = df[cols]._to_values().ravel()
@@ -5403,7 +5403,7 @@ class BaseColumns(ABC):
             and (2, 2) means only bigrams. Only applies if analyzer is not callable.
         :return:
         """
-
+        from sklearn.feature_extraction.text import CountVectorizer
         df = self.root
         if is_int(ngram_range):
             ngram_range = (ngram_range, ngram_range)

@@ -1,5 +1,3 @@
-import seaborn as sns
-from matplotlib import pyplot as plt
 from numpy.core._multiarray_umath import array
 
 from optimus.infer import is_dict, is_list
@@ -16,7 +14,7 @@ def plot_heatmap(column_data=None, output=None, path=None):
     :param path:
     :return:
     """
-
+    from matplotlib import pyplot as plt
     fig = plt.figure(figsize=(12, 5))
     extent = column_data["x"]["edges"] + column_data["y"]["edges"]
     plt.imshow(column_data["values"], extent=extent, origin='lower')
@@ -42,6 +40,7 @@ def plot_boxplot(column_data=None, output=None, path=None):
     :param path:
     :return:
     """
+    from matplotlib import pyplot as plt
     for col_name, stats in column_data.items():
         if not is_dict(stats):
             continue
@@ -80,6 +79,7 @@ def plot_frequency(column_data=None, output=None, path=None):
     :param path:
     :return:
     """
+    from matplotlib import pyplot as plt
     for col_name, data in column_data.items():
         if not is_dict(data):
             continue
@@ -130,7 +130,7 @@ def plot_hist(column_data=None, output=None, sub_title="", path=None):
     :param path:
     :return: plot, image or base64
     """
-
+    from matplotlib import pyplot as plt
     for col_name, data in column_data.items():
         if not is_list(data):
             continue
@@ -181,6 +181,7 @@ def plot_correlation(cols_data, output=None, path=None):
     :return:
     """
     import pandas as pd
+    import seaborn as sns
     df = pd.DataFrame(data=cols_data)
 
     sns_plot = sns.heatmap(df, cmap=sns.diverging_palette(220, 10, as_cmap=True), annot=True)
@@ -204,6 +205,7 @@ def plot_missing_values(column_data=None, output=None, path=None):
     image to the notebook
     :return:
     """
+    from matplotlib import pyplot as plt
     values = []
     columns = []
     labels = []
@@ -234,5 +236,3 @@ def plot_missing_values(column_data=None, output=None, path=None):
         output_image(plt, path)
     elif output == "plot":
         plt.subplots_adjust(left=0.05, right=0.99, top=0.9, bottom=0.3)
-
-

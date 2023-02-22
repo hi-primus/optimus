@@ -1,6 +1,6 @@
 from time import time
 
-import joblib
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import decomposition
@@ -209,6 +209,7 @@ class Model:
         plt.show()
 
     def save(self, path):
+        import joblib
         joblib.dump(self.model, path)
 
 

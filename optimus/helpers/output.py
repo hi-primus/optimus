@@ -4,9 +4,6 @@ import os
 import pprint
 from io import BytesIO
 
-
-from matplotlib import pyplot as plt
-
 from optimus.infer import is_str
 
 
@@ -17,7 +14,7 @@ def output_image(fig, path):
     :param path: Matplotlib figure
     :return: Base64 encode image
     """
-
+    from matplotlib import pyplot as plt
     fig.savefig(path, format='png')
     plt.close()
 
@@ -28,6 +25,7 @@ def output_base64(fig):
     :param fig: Matplotlib figure
     :return: Base64 encode image
     """
+    from matplotlib import pyplot as plt
     fig_file = BytesIO()
     plt.savefig(fig_file, format='png')
     # rewind to beginning of file
@@ -45,6 +43,7 @@ def print_html(html):
     :param html: html code to be printed
     :return:
     """
+
     from IPython.core.display import display, HTML
     try:
         if "DATABRICKS_RUNTIME_VERSION" in os.environ:
