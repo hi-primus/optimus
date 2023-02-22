@@ -172,16 +172,14 @@ class BaseDataFrame(ABC):
         df2_is_df = isinstance(df2, (BaseDataFrame,))
 
         c = df1.constants.OPTIMUS_TO_INTERNAL
-        # If any of the columnsis numeric, cast the other columns to numeric
+        # If any of the columns is numeric, cast the other columns to numeric
         if df1_is_df and df2_is_df:
             if len(df1.cols.names()) == 1:
-                if c[df2.cols.infer_type(tidy=True)["data_type"]] == ProfilerDataTypes.STRING.value:
-                    df1 = df1.cols.cast("*", c[df1.cols.infer_type()["data_type"]])
-                    df2 = df2.cols.cast("*", c[df1.cols.infer_type()["data_type"]])
+                df1 = df1.cols.cast("*", c[df1.cols.infer_type()["data_type"]])
+                df2 = df2.cols.cast("*", c[df1.cols.infer_type()["data_type"]])
             if len(df2.cols.names()) == 1:
-                if c[df1.cols.infer_type(tidy=True)["data_type"]] == ProfilerDataTypes.STRING.value:
-                    df1 = df1.cols.cast("*", c[df2.cols.infer_type()["data_type"]])
-                    df2 = df2.cols.cast("*", c[df2.cols.infer_type()["data_type"]])
+                df1 = df1.cols.cast("*", c[df2.cols.infer_type()["data_type"]])
+                df2 = df2.cols.cast("*", c[df2.cols.infer_type()["data_type"]])
 
         if not df1_is_df or not df2_is_df:
             multiple_columns = True
