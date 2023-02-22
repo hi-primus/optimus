@@ -104,17 +104,19 @@ def start_pyodide(*args, **kwargs):
     return PyodideEngine(*args, **kwargs)
 
 
-def optimus(engine=Engine.PANDAS.value, *args, **kwargs):
+def optimus(engine=Engine.PANDAS.value, load_nltk_data=False, *args, **kwargs):
     """
     This is the entry point to initialize the selected engine.
     :param engine: A string identifying an engine :classL`Engine`.
+    :param load_nltk_data: Load nltk data for lemmatizer, stopwords and POS
     :param args:
     :param kwargs:
     :return:
     """
     logger.print("ENGINE", engine)
 
-    if not is_pyodide():
+    if not is_pyodide() and load_nltk_data:
+
         # This should be installed using javascript over pyodide
         # https://stackoverflow.com/questions/68835360/pyodide-filesystem-for-nltk-resources-missing-files
 
