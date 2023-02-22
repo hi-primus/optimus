@@ -5,6 +5,7 @@ import requests
 
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.pyodide.dataframe import PyodideDataFrame
+from optimus.infer import is_url
 
 
 class Load(BaseLoad):
@@ -23,18 +24,18 @@ class Load(BaseLoad):
     @staticmethod
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-
-
-        response = requests.get(filepath_or_buffer)
-        s = response.content
-        df = pd.read_csv(io.StringIO(s.decode('utf-8')), *args, **kwargs)
+        if is_url(filepath_or_buffer):
+            response = requests.get(filepath_or_buffer)
+            s = response.content
+            buffer = io.StringIO(s.decode(kwargs["encoding"]))
+        else:
+            buffer = filepath_or_buffer
+        df = pd.read_csv(buffer, *args, **kwargs)
 
         return df
 
-
     @staticmethod
     def _json(filepath_or_buffer, *args, **kwargs):
-
         pass
 
     @staticmethod
