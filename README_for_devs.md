@@ -322,6 +322,15 @@ conda install -c conda-forge jupyter_kernel_gateway
 Dask try to infer the column datatype for every partition so it can cause problem the inferred datatype does not match. 
 Optimus will always parse the columns as object and the try to optimize the data type using the `.ext.optimize` function.
 
+## Detecting the encoding
+Important Note: faust-cchardet is recommended but is not compatible with Pyodide
+
+Please be aware that the faust-cchardet library cannot be used in projects that target the Pyodide runtime environment. This is because faust-cchardet has C bindings, which cannot be compiled and executed within the Pyodide environment.
+
+To ensure that our project remains compatible with Pyodide, we recommend that you use the chardet library instead of faust-cchardet. Although chardet is slower than faust-cchardet, it is written in pure Python and can be executed within the Pyodide environment without any issues.
+
+If you have any questions or concerns about this compatibility issue, please don't hesitate to reach out to our team for further assistance.
+
 ## Update RAPIDS
 ### List Jupyter Kernels
 `jupyter kernelspec list` 
@@ -373,8 +382,8 @@ go to `docs/` in the package and run `make html`
 
 ### Versioning
 
-If you want to build the pachage and upload it to pypi you probably want to update the version.
-For that go to pyproject.toml and change the key 'version'
+If you want to build the package and upload it to pypi you probably want to update the version.
+For that go to `pyproject.toml` and change the key `version`
 
 ### Publishing to PyPi
 
@@ -392,12 +401,14 @@ or if you want to use a token
 
 ### Publishing to Test PyPi
 
-Configure the `testpypi` repository
+Configure the `testpypi` repository with:
+
 `poetry config repositories.testpypi https://test.pypi.org/legacy/`
 
 This will set the url for repository `testpypi` to `https://test.pypi.org/legacy/`.
 
-Authenticate with the `testpypi` repo
+Authenticate with the `testpypi` repo:
+
 `poetry config http-basic.testpypi <username> <password>`
 
 or if you want to use a token
