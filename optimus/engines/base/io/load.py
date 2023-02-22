@@ -434,9 +434,7 @@ class BaseLoad:
         # Detect the file type
         file_ext = os.path.splitext(file_name)[1].replace(".", "")
         mime_type=ext_to_type[file_ext]
-        print("1")
         mime_encoding = chardet.detect(buffer)["encoding"]
-        print(mime_encoding)
         mime_info = {"mime": mime_type, "encoding": mime_encoding, "file_ext": file_ext}
         file_type = ext_to_type.get(file_ext, file_ext)
 
