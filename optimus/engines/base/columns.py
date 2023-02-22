@@ -17,7 +17,6 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import SnowballStemmer
 
-
 from optimus.engines.base.meta import Meta
 from optimus.engines.base.stringclustering import Clusters
 from optimus.helpers.check import is_dask_dataframe
@@ -5379,7 +5378,7 @@ class BaseColumns(ABC):
         :param cols: '*', list of columns names or a single column name.
         :return:
         """
-        from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+        from sklearn.feature_extraction.text import TfidfVectorizer
         df = self.root
         vectorizer = TfidfVectorizer()
         X = df[cols]._to_values().ravel()
