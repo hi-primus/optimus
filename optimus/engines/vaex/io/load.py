@@ -49,6 +49,8 @@ class Load(BaseLoad):
              keep_default_na=False, na_filter=False, null_value=None, storage_options=None, conn=None,
              n_partitions=1, *args, **kwargs):
 
+        kwargs.pop("callback", None)
+
         filepath_or_buffer = unquote_path(filepath_or_buffer)
 
         if cache is False:

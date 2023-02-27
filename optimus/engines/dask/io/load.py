@@ -26,7 +26,7 @@ class Load(BaseLoad):
     @staticmethod
     def _csv(filepath_or_buffer, n_partitions=None, nrows=None, engine="c", na_filter=True,
              na_values=None, index_col=None, on_bad_lines='warn', *args, **kwargs):
-        
+        kwargs.pop("callback", None)
         na_filter = na_filter if na_values else False
 
         new_dtype = None

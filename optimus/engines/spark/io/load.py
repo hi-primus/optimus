@@ -38,6 +38,7 @@ class Load(BaseLoad):
         kwargs.pop("na_filter", None)
         kwargs.pop("na_values", None)
         kwargs.pop("storage_options", None)
+        kwargs.pop("callback", None)
 
         kwargs["index_col"] = kwargs.get("index_col", None)
         if kwargs["index_col"] is False:

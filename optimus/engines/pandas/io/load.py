@@ -8,7 +8,7 @@ from typing import Tuple
 import pandas as pd
 import requests
 
-from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.io.load import BaseLoad, Reader
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
@@ -27,7 +27,13 @@ class Load(BaseLoad):
     @staticmethod
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
+
+        with requests.get(filepath_or_buffer, params=None, stream=True) as resp:
+            r = Reader(resp, 500_000, n_rows=kwargs["nrows"], callback=kwargs["callback"])
+            kwargs.pop("callback", None)
+            df = pd.read_csv(r, *args, **kwargs)
+
+        # df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
         return df
 
     @staticmethod

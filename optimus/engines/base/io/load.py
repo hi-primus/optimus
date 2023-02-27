@@ -1,8 +1,11 @@
+import csv
 import glob
 import ntpath
 import os
 from abc import abstractmethod
+from io import BytesIO
 
+import chardet
 import requests
 
 from optimus.engines.base.meta import Meta
@@ -13,10 +16,79 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import DataFrameType, InternalDataFrameType
 from optimus.infer import is_empty_function, is_list, is_str, is_url
 
-import csv
-import chardet
-
 BYTES_SIZE = 80000
+
+
+class Reader:
+    def __init__(self, resp, step_size, callback=None, n_rows=None, encoding="utf-8"):
+        """
+        Initialize a new Reader object.
+
+        :param resp: The response object returned by the HTTP request to download the CSV file.
+        :type resp: requests.Response
+        :param step_size: The number of bytes to read from the response object at a time.
+        :type step_size: int
+        :param callback: A function to call periodically with progress updates.
+        :type callback: callable
+        :param n_rows: The maximum number of rows to read from the CSV file. If None, all rows are read.
+        :type n_rows: int or None
+        :param encoding: The character encoding to use when decoding the CSV data.
+        :type encoding: str
+        """
+        if step_size > n_rows:
+            step_size = n_rows
+
+        self.step = step_size
+        self.step_size = step_size
+        self.bytes_loaded = 0
+        self.total_size = int(resp.headers.get("Content-length"))
+        self.f = callback
+        self.resp = resp
+        self.n_rows = n_rows
+        self.encoding = encoding
+        self.reader = self.read_from_stream()
+
+    def read_from_stream(self):
+        """
+        Read rows from the CSV file and yield them one at a time.
+
+        :return: The next row in the CSV file, decoded using the specified encoding.
+        :rtype: str
+        """
+        rows_read = 0
+        start_row_last_step = 0
+        for line in self.resp.iter_lines(chunk_size=self.step_size):
+            line += b"\n"
+            self.bytes_loaded += len(line)
+
+            if self.bytes_loaded > self.step:
+                if self.f is not None:
+                    self.f(self.bytes_loaded, self.total_size, start_row_last_step, rows_read)
+                self.step = self.bytes_loaded + self.step_size
+                start_row_last_step = rows_read + 1
+            line = line.decode(self.encoding)
+            yield line
+
+            rows_read += 1
+            # print(rows_read)
+            if self.n_rows is not None and rows_read >= self.n_rows:
+                break
+
+    def read(self, n=0):
+        """
+        Read the next row from the CSV file.
+
+        :param n: Not used.
+        :type n: int
+
+        :return: The next row in the CSV file, decoded using the specified encoding.
+        :rtype: str
+        """
+        try:
+            return next(self.reader)
+        except StopIteration:
+            return ""
+
 
 class BaseLoad:
 
@@ -47,7 +119,7 @@ class BaseLoad:
 
     def csv(self, filepath_or_buffer, sep=",", header=True, infer_schema=True, encoding="UTF-8", n_rows=None,
             null_value="None", quoting=3, lineterminator='\r\n', on_bad_lines='warn', cache=False, na_filter=False,
-            storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
+            storage_options=None, conn=None, callback=None, *args, **kwargs) -> 'DataFrameType':
 
         """
         Loads a dataframe from a csv file. It is the same read.csv Spark function with some predefined
@@ -58,10 +130,10 @@ class BaseLoad:
         :param encoding: Encoding to use for UTF when reading/writing.
         :param header: Tell the function whether dataset has a header row. True default.
         :param infer_schema: Infers the input schema automatically from data.
-        :param n_rows:
+        :param n_rows: Number of rows to read. If None, all rows will be read.
         :param null_value: Whether to include the default NaN values when parsing the data
         :param quoting: Control field quoting behavior
-        :param cache:
+        :param cache: Cache the dataframe in memory.
         :param na_filter: Detect missing value markers (empty strings and the value of na_values).
         :param lineterminator: Character to break file into lines.
         :param on_bad_lines: Specifies what to do upon encountering a bad line (a line with too many fields).
@@ -71,7 +143,7 @@ class BaseLoad:
             ‘skip’, skip bad lines without raising or warning when they are encountered
         :param storage_options: A dict with the connection params.
         :param conn: A connection object.
-        It requires one extra pass over the data. True default.
+        :param callback: A callback function to be executed while loading.
 
         :return dataFrame
         """
@@ -116,7 +188,7 @@ class BaseLoad:
                                  nrows=n_rows, quoting=quoting, lineterminator=lineterminator,
                                  on_bad_lines=on_bad_lines, na_filter=na_filter,
                                  na_values=val_to_list(null_value), index_col=False,
-                                 storage_options=storage_options, *args, **kwargs)
+                                 storage_options=storage_options, callback=callback, *args, **kwargs)
 
             if is_list(filepath_or_buffer):
                 df = self.op.F.new_df()
@@ -417,8 +489,12 @@ class BaseLoad:
                 full_path, file_name = prepare_path(path)[0]
                 file = open(full_path, "rb")
                 buffer = file.read(BYTES_SIZE)
-            elif isinstance(path, bytes):
-                buffer = path
+            elif isinstance(path, BytesIO):
+                path.seek(0)
+                buffer = path.read(BYTES_SIZE)
+                path.seek(0)
+                full_path = path
+                file_name = kwargs.get("meta", {}).get("file_name")
             else:
                 RaiseIt.value_error(
                     path, ["filepath", "url", "buffer"])
@@ -432,12 +508,15 @@ class BaseLoad:
         }
 
         # Detect the file type
-        file_ext = os.path.splitext(file_name)[1].replace(".", "")
-        mime_type=ext_to_type[file_ext]
-        mime_encoding = chardet.detect(buffer)["encoding"]
-        mime_info = {"mime": mime_type, "encoding": mime_encoding, "file_ext": file_ext}
-        file_type = ext_to_type.get(file_ext, file_ext)
-
+        if (file_name):
+            file_ext = os.path.splitext(file_name)[1].replace(".", "")
+            mime_type = ext_to_type[file_ext]
+            mime_encoding = chardet.detect(buffer)["encoding"]
+            mime_info = {"mime": mime_type, "encoding": mime_encoding, "file_ext": file_ext}
+            file_type = ext_to_type.get(file_ext, file_ext)
+        else:
+            mime_info = {"mime": None, "encoding": None, "file_ext": None}
+            file_type = "None"
 
         # Detect the file encoding
         file_type_to_func = {
@@ -456,6 +535,7 @@ class BaseLoad:
                     mime_info["encoding"] = "latin-1"
 
                 dialect = csv.Sniffer().sniff(str(buffer))
+                # print(dialect, dialect)
                 properties = {"sep": dialect.delimiter,
                               "doublequote": dialect.doublequote,
                               "escapechar": dialect.escapechar,
@@ -463,14 +543,13 @@ class BaseLoad:
                               "quotechar": dialect.quotechar,
                               "quoting": dialect.quoting,
                               "skipinitialspace": dialect.skipinitialspace}
-
                 for k in properties:
                     if k not in kwargs:
                         kwargs.update({k: properties[k]})
 
                 mime_info.update({"properties": properties})
                 kwargs.update({"encoding": mime_info.get("encoding", None)})
-
+            kwargs.pop("meta", None)
             df = func(full_path, *args, **kwargs)
         else:
             RaiseIt.value_error(

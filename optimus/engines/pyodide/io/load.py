@@ -3,7 +3,7 @@ import io
 import pandas as pd
 import requests
 
-from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.io.load import BaseLoad, Reader
 from optimus.engines.pyodide.dataframe import PyodideDataFrame
 from optimus.infer import is_url
 
@@ -24,10 +24,12 @@ class Load(BaseLoad):
     @staticmethod
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
+        kwargs.pop("callback", None)
+
         if is_url(filepath_or_buffer):
-            response = requests.get(filepath_or_buffer)
-            s = response.content
-            buffer = io.StringIO(s.decode(kwargs["encoding"]))
+            with requests.get(filepath_or_buffer, params=None, stream=True) as resp:
+                buffer = Reader(resp, 500_000, n_rows=kwargs["nrows"], callback=kwargs["callback"])
+                kwargs.pop("callback", None)
         else:
             buffer = filepath_or_buffer
         df = pd.read_csv(buffer, *args, **kwargs)
