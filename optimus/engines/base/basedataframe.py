@@ -171,9 +171,10 @@ class BaseDataFrame(ABC):
         df1_is_df = isinstance(df1, (BaseDataFrame,))
         df2_is_df = isinstance(df2, (BaseDataFrame,))
 
-        c = df1.constants.OPTIMUS_TO_INTERNAL
+
         # If any of the columns is numeric, cast the other columns to numeric
         if df1_is_df and df2_is_df:
+            c = df1.constants.OPTIMUS_TO_INTERNAL
             if len(df1.cols.names()) == 1:
                 df1 = df1.cols.cast("*", c[df1.cols.infer_type()["data_type"]])
                 df2 = df2.cols.cast("*", c[df1.cols.infer_type()["data_type"]])
