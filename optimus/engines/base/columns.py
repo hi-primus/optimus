@@ -2316,6 +2316,9 @@ class BaseColumns(ABC):
         :param output_cols: Column name or list of column names where the transformed data will be saved.
         :return:
         """
+        if side not in ["left", "right", "both"]:
+            RaiseIt.value_error(side, ["left", "right", "both"])
+        
         return self.apply(cols, self.F.pad, args=(width, side, fill_char,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.PAD.value, mode="vectorized")
