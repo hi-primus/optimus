@@ -6,624 +6,571 @@ functions = {
     # Aggregations
     "MIN": {
         "description": "Returns the minimum value in a numeric dataset.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value."
-            },
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value."
+        }],
         "example": "MIN(COL_NAME)",
-        "text": "MIN",
+        "text": "MIN"
     },
     "MAX": {
         "description": "Returns the maximum value in a numeric dataset.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value."
-            },
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value."
+        }],
         "example": "MIN(COL_NAME)",
-        "text": "MAX",
+        "text": "MAX"
     },
     "MEAN": {
-        "description": "Returns the numerical average value in a dataset, ignoring text.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value."
-            },
-        ],
+        "description":
+            "Returns the numerical average value in a dataset, ignoring text.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value."
+        }],
         "example": "MEAN(COL_NAME)",
-        "text": "MEAN",
+        "text": "MEAN"
     },
     "MODE": {
-        "description": "Returns the most commonly occurring value in a dataset.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value."
-            },
-        ],
+        "description":
+            "Returns the most commonly occurring value in a dataset.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value."
+        }],
         "example": "MODE(COL_NAME)",
-        "text": "MODE",
+        "text": "MODE"
     },
     "STD": {
         "description": "Calculates the standard deviation based on a sample.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value."
-            },
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value."
+        }],
         "example": "STD(COL_NAME)",
-        "text": "STD",
+        "text": "STD"
     },
     "SUM": {
         "description": "Returns the sum of a series of numbers and/or cells.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value."
-            },
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value."
+        }],
         "example": "SUM(COL_NAME)",
-        "text": "SUM",
+        "text": "SUM"
     },
     "VAR": {
         "description": "Calculates the variance based on a sample.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value."
-            },
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value."
+        }],
         "example": "VAR(COL_NAME)",
-        "text": "VAR",
+        "text": "VAR"
     },
     "KURTOSIS": {
-        "description": "Calculates the kurtosis of a dataset, which describes the shape, and in particular the 'peakedness' of that dataset.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value."
-            },
-        ],
+        "description":
+            "Calculates the kurtosis of a dataset, which describes the shape, and in particular the 'peakedness' of that dataset.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value."
+        }],
         "example": "KURT(COL_NAME)",
-        "text": "KURT",
+        "text": "KURT"
     },
     "SKEW": {
-        "description": "Calculates the skewness of a dataset, which describes the symmetry of that dataset about the mean.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value."
-            },
-        ],
+        "description":
+            "Calculates the skewness of a dataset, which describes the symmetry of that dataset about the mean.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value."
+        }],
         "example": "SKEW(COL_NAME)",
-        "text": "SKEW",
+        "text": "SKEW"
     },
     "MAD": {
-        "description": "Calculates the skewness of a dataset, which describes the symmetry of that dataset about the mean.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Column name or value"
-            },
-        ],
+        "description":
+            "Calculates the skewness of a dataset, which describes the symmetry of that dataset about the mean.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Column name or value"
+        }],
         "example": "MAD(COL_NAME)",
-        "text": "MAD",
+        "text": "MAD"
     },
     # Math functions
     "ABS": {
         "description": "Returns the absolute value of a number.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The number of which to return the absolute value."
-            },
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "The number of which to return the absolute value."
+        }],
         "example": "ABS(-2)",
-        "text": "ABS",
+        "text": "ABS"
     },
-
     "MOD": {
-        "description": "Returns the result of the modulo operator, the remainder after a division operation.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The number to be divided to find the remainder."
-            },
-            {
-                "type": "number",
-                "name": "divisor",
-                "description": "The number to divide by."
-            }
-        ],
+        "description":
+            "Returns the result of the modulo operator, the remainder after a division operation.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "The number to be divided to find the remainder."
+        }, {
+            "type": "number",
+            "name": "divisor",
+            "description": "The number to divide by."
+        }],
         "example": "MOD(10, 4)",
-        "text": "MOD",
+        "text": "MOD"
     },
-
     "EXP": {
         "description": "Returns Euler's number, e (~2.718) raised to a power.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The number of which to return the absolute value."
-            },
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "The number of which to return the absolute value."
+        }],
         "example": "ABS(-2)",
-        "text": "EXP",
+        "text": "EXP"
     },
     "LOG": {
-        "description": "Returns the logarithm of a number with respect to a base.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value for which to calculate the logarithm."
-            },
-        ],
+        "description":
+            "Returns the logarithm of a number with respect to a base.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "The value for which to calculate the logarithm."
+        }],
         "example": "LOG(128, 2)",
-        "text": "LOG",
+        "text": "LOG"
     },
     "LN": {
-        "description": "Returns the logarithm of a number, base e (Euler's number).",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value for which to calculate the logarithm, base e."
-            },
-        ],
+        "description":
+            "Returns the logarithm of a number, base e (Euler's number).",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The value for which to calculate the logarithm, base e."
+        }],
         "example": "LN(100)",
-        "text": "LN",
+        "text": "LN"
     },
     "POW": {
         "description": "Returns a number raised to a power.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The number to raise to the exponent power."
-            },
-            {
-                "type": "number",
-                "name": "exponent",
-                "description": "The exponent to raise base to."
-            }
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "The number to raise to the exponent power."
+        }, {
+            "type": "number",
+            "name": "exponent",
+            "description": "The exponent to raise base to."
+        }],
         "example": "POW(4, 0.5)",
-        "text": "POW",
+        "text": "POW"
     },
     "CEIL": {
-        "description": "Rounds a number up to the nearest integer multiple of specified significance factor.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value to round up to the nearest integer multiple of factor."
-            },
-
-        ],
+        "description":
+            "Rounds a number up to the nearest integer multiple of specified significance factor.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The value to round up to the nearest integer multiple of factor."
+        }],
         "example": "CEILING(23.25)",
-        "text": "CEIL",
+        "text": "CEIL"
     },
     "SQRT": {
         "description": "Returns the positive square root of a positive number.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The number for which to calculate the positive square root."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The number for which to calculate the positive square root."
+        }],
         "example": "SQRT(9)",
-        "text": "SQRT",
+        "text": "SQRT"
     },
     "FLOOR": {
-        "description": "Rounds a number down to the nearest integer multiple of specified significance factor.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value to round down to the nearest integer multiple of factor."
-            },
-
-        ],
+        "description":
+            "Rounds a number down to the nearest integer multiple of specified significance factor.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The value to round down to the nearest integer multiple of factor."
+        }],
         "example": "FLOOR(23.25)",
-        "text": "FLOOR",
+        "text": "FLOOR"
     },
     "ROUND": {
-        "description": "Rounds a number to a certain number of decimal places according to standard rules.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value to round to places number of places."
-            },
-
-            {
-                "type": "number",
-                "name": "decimals",
-                "description": "The value to round to places number of places."
-            }
-
-        ],
+        "description":
+            "Rounds a number to a certain number of decimal places according to standard rules.",
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "The value to round to places number of places."
+        }, {
+            "type": "number",
+            "name": "decimals",
+            "description": "The value to round to places number of places."
+        }],
         "example": "ROUND(99.44, 1)",
-        "text": "ROUND",
+        "text": "ROUND"
     },
     "SIN": {
         "description": "Returns the sin of an angle provided in radians.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The angle to find the sine of, in radians."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "The angle to find the sine of, in radians."
+        }],
         "example": "SIN(3.14)",
-        "text": "SIN",
+        "text": "SIN"
     },
     "COS": {
         "description": "Returns the cosine of an angle provided in radians.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The angle to find the cosine of, in radians."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "The angle to find the cosine of, in radians."
+        }],
         "example": "COS(3.14)",
-        "text": "COS",
+        "text": "COS"
     },
     "TAN": {
         "description": "Returns the tangent of an angle provided in radians.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The angle to find the tangent of, in radians."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "The angle to find the tangent of, in radians."
+        }],
         "example": "TAN(3.14)",
-        "text": "TAN",
+        "text": "TAN"
     },
     "ASIN": {
         "description": "Returns the inverse sine of a value, in radians.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value for which to calculate the inverse sine. Must be between -1 and 1, inclusive."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The value for which to calculate the inverse sine. Must be between -1 and 1, inclusive."
+        }],
         "example": "ASIN(0)",
-        "text": "ASIN",
+        "text": "ASIN"
     },
     "ACOS": {
         "description": "Returns the inverse cosine of a value, in radians.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value for which to calculate the inverse cosine. Must be between -1 and 1, inclusive."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The value for which to calculate the inverse cosine. Must be between -1 and 1, inclusive."
+        }],
         "example": "ACOS(0)",
-        "text": "ACOS",
+        "text": "ACOS"
     },
     "ATAN": {
         "description": "Returns the inverse tangent of a value, in radians.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value for which to calculate the inverse tangent."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The value for which to calculate the inverse tangent."
+        }],
         "example": "ATAN(0)",
-        "text": "ATAN",
+        "text": "ATAN"
     },
     "SINH": {
         "description": "Returns the hyperbolic sine of any real number.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Any real value to calculate the hyperbolic sine of."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description": "Any real value to calculate the hyperbolic sine of."
+        }],
         "example": "SINH(2)",
-        "text": "SINH",
+        "text": "SINH"
     },
     "COSH": {
         "description": "Returns the hyperbolic cosine of any real number.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Any real value to calculate the hyperbolic cosine of."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "Any real value to calculate the hyperbolic cosine of."
+        }],
         "example": "COSH(0.48)",
-        "text": "COSH",
+        "text": "COSH"
     },
-
     "TANH": {
         "description": "Returns the hyperbolic tangent of any real number.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "Any real value to calculate the hyperbolic tangent of."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "Any real value to calculate the hyperbolic tangent of."
+        }],
         "example": "TANH(1)",
-        "text": "TANH",
+        "text": "TANH"
     },
     "ASINH": {
         "description": "Returns the hyperbolic tangent of any real number.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value for which to calculate the inverse hyperbolic sine."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The value for which to calculate the inverse hyperbolic sine."
+        }],
         "example": "ASINH(0.9)",
-        "text": "ASINH",
+        "text": "ASINH"
     },
-
     "ACOSH": {
         "description": "Returns the inverse hyperbolic cosine of a number.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value for which to calculate the inverse hyperbolic cosine. Must be greater than or equal to 1."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The value for which to calculate the inverse hyperbolic cosine. Must be greater than or equal to 1."
+        }],
         "example": "ACOSH(2)",
-        "text": "ACOSH",
+        "text": "ACOSH"
     },
     "ATANH": {
         "description": "Returns the inverse hyperbolic tangent of a number.",
-        "parameters": [
-            {
-                "type": ["column", "number"],
-                "name": "col_name",
-                "description": "The value for which to calculate the inverse hyperbolic tangent. Must be between -1 and 1, exclusive."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "number"],
+            "name": "col_name",
+            "description":
+                "The value for which to calculate the inverse hyperbolic tangent. Must be between -1 and 1, exclusive."
+        }],
         "example": "ATANH(0.9)",
-        "text": "ATANH",
+        "text": "ATANH"
     },
-    "UPPER": {  # String Transformations
+    # String transformations functions
+    "UPPER": {
         "description": "Returns the inverse hyperbolic tangent of a number.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "Converts a specified string to uppercase."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "Converts a specified string to uppercase."
+        }],
         "example": "UPPER('lorem ipsum')",
-        "text": "UPPER",
+        "text": "UPPER"
     },
     "LOWER": {
         "description": "Converts a specified string to lowercase.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The string to convert to lowercase."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The string to convert to lowercase."
+        }],
         "example": "LOWER('LOREM IPSUM')",
-        "text": "LOWER",
+        "text": "LOWER"
     },
     "PROPER": {
         "description": "Capitalizes each word in a specified string.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The text which will be returned with the first letter of each word in uppercase and all other letters in lowercase."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description":
+                "The text which will be returned with the first letter of each word in uppercase and all other letters in lowercase."
+        }],
         "example": "PROPER('optimus prime')",
-        "text": "PROPER",
+        "text": "PROPER"
     },
     "TRIM": {
-        "description": "Removes leading, trailing, and repeated spaces in text.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The text or reference to a cell containing text to be trimmed."
-            },
-
-        ],
+        "description":
+            "Removes leading, trailing, and repeated spaces in text.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description":
+                "The text or reference to a cell containing text to be trimmed."
+        }],
         "example": "TRIM('optimus prime')",
-        "text": "TRIM",
+        "text": "TRIM"
     },
     "LEN": {
         "description": "Returns the length of a string.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The string whose length will be returned."
-            },
-
-        ],
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The string whose length will be returned."
+        }],
         "example": "LEN('optimus prime')",
-        "text": "LEN",
+        "text": "LEN"
     },
     "FIND": {
         "description": "Returns the position at which a string is first found.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The string to look for."
-            },
-            {
-                "type": "string",
-                "name": "text_to_search",
-                "description": "The text to search for the first occurrence of search_for."
-            }
-
-        ],
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The string to look for."
+        }, {
+            "type": "string",
+            "name": "text_to_search",
+            "description":
+                "The text to search for the first occurrence of search_for."
+        }],
         "example": "LEN('optimus prime')",
-        "text": "LEN",
+        "text": "LEN"
     },
     "RFIND": "RFIND",
     "LEFT": {
-        "description": "Returns a substring from the beginning of a specified string.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The string from which the left portion will be returned."
-            },
-        ],
+        "description":
+            "Returns a substring from the beginning of a specified string.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description":
+                "The string from which the left portion will be returned."
+        }],
         "example": "LEFT('Optimus', 2)",
-        "text": "LEN",
+        "text": "LEN"
     },
     "RIGHT": {
-        "description": "Returns a substring from the end of a specified string.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The string from which the right portion will be returned."
-            },
-        ],
+        "description":
+            "Returns a substring from the end of a specified string.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description":
+                "The string from which the right portion will be returned."
+        }],
         "example": "LEN('optimus prime')",
-        "text": "LEN",
+        "text": "LEN"
     },
-    "STARTS_WITH": "STARTS_WITH",
-    "ENDS_WITH": "ENDS_WITH",
-    "EXACT": "EXACT",
-    "YEAR": {  # Date Functions
+    "STARTS_WITH": {
+        "description":
+            "Returns true if a string starts with a specified string.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The string to look for."
+        }],
+        "example": "STARTS_WITH('optimus prime', 'optimus')",
+        "text": "STARTS_WITH"
+    },
+    "ENDS_WITH": {
+        "description": "Returns true if a string ends with a specified string.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The string to look for."
+        }],
+        "example": "ENDS_WITH('optimus prime', 'prime')",
+        "text": "ENDS_WITH"
+    },
+    "EXACT": {
+        "description": "Returns true if two strings are exactly the same.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The string to compare to."
+        }],
+        "example": "EXACT('optimus prime', 'optimus prime')",
+        "text": "EXACT"
+    },
+    # Date Functions
+    "YEAR": {
         "description": "Returns the year specified by a given date.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The date from which to extract the year."
-            },
-        ],
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The date from which to extract the year."
+        }],
         "example": "YEAR()",
-        "text": "YEAR",
+        "text": "YEAR"
     },
     "MONTH": {
-        "description": "Returns the month of the year a specific date falls in, in numeric format.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The date from which to extract the month."
-            },
-        ],
+        "description":
+            "Returns the month of the year a specific date falls in, in numeric format.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The date from which to extract the month."
+        }],
         "example": "MONTH()",
-        "text": "MONTH",
+        "text": "MONTH"
     },
     "DAY": {
-        "description": "Returns the day of the month that a specific date falls on, in numeric format.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The date from which to extract the day."
-            },
-        ],
-        "example": 'DAY()',
-        "text": "DAY",
+        "description":
+            "Returns the day of the month that a specific date falls on, in numeric format.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The date from which to extract the day."
+        }],
+        "example":
+            'DAY()',
+        "text": "DAY"
     },
     "HOUR": {
-        "description": "Returns the hour component of a specific time, in numeric format.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The time from which to calculate the hour value."
-            },
-        ],
-        "example": 'HOUR()',
-        "text": "HOUR",
+        "description":
+            "Returns the hour component of a specific time, in numeric format.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The time from which to calculate the hour value."
+        }],
+        "example":
+            'HOUR()',
+        "text": "HOUR"
     },
     "MINUTE": {
-        "description": "Returns the minute component of a specific time, in numeric format.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The time from which to calculate the minute value."
-            },
-        ],
-        "example": 'MINUTE()',
-        "text": "MINUTE",
+        "description":
+            "Returns the minute component of a specific time, in numeric format.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The time from which to calculate the minute value."
+        }],
+        "example":
+            'MINUTE()',
+        "text": "MINUTE"
     },
     "SECOND": {
-        "description": "Returns the second component of a specific time, in numeric format.",
-        "parameters": [
-            {
-                "type": ["column", "string"],
-                "name": "col_name",
-                "description": "The time from which to calculate the second value"
-            },
-        ],
-        "example": 'SECOND()',
-        "text": "SECOND",
+        "description":
+            "Returns the second component of a specific time, in numeric format.",
+        "parameters": [{
+            "type": ["column", "string"],
+            "name": "col_name",
+            "description": "The time from which to calculate the second value"
+        }],
+        "example":
+            'SECOND()',
+        "text": "SECOND"
     },
-
 }
+
 unary_operators = {
-    "~": "~ function description",
-    "|": "| function description",
-    "&": "& function description",
-    "+": "+ function description",
-    "-": "- function description",
-
+    "~": "bitwise not",
+    "|": "bitwise or",
+    "&": "bitwise and",
+    "+": "unary plus",
+    "-": "unary minus"
 }
+
 binary_operators = {
-    "+": "+ function description",
-    "-": "- function description",
-    "*": "* function description",
-    "/": "/ function description",
-    "%": "- function description"
+    "+": "addition",
+    "-": "subtraction",
+    "*": "multiplication",
+    "/": "division",
+    "%": "modulus"
 }
 
 # functions = op_functions
