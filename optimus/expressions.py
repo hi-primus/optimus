@@ -426,10 +426,27 @@ functions = {
             "description":
                 "The text to search for the first occurrence of search_for."
         }],
-        "example": "LEN('optimus prime')",
-        "text": "LEN"
+        "example": "FIND(col, 'optimus prime')",
+        "text": "FIND",
     },
-    "RFIND": "RFIND",
+    "RFIND": {
+        "description": "Returns the position at which a string is last found.",
+        "parameters": [
+            {
+                "type": ["column", "string"],
+                "name": "col_name",
+                "description": "The string to look for."
+            },
+            {
+                "type": "string",
+                "name": "text_to_search",
+                "description": "The text to search for the first occurrence of search_for."
+            }
+
+        ],
+        "example": "RFIND(col, 'optimus prime')",
+        "text": "RFIND",
+    },
     "LEFT": {
         "description":
             "Returns a substring from the beginning of a specified string.",
@@ -629,12 +646,6 @@ l_g.add('INTEGER', r'\d+')
 l_g.ignore('\s+')
 
 
-def frame_function(func):
-    def wrapper(df, *args, **kwargs):
-        return df.cols.apply(func=func, args=args)
-
-    return wrapper
-
 
 def parse(text_input, df_name="df", data=True):
     """
@@ -661,7 +672,7 @@ def parse(text_input, df_name="df", data=True):
             if data:
                 result_element = f"""{df_name}.functions.{token_value.lower()}"""
             else:
-                result_element = f"""frame_function({df_name}.functions.{token_value.lower()})"""
+                result_element = f"""lambda *args: {df_name}.cols.apply(func={df_name}.functions.{token_value.lower()}, args=args)"""
 
         else:
             result_element = token_value
