@@ -27,9 +27,10 @@ class Load(BaseLoad):
     @staticmethod
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
+        n_rows = kwargs.get("n_rows")
 
         with requests.get(filepath_or_buffer, params=None, stream=True) as resp:
-            r = Reader(resp, 500_000, n_rows=kwargs["nrows"], callback=kwargs["callback"])
+            r = Reader(resp, 500_000, n_rows=n_rows, callback=kwargs.get("callback"))
             kwargs.pop("callback", None)
             df = pd.read_csv(r, *args, **kwargs)
 

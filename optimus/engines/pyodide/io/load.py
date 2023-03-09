@@ -22,14 +22,14 @@ class Load(BaseLoad):
         return PyodideDataFrame(*args, **kwargs)
 
     @staticmethod
-    def _csv(filepath_or_buffer, *args, **kwargs):
+    def _csv(filepath_or_buffer, n_rows=1000, callback=None, *args, **kwargs):
         kwargs.pop("n_partitions", None)
-        kwargs.pop("callback", None)
 
         if is_url(filepath_or_buffer):
             with requests.get(filepath_or_buffer, params=None, stream=True) as resp:
-                buffer = Reader(resp, 500_000, n_rows=kwargs["nrows"], callback=kwargs["callback"])
+                buffer = Reader(resp, 500_000, n_rows=n_rows, callback=kwargs.get("callback"))
                 kwargs.pop("callback", None)
+
         else:
             buffer = filepath_or_buffer
         df = pd.read_csv(buffer, *args, **kwargs)
