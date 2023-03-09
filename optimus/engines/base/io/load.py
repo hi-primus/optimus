@@ -35,14 +35,20 @@ class Reader:
         :param encoding: The character encoding to use when decoding the CSV data.
         :type encoding: str
         """
-        if step_size > n_rows:
-            step_size = n_rows
+        if n_rows is None:
+            self.step_size = 100000
+        elif step_size is None:
+            self.step_size = 100000
+        elif step_size > n_rows:
+            self.step_size = n_rows
+        else:
+            self.step_size = step_size
 
         self.step = step_size
         self.step_size = step_size
         self.bytes_loaded = 0
         self.total_size = int(resp.headers.get("Content-length"))
-        self.f = callback
+        self.callback = callback
         self.resp = resp
         self.n_rows = n_rows
         self.encoding = encoding
@@ -62,8 +68,8 @@ class Reader:
             self.bytes_loaded += len(line)
 
             if self.bytes_loaded > self.step:
-                if self.f is not None:
-                    self.f(self.bytes_loaded, self.total_size, start_row_last_step, rows_read)
+                if self.callback is not None:
+                    self.callback(self.bytes_loaded, self.total_size, start_row_last_step, rows_read)
                 self.step = self.bytes_loaded + self.step_size
                 start_row_last_step = rows_read + 1
             line = line.decode(self.encoding)
@@ -475,6 +481,7 @@ class BaseLoad:
             file_name = os.path.basename(path)
 
         else:
+
             if is_url(path):
                 # Download a chunk of the file to detect the file encoding
                 response = requests.get(
