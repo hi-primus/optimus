@@ -19,6 +19,7 @@ from nltk.stem import SnowballStemmer
 
 from optimus.engines.base.meta import Meta
 from optimus.engines.base.stringclustering import Clusters
+from optimus.engines.stream.stream import Stream
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     prepare_columns_arguments, \
@@ -2318,7 +2319,7 @@ class BaseColumns(ABC):
         """
         if side not in ["left", "right", "both"]:
             RaiseIt.value_error(side, ["left", "right", "both"])
-        
+
         return self.apply(cols, self.F.pad, args=(width, side, fill_char,), func_return_type=str,
                           output_cols=output_cols,
                           meta_action=Actions.PAD.value, mode="vectorized")
@@ -3502,19 +3503,22 @@ class BaseColumns(ABC):
         return result
 
     def hist(self, cols="*", buckets: int = MAX_BUCKETS, range: Optional[Tuple[float, float]] = None,
-             compute=True) -> dict:
+             stream=False, callback=None, compute=True) -> dict:
         """
         Return the histogram representation of the distribution of the data.
 
         :param cols: "*", column name or list of column names to be processed.
         :param buckets: Number of histogram bins to be used.
         :param range: Range of the histogram. If None is passed, the range is computed from the data.
+        :param stream: Process data in chunks a send the result via a callback.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return: A dictionary with the histogram representation.
         """
 
         df = self.root
         cols = parse_columns(df, cols)
+        if stream:
+            Stream(df).histogram(cols, buckets, range, callback)
 
         dfn = df.cols.select(cols).cols.to_numeric()
 
@@ -3779,7 +3783,7 @@ class BaseColumns(ABC):
         return format_dict(result, tidy)
 
     def frequency(self, cols="*", n=MAX_BUCKETS, percentage=False, total_rows=None, count_uniques=False,
-                  compute=True, tidy=False) -> dict:
+                  stream=False, callback=None, compute=True, tidy=False) -> dict:
         """
         Return the count of every element in the column.
 

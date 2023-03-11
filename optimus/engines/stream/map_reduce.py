@@ -1,10 +1,6 @@
-from collections import Counter
 from functools import reduce, partial
 
-import numpy as np
 import pandas as pd
-
-from optimus.engines.stream.frequency import map_frequency, reduce_frequency
 
 
 class Stream:
@@ -51,6 +47,3 @@ class Stream:
             .reduce(self.reduce_frequency, format=None, callback=callback_reducer).most_common(n)
 
         return result
-
-
-

@@ -637,14 +637,12 @@ l_g.add('NEQ_OPERATOR', r'\!\=')
 l_g.add('AND_OPERATOR', r'\&')
 l_g.add('OR_OPERATOR', r'\|')
 
-
 # Number
 l_g.add('FLOAT', r'[-+]?[0-9]*\.?[0-9]+')
 l_g.add('INTEGER', r'\d+')
 
 # Ignore spaces
 l_g.ignore('\s+')
-
 
 
 def parse(text_input, df_name="df", data=True):
