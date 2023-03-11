@@ -1,4 +1,4 @@
-import copy
+from abc import ABC, abstractmethod
 from collections import Counter
 
 import numpy as np
@@ -8,7 +8,25 @@ from optimus.engines.base.meta import deepcopy
 from optimus.engines.stream import distogram
 
 
-class Frequency:
+class MapReduce(ABC):
+    @abstractmethod
+    def map(self, chunk):
+        pass
+
+    @abstractmethod
+    def reduce(self, a, b):
+        pass
+
+    @abstractmethod
+    def output_format(self, value):
+        pass
+
+
+class Frequency(MapReduce):
+    def __init__(self, n=10):
+        self.n = n
+        self.task_id = "frequency"
+
     def map(self, chunk):
         # Here's where you would implement your logic to calculate the frequency of the data in each chunk
         # This function should take in a chunk of the data as input and return a Counter object of frequencies
@@ -23,43 +41,17 @@ class Frequency:
         a.update(b)
         return a
 
+    def output_format(self, value):
+        # Create a shallow copy of the input data dictionary
+        data_copy = deepcopy(value)
+
+        n = self.n
+        values = [{"value": i, "count": j} for i, j in dict(data_copy.most_common(n)).items()]
+        return {"values": values}
+
 
 def map_histogram(chunk):
     return pd.to_numeric(chunk, errors='coerce').dropna()
-
-
-def map_frequency(chunk):
-    # Here's where you would implement your logic to calculate the frequency of the data in each chunk
-    # This function should take in a chunk of the data as input and return a Counter object of frequencies
-    result = Counter(chunk)
-    return result
-
-
-def reduce_frequency(a, b):
-    # Here's where you would implement your logic to combine the frequency data from each chunk
-    # This function should take in a list of Counter objects (one for each chunk) and return a single Counter object of the top n frequencies
-
-    a.update(b)
-    return a
-
-
-def format_frequency(data, *args, **kwargs):
-    # Create a shallow copy of the input data dictionary
-    data_copy = deepcopy(data)
-
-    # Modify the copy of the data
-    n = kwargs["n"]
-    cols = kwargs["cols"]
-
-    for col_name in cols:
-        # Create a new dictionary with the modified values for the column
-        values = [{"value": i, "count": j} for i, j in dict(data_copy["frequency"][col_name].most_common(n)).items()]
-
-        # Update the copy of the data with the modified column data
-        data_copy["frequency"][col_name] = {"values": values}
-
-    # Return the modified copy of the data
-    return data_copy
 
 
 def accum_histogram(value, *args, **kwargs):

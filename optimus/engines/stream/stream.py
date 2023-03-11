@@ -5,9 +5,9 @@ import requests
 
 from optimus.engines.base.io.reader import Reader
 from optimus.engines.stream import distogram
-from optimus.engines.stream.commons import map_frequency, reduce_frequency, format_frequency, accum_histogram, \
-    format_histogram, map_histogram
-from optimus.helpers.columns import parse_columns
+from optimus.engines.stream.commons import accum_histogram, \
+    format_histogram, map_histogram, Frequency
+from optimus.helpers.core import val_to_list
 
 
 class Stream:
@@ -47,65 +47,64 @@ class Stream:
 
         return hist
 
-    def map(self, func_list, col_name, chunk_size, *args, taskId=None, callback=None, **kwargs):
+    def map(self, func_list, col_name, chunk_size, *args, task_id=None, callback=None, **kwargs):
+        print("func_list", func_list)
         if isinstance(func_list, types.FunctionType):
             func_list = [func_list]
 
-        self.map_results[taskId][col_name] = []
+        self.map_results[task_id][col_name] = []
 
         _df = self.df.data
         for _, chunk in _df[col_name].groupby(_df.index // chunk_size):
             for func in func_list:
                 # Apply the map function to every chunk
-                self.map_results[taskId][col_name] = func(chunk, *args, **kwargs)
+                self.map_results[task_id][col_name] = func.map(chunk, *args, **kwargs)
 
             if callback:
                 callback(col_name)
 
-    def reduce(self, func_list, col_name, *args, taskId=None, format_result=None, format_params=None, callback=None,
-               **kwargs):
-        self.reduce_results[taskId][col_name] = None
+    def reduce(self, func_list, col_name, *args, callback=None, **kwargs):
+        for func in func_list:
+            self.reduce_results[func.task_id][col_name] = None
 
-        if isinstance(func_list, types.FunctionType):
-            func_list = [func_list]
-
-        function_name = taskId
+        func_list = val_to_list(func_list)
 
         for func in func_list:
 
             # The first iteration will be the same map result
-
-            if self.reduce_results[function_name][col_name] is None:
-                self.reduce_results[function_name][col_name] = self.map_results[function_name][col_name]
+            task_id = func.task_id
+            if self.reduce_results[task_id][col_name] is None:
+                self.reduce_results[task_id][col_name] = self.map_results[task_id][col_name]
             else:
-                self.reduce_results[function_name][col_name] = func(
-                    self.reduce_results[function_name][col_name], self.map_results[function_name][col_name], *args,
+                self.reduce_results[task_id][col_name] = func(
+                    self.reduce_results[task_id][col_name], self.map_results[task_id][col_name], *args,
                     **kwargs)
 
             if callback:
-                callback(format_result(self.reduce_results, **format_params))
+                callback(func.output_format(self.reduce_results[task_id][col_name]))
 
     def frequency(self, cols, n=10, chunk_size=100, callback=None):
-        df = self.df
-        cols = parse_columns(df, cols)
-        taskId = "frequency"
-        self.map_results[taskId] = {}
-        self.reduce_results[taskId] = {}
+        return self.execute(cols, [Frequency(n)], chunk_size=chunk_size, callback_reduce=callback)
 
-        format_params = {"n": n, "cols": cols}
+    def execute(self, cols, func_list, chunk_size=100, callback_map=None, callback_reduce=None):
 
-        def callback_reduce(_col_name):
-            self.reduce(reduce_frequency, _col_name, taskId=taskId, format_result=format_frequency,
-                        format_params={"n": n, "cols": [_col_name]},
-                        callback=callback)
+        # Reset the results
+        for func in func_list:
+            self.map_results[func.task_id] = {}
+            self.reduce_results[func.task_id] = {}
+
+        def callback(_col_name):
+            self.reduce(func_list, _col_name, callback=callback_reduce)
 
         for col_name in cols:
-            self.map(map_frequency, col_name, chunk_size, taskId=taskId,
-                     callback=callback_reduce)
+            self.map(func_list, col_name, chunk_size, task_id="frequency", callback=callback)
 
-        print("self.map_results", self.reduce_results)
+        for func in func_list:
+            for col_name in cols:
+                self.reduce_results[func.task_id][col_name] = func.output_format(
+                    self.reduce_results[func.task_id][col_name])
 
-        return format_frequency(self.reduce_results, **format_params)
+        return self.reduce_results
 
     def process(self, filepath_or_buffer, n_rows=100, apply=None, *args, **kwargs):
         self.map_result = None
