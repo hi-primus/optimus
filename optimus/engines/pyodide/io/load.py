@@ -3,7 +3,8 @@ import io
 import pandas as pd
 import requests
 
-from optimus.engines.base.io.load import BaseLoad, Reader
+from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.io.reader import Reader
 from optimus.engines.pyodide.dataframe import PyodideDataFrame
 from optimus.infer import is_url
 

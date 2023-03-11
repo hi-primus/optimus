@@ -8,7 +8,8 @@ from typing import Tuple
 import pandas as pd
 import requests
 
-from optimus.engines.base.io.load import BaseLoad, Reader
+from optimus.engines.base.io.load import BaseLoad
+from optimus.engines.base.io.reader import Reader
 from optimus.engines.base.meta import Meta
 from optimus.engines.pandas.dataframe import PandasDataFrame
 from optimus.helpers.core import val_to_list
