@@ -1,19 +1,17 @@
-import types
+from __future__ import annotations
 
 import pandas as pd
 import requests
 
 from optimus.engines.base.io.reader import Reader
-from optimus.engines.stream import distogram
-from optimus.engines.stream.commons import accum_histogram, \
-    format_histogram, map_histogram, Frequency
+from optimus.engines.stream.commons import Frequency, Min, Max, MinMax, Histogram, MapReduce
+from optimus.helpers.columns import parse_columns
 from optimus.helpers.core import val_to_list
 
 
 class Stream:
     def __init__(self, filepath_or_buffer):
         self.chunks = None
-        self.col_values = None
 
         # if file_path is a pandas dataframe
         # if isinstance(filepath_or_buffer, pd.DataFrame):
@@ -21,12 +19,25 @@ class Stream:
         # elif (filepath_or_buffer):
         #     self.df = pd.read_csv(filepath_or_buffer)
 
-        self.acc = None
-        self.map_results = {}
-        self.reduce_results = {}
+        self.acc: dict = {}
+        self.map_results: dict = {}
+        self.reduce_results: dict = {}
 
     def accum(self, func_map, func_accum, col_name, chunk_size, format_results, format_params, *args, callback=None,
               **kwargs):
+        """
+
+        :param func_map:
+        :param func_accum:
+        :param col_name:
+        :param chunk_size:
+        :param format_results:
+        :param format_params:
+        :param args:
+        :param callback:
+        :param kwargs:
+        :return:
+        """
         # Apply an aggregation function
         _df = self.df.data
         for _, chunk in _df[col_name].groupby(_df.index // chunk_size):
@@ -39,56 +50,138 @@ class Stream:
         # print(format_params)
         return format_results(self.acc, **format_params)
 
-    def histogram(self, col_name, n=10, chunk_size=100, callback=None):
-        format_params = {"n": n}
-        h = distogram.Distogram()
-        hist = self.accum(map_histogram, accum_histogram, col_name, chunk_size, format_results=format_histogram,
-                          format_params=format_params, h=h, callback=callback)
+    def map(self, func_list: list, col_name: str | list, chunk_size: int, *args, callback: callable = None, **kwargs):
+        """
+        Apply a map function over a chunk of data
+        :param func_list: List of functions to apply to the chunk
+        :param col_name:  Column name to apply the map function
+        :param chunk_size: Chunk size in rows
+        :param args: Arguments to pass to the map function
+        :param callback: Callback function fired after each map
+        :param kwargs: Keyword arguments to pass to the map function
+        :return:
+        """
+        func_list = val_to_list(func_list)
 
-        return hist
-
-    def map(self, func_list, col_name, chunk_size, *args, task_id=None, callback=None, **kwargs):
-        print("func_list", func_list)
-        if isinstance(func_list, types.FunctionType):
-            func_list = [func_list]
-
-        self.map_results[task_id][col_name] = []
+        # Initialize the data structure for map and reduce re
+        for func in func_list:
+            self.map_results[func.task_id][col_name] = []
+            self.reduce_results[func.task_id][col_name] = None
 
         _df = self.df.data
         for _, chunk in _df[col_name].groupby(_df.index // chunk_size):
             for func in func_list:
                 # Apply the map function to every chunk
-                self.map_results[task_id][col_name] = func.map(chunk, *args, **kwargs)
+                self.map_results[func.task_id][col_name] = func.map(chunk, *args, **kwargs)
 
             if callback:
                 callback(col_name)
 
-    def reduce(self, func_list, col_name, *args, callback=None, **kwargs):
-        for func in func_list:
-            self.reduce_results[func.task_id][col_name] = None
-
+    def reduce(self, func_list: list, col_name: str | list, *args, callback: callable = None, **kwargs):
+        """
+        Apply a reduce function over a map result
+        :param func_list: List of functions to the map result
+        :param col_name: Column name used as key to access the map result
+        :param args: Arguments to pass to the reduce function
+        :param callback: Callback function fired after each reduce
+        :param kwargs: Keyword arguments to pass to the reduce function
+        :return:
+        """
         func_list = val_to_list(func_list)
 
         for func in func_list:
 
             # The first iteration will be the same map result
             task_id = func.task_id
-            if self.reduce_results[task_id][col_name] is None:
+            reduce_result = self.reduce_results[task_id][col_name]
+            map_result = self.map_results[task_id][col_name]
+
+            if reduce_result is None:
                 self.reduce_results[task_id][col_name] = self.map_results[task_id][col_name]
             else:
-                self.reduce_results[task_id][col_name] = func(
-                    self.reduce_results[task_id][col_name], self.map_results[task_id][col_name], *args,
-                    **kwargs)
+                self.reduce_results[task_id][col_name] = func.reduce(reduce_result, map_result, *args, **kwargs)
 
             if callback:
-                callback(func.output_format(self.reduce_results[task_id][col_name]))
+                callback(func.output_format(reduce_result))
 
-    def frequency(self, cols, n=10, chunk_size=100, callback=None):
-        return self.execute(cols, [Frequency(n)], chunk_size=chunk_size, callback_reduce=callback)
+    def histogram(self, cols: str | list, bins: int = 10, chunk_size: int = 100, callback: callable = None):
+        """
+        Get the histogram of one or multiple columns.
+        :param cols: Columns to get the histogram
+        :param bins: Number of bins in the histogram
+        :param chunk_size: Size of the chunk to process in rows
+        :param callback: Callback function fired after each reduce
+        :return:
+        """
+        return self.execute(cols, Histogram(bins), chunk_size=chunk_size, callback_reduce=callback)
 
-    def execute(self, cols, func_list, chunk_size=100, callback_map=None, callback_reduce=None):
+    def frequency(self, cols: str | list, n: int = 10, chunk_size: int = 100, callback: callable = None) -> dict:
+        """
+        Get the count of the most frequent values of a column.
+        :param cols: Columns to get the frequency
+        :param n: Number of values to return
+        :param chunk_size: Size of the chunk to process in rows
+        :param callback: Callback function fired after each reduce
+        :return:
+        """
+        return self.execute(cols, Frequency(n), chunk_size=chunk_size, callback_reduce=callback)
+
+    def min(self, cols: str | list, chunk_size: int = 100, callback: callable = None) -> dict | int | float:
+        """
+        Get the min value of a column.
+        :param cols: Columns to get the min value
+        :param chunk_size: Size of the chunk to process in rows
+        :param callback: Callback function fired after each reduce
+        :return:
+        """
+        return self.execute(cols, [Min()], chunk_size=chunk_size, callback_reduce=callback)
+
+    def max(self, cols: str | list, chunk_size: int = 100, callback: callable = None) -> dict | int | float:
+        """
+        Get the max value of a column.
+        :param cols: Columns to get the max value
+        :param chunk_size: Size of the chunk to process in rows
+        :param callback: Callback function fired after each reduce
+        :return:
+        """
+        return self.execute(cols, [Max()], chunk_size=chunk_size, callback_reduce=callback)
+
+    def min_max(self, cols: str | list, chunk_size: int = 100, callback: callable = None) -> dict | int | float:
+        """
+        Get the min and max value of a column.
+        :param cols: Columns to get the min and max value
+        :param chunk_size: Size of the chunk to process in rows
+        :param callback: Callback function fired after each reduce
+        :return:
+        """
+        return self.execute(cols, [MinMax()], chunk_size=chunk_size, callback_reduce=callback)
+
+    def execute(self, cols: str | list, func_list: MapReduce | list[MapReduce], chunk_size: int = 100,
+                callback_map: callable = None,
+                callback_reduce: callable = None):
+        """
+        Execute a map reduce operation using the specified functions.
+        The map function is applied to every chunk of data and the reduce function is applied to the map result.
+        The operation is executed like this:
+        1. Map function is applied to the first chunk of data.
+        2. Reduce function is applied to the map result.
+        3. Map function is applied to the second chunk of data.
+        4. Reduce function is applied to the map result and the previous reduce result.
+        5. Repeat until all chunks are processed.
+        :param cols: Columns to process
+        :param func_list: List of functions to apply
+        :param chunk_size: Chunk size in rows
+        :param callback_map: Callback function fired after each map
+        :param callback_reduce: Callback function fired after each reduce
+        :return:
+        """
+
+        func_list = val_to_list(func_list)
+        cols = parse_columns(self.df, cols)
 
         # Reset the results
+        self.map_results = {}
+        self.reduce_results = {}
         for func in func_list:
             self.map_results[func.task_id] = {}
             self.reduce_results[func.task_id] = {}
@@ -97,7 +190,7 @@ class Stream:
             self.reduce(func_list, _col_name, callback=callback_reduce)
 
         for col_name in cols:
-            self.map(func_list, col_name, chunk_size, task_id="frequency", callback=callback)
+            self.map(func_list, col_name, chunk_size, callback=callback)
 
         for func in func_list:
             for col_name in cols:
@@ -126,57 +219,3 @@ class Stream:
             self.df = pd.read_csv(r)
 
         return self.reduce_result
-
-    @staticmethod
-    def new_frequency(streamer, chunk, col_name, n=10, callback=None):
-        """
-        This is for streaming and processing multiple functions at the same time
-        :param streamer:
-        :param chunk:
-        :param col_name:
-        :param n:
-        :param callback:
-        :return:
-        """
-        format_params = {"n": n, "col_name": col_name}
-
-        result = streamer.map_new(chunk[col_name], map_frequency, reduce_frequency, format_frequency, format_params,
-                                  callback=callback)
-
-        return format_frequency(result, **format_params)
-
-    def map_new(self, chunk, func_map, func_reduce, format_result, format_params, *args, callback=None, **kwargs):
-
-        # Apply the map function to every chunk
-        self.map_result = func_map(chunk, *args, **kwargs)
-        # print(self.map_result,"Aaaa")
-        # Then apply the reduce function to the result of
-        # the map function and the previous result of the reduce function
-
-        self.reduce(func_reduce, *args, format_result=format_result, format_params=format_params, callback=callback,
-                    **kwargs)
-
-        return self.reduce_result
-
-# class frequency:
-#     def __init__(self, streamer):
-#         format_params = {"n": n, "col_name": col_name}
-#
-#         result = streamer.map_new(chunk[col_name], map_frequency, reduce_frequency, format_frequency, format_params,
-#                                   callback=callback)
-#
-#         return format_frequency(result, **format_params)
-#
-#     def map(self):
-#         return Counter(chunk)
-#
-#     def reduce(self):
-#         return a + b
-#
-#     def final(self):
-#         n = kwargs["n"]
-#         col_name = kwargs["col_name"]
-#         # return result.most_common(n)
-#         return {
-#             "frequency": {
-#                 col_name: {"values": [{"value": i, "count": j} for i, j in dict(result.most_common(n)).items()]}}}

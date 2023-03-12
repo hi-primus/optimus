@@ -2,6 +2,7 @@ def unzip(val):
     list_of_tuples = list(zip(*val))
     return [list(t) for t in list_of_tuples]
 
+
 def val_to_list(val, allow_none=False, convert_tuple=False):
     """
     Convert a single value to a list
