@@ -103,13 +103,16 @@ class Histogram(MapReduce):
         #                  {'lower': 22453.8, 'upper': 33680.2, 'count': 1},
         #                  {'lower': 33680.2, 'upper': 44906.6, 'count': 1},
         #                  {'lower': 44906.6, 'upper': 56133.0, 'count': 4}]}}
-        #
+
+        # In case the bin size is bigger than the number of bins
+        if self.bin_size > len(self.h.bins):
+            self.bin_size = len(self.h.bins)
         hist_data = distogram.histogram(self.h, self.bin_size)
         bins = hist_data[1]
         values = hist_data[0]
-        output_data = {'hist': {'id': []}}
+        output_data = []
         for i in range(len(bins) - 1):
-            output_data['hist']['id'].append({
+            output_data.append({
                 'lower': bins[i],
                 'upper': bins[i + 1],
                 'count': sum(1 for v in values if bins[i] <= v < bins[i + 1])

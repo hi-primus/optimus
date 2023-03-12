@@ -102,7 +102,7 @@ class Stream:
                 self.reduce_results[task_id][col_name] = func.reduce(reduce_result, map_result, *args, **kwargs)
 
             if callback:
-                callback(func.output_format(reduce_result))
+                callback({task_id: {col_name: func.output_format(self.reduce_results[task_id][col_name])}})
 
     def histogram(self, cols: str | list, bins: int = 10, chunk_size: int = 100, callback: callable = None):
         """
