@@ -1,4 +1,5 @@
 import json
+import numpy as np
 
 from rply import LexerGenerator
 
@@ -645,11 +646,38 @@ l_g.add('INTEGER', r'\d+')
 l_g.ignore('\s+')
 
 
+def parsed_function(df, func):
+    """
+    Makes a function compatible with optimus dataframes
+    :param df: Dataframe
+    :param func: Function to parse
+    """
+    def wrapper(*args, **kwargs):
+        new_args = list(args)
+        for i, arg in enumerate(new_args):
+            if isinstance(arg, type(df)):
+                new_args[i] = arg.get_series()
+
+        new_kwargs = {k: v.get_series() if isinstance(v, type(df)) else v for k, v in kwargs.items()}
+        
+        result = func(*new_args, **new_kwargs)
+
+        if not isinstance(result, (int, float, str, bool, list, tuple, dict, type(None), np.generic)):
+            if hasattr(result, "to_frame"):
+                result = result.to_frame()
+            result = df.op.create.dataframe(result)
+            
+        return result
+
+    return wrapper
+
+
 def parse(text_input, df_name="df", data=True):
     """
-
+    Parse a string to optimus code
     :param text_input: string to be parsed
     :param df_name: dataframe name
+    :param data: if True, the dataframe will be an object in the dataframe class. If False, it will be a dataframe.
 
     :return:
     """
@@ -670,7 +698,8 @@ def parse(text_input, df_name="df", data=True):
             if data:
                 result_element = f"""{df_name}.functions.{token_value.lower()}"""
             else:
-                result_element = f"""lambda *args: {df_name}.cols.apply(func={df_name}.functions.{token_value.lower()}, args=args)"""
+                # make sure parsed_function is imported or defined when calling this expression
+                result_element = f"""parsed_function({df_name}, {df_name}.functions.{token_value.lower()})"""
 
         else:
             result_element = token_value
