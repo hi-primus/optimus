@@ -27,6 +27,8 @@ jobs:
         run: |
           TAG_NAME=$(echo ${{ github.ref }} | sed 's/refs\/tags\///')
           PACKAGE_VERSION=$(echo $TAG_NAME | sed 's/^test-//')
+          echo "Tag: $TAG_NAME"
+          echo "Tag version: $PACKAGE_VERSION"
           poetry build
           poetry publish -r pyoptimus --version $PACKAGE_VERSION
         env:
