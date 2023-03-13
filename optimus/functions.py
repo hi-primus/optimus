@@ -24,7 +24,7 @@ class Functions(type):
                 r = getattr(np, func)(df_or_value, *args)
 
             if isinstance(r, np.generic):
-                return np.asscalar(r)
+                return r.item()
             return r
 
         return _func

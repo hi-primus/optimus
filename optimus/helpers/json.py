@@ -22,7 +22,7 @@ def json_converter(obj):
             return obj.isoformat()
 
         elif isinstance(obj, (np.generic,)):
-            return np.asscalar(obj)
+            return obj.item()
 
 
 def json_encoding(obj):

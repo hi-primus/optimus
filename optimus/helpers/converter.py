@@ -47,7 +47,7 @@ def convert_numpy(value):
     elif isinstance(value, (list, set, tuple)):
         return value.__class__(map(convert_numpy, value))
     elif isinstance(value, (np.generic,)):
-        return np.asscalar(value)
+        return value.item()
     elif hasattr(value, "to_pydatetime"):
         return value.to_pydatetime()
     else:

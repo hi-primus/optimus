@@ -158,10 +158,10 @@ class BaseDataFrame(ABC):
         """
 
         if isinstance(df1, (np.generic,)):
-            df1 = np.asscalar(df1)
+            df1 = df1.item()
 
         if isinstance(df2, (np.generic,)):
-            df2 = np.asscalar(df2)
+            df2 = df2.item()
 
         if is_list(df1):
             df1 = self.op.create.dataframe({"0": df1})
