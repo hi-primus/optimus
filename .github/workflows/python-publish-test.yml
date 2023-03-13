@@ -21,14 +21,14 @@ jobs:
           pip install poetry
       - name: Configure Poetry
         run: |
-          poetry config repositories.testpypi https://test.pypi.org/legacy/
-          poetry config http-basic.testpypi ${{ secrets.TEST_PYPI_USERNAME }} ${{ secrets.TEST_PYPI_PASSWORD }}
+          poetry config repositories.pyoptimus https://test.pypi.org/legacy/
+          poetry config http-basic.pyoptimus ${{ secrets.TEST_PYPI_USERNAME }} ${{ secrets.TEST_PYPI_PASSWORD }}
       - name: Build and publish package
         run: |
           TAG_NAME=$(echo ${{ github.ref }} | sed 's/refs\/tags\///')
           PACKAGE_VERSION=$(echo $TAG_NAME | sed 's/^test-//')
           poetry build
-          poetry publish -r testpypi --version $PACKAGE_VERSION
+          poetry publish -r pyoptimus --version $PACKAGE_VERSION
         env:
           TEST_PYPI_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
           TEST_PYPI_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
