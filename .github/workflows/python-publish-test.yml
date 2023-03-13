@@ -26,11 +26,9 @@ jobs:
       - name: Build and publish package
         run: |
           TAG_NAME=$(echo ${{ github.ref }} | sed 's/refs\/tags\///')
-          PACKAGE_VERSION=$(echo $TAG_NAME | sed 's/^test-//')
-          echo "Tag: $TAG_NAME"
-          echo "Tag version: $PACKAGE_VERSION"
+          echo "Tag (not used): $TAG_NAME"
           poetry build
-          poetry publish -r pyoptimus --version $PACKAGE_VERSION
+          poetry publish -r pyoptimus
         env:
           TEST_PYPI_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
           TEST_PYPI_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
