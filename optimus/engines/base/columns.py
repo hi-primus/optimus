@@ -435,7 +435,7 @@ class BaseColumns(ABC):
         return self.set(cols, value_func=func, args=args, where=mask)
 
     def set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
-            eval_value: bool = False, each=True) -> 'DataFrameType':
+            eval_value: bool = False, eval_variables=None, each=True) -> 'DataFrameType':
         """
         Set a column value using a number, string or an expression.
 
@@ -445,6 +445,7 @@ class BaseColumns(ABC):
         :param args: Argument when 'value_func' param is a function.
         :param default: Entries where 'where' is False are replaced with corresponding value from other.
         :param eval_value: Parse 'value_func' param in case a string is passed.
+        :param eval_variables: Dictionary with variables to be used when 'eval_value' is True.
         :param each: If possible, apply the function using one argument for each column, if not, applies every argument to every element.
         :return:
         """
@@ -462,7 +463,7 @@ class BaseColumns(ABC):
         value_func = val_to_list(value_func, allow_none=True)
 
         if each:
-            each = (value_func is not None and len(cols) == len(value_func)) or (
+            each = (value_func is not None and len(cols) == len(value_func) or
                     where is not None and len(cols) == len(where))
 
         if each:
@@ -470,20 +471,22 @@ class BaseColumns(ABC):
 
             for col, _where, _values in zip(cols, where, value_func):
                 df = df.cols._set(cols=col, value_func=_values, where=_where,
-                                  default=default, eval_value=eval_value, args=args)
+                                  default=default, eval_value=eval_value, args=args,
+                                  eval_variables=eval_variables)
                 # drops default value after the first iteration to avoid overwriting
                 default = None
 
         else:
             for _where, _values in zip(where, value_func):
                 df = df.cols._set(cols=cols, value_func=_values, where=_where,
-                                  default=default, eval_value=eval_value, args=args)
+                                  default=default, eval_value=eval_value, args=args,
+                                  eval_variables=eval_variables)
                 default = None
 
         return df
 
     def _set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
-             eval_value: bool = False) -> 'DataFrameType':
+                eval_value: bool = False, eval_variables=None) -> 'DataFrameType':
 
         df = self.root
         dfd = df.data
@@ -497,6 +500,12 @@ class BaseColumns(ABC):
 
         assign_dict = {}
         move_cols = []
+
+        if eval_variables is not None:
+            for k, v in eval_variables.items():
+                if k in locals():
+                    raise ValueError(f"Variable {k} already exists in the local scope")
+                locals()[k] = v
 
         for col_name, _value, _eval_value in zip(cols, values, eval_values):
 
