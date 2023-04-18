@@ -1098,7 +1098,7 @@ class BaseColumns(ABC):
 
         return result
 
-    def pattern_counts(self, cols="*", n=10, mode=0, flush=False) -> dict:
+    def pattern_counts(self, cols="*", n=10, mode=0, flush=False, tidy=True) -> dict:
         """
         Get how many equal patterns there are in a column. Triggers the operation only if necessary.
 
@@ -1106,6 +1106,7 @@ class BaseColumns(ABC):
         :param n: Top n matches
         :param mode:
         :param flush: Flushes the cache to process again
+        :param tidy: The result format. If True it will return a value, if False it will return the functions name, the column name and the value.
         :return:
         """
 
@@ -1152,7 +1153,7 @@ class BaseColumns(ABC):
             else:
                 result[input_col]["values"] = result[input_col]["values"]
 
-        return result
+        return format_dict({ "pattern_counts": result }, tidy)
 
     def groupby(self, by: Union[str, list] = None, agg: Union[list, dict] = None) -> 'DataFrameType':
         """
