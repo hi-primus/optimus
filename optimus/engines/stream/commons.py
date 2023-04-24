@@ -146,3 +146,17 @@ class Frequency(MapReduce):
         n = self.n
         values = [{"value": i, "count": j} for i, j in dict(data_copy.most_common(n)).items()]
         return {"values": values}
+
+
+class Profile(MapReduce):
+    def __init__(self):
+        self.task_id = "profile"
+
+    def map(self, chunk):
+        return chunk
+
+    def reduce(self, a, b):
+        pass
+
+    def output_format(self, value):
+        return value

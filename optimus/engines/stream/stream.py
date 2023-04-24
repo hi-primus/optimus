@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 import pandas as pd
 import requests
 
@@ -102,7 +104,7 @@ class Stream:
                 self.reduce_results[task_id][col_name] = func.reduce(reduce_result, map_result, *args, **kwargs)
 
             if callback:
-                callback({task_id: {col_name: func.output_format(self.reduce_results[task_id][col_name])}})
+                callback(self._apply_output_format({task_id: {col_name: func}}, func, col_name))
 
     def histogram(self, cols: str | list, bins: int = 10, chunk_size: int = 100, callback: callable = None):
         """
@@ -156,6 +158,17 @@ class Stream:
         """
         return self.execute(cols, [MinMax()], chunk_size=chunk_size, callback_reduce=callback)
 
+    def _apply_output_format(self, target, func, col_name):
+        """
+        Apply the output format of a function to a column name
+        :param target: Target dictionary to save the result
+        :param func: Function used to get the id and the to convert the output format
+        :param col_name: Column name used as key to access the dictionary result
+        :return:
+        """
+        target[func.task_id][col_name] = func.output_format(self.reduce_results[func.task_id][col_name])
+        return target
+
     def execute(self, cols: str | list, func_list: MapReduce | list[MapReduce], chunk_size: int = 100,
                 callback_map: callable = None,
                 callback_reduce: callable = None):
@@ -175,33 +188,37 @@ class Stream:
         :param callback_reduce: Callback function fired after each reduce
         :return:
         """
+        try:
+            func_list = val_to_list(func_list)
+            cols = parse_columns(self.df, cols)
 
-        func_list = val_to_list(func_list)
-        cols = parse_columns(self.df, cols)
+            # Reset the results
+            self.map_results = {}
+            self.reduce_results = {}
+            for func in func_list:
+                self.map_results[func.task_id] = {}
+                self.reduce_results[func.task_id] = {}
 
-        # Reset the results
-        self.map_results = {}
-        self.reduce_results = {}
-        for func in func_list:
-            self.map_results[func.task_id] = {}
-            self.reduce_results[func.task_id] = {}
+            def callback(_col_name):
+                self.reduce(func_list, _col_name, callback=callback_reduce)
 
-        def callback(_col_name):
-            self.reduce(func_list, _col_name, callback=callback_reduce)
-
-        for col_name in cols:
-            self.map(func_list, col_name, chunk_size, callback=callback)
-
-        for func in func_list:
             for col_name in cols:
-                self.reduce_results[func.task_id][col_name] = func.output_format(
-                    self.reduce_results[func.task_id][col_name])
+                self.map(func_list, col_name, chunk_size, callback=callback)
 
-        return self.reduce_results
+            for func in func_list:
+                for col_name in cols:
+                    self._apply_output_format(self.reduce_results, func, col_name)
+
+            return self.reduce_results
+        except Exception as e:
+            # Handle exceptions and log error message
+            error_msg = f"An error occurred in execute method: {str(e)}"
+            logging.error(error_msg)
+            raise e
 
     def process(self, filepath_or_buffer, n_rows=100, apply=None, *args, **kwargs):
-        self.map_result = None
-        self.reduce_result = None
+        # self.map_results = None
+        # self.reduce_results = None
 
         def callback(i, j, x, y):
             if apply:
@@ -218,4 +235,4 @@ class Stream:
             kwargs.pop("callback", None)
             self.df = pd.read_csv(r)
 
-        return self.reduce_result
+        return self.reduce_results
