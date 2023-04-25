@@ -961,17 +961,17 @@ class BaseColumns(ABC):
             column_modified_time = Meta.get(
                 df.meta, f"profile.columns.{input_col}.modified")
             patterns_update_time = Meta.get(
-                df.meta, f"profile.columns.{input_col}.patterns.updated")
+                df.meta, f"profile.columns.{input_col}.patterns.{mode}.updated")
             if column_modified_time is None:
                 column_modified_time = -1
             if patterns_update_time is None:
                 patterns_update_time = 0
 
             incomplete_cache = Meta.get(
-                df.meta, f"profile.columns.{input_col}.patterns.more")
+                df.meta, f"profile.columns.{input_col}.patterns.{mode}.more")
 
             values = Meta.get(df.meta,
-                              f"profile.columns.{input_col}.patterns.values")
+                              f"profile.columns.{input_col}.patterns.{mode}.values")
 
             if (column_modified_time > patterns_update_time or
                     patterns_update_time == 0 or
@@ -996,12 +996,12 @@ class BaseColumns(ABC):
                 else:
                     result[input_col].update({"more": False})
 
-                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns", result[input_col])
-                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.updated", time.time())
+                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.{mode}", result[input_col])
+                df.meta = Meta.set(df.meta, f"profile.columns.{input_col}.patterns.{mode}.updated", time.time())
 
             else:
                 result[input_col] = Meta.get(
-                    df.meta, f"profile.columns.{input_col}.patterns")
+                    df.meta, f"profile.columns.{input_col}.patterns.{mode}")
 
                 if n is not None:
                     result[input_col]["values"] = result[input_col]["values"][:n]
@@ -1119,9 +1119,9 @@ class BaseColumns(ABC):
 
         for input_col in cols:
             patterns_values = Meta.get(
-                df.meta, f"profile.columns.{input_col}.patterns.values")
+                df.meta, f"profile.columns.{input_col}.patterns.{mode}.values")
             patterns_more = Meta.get(
-                df.meta, f"profile.columns.{input_col}.patterns.more")
+                df.meta, f"profile.columns.{input_col}.patterns.{mode}.more")
             if patterns_values is None or (n is not None and len(patterns_values) < n and patterns_more):
                 calculate = True
                 break
@@ -1129,7 +1129,7 @@ class BaseColumns(ABC):
             column_modified_time = Meta.get(
                 df.meta, f"profile.columns.{input_col}.modified")
             patterns_update_time = Meta.get(
-                df.meta, f"profile.columns.{input_col}.patterns.updated")
+                df.meta, f"profile.columns.{input_col}.patterns.{mode}.updated")
             if column_modified_time is None:
                 column_modified_time = -1
             if patterns_update_time is None:
@@ -1146,7 +1146,7 @@ class BaseColumns(ABC):
 
         for input_col in cols:
             result[input_col] = Meta.get(
-                df.meta, f"profile.columns.{input_col}.patterns")
+                df.meta, f"profile.columns.{input_col}.patterns.{mode}")
             if n is not None and len(result[input_col]["values"]) > n:
                 result[input_col].update({"more": True})
                 result[input_col]["values"] = result[input_col]["values"][0:n]
