@@ -15,12 +15,12 @@ class ModifiedZScore(AbstractOutlierThreshold):
     :return:
     """
 
-    def __init__(self, df, col_name, threshold, relative_error=RELATIVE_ERROR):
+    def __init__(self, df, col_name, threshold: float, relative_error=RELATIVE_ERROR):
         """
 
-        :param df:
-        :param col_name:
-        :param threshold:
+        :param df: Dataframe to be processed
+        :param col_name: Column to be processed
+        :param threshold: Threshold to be used
         """
 
         if not is_numeric(threshold):
@@ -33,14 +33,13 @@ class ModifiedZScore(AbstractOutlierThreshold):
         self.threshold = threshold
         self.relative_error = relative_error
         self.col_name = one_list_to_val(parse_columns(df, col_name))
-        self.z_score = df.cols.modified_z_score(col_name)
+        self.z_score = self.df[self.col_name].cols.modified_z_score(col_name)
         super().__init__()
-
 
         # return df.withColumn(m_z_col_name, F.abs(0.6745 * (df[col_name] - mad["median"]) / mad["mad"]))
 
     def info(self, output: str = "dict"):
-        m_z_col_name = name_col(self.col_name, "modified_z_score")
+        # m_z_col_name = name_col(self.col_name, "modified_z_score")
 
         df = self.df
         z_score = self.z_score

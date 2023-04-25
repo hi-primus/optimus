@@ -7,6 +7,15 @@ class AbstractOutlierThreshold(ABC):
      Also you need to add the function to outliers.py
      """
 
+    def mask(self):
+        """
+        Select outliers rows using the selected column
+        :return:
+        """
+        z_score = self.z_score
+
+        return (z_score > self.threshold) | (z_score < self.threshold * -1)
+
     def select(self):
         """
         Select outliers rows using the selected column
@@ -16,17 +25,17 @@ class AbstractOutlierThreshold(ABC):
         z_score = self.z_score
 
         return df.rows.select(
-            (z_score > self.threshold) | (z_score < (self.threshold) * -1))
+            (z_score > self.threshold) | (z_score < self.threshold * -1))
 
     def select_lower_bound(self):
         df = self.df
         z_score = self.z_score
-        return df.rows.select((z_score < (self.threshold) * -1))
+        return df.rows.select((z_score < self.threshold * -1))
 
     def select_upper_bound(self):
         df = self.df
         z_score = self.z_score
-        return df.rows.select((z_score > (self.threshold)))
+        return df.rows.select((z_score > self.threshold))
 
     def drop(self):
         """

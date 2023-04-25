@@ -1380,10 +1380,9 @@ class BaseColumns(ABC):
             return convert_numpy(format_dict(values, tidy))
 
         agg_result = compute_agg(agg_result)
-
         if compute:
             agg_result = self.F.compute(agg_result)
-
+            
         return agg_result
 
     def exec_agg(self, exprs, compute=True):
@@ -1489,7 +1488,7 @@ class BaseColumns(ABC):
         Return the minimum and maximum of the values over the requested columns.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param tidy: The result format. If True it will return a value if you process a column or column name and
+        :param tidy: The result format. If True it returns a value if you process a column or column name and
             value if not. If False it will return the functions name, the column name.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return:
@@ -1505,7 +1504,7 @@ class BaseColumns(ABC):
         :param values: Percentiles values you want to calculate. 0.25,0.5,0.75
         :param relative_error:
         :param estimate:
-        :param tidy: The result format. If True it will return a value if you process a column or column name and
+        :param tidy: The result format. If True it returns a value if you process a column or column name and
             value if not. If False it will return the functions name, the column name.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return: Return values at the given percentile over requested column.
@@ -1516,19 +1515,19 @@ class BaseColumns(ABC):
             values = [0.25, 0.5, 0.75]
         return df.cols.agg_exprs(cols, self.F.percentile, values, relative_error, estimate, tidy=tidy, compute=compute)
 
-    def median(self, cols="*", relative_error=RELATIVE_ERROR, tidy=True, compute=True):
+    def median(self, cols="*", relative_error=RELATIVE_ERROR, estimate=True, tidy=True, compute=True):
         """
         Returns the median of the values over the requested columns.
 
         :param cols: "*", column name or list of column names to be processed.
         :param relative_error:
-        :param tidy: The result format. If True it will return a value if you process a column or column name and
+        :param tidy: The result format. If True it returns a value if you process a column or column name and
             value if not. If False it will return the functions name, the column name.
         :param compute:
         :return: Returns the median of the values over the requested columns
         """
         df = self.root
-        return df.cols.agg_exprs(cols, self.F.percentile, [0.5], relative_error, tidy=tidy, compute=True)
+        return df.cols.agg_exprs(cols, self.F.percentile, [0.5], relative_error, estimate, tidy=tidy, compute=True)
 
     # TODO: implement double MAD http://eurekastatistics.com/using-the-median-absolute-deviation-to-find-outliers/
     def kurtosis(self, cols="*", tidy=True, compute=True):

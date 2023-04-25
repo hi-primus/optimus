@@ -36,6 +36,17 @@ class AbstractOutlierBounds(ABC):
         """
         pass
 
+    def mask(self):
+        """
+        Select outliers rows using the selected column
+        :return:
+        """
+        df = self.df
+        col_name = self.col_name
+        upper_bound, lower_bound = dict_filter(self.whiskers(), ["upper_bound", "lower_bound"])
+
+        return (df[col_name] > upper_bound) | (df[col_name] < lower_bound)
+
     def select(self):
         """
         Select outliers rows using the selected column

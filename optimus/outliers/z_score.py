@@ -12,9 +12,9 @@ class ZScore(AbstractOutlierThreshold):
     def __init__(self, df, col_name, threshold):
         """
 
-        :para df:
-        :param col_name:
-        :param threshold:
+        :param df: Dataframe to be processed
+        :param col_name: Column to be processed
+        :param threshold: Threshold to be used
         """
         if not is_numeric(threshold):
             raise TypeError("Numeric expected")
@@ -29,6 +29,11 @@ class ZScore(AbstractOutlierThreshold):
         super().__init__()
 
     def info(self, output="dict"):
+        """
+
+        :param output:
+        :return:
+        """
         self.tmp_col = name_col(self.col_name, "z_score")
 
         # df = self.z_score()

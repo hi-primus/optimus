@@ -1,6 +1,6 @@
 import numpy as np
 
-from optimus.infer import is_dict, is_dict_of_one_element, is_list_value, is_list_of_one_element
+from optimus.infer import is_dict_of_one_element, is_list_of_one_element
 
 
 def tuple_to_dict(value):
@@ -22,22 +22,27 @@ def format_dict(_dict, tidy=True):
     :return:
     """
 
+    def is_list_of_one_element(_list):
+        return isinstance(_list, list) and len(_list) == 1
+
+    def is_dict_of_one_element(_dict):
+        return isinstance(_dict, dict) and len(_dict) == 1
+
     if tidy is True:
-        levels = 2
-        while (levels>=0):
-            levels -= 1
+        while is_dict_of_one_element(_dict) or is_list_of_one_element(_dict):
             if is_list_of_one_element(_dict):
                 _dict = _dict[0]
             elif is_dict_of_one_element(_dict):
                 _dict = next(iter(_dict.values()))
-            else:
-                return _dict
-                
+        return _dict
+
     else:
         if is_list_of_one_element(_dict):
             return _dict[0]
         else:
             return _dict
+
+
 
 def convert_numpy(value):
     if isinstance(value, (dict,)):
@@ -53,6 +58,7 @@ def convert_numpy(value):
     else:
         return value
 
+
 # def cudf_series_to_pandas(serie):
 #     return serie.to_pandas()
 
@@ -60,9 +66,11 @@ def dask_dataframe_to_dask_cudf(df):
     import cudf
     return df.map_partitions(cudf.DataFrame.from_pandas)
 
+
 # To cudf
 def dask_dataframe_to_cudf(df):
     return pandas_to_cudf(dask_dataframe_to_pandas(df))
+
 
 # def dask_cudf_to_cudf(df):
 #     return df.compute()
@@ -84,9 +92,11 @@ def dask_dataframe_to_pandas(df):
 def cudf_to_pandas(df):
     return df.to_pandas()
 
+
 def cudf_to_dask_cudf(df, n_partitions=1):
     import dask_cudf
     return dask_cudf.from_cudf(df, npartitions=1)
+
 
 # def cudf_to_cupy_arr(df):
 #     import cupy as cp
@@ -113,6 +123,7 @@ def pandas_to_dask_cudf_dataframe(pdf, n_partitions=1):
     # Seems that from_cudf also accepts pandas
     cdf = cudf.DataFrame.from_pandas(pdf)
     return dask_cudf.from_cudf(cdf, npartitions=n_partitions)
+
 
 def pandas_to_spark_dataframe(pdf, n_partitions=1):
     import databricks.koalas as ks
