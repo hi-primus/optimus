@@ -24,8 +24,7 @@ class AbstractOutlierThreshold(ABC):
         df = self.df
         z_score = self.z_score
 
-        return df.rows.select(
-            (z_score > self.threshold) | (z_score < self.threshold * -1))
+        return df.rows.select(self.mask())
 
     def select_lower_bound(self):
         df = self.df
