@@ -171,7 +171,7 @@ class BaseColumns(ABC):
         Join two dataframes using a column.
 
         :param df_right: The dataframe that will be used to join the actual dataframe.
-        :param how: {‘left’, ‘right’, ‘outer’, ‘inner’}, default ‘left’
+        :param how: {'left', 'right', 'outer', 'inner'}, default 'left'
         :param on: The column that will be used to join the two dataframes.
         :param left_on: The column in the actual dataframe that will be used to execute the join.
         :param right_on: The column in the given dataframe that will be used to execute the join.
@@ -723,7 +723,7 @@ class BaseColumns(ABC):
     def set_date_format(self, cols: Union[str, list, dict] = "*", date_formats: Union[str, list] = None,
                         inferred: bool = False) -> 'DataFrameType':
         """
-        Set user defined date format in the meta data
+        Set user defined date format in the metadata
 
         :param cols: A dict with the form {"col_name": "date format"}, a list of columns or a single column
         :param date_formats: If a string or a list passed to cols, uses this parameter to set the date format to those columns.
@@ -1416,6 +1416,8 @@ class BaseColumns(ABC):
 
     def mad(self, cols="*", relative_error=RELATIVE_ERROR, more=False, estimate=True, tidy=True, compute=True):
         """
+        Return the median absolute deviation over one or more columns.
+
         :param cols: "*", column name or list of column names to be processed.
         :param relative_error:
         :param more:
@@ -1456,7 +1458,7 @@ class BaseColumns(ABC):
 
         :param cols: "*", column name or list of column names to be processed.
         :param numeric: if True, cast to numeric before processing.
-        :param tidy: The result format. If True it will return a value if you process a column or column name and
+        :param tidy: The result format. If True it returns a value if you process a column or column name and
             value if not. If False it will return the functions name, the column name.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return:
@@ -1472,10 +1474,10 @@ class BaseColumns(ABC):
 
     def mode(self, cols="*", tidy: bool = True, compute: bool = True):
         """
-        Return the mode value over.
+        Return the mode
 
         :param cols: "*", column name or list of column names to be processed.
-        :param tidy: The result format. If True it will return a value if you process a column or column name and
+        :param tidy: The result format. If True it returns a value if you process a column or column name and
             value if not. If False it will return the functions name, the column name.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return:
@@ -1587,7 +1589,7 @@ class BaseColumns(ABC):
         Return the prod of the values over the requested column.
 
         :param cols: "*", column name or list of column names to be processed.
-        :param tidy: The result format. If True it will return a value if you process a column or column name and
+        :param tidy: The result format. If True it returns a value if you process a column or column name and
             value if not. If False it will return the functions name, the column name.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return: Column containing the sum of multiple columns.
@@ -1726,7 +1728,7 @@ class BaseColumns(ABC):
 
     def item(self, cols="*", index=None, output_cols=None) -> 'DataFrameType':
         """
-        Get an item from  a list in a cell and put it in another column.
+        Get an item from a list in a cell and put it in another column.
 
         :param cols: "*", column name or list of column names to be processed.
         :param index: The position of the element that will be returned.
@@ -3957,6 +3959,7 @@ class BaseColumns(ABC):
 
     def qcut(self, cols="*", quantiles=None, output_cols=None):
         """
+        Quantile-based discretization function.
 
         :param cols: "*", column name or list of column names to be processed.
         :param quantiles:
@@ -5229,7 +5232,7 @@ class BaseColumns(ABC):
 
     def ngrams(self, cols="*", n_size=2, output_cols=None) -> 'DataFrameType':
         """
-        Calculate the ngram for a fingerprinted string.
+        Calculate the ngram for a string.
 
         :param cols: '*', list of columns names or a single column name.
         :param n_size: The ngram size.
@@ -5390,7 +5393,7 @@ class BaseColumns(ABC):
 
     def tf_idf(self, cols="*") -> 'DataFrameType':
         """
-
+        TD-IDF (term frequency-inverse document frequency) is a statistical measure that evaluates how relevant a word.
         :param cols: '*', list of columns names or a single column name.
         :return:
         """
@@ -5407,7 +5410,7 @@ class BaseColumns(ABC):
 
     def bag_of_words(self, cols, analyzer="word", ngram_range=2) -> 'DataFrameType':
         """
-
+        Method of extracting features from text for use in modeling, such as with machine learning.
         :param cols: '*', list of columns names or a single column name.
         :param analyzer:Whether the feature should be made of word n-gram or character n-grams. Option ‘char_wb’
             creates character n-grams only from text inside word boundaries; n-grams at the edges of words
