@@ -20,8 +20,9 @@ class BaseRows(ABC):
     def append(self, dfs: 'DataFrameTypeList', names_map=None) -> 'DataFrameType':
         """
         Appends 2 or more dataframes
-        :param dfs:
+        :param dfs: List of dataframes to be appended
         :param names_map:
+        :return: Optimus Dataframe
         """
         if not is_list_value(dfs):
             dfs = [dfs]
@@ -64,7 +65,7 @@ class BaseRows(ABC):
         :param output_cols: pass the result to one or more columns, if None, the
         result will replace the original dataframe
         :param mode: 
-        :return:
+        :return: Optimus Dataframe
         """
         df = self.root
         dfd = self.root.data
@@ -104,11 +105,11 @@ class BaseRows(ABC):
         Return selected rows using an expression
         :param expr: Expression used, For Ex: (df["A"] > 3) & (df["A"] <= 1000) or Column name "A"
         :param contains: List of string
-        :param case:
-        :param flags:
-        :param na:
-        :param regex:
-        :return:
+        :param case: If True, case sensitive
+        :param flags: regex flags
+        :param na: If True, NA/null values are considered True
+        :param regex: If True, treats the pat as a regex
+        :return: Optimus Dataframe
         """
 
         df = self.root
@@ -164,14 +165,16 @@ class BaseRows(ABC):
     def _count(self, compute=True) -> int:
         """
         Specific implementation to count the number of rows in the dataframe
-        :param compute:
-        :return:
+        :param compute: If true compute the delayed function
+        :return: Optimus Dataframe
         """
         return len(self.root.data.index)
 
     def count(self, compute=True) -> int:
         """
         Count dataframe rows
+        :param compute: If true compute the delayed function
+        :return: Optimus Dataframe
         """
         df = self.root
         dfd = df.data
@@ -197,8 +200,8 @@ class BaseRows(ABC):
     def sort(self, cols="*", order="desc", cast=True) -> 'DataFrameType':
         """
         Sort rows taking into account multiple columns
-        :param cols:
-        :param order:
+        :param cols: Columns to order
+        :param order: asc or desc
         :param cast: cast rows before sorting them.
         """
         df = self.root
@@ -247,7 +250,7 @@ class BaseRows(ABC):
     def reverse(self) -> 'DataFrameType':
         """
         Reverse Rows
-        :return:
+        :return: Optimus Dataframe
         """
         dfd = self.root.functions.reverse_df(self.root.data)
         return self.root.new(dfd)
@@ -303,10 +306,10 @@ class BaseRows(ABC):
     def between(self, lower_bound=None, upper_bound=None, cols="*"):
         """
         Select rows between lower and upper bound
-        :param cols:
-        :param lower_bound:
-        :param upper_bound:
-        :return:
+        :param cols: Columns to be analyzed
+        :param lower_bound: Lower bound
+        :param upper_bound: Upper bound
+        :return: Optimus Dataframe
         """
         df = self.root
         dfd = df.data
@@ -326,16 +329,16 @@ class BaseRows(ABC):
     @staticmethod
     def unnest(cols) -> 'DataFrameType':
         """
-
-        :param cols:
-        :return:
+        Convert a list inside a column into columns
+        :param cols: Columns to be unnested
+        :return: Optimus Dataframe
         """
         raise NotImplementedError('Not implemented yet')
 
     def approx_count(self) -> 'DataFrameType':
         """
         Approx count
-        :return:
+        :return: Optimus Dataframe
         """
         return self.root.rows.count()
 
@@ -344,11 +347,11 @@ class BaseRows(ABC):
         Select rows that match a function
         :param cols: Columns to be used
         :param func:  Function to be applied
-        :param drop:
-        :param how:
-        :param args:
-        :param kwargs:
-        :return:
+        :param drop: Drop rows that match the function
+        :param how: How to apply the mask. "any" or "all"
+        :param args: Arguments to be passed to the function
+        :param kwargs: Keyword arguments to be passed to the function
+        :return: Optimus Dataframe
         """
         df = self.root
         mask = func(cols=cols, *args, **kwargs)
@@ -379,31 +382,31 @@ class BaseRows(ABC):
 
     def int(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows that contains a integer
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.int, drop=drop, how=how)
 
     def float(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows that contains a float
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.float, drop=drop, how=how)
 
     def numeric(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows that contains a numeric
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.numeric, drop=drop, how=how)
 
@@ -417,764 +420,764 @@ class BaseRows(ABC):
         :param include_bounds: If true, include the bounds
         :param bounds: Bounds to be used. Example: (1,2)
         :param drop: Drop rows selected
-        :param how:
-        :return:
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.between_values, drop=drop, how=how, lower_bound=lower_bound,
                           upper_bound=upper_bound, equal=include_bounds, bounds=bounds)
 
     def greater_than_equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are greater or equal than a value
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param drop: Drop rows that match the condition
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.greater_than_equal, drop=drop, value=value, how=how)
 
     def greater_than(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
+        Select rows which values are greater than a value
+         :param cols: Columns to be used
+        :param value: Value to be compared
+        :param drop: Drop rows that match the condition
+        :param how: How to apply the mask. "any" or "all"
         :return:
         """
         return self._mask(cols, func=self.root.mask.greater_than, drop=drop, value=value, how=how)
 
     def less_than(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are less than a value
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param drop: Drop rows that match the condition
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.less_than, drop=drop, value=value, how=how)
 
     def less_than_equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are less or equal than a value
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param drop: Drop rows that match the condition
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.less_than_equal, drop=drop, value=value, how=how)
 
     def equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
-        :return:
+        Equal to a value
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param drop: Drop rows that match the condition
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.equal, drop=drop, value=value, how=how)
 
     def not_equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are not equal to a value
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param drop: Drop rows that match the condition
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.not_equal, drop=drop, value=value, how=how)
 
     def missing(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are missing
+        :param cols: Columns to be used
+        :param drop: Drop rows that match the condition
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.missing, drop=drop, how=how)
 
     def null(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are null
+        :param cols: Columns to be used
+        :param drop: Drop rows that match the condition
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.null, drop=drop, how=how)
 
     def none(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are none
+        :param cols: Columns to be used
+        :param drop: Drop rows that match the condition
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.none, drop=drop, how=how)
 
     def nan(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are nan
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.nan, drop=drop, how=how)
 
     def empty(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are empty
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.empty, drop=drop, how=how)
 
     def duplicated(self, cols="*", keep="first", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param keep:
-        :param drop:
-        :param how:
-        :return:
+        Remove duplicates values
+        :param cols: Columns to be used
+        :param keep: Which duplicate value to keep. first, last or all
+        :param drop: Drop rows that are duplicated
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.duplicated, drop=drop, keep=keep, how=how)
 
     def unique(self, cols="*", keep="first", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param keep:
-        :param drop:
-        :param how:
-        :return:
+        Filter rows which values are unique
+        :param cols: Columns to be used
+        :param keep: Which duplicate value to keep. first, last or all
+        :param drop: Drop rows that are duplicated
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.unique, drop=drop, keep=keep, how=how)
 
     def mismatch(self, cols="*", data_type=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param data_type:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are not the same data type
+        :param cols: Columns to be used
+        :param data_type: Data type to be compared
+        :param drop: Drop rows that are duplicated
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.mismatch, drop=drop, data_type=data_type, how=how)
 
     def match(self, cols="*", regex=None, data_type=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param regex:
-        :param data_type:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values match a regex
+        :param cols: Columns to be used
+        :param regex: Regex to be compared
+        :param data_type: Data type to be compared
+        :param drop: Drop rows that are duplicated
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.match, drop=drop, regex=regex, data_type=data_type, how=how)
 
     def match_regex(self, cols="*", regex=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param regex:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values match a regex
+        :param cols: Columns to be used
+        :param regex: Regex to be compared
+        :param drop: Drop rows that are duplicated
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.match_regex, drop=drop, regex=regex, how=how)
 
     def match_data_type(self, cols="*", data_type=None, drop=False, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
+        :param cols: Columns to be used
         :param data_type:
-        :param drop:
-        :param how:
-        :return:
+        :param drop: Drop rows that are duplicated
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.match_data_type, drop=drop, data_type=data_type, how=how)
 
     def value_in(self, cols="*", values=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param values:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are in a list
+        :param cols: Columns to be used
+        :param values: Values to be matches
+        :param drop: Drop rows that are duplicated
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.value_in, drop=drop, values=values, how=how)
 
     def pattern(self, cols="*", pattern=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param pattern:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values match a pattern
+        :param cols: Columns to be used
+        :param pattern: Pattern to be matches
+        :param drop: Drop rows that are duplicated
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.pattern, drop=drop, pattern=pattern, how=how)
 
     def starts_with(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values starts with a string
+        :param cols: Columns to be used
+        :param keep: Which duplicate value to keep. first, last or all
+        :param drop: Drop rows that are duplicated
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.starts_with, drop=drop, value=value, how=how)
 
     def ends_with(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values ends with a string
+        :param cols: Columns to be used
+        :param value: String to be searched
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.ends_with, drop=drop, value=value, how=how)
 
     def contains(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values contains a string
+        :param cols: Columns to be used
+        :param value: String to be searched
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.contains, drop=drop, value=value, how=how)
 
     def find(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values contains a value
+        :param cols: Columns to be used
+        :param value: String to be searched
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.find, drop=drop, value=value, how=how)
 
     def email(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are email
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.email, drop=drop, how=how)
 
     def ip(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are ip
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.ipv4, drop=drop, how=how)
 
     def url(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are url
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.url, drop=drop, how=how)
 
     def gender(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values gender.
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.gender, drop=drop, how=how)
 
     def boolean(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are boolean.
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.boolean, drop=drop, how=how)
 
     def zip_code(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.zip_code, drop=drop, how=how)
 
     def credit_card_number(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.credit_card_number, drop=drop, how=how)
 
     def datetime(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are datetime
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.datetime, drop=drop, how=how)
 
     def object(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are object
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.object, drop=drop, how=how)
 
     def array(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are array
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.array, drop=drop, how=how)
 
     def phone_number(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are phone number
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.phone_number, drop=drop, how=how)
 
     def social_security_number(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are social security number
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.social_security_number, drop=drop, how=how)
 
     def http_code(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param drop:
-        :param how:
-        :return:
+        Select rows which values are http code
+        :param cols: Columns to be used
+        :param drop: Drop rows that contains a integer
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.http_code, drop=drop, how=how)
 
     def expression(self, where=None, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
         Filter by expression
-        :param where:
-        :param cols:
+        :param where: Expression to be filtered
+        :param cols: Columns to be used
         :param drop:
-        :param how:
-        :return:
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.expression, drop=drop, how=how, where=where)
 
     # drop functions
     def drop_str(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a string
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.str, drop=True, how=how)
 
     def drop_int(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a integer
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.int, drop=True, how=how)
 
     def drop_float(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a float
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.float, drop=True, how=how)
 
     def drop_numeric(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a numeric
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.numeric, drop=True, how=how)
 
     def drop_greater_than_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        Drop rows that are greather or equal than a value
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.greater_than_equal, drop=True, value=value, how=how)
 
     def drop_greater_than(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.greater_than, drop=True, value=value, how=how)
 
     def drop_less_than_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.less_than_equal, drop=True, value=value, how=how)
 
     def drop_less_than(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.less_than, drop=True, value=value, how=how)
 
     def drop_between(self, cols="*", lower_bound=None, upper_bound=None, equal=True, bounds=None,
                      how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param lower_bound:
-        :param upper_bound:
-        :param equal:
-        :param bounds:
-        :param how:
-        :return:
+        Drop rows between a range of values
+        :param cols: Columns to be used
+        :param lower_bound: Lower bound
+        :param upper_bound:  Upper bound
+        :param equal: Include the bounds
+        :param bounds: Bounds to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.between_values, drop=True, how=how, lower_bound=lower_bound,
                           upper_bound=upper_bound, equal=equal, bounds=bounds)
 
     def drop_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        Drop rows that are equal to a value
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.equal, drop=True, value=value, how=how)
 
     def drop_not_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        Drop rows that are not equal to a value
+        :param cols: Columns to be used
+        :param value: Value to be compared
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.not_equal, drop=True, value=value, how=how)
 
     def drop_missings(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a missing
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.missing, drop=True, how=how)
 
     def drop_nulls(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a null
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.null, drop=True, how=how)
 
     def drop_none(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a none
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.none, drop=True, how=how)
 
     def drop_nan(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a nan
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.nan, drop=True, how=how)
 
     def drop_empty(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a empty string
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.empty, drop=True, how=how)
 
     def drop_duplicated(self, cols="*", keep="first", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param keep:
-        :param how:
-        :return:
+        Drop duplicated rows
+        :param cols: Columns to be used
+        :param keep: Which duplicate value to keep. first, last or all
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.duplicated, drop=True, keep=keep, how=how)
 
     def drop_uniques(self, cols="*", keep="first", how="any") -> 'DataFrameType':
         """
         Drops first (passed to keep) matches of duplicates and unique values.
-        :param cols:
-        :param keep:
-        :param how:
-        :return: Dataframe
+        :param cols: Columns to be used
+        :param keep: Which duplicate value to keep. first, last or all
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.unique, drop=True, keep=keep, how=how)
 
     def drop_mismatch(self, cols="*", data_type=None, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
-        :param data_type:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param data_type: Data type to be checked
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.mismatch, drop=True, data_type=data_type, how=how)
 
     def drop_match(self, cols="*", regex=None, data_type=None, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
-        :param regex:
-        :param data_type:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param regex: Regex to be used
+        :param data_type: Data type to be checked
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.match, drop=True, regex=regex, data_type=data_type, how=how)
 
     def drop_by_regex(self, cols="*", regex=None, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
-        :param regex:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param regex: Regex to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.match_regex, drop=True, regex=regex, how=how)
 
     def drop_by_data_type(self, cols="*", data_type=None, how="any") -> 'DataFrameType':
         """
 
-        :param cols:
-        :param data_type:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param data_type: Data type to be checked
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.match_data_type, drop=True, data_type=data_type, how=how)
 
     def drop_value_in(self, cols="*", values=None, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param values:
-        :param how:
-        :return:
+        Drop rows that contains a value in a list
+        :param cols: Columns to be used
+        :param values: Value to be matched
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.value_in, drop=True, values=values, how=how)
 
     def drop_pattern(self, cols="*", pattern=None, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param pattern:
-        :param how:
-        :return:
+        Drop rows that match a pattern
+        :param cols: Columns to be used
+        :param pattern: Pattern to be matched
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.pattern, drop=True, pattern=pattern, how=how)
 
     def drop_starts_with(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        Drop rows that starts with a value
+        :param cols: Columns to be used
+        :param value: Value to be matched
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.starts_with, drop=True, value=value, how=how)
 
     def drop_ends_with(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        Drop rows that ends with a value
+        :param cols: Columns to be used
+        :param value: Value to be matched
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.ends_with, drop=True, value=value, how=how)
 
     def drop_contains(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        Drop rows that contains a value
+        :param cols: Columns to be used
+        :param value: Value to be matched
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.contains, drop=True, value=value, how=how)
 
     def drop_find(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param value:
-        :param how:
-        :return:
+        Drop rows that math a value
+        :param cols: Columns to be used
+        :param value: Value to be matched
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.find, drop=True, value=value, how=how)
 
     def drop_emails(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a email
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.email, drop=True, how=how)
 
     def drop_ips(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a ip
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.ipv4, drop=True, how=how)
 
     def drop_urls(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a url
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.url, drop=True, how=how)
 
     def drop_genders(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains genders
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.gender, drop=True, how=how)
 
     def drop_booleans(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a boolean
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.boolean, drop=True, how=how)
 
     def drop_zip_codes(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a zip code
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.zip_code, drop=True, how=how)
 
     def drop_credit_card_numbers(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a credit card number
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.credit_card_number, drop=True, how=how)
 
     def drop_datetimes(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a datetime
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.datetime, drop=True, how=how)
 
     def drop_objects(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a object
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.object, drop=True, how=how)
 
     def drop_arrays(self, cols="*", how="any") -> 'DataFrameType':
         """
-
+        Drop rows that contains a array
         :param cols:
         :param how:
         :return:
@@ -1183,28 +1186,28 @@ class BaseRows(ABC):
 
     def drop_phone_numbers(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a phone number
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.phone_number, drop=True, how=how)
 
     def drop_social_security_numbers(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a social security number
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.social_security_number, drop=True, how=how)
 
     def drop_http_codes(self, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that contains a http code
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.http_code, drop=True, how=how)
 
