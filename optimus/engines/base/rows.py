@@ -472,7 +472,7 @@ class BaseRows(ABC):
 
     def equal(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-        Equal to a value
+        Select rows which values are equal to a value
         :param cols: Columns to be used
         :param value: Value to be compared
         :param drop: Drop rows that match the condition
@@ -526,7 +526,7 @@ class BaseRows(ABC):
         """
         Select rows which values are nan
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains a nan
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -536,7 +536,7 @@ class BaseRows(ABC):
         """
         Select rows which values are empty
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains an empty string
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -600,9 +600,9 @@ class BaseRows(ABC):
 
     def match_data_type(self, cols="*", data_type=None, drop=False, how="any") -> 'DataFrameType':
         """
-
+        Select rows which values match a data type
         :param cols: Columns to be used
-        :param data_type:
+        :param data_type: Data type to be compared
         :param drop: Drop rows that are duplicated
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
@@ -635,7 +635,7 @@ class BaseRows(ABC):
         """
         Select rows which values starts with a string
         :param cols: Columns to be used
-        :param keep: Which duplicate value to keep. first, last or all
+        :param value: String to be searched
         :param drop: Drop rows that are duplicated
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
@@ -647,7 +647,7 @@ class BaseRows(ABC):
         Select rows which values ends with a string
         :param cols: Columns to be used
         :param value: String to be searched
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains a string
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -655,10 +655,10 @@ class BaseRows(ABC):
 
     def contains(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-        Select rows which values contains a string
+        Select rows which values contain a string
         :param cols: Columns to be used
         :param value: String to be searched
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains an integer
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -666,10 +666,10 @@ class BaseRows(ABC):
 
     def find(self, cols="*", value=None, drop=False, how="any") -> 'DataFrameType':
         """
-        Select rows which values contains a value
+        Select rows which values contain a value
         :param cols: Columns to be used
         :param value: String to be searched
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains an integer
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -679,7 +679,7 @@ class BaseRows(ABC):
         """
         Select rows which values are email
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains an email
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -689,7 +689,7 @@ class BaseRows(ABC):
         """
         Select rows which values are ip
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains an ip
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -709,7 +709,7 @@ class BaseRows(ABC):
         """
         Select rows which values gender.
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains an url
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -719,7 +719,7 @@ class BaseRows(ABC):
         """
         Select rows which values are boolean.
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains a boolean
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -727,9 +727,9 @@ class BaseRows(ABC):
 
     def zip_code(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
+        Select rows which values are zip code.
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains a zip code
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -737,9 +737,9 @@ class BaseRows(ABC):
 
     def credit_card_number(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
-
+        Select rows which values are credit card number.
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains a credit card number
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -749,7 +749,7 @@ class BaseRows(ABC):
         """
         Select rows which values are datetime
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains a datetime
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -759,7 +759,7 @@ class BaseRows(ABC):
         """
         Select rows which values are object
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains an object
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -769,7 +769,7 @@ class BaseRows(ABC):
         """
         Select rows which values are array
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains an array
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -779,7 +779,7 @@ class BaseRows(ABC):
         """
         Select rows which values are phone number
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains a phone number
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -789,7 +789,7 @@ class BaseRows(ABC):
         """
         Select rows which values are social security number
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains a social security number
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -799,7 +799,7 @@ class BaseRows(ABC):
         """
         Select rows which values are http code
         :param cols: Columns to be used
-        :param drop: Drop rows that contains a integer
+        :param drop: Drop rows that contains a http code
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
@@ -855,7 +855,7 @@ class BaseRows(ABC):
 
     def drop_greater_than_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-        Drop rows that are greather or equal than a value
+        Drop rows that are greater or equal than a value
         :param cols: Columns to be used
         :param value: Value to be compared
         :param how: How to apply the mask. "any" or "all"
@@ -865,7 +865,7 @@ class BaseRows(ABC):
 
     def drop_greater_than(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
+        Drop rows that are greater than a value
         :param cols: Columns to be used
         :param value: Value to be compared
         :param how: How to apply the mask. "any" or "all"
@@ -875,7 +875,7 @@ class BaseRows(ABC):
 
     def drop_less_than_equal(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
+        Drop rows that are less or equal than a value
         :param cols: Columns to be used
         :param value: Value to be compared
         :param how: How to apply the mask. "any" or "all"
@@ -885,7 +885,7 @@ class BaseRows(ABC):
 
     def drop_less_than(self, cols="*", value=None, how="any") -> 'DataFrameType':
         """
-
+        Drop rows that are less than a value
         :param cols: Columns to be used
         :param value: Value to be compared
         :param how: How to apply the mask. "any" or "all"
@@ -995,7 +995,7 @@ class BaseRows(ABC):
 
     def drop_mismatch(self, cols="*", data_type=None, how="any") -> 'DataFrameType':
         """
-
+        Drop rows that contains a mismatch data type
         :param cols: Columns to be used
         :param data_type: Data type to be checked
         :param how: How to apply the mask. "any" or "all"
@@ -1005,7 +1005,7 @@ class BaseRows(ABC):
 
     def drop_match(self, cols="*", regex=None, data_type=None, how="any") -> 'DataFrameType':
         """
-
+        Drop rows that contains a match
         :param cols: Columns to be used
         :param regex: Regex to be used
         :param data_type: Data type to be checked
@@ -1016,7 +1016,7 @@ class BaseRows(ABC):
 
     def drop_by_regex(self, cols="*", regex=None, how="any") -> 'DataFrameType':
         """
-
+        Drop rows that contains a regex match
         :param cols: Columns to be used
         :param regex: Regex to be used
         :param how: How to apply the mask. "any" or "all"
@@ -1026,7 +1026,7 @@ class BaseRows(ABC):
 
     def drop_by_data_type(self, cols="*", data_type=None, how="any") -> 'DataFrameType':
         """
-
+        Drop rows that contains a data type
         :param cols: Columns to be used
         :param data_type: Data type to be checked
         :param how: How to apply the mask. "any" or "all"
@@ -1178,9 +1178,9 @@ class BaseRows(ABC):
     def drop_arrays(self, cols="*", how="any") -> 'DataFrameType':
         """
         Drop rows that contains a array
-        :param cols:
-        :param how:
-        :return:
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.array, drop=True, how=how)
 
@@ -1213,10 +1213,10 @@ class BaseRows(ABC):
 
     def drop_by_expression(self, where=None, cols="*", how="any") -> 'DataFrameType':
         """
-
-        :param where:
-        :param cols:
-        :param how:
-        :return:
+        Drop rows that match an expression
+        :param where: Expression to be evaluated
+        :param cols: Columns to be used
+        :param how: How to apply the mask. "any" or "all"
+        :return: Optimus Dataframe
         """
         return self._mask(cols, func=self.root.mask.expression, drop=True, how=how, where=where)
