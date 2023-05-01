@@ -1,3 +1,3 @@
 update: insecure
-branch: develop-22.10
+branch: develop-23.5
 schedule: "every two weeks on monday"
