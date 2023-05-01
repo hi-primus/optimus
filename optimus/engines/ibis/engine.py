@@ -28,8 +28,15 @@ class IbisEngine(BaseEngine):
         :return: JDBC object
         """
 
-        return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
-                    presto_catalog, cassandra_keyspace, cassandra_table, bigquery_project, bigquery_dataset, op=self)
+        return JDBC(host=host, database=database, user=user, password=password,
+                    port=port, driver=driver, schema=schema,
+                    oracle_tns=oracle_tns,
+                    oracle_service_name=oracle_service_name,
+                    oracle_sid=oracle_sid, presto_catalog=presto_catalog,
+                    cassandra_keyspace=cassandra_keyspace,
+                    cassandra_table=cassandra_table,
+                    bigquery_project=bigquery_project,
+                    bigquery_dataset=bigquery_dataset, op=self)
 
     @property
     def engine_label(self):

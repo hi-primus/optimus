@@ -24,7 +24,7 @@ class DaskBaseJDBC:
 
     def __init__(self, host, database, user, password, port=None, driver=None, schema="public", oracle_tns=None,
                  oracle_service_name=None, oracle_sid=None, presto_catalog=None, cassandra_keyspace=None,
-                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, op=None, sso=False):
+                 cassandra_table=None, bigquery_project=None, bigquery_dataset=None, sso=False, op=None):
 
         """
         Create the JDBC connection object

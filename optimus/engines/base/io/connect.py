@@ -164,9 +164,9 @@ class Connect:
     def __init__(self, op):
         self.op = op
 
-    def mysql(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
+    def mysql(self, host=None, database=None, user=None, password=None, port=None, schema="public", sso=False) -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.MYSQL.value["name"],
-                            schema=schema, op=self.op, sso=sso)
+                            schema=schema, sso=sso, op=self.op)
 
     def postgres(self, host=None, database=None, user=None, password=None, port=None, schema="public") -> 'ConnectionType':
         return DaskBaseJDBC(host, database, user, password, port=port, driver=DriverProperties.POSTGRESQL.value["name"],

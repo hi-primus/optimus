@@ -161,8 +161,7 @@ class SparkEngine(BaseEngine):
     def engine_label(self):
         return EnginePretty.SPARK.value
 
-    @staticmethod
-    def connect(driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
+    def connect(self, driver=None, host=None, database=None, user=None, password=None, port=None, schema="public",
                 oracle_tns=None, oracle_service_name=None, oracle_sid=None, presto_catalog=None,
                 cassandra_keyspace=None, cassandra_table=None):
         """
@@ -170,8 +169,13 @@ class SparkEngine(BaseEngine):
         :return: JDBC object
         """
 
-        return JDBC(host, database, user, password, port, driver, schema, oracle_tns, oracle_service_name, oracle_sid,
-                    presto_catalog, cassandra_keyspace, cassandra_table)
+        return JDBC(host=host, database=database, user=user, password=password,
+                    port=port, driver=driver, schema=schema,
+                    oracle_tns=oracle_tns,
+                    oracle_service_name=oracle_service_name,
+                    oracle_sid=oracle_sid, presto_catalog=presto_catalog,
+                    cassandra_keyspace=cassandra_keyspace,
+                    cassandra_table=cassandra_table, op=self)
 
     @staticmethod
     def output(output):
