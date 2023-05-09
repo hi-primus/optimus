@@ -24,14 +24,10 @@ class Load(BaseLoad):
 
     @staticmethod
     def _csv(filepath_or_buffer, n_rows=1000, callback=None, *args, **kwargs):
+        import pyodide
         kwargs.pop("n_partitions", None)
-        encoding = kwargs.get("encoding", "utf-8")
         if is_url(filepath_or_buffer):
-            with requests.get(filepath_or_buffer, params=None, stream=True) as resp:
-                buffer = Reader(resp, 500_000, n_rows=n_rows, callback=kwargs.get("callback"))
-                kwargs.pop("callback", None)
-
-            df = pd.read_csv(io.BytesIO(buffer.encode(encoding)), *args, **kwargs)
+            df = pd.read_csv(pyodide.http.open_url(filepath_or_buffer), *args, **kwargs)
         else:
             buffer = filepath_or_buffer
             df = pd.read_csv(buffer, *args, **kwargs)
