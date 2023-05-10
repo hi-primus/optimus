@@ -5,6 +5,7 @@ import os
 from abc import abstractmethod
 from io import BytesIO
 
+
 import chardet
 import requests
 
@@ -392,63 +393,119 @@ class BaseLoad:
         :param kwargs: custom keyword arguments to be passed to the spark avro function.
         :return:
         """
-        conn = kwargs.get("conn")
 
-        if conn:
+        def get_remote_file(conn, path, BYTES_SIZE):
             import boto3
             remote_obj = boto3.resource(
                 conn.type, **conn.boto).Object(conn.options.get("bucket"), path)
             body = remote_obj.get()['Body']
             buffer = body.read(amt=BYTES_SIZE)
+            return buffer
+
+        def get_file_from_url(path, BYTES_SIZE):
+            response = requests.get(path, stream=True)
+            buffer = b''
+            for chunk in response.iter_content(chunk_size=1024):
+                if len(buffer) >= BYTES_SIZE:
+                    break
+                buffer += chunk
+            return buffer
+
+        def get_file_from_local_path(path, BYTES_SIZE):
+            full_path, file_name = prepare_path(path)[0]
+            with open(full_path, "rb") as file:
+                buffer = file.read(BYTES_SIZE)
+            return buffer
+
+        def get_file_from_buffer(path, BYTES_SIZE):
+            path.seek(0)
+            buffer = path.read(BYTES_SIZE)
+            path.seek(0)
+            return buffer
+
+        def get_mime_info(file_name, buffer):
+            mime_encoding = chardet.detect(buffer)["encoding"]
+            file_ext = os.path.splitext(file_name)[1].replace(".", "")
+
+            ext_to_type = {
+                "xls": "excel",
+                "xlsx": "excel",
+                "csv": "csv",
+                "json": "json",
+                "xml": "xml",
+            }
+
+            mime_to_type = {
+                "ascii": "csv"
+            }
+
+            if file_ext in ext_to_type:
+                mime_type = ext_to_type[file_ext]
+            elif mime_encoding:
+                mime_type = mime_to_type.get(mime_encoding, None)
+
+            return {
+                "mime": mime_type,
+                "encoding": mime_encoding,
+                "file_ext": file_ext,
+            }
+
+        def get_mime_properties(buffer, mime_info, kwargs):
+            if mime_info.get("encoding", None) == "unknown-8bit":
+                mime_info["encoding"] = "latin-1"
+
+            dialect = csv.Sniffer().sniff(str(buffer))
+            properties = {
+                "sep": dialect.delimiter,
+                "doublequote": dialect.doublequote,
+                "escapechar": dialect.escapechar,
+                "lineterminator": dialect.lineterminator,
+                "quotechar": dialect.quotechar,
+                "quoting": dialect.quoting,
+                "skipinitialspace": dialect.skipinitialspace,
+            }
+            for k in properties:
+                if k not in kwargs:
+                    kwargs.update({k: properties[k]})
+
+            mime_info.update({"properties": properties})
+            kwargs.update({"encoding": mime_info.get("encoding", None)})
+            return kwargs
+        conn = kwargs.get("conn", None)
+
+        if conn:
+            buffer = get_remote_file(conn, path, BYTES_SIZE)
             full_path = conn.path(path)
             file_name = os.path.basename(path)
-
         else:
-
             if is_url(path):
-                # Download a chunk of the file to detect the file encoding
-                response = requests.get(
-                    path, stream=True)
-                buffer = b''
-                for chunk in response.iter_content(chunk_size=1024):
-                    if len(buffer) >= BYTES_SIZE:
-                        break
-                    buffer += chunk
+                buffer = get_file_from_url(path, BYTES_SIZE)
                 file_name = full_path = path
             elif is_str(path):
+                buffer = get_file_from_local_path(path, BYTES_SIZE)
                 full_path, file_name = prepare_path(path)[0]
-                file = open(full_path, "rb")
-                buffer = file.read(BYTES_SIZE)
             elif isinstance(path, BytesIO):
-                path.seek(0)
-                buffer = path.read(BYTES_SIZE)
-                path.seek(0)
+                buffer = get_file_from_buffer(path, BYTES_SIZE)
                 full_path = path
                 file_name = kwargs.get("meta", {}).get("file_name")
             else:
-                RaiseIt.value_error(
-                    path, ["filepath", "url", "buffer"])
+                RaiseIt.value_error(path, ["filepath", "url", "buffer"])
 
-        ext_to_type = {
-            "xls": "excel",
-            "xlsx": "excel",
-            "csv": "csv",
-            "json": "json",
-            "xml": "xml",
-        }
-
-        # Detect the file type
-        if (file_name):
-            file_ext = os.path.splitext(file_name)[1].replace(".", "")
-            mime_type = ext_to_type[file_ext]
-            mime_encoding = chardet.detect(buffer)["encoding"]
-            mime_info = {"mime": mime_type, "encoding": mime_encoding, "file_ext": file_ext}
-            file_type = ext_to_type.get(file_ext, file_ext)
+        # Get mime info
+        if file_name:
+            mime_info = get_mime_info(file_name, buffer)
+            mime_type = mime_info["mime"]
         else:
             mime_info = {"mime": None, "encoding": None, "file_ext": None}
-            file_type = "None"
+            mime_type = "None"
 
-        # Detect the file encoding
+        # Get mime properties
+        if mime_type == "csv":
+            kwargs = get_mime_properties(buffer, mime_info, kwargs)
+
+        kwargs.pop("meta", None)
+
+        # Mapping file types to functions
         file_type_to_func = {
             "csv": self.csv,
             "json": self.json,
@@ -457,33 +514,11 @@ class BaseLoad:
             "parquet": self.parquet
         }
 
-        if file_type in file_type_to_func:
-            func = file_type_to_func[file_type]
-
-            if file_type == "csv":
-                if mime_info.get("encoding", None) == "unknown-8bit":
-                    mime_info["encoding"] = "latin-1"
-
-                dialect = csv.Sniffer().sniff(str(buffer))
-                # print(dialect, dialect)
-                properties = {"sep": dialect.delimiter,
-                              "doublequote": dialect.doublequote,
-                              "escapechar": dialect.escapechar,
-                              "lineterminator": dialect.lineterminator,
-                              "quotechar": dialect.quotechar,
-                              "quoting": dialect.quoting,
-                              "skipinitialspace": dialect.skipinitialspace}
-                for k in properties:
-                    if k not in kwargs:
-                        kwargs.update({k: properties[k]})
-
-                mime_info.update({"properties": properties})
-                kwargs.update({"encoding": mime_info.get("encoding", None)})
-            kwargs.pop("meta", None)
+        if mime_type in file_type_to_func:
+            func = file_type_to_func[mime_type]
             df = func(full_path, *args, **kwargs)
         else:
-            RaiseIt.value_error(
-                file_type, ["csv", "json", "xml", "excel", "parquet"])
+            RaiseIt.value_error(mime_type, ["csv", "json", "xml", "excel", "parquet"])
 
         if file_name:
             df.meta = Meta.set(df.meta, "file_name", file_name)
