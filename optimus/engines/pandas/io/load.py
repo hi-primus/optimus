@@ -29,9 +29,10 @@ class Load(BaseLoad):
     def _csv(filepath_or_buffer, *args, **kwargs):
         kwargs.pop("n_partitions", None)
         n_rows = kwargs.get("n_rows")
+
         if is_url(filepath_or_buffer):
             with requests.get(filepath_or_buffer, params=None, stream=True) as resp:
-                r = Reader(resp, 500_000, n_rows=n_rows, callback=kwargs.get("callback"))
+                r = Reader(resp, 500_000, n_rows=n_rows, callback=kwargs.get("callback"), encoding=kwargs.get("encoding"))
                 kwargs.pop("callback", None)
                 df = pd.read_csv(r, *args, **kwargs)
         else:
