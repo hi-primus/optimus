@@ -2410,8 +2410,9 @@ class BaseColumns(ABC):
 
         return df
 
-    def word_tokenize(self, cols="*", output_cols=None) -> 'DataFrameType':
+    def word_tokenize(self, cols="*", output_cols=None) -> 'DataFrameType':        
         """
+        Split text into tokens.
 
         :param cols: "*", column name or list of column names to be processed.
         :param output_cols: Column name or list of column names where the transformed data will be saved.
