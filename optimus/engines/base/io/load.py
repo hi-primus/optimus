@@ -436,7 +436,8 @@ class BaseLoad:
             }
 
             mime_to_type = {
-                "ascii": "csv"
+                "ascii": "csv",
+                "utf-8": "csv"
             }
 
             if file_ext in ext_to_type:
@@ -471,6 +472,7 @@ class BaseLoad:
             mime_info.update({"properties": properties})
             kwargs.update({"encoding": mime_info.get("encoding", None)})
             return kwargs
+
         conn = kwargs.get("conn", None)
 
         if conn:
