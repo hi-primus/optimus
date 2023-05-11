@@ -504,7 +504,8 @@ class BaseLoad:
         # Get mime properties
         if mime_type == "csv":
             kwargs = get_mime_properties(buffer, mime_info, kwargs)
-
+        if kwargs.get("meta"):
+            file_name = kwargs["meta"].get("file_name", file_name)
         kwargs.pop("meta", None)
 
         # Mapping file types to functions
