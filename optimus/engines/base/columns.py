@@ -867,10 +867,10 @@ class BaseColumns(ABC):
         alpha_lower = r"[a-z]"
         alpha_upper = r"[A-Z]"
         digits = r"\d"
-        alpha = r"[A-Z][a-z]"
+        alpha = r"[A-Za-z]"
         alpha_numeric = r"[A-Za-z0-9]"
-        punctuation = r"[!@#$%^&*()_+\-=\[\]{};':\\|,.<>/?]"
-        alpha_numeric_punctuation = r"[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':\\|,.<>/?]"
+        punctuation = r"[^\w\s]"
+        alpha_numeric_punctuation = r"[^\s]"
 
         if mode == 0:
             search = [(punctuation, "!"), (alpha_lower, "l"), (alpha_upper, "U"), (digits, "#")]
