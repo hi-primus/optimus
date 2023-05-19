@@ -20,6 +20,7 @@ from nltk.stem import SnowballStemmer
 from optimus.engines.base.meta import Meta
 from optimus.engines.base.stringclustering import Clusters
 from optimus.engines.stream.stream import Stream
+from optimus.expressions import parsed_function
 from optimus.helpers.check import is_dask_dataframe
 from optimus.helpers.columns import parse_columns, check_column_numbers, prepare_columns, get_output_cols, \
     prepare_columns_arguments, \
@@ -506,6 +507,10 @@ class BaseColumns(ABC):
                 if k in locals():
                     raise ValueError(f"Variable {k} already exists in the local scope")
                 locals()[k] = v
+
+        # If the expression is parsed and uses a function we need 'parsed_function' in the local scope
+        if "parsed_function" not in locals():
+            locals()["parsed_function"] = parsed_function
 
         for col_name, _value, _eval_value in zip(cols, values, eval_values):
 
