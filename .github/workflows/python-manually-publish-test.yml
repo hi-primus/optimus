@@ -1,0 +1,67 @@
+name: Update Version and Publish to Test PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      new_version:
+        description: 'New PyOptimus version (TestPyPI)'
+        required: true
+      python_version:
+        description: 'Python version'
+        default: '3.10'
+        required: true
+
+jobs:
+  update-version-and-create-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Set up Python ${{ github.event.inputs.python_version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: '${{ github.event.inputs.python_version }}'
+      
+      - name: Update version in toml file
+        run: |
+          sed -i 's/version\s*=\s*".*"/version = "${{ github.event.inputs.new_version }}"/' pyproject.toml
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --local user.name "${{ github.actor }}"
+          git commit -m "Update version in toml file" pyproject.toml
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+
+      - name: Create tag
+        run: |
+          git tag "test-${{ github.event.inputs.new_version }}"
+
+      - name: Push tag
+        run: |
+          git push origin "test-${{ github.event.inputs.new_version }}"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+      
+      - name: Configure Poetry
+        run: |
+          poetry config repositories.pyoptimus https://test.pypi.org/legacy/
+          poetry config http-basic.pyoptimus ${{ secrets.TEST_PYPI_USERNAME }} ${{ secrets.TEST_PYPI_PASSWORD }}
+      
+      - name: Build and publish package
+        run: |
+          poetry build
+          poetry publish -r pyoptimus
+        env:
+          TEST_PYPI_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
+          TEST_PYPI_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
