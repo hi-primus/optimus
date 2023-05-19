@@ -530,7 +530,7 @@ class BaseFunctions(ABC):
 
     def z_score(self, series):
         t = self.to_float(series)
-        return t - t.mean() / t.std(ddof=0)
+        return (t - t.mean()) / t.std(ddof=0)
 
     def modified_z_score(self, series, estimate):
         series = self.to_float(series)
