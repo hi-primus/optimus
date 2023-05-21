@@ -4,7 +4,7 @@
 	"description": "HTML with style tag to HTML with inline css",
 	"main": "inlinecss.js",
 	"dependencies": {
-		"juice": "^5.2.0",
+		"juice": "^8.1.0",
 		"web-resource-inliner": "^4.3.3"
 	},
 	"devDependencies": {},
