@@ -487,7 +487,7 @@ class BaseColumns(ABC):
         return df
 
     def _set(self, cols="*", value_func=None, where: Union[str, 'MaskDataFrameType'] = None, args=None, default=None,
-                eval_value: bool = False, eval_variables=None) -> 'DataFrameType':
+             eval_value: bool = False, eval_variables=None) -> 'DataFrameType':
 
         df = self.root
         dfd = df.data
@@ -1158,7 +1158,7 @@ class BaseColumns(ABC):
             else:
                 result[input_col]["values"] = result[input_col]["values"]
 
-        return format_dict({ "pattern_counts": result }, tidy)
+        return format_dict({"pattern_counts": result}, tidy)
 
     def groupby(self, by: Union[str, list] = None, agg: Union[list, dict] = None) -> 'DataFrameType':
         """
@@ -1349,7 +1349,7 @@ class BaseColumns(ABC):
         :param args:
         :param compute: Compute the result or return a delayed function.
         :param tidy: Compact the dict output.
-        :param parallel: Execute the function in every c3olumn or apply it over the whole dataframe.
+        :param parallel: Execute the function in every column or apply it over the whole dataframe.
         :return: Return the calculates values from a list of aggregations functions.
         """
         df = self.root
@@ -1387,7 +1387,7 @@ class BaseColumns(ABC):
         agg_result = compute_agg(agg_result)
         if compute:
             agg_result = self.F.compute(agg_result)
-            
+
         return agg_result
 
     def exec_agg(self, exprs, compute=True):
@@ -2415,7 +2415,7 @@ class BaseColumns(ABC):
 
         return df
 
-    def word_tokenize(self, cols="*", output_cols=None) -> 'DataFrameType':        
+    def word_tokenize(self, cols="*", output_cols=None) -> 'DataFrameType':
         """
         Split text into tokens.
 
@@ -3519,6 +3519,53 @@ class BaseColumns(ABC):
 
         return result
 
+    def kde(self, cols="*", bandwidth: Union[float, str] = 1.0,
+            algorithm: str = "auto",
+            kernel: str = "gaussian",
+            metric: str = "euclidean",
+            atol: float = 0,
+            rtol: float = 0,
+            breadth_first: bool = True,
+            leaf_size: int = 40,
+            metric_params: dict = None,
+            n: int = 100
+            ) -> dict:
+        """
+        Return the Kernel Density Estimate of the current column as a Spark DataFrame.
+        """
+
+        df = self.root
+        cols = parse_columns(df, cols)
+
+        from sklearn.neighbors import KernelDensity
+        result = {}
+        for col_name in cols:
+            result[col_name] = {}
+            column_values = df[col_name].data.values
+
+            # Reshape the column values if necessary (e.g., for a 1D array)
+            column_values = column_values.reshape(-1, 1)
+
+            # Create an instance of the KernelDensity estimator and fit it to the column values
+            kde = KernelDensity(algorithm=algorithm, kernel=kernel, bandwidth=bandwidth, metric=metric, atol=atol,
+                                rtol=rtol, breadth_first=breadth_first, leaf_size=leaf_size,
+                                metric_params=metric_params)
+
+            # Adjust kernel and bandwidth as needed
+            kde.fit(column_values)
+
+            # Generate the KDE values over a range of points
+            x_values = np.linspace(min(column_values), max(column_values),
+                                   n).flatten()  # Adjust the number of points as desired
+            log_dens = kde.score_samples(x_values.reshape(-1, 1))
+            dens = np.exp(log_dens)
+
+            x_values = x_values.tolist()
+            dens = dens.tolist()
+            result[col_name] = [{"value": x_values[i], "prob": dens[i]} for i in range(len(x_values))]
+
+        return result
+
     def hist(self, cols="*", buckets: int = MAX_BUCKETS, range: Optional[Tuple[float, float]] = None,
              stream=False, callback=None, compute=True) -> dict:
         """
@@ -3528,6 +3575,7 @@ class BaseColumns(ABC):
         :param buckets: Number of histogram bins to be used.
         :param range: Range of the histogram. If None is passed, the range is computed from the data.
         :param stream: Process data in chunks a send the result via a callback.
+        :param callback: Callback function to be called after each chunk is processed.
         :param compute: Compute the final result. False imply to return a delayed object.
         :return: A dictionary with the histogram representation.
         """
@@ -3779,6 +3827,8 @@ class BaseColumns(ABC):
         This function use Pandas no matter the engine you are using.
 
         :param cols: Columns in which you want to infer the datatype.
+        :param sample: Number of rows to sample.
+        :param tidy: The result format. If True it returns a value if you.
         :return: dict with the column and the inferred date format
         """
         df = self.root
