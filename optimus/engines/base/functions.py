@@ -244,8 +244,8 @@ class BaseFunctions(ABC):
         """
         Converts a series values to floats
         """
-        # print(series.dtype, "----",self.constants.NUMERIC_INTERNAL_TYPES)
-        if not str(series.dtype) in self.constants.NUMERIC_INTERNAL_TYPES + self.constants.BOOLEAN_INTERNAL_TYPES:
+        if (not hasattr(series, 'dtype')) or \
+                (not str(series.dtype) in self.constants.NUMERIC_INTERNAL_TYPES + self.constants.BOOLEAN_INTERNAL_TYPES):
             return self._to_float(series)
         else:
             return series
@@ -260,7 +260,8 @@ class BaseFunctions(ABC):
         return pd.to_numeric(series, errors='coerce', downcast='int')
 
     def to_numeric(self, series, default=0):
-        if not str(series.dtype) in self.constants.NUMERIC_INTERNAL_TYPES:
+        if (not hasattr(series, 'dtype')) or \
+                (not str(series.dtype) in self.constants.NUMERIC_INTERNAL_TYPES):
             return self._to_float(series)
         else:
             return series
@@ -287,7 +288,8 @@ class BaseFunctions(ABC):
         """
         Converts a series values to strings
         """
-        if not str(series.dtype) in self.constants.STRING_INTERNAL_TYPES:
+        if (hasattr(series, 'dtype')) and \
+                (not str(series.dtype) in self.constants.STRING_INTERNAL_TYPES):
             return series.astype("string")
         else:
             return series
