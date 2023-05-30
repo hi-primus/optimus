@@ -437,9 +437,9 @@ class BaseLoad:
 
             mime_to_type = {
                 "ascii": "csv",
-                "utf-8": "csv"
+                "utf-8": "csv",
+                "UTF-8-SIG": "csv"
             }
-
             if file_ext in ext_to_type:
                 mime_type = ext_to_type[file_ext]
             elif mime_encoding:
@@ -516,7 +516,6 @@ class BaseLoad:
             "excel": self.excel,
             "parquet": self.parquet
         }
-
         if mime_type in file_type_to_func:
             func = file_type_to_func[mime_type]
             df = func(full_path, *args, **kwargs)
