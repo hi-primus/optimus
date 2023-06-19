@@ -617,7 +617,7 @@ def is_filepath(file_path):
     # the file is there
     if os.path.exists(file_path):
         return True
-    # the file does not exists but write privileges are given
+    # the file does not exist but write privileges are given
     elif os.access(os.path.dirname(file_path), os.W_OK):
         return True
     # can not write there
@@ -632,6 +632,15 @@ def is_ipv4(value):
     :return:
     """
     return re.match(regex_ipv4_address_compiled, value)
+
+
+def is_ipv6(value):
+    """
+    Check if a value is valid ip
+    :param value:
+    :return:
+    """
+    return re.match(regex_ipv6_address_compiled, value)
 
 
 def is_list_of_str(value):

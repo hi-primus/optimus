@@ -52,7 +52,7 @@ class BaseSet():
         return self._mask(cols, true_value=value, default_value=default_value, args=args, func=self.root.mask.email)
 
     def ip(self, cols, value=None, default_value=None, args=[]) -> 'DataFrameType':
-        return self._mask(cols, true_value=value, default_value=default_value, args=args, func=self.root.mask.ipv4)
+        return self._mask(cols, true_value=value, default_value=default_value, args=args, func=self.root.mask.ipv4_address)
 
     def url(self, cols, value=None, default_value=None, args=[]) -> 'DataFrameType':
         return self._mask(cols, true_value=value, default_value=default_value, args=args, func=self.root.mask.url)

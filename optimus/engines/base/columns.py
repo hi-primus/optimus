@@ -3804,7 +3804,7 @@ class BaseColumns(ABC):
                 "data_type": INDEX_TO_DATA_TYPE_FUNC[dtype], "categorical": is_categorical}
 
             if dtype == ProfilerDataTypes.DATETIME.value:
-                # pydatainfer do not accepts None value so we must filter them
+                # pydatainfer do not accept None value, so we must filter them
                 # TODO: should this be inside date_format?
                 __df = sample_df[col_name].rows.drop_missings()
                 _format = __df.cols.date_format(cached=False)
@@ -4440,7 +4440,7 @@ class BaseColumns(ABC):
         return self._any_mask(cols, self.root.mask.email, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_ip(self, cols="*", inverse=False, tidy=True, compute=True):
-        return self._any_mask(cols, self.root.mask.ipv4, inverse=inverse, tidy=tidy, compute=compute)
+        return self._any_mask(cols, self.root.mask.ipv4_address, inverse=inverse, tidy=tidy, compute=compute)
 
     def any_url(self, cols="*", inverse=False, tidy=True, compute=True):
         return self._any_mask(cols, self.root.mask.url, inverse=inverse, tidy=tidy, compute=compute)
@@ -5181,7 +5181,7 @@ class BaseColumns(ABC):
         return self._mask(cols, self.root.mask.email, output_cols, rename_func=not drop)
 
     def ip_values(self, cols="*", output_cols=None, drop=True) -> 'DataFrameType':
-        return self._mask(cols, self.root.mask.ipv4, output_cols, rename_func=not drop)
+        return self._mask(cols, self.root.mask.ipv4_address, output_cols, rename_func=not drop)
 
     def url_values(self, cols="*", output_cols=None, drop=True) -> 'DataFrameType':
         return self._mask(cols, self.root.mask.url, output_cols, rename_func=not drop)

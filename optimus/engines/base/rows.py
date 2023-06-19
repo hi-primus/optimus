@@ -693,7 +693,7 @@ class BaseRows(ABC):
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
-        return self._mask(cols, func=self.root.mask.ipv4, drop=drop, how=how)
+        return self._mask(cols, func=self.root.mask.ipv4_address, drop=drop, how=how)
 
     def url(self, cols="*", drop=False, how="any") -> 'DataFrameType':
         """
@@ -1110,7 +1110,7 @@ class BaseRows(ABC):
         :param how: How to apply the mask. "any" or "all"
         :return: Optimus Dataframe
         """
-        return self._mask(cols, func=self.root.mask.ipv4, drop=True, how=how)
+        return self._mask(cols, func=self.root.mask.ipv4_address, drop=True, how=how)
 
     def drop_urls(self, cols="*", how="any") -> 'DataFrameType':
         """

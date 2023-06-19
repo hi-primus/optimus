@@ -379,10 +379,10 @@ class Mask(ABC):
     def email(self, cols="*") -> 'MaskDataFrameType':
         return self.match_regex(cols, regex_email)
 
-    def ipv4(self, cols="*") -> 'MaskDataFrameType':
+    def ipv4_address(self, cols="*") -> 'MaskDataFrameType':
         return self.match_regex(cols, regex_ipv4_address)
 
-    def ipv6(self, cols="*") -> 'MaskDataFrameType':
+    def ipv6_address(self, cols="*") -> 'MaskDataFrameType':
         return self.match_regex(cols, regex_ipv6_address)
 
     def address(self, cols="*") -> 'MaskDataFrameType':
