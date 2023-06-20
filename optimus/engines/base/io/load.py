@@ -5,7 +5,6 @@ import os
 from abc import abstractmethod
 from io import BytesIO
 
-
 import chardet
 import requests
 
@@ -17,7 +16,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import DataFrameType, InternalDataFrameType
 from optimus.infer import is_empty_function, is_list, is_str, is_url
 
-BYTES_SIZE = 80000
+BYTES_SIZE = 80_000
 
 
 class BaseLoad:
@@ -394,37 +393,42 @@ class BaseLoad:
         :return:
         """
 
-        def get_remote_file(conn, path, BYTES_SIZE):
+        def get_remote_file(conn, path, bites_size):
             import boto3
             remote_obj = boto3.resource(
                 conn.type, **conn.boto).Object(conn.options.get("bucket"), path)
             body = remote_obj.get()['Body']
-            buffer = body.read(amt=BYTES_SIZE)
+            buffer = body.read(amt=bites_size)
             return buffer
 
-        def get_file_from_url(path, BYTES_SIZE):
+        def get_file_from_url(path, bytes_size):
             response = requests.get(path, stream=True)
             buffer = b''
             for chunk in response.iter_content(chunk_size=1024):
-                if len(buffer) >= BYTES_SIZE:
+                if len(buffer) >= bytes_size:
                     break
                 buffer += chunk
             return buffer
 
-        def get_file_from_local_path(path, BYTES_SIZE):
+        def get_file_from_local_path(path, bytes_size):
             full_path, file_name = prepare_path(path)[0]
             with open(full_path, "rb") as file:
-                buffer = file.read(BYTES_SIZE)
+                buffer = file.read(bytes_size)
             return buffer
 
-        def get_file_from_buffer(path, BYTES_SIZE):
+        def get_file_from_buffer(path, bites_size):
             path.seek(0)
-            buffer = path.read(BYTES_SIZE)
+            buffer = path.read(bites_size)
             path.seek(0)
             return buffer
 
         def get_mime_info(file_name, buffer):
-            mime_encoding = chardet.detect(buffer)["encoding"]
+            charset = chardet.detect(buffer)
+            if charset["confidence"] > 0.7:
+                mime_encoding = chardet.detect(buffer)["encoding"]
+            else:
+                mime_encoding = "utf-8"
+
             file_ext = os.path.splitext(file_name)[1].replace(".", "")
 
             ext_to_type = {
@@ -438,8 +442,10 @@ class BaseLoad:
             mime_to_type = {
                 "ascii": "csv",
                 "utf-8": "csv",
-                "UTF-8-SIG": "csv"
+                "UTF-8-SIG": "csv",
+                "Windows-1254": "csv"
             }
+
             if file_ext in ext_to_type:
                 mime_type = ext_to_type[file_ext]
             elif mime_encoding:
@@ -516,6 +522,7 @@ class BaseLoad:
             "excel": self.excel,
             "parquet": self.parquet
         }
+
         if mime_type in file_type_to_func:
             func = file_type_to_func[mime_type]
             df = func(full_path, *args, **kwargs)
