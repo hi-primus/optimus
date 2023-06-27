@@ -6,6 +6,7 @@ import requests
 from optimus.engines.base.io.load import BaseLoad
 from optimus.engines.base.io.reader import Reader
 from optimus.engines.pyodide.dataframe import PyodideDataFrame
+from optimus.helpers.core import val_to_list
 from optimus.infer import is_url
 
 
@@ -27,10 +28,9 @@ class Load(BaseLoad):
         import pyodide
         kwargs.pop("n_partitions", None)
         if is_url(filepath_or_buffer):
-            df = pd.read_csv(pyodide.http.open_url(filepath_or_buffer), *args, **kwargs)
-        else:
-            buffer = filepath_or_buffer
-            df = pd.read_csv(buffer, *args, **kwargs)
+            filepath_or_buffer = pyodide.http.open_url(filepath_or_buffer)
+
+        df = pd.read_csv(filepath_or_buffer, *args, **kwargs)
 
         return df
 
@@ -52,4 +52,14 @@ class Load(BaseLoad):
 
     @staticmethod
     def _excel(filepath_or_buffer, nrows=None, storage_options=None, *args, **kwargs):
-        pass
+        import pyodide
+        kwargs.pop("n_partitions", None)
+
+        if is_url(filepath_or_buffer):
+            filepath_or_buffer = pyodide.http.open_url(filepath_or_buffer)
+
+        dfs = pd.read_excel(filepath_or_buffer, nrows=nrows, storage_options=storage_options, *args, **kwargs)
+        sheet_names = list(pd.read_excel(filepath_or_buffer, None, storage_options=storage_options).keys())
+        df = pd.concat(val_to_list(dfs), axis=0).reset_index(drop=True)
+
+        return df, sheet_names
