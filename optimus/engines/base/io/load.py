@@ -246,22 +246,29 @@ class BaseLoad:
             filepath_or_buffer = conn.path(filepath_or_buffer)
             storage_options = conn.storage_options
 
-        filepath_or_buffer = unquote_path(filepath_or_buffer)
-        local_file_names = prepare_path(filepath_or_buffer, "xls")
+        if is_str(filepath_or_buffer):
+            filepath_or_buffer = unquote_path(filepath_or_buffer)
+            local_file_names = prepare_path(filepath_or_buffer, "xls")
 
-        if merge_sheets is True:
-            skip_rows = -1
+            if merge_sheets is True:
+                skip_rows = -1
 
-        file = local_file_names[0][0]
+            file = local_file_names[0][0]
 
-        df, sheet_names = self._excel(file, sheet_name=sheet_name, skiprows=skip_rows, header=header, nrows=n_rows,
-                                      storage_options=storage_options, *args, **kwargs)
+            df, sheet_names = self._excel(file, sheet_name=sheet_name, skiprows=skip_rows, header=header, nrows=n_rows,
+                                        storage_options=storage_options, *args, **kwargs)
+            df = self.df(df, op=self.op)
 
-        df = self.df(df, op=self.op)
+            file_name = local_file_names[0][1]
+            print(local_file_names, file, file_name, filepath_or_buffer)
+            df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
+        
+        else:
+            df, sheet_names = self._excel(filepath_or_buffer, sheet_name=sheet_name, skiprows=skip_rows, header=header, nrows=n_rows,
+                                        storage_options=storage_options, *args, **kwargs)
+            df = self.df(df, op=self.op)
 
-        file_name = local_file_names[0][1]
-        print(local_file_names, file, file_name, filepath_or_buffer)
-        df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
+
         df.meta = Meta.set(df.meta, "sheet_names", sheet_names)
 
         return df
