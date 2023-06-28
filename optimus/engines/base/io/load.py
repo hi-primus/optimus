@@ -16,7 +16,7 @@ from optimus.helpers.raiseit import RaiseIt
 from optimus.helpers.types import DataFrameType, InternalDataFrameType
 from optimus.infer import is_empty_function, is_list, is_str, is_url
 
-BYTES_SIZE = 80_000
+BYTES_SIZE = 180_000
 
 
 class BaseLoad:
@@ -173,13 +173,13 @@ class BaseLoad:
     def json(self, filepath_or_buffer, multiline=False, n_rows=False, storage_options=None,
              conn=None, *args, **kwargs) -> 'DataFrameType':
         """
-        Loads a dataframe from a json file.
+        Loads a dataframe from a json file
 
-        :param filepath_or_buffer: path or location of the file.
-        :param multiline:
-        :param n_rows:
-        :param storage_options: A dict with the connection params.
-        :param conn: A connection object.
+        :param filepath_or_buffer: path or location of the file
+        :param multiline: Read the file as a json object per line.
+        :param n_rows: Number of rows to read. If None, all rows will be read.
+        :param storage_options: A dict with the connection params
+        :param conn: A connection object
         :param args:
         :param kwargs:
         :return:
@@ -224,11 +224,11 @@ class BaseLoad:
     def excel(self, filepath_or_buffer, header=0, sheet_name=0, merge_sheets=False, skip_rows=0, n_rows=None,
               storage_options=None, conn=None, *args, **kwargs) -> 'DataFrameType':
         """
-        Loads a dataframe from a excel file.
+        Loads a dataframe from an Excel file.
         
         :param filepath_or_buffer: Path or location of the file. Must be string dataType
         :param header: 
-        :param sheet_name: excel sheet name
+        :param sheet_name: Excel sheet name
         :param merge_sheets: 
         :param skip_rows: 
         :param n_rows: 
@@ -269,6 +269,8 @@ class BaseLoad:
             df = self.df(df, op=self.op)
 
 
+        file_name = local_file_names[0][1]
+        df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         df.meta = Meta.set(df.meta, "sheet_names", sheet_names)
 
         return df
@@ -429,15 +431,52 @@ class BaseLoad:
             path.seek(0)
             return buffer
 
+        def is_zip_file(file_path):
+            zip_signature = b'\x50\x4B\x03\x04'
+
+            with open(file_path, 'rb') as file:
+                file_header = file.read(4)
+                if file_header == zip_signature:
+                    return True
+
+            return False
+
+        def is_excel_encoding(file_path):
+            excel_signatures = [
+                (b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1', 'Excel 97-2003'),
+                (b'\x50\x4B\x03\x04\x14\x00\x06\x00', 'Excel 2007+'),
+                (b'\x50\x4B\x03\x04\x14\x00\x08\x00', 'Excel 2010+')
+                # Add more signatures for other Excel file types if needed
+            ]
+
+            with open(file_path, 'rb') as file:
+                file_header = file.read(8)
+                print (file_header)
+                for signature, excel_type in excel_signatures:
+                    if file_header.startswith(signature):
+                        return True, excel_type
+
+            return False, None
+
         def get_mime_info(file_name, buffer):
+            zip_signature = b'\x50\x4B\x03\x04'
+            # Some excel format are zip compressed
+            if zip_signature == buffer[0:4]:
+                return {
+                    "mime": "excel",
+                    "encoding": "utf-8",
+                    "file_ext": "xlsx",
+                }
+
             charset = chardet.detect(buffer)
+
             if charset["confidence"] > 0.7:
                 mime_encoding = chardet.detect(buffer)["encoding"]
             else:
                 mime_encoding = "utf-8"
 
             file_ext = os.path.splitext(file_name)[1].replace(".", "")
-
+            print("file_ext",file_ext,"mime_encoding",mime_encoding)
             ext_to_type = {
                 "xls": "excel",
                 "xlsx": "excel",
@@ -457,6 +496,8 @@ class BaseLoad:
                 mime_type = ext_to_type[file_ext]
             elif mime_encoding:
                 mime_type = mime_to_type.get(mime_encoding, None)
+
+            print (mime_type, mime_encoding, file_ext)
 
             return {
                 "mime": mime_type,
