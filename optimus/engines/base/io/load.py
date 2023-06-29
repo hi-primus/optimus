@@ -256,21 +256,19 @@ class BaseLoad:
             file = local_file_names[0][0]
 
             df, sheet_names = self._excel(file, sheet_name=sheet_name, skiprows=skip_rows, header=header, nrows=n_rows,
-                                        storage_options=storage_options, *args, **kwargs)
+                                          storage_options=storage_options, *args, **kwargs)
             df = self.df(df, op=self.op)
 
             file_name = local_file_names[0][1]
-            print(local_file_names, file, file_name, filepath_or_buffer)
             df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
-        
+
         else:
-            df, sheet_names = self._excel(filepath_or_buffer, sheet_name=sheet_name, skiprows=skip_rows, header=header, nrows=n_rows,
-                                        storage_options=storage_options, *args, **kwargs)
+            df, sheet_names = self._excel(filepath_or_buffer, sheet_name=sheet_name, skiprows=skip_rows, header=header,
+                                          nrows=n_rows,
+                                          storage_options=storage_options, *args, **kwargs)
             df = self.df(df, op=self.op)
 
 
-        file_name = local_file_names[0][1]
-        df.meta = Meta.set(df.meta, "file_name", ntpath.basename(file_name))
         df.meta = Meta.set(df.meta, "sheet_names", sheet_names)
 
         return df
@@ -451,7 +449,7 @@ class BaseLoad:
 
             with open(file_path, 'rb') as file:
                 file_header = file.read(8)
-                print (file_header)
+                print(file_header)
                 for signature, excel_type in excel_signatures:
                     if file_header.startswith(signature):
                         return True, excel_type
@@ -476,7 +474,7 @@ class BaseLoad:
                 mime_encoding = "utf-8"
 
             file_ext = os.path.splitext(file_name)[1].replace(".", "")
-            print("file_ext",file_ext,"mime_encoding",mime_encoding)
+            print("file_ext", file_ext, "mime_encoding", mime_encoding)
             ext_to_type = {
                 "xls": "excel",
                 "xlsx": "excel",
@@ -497,7 +495,7 @@ class BaseLoad:
             elif mime_encoding:
                 mime_type = mime_to_type.get(mime_encoding, None)
 
-            print (mime_type, mime_encoding, file_ext)
+            print(mime_type, mime_encoding, file_ext)
 
             return {
                 "mime": mime_type,
