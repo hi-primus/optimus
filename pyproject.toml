@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyoptimus"
-version = "0.1.4067"
+version = "0.1.4068"
 description = ""
 authors = ["Argenis Leon <argenisleon@gmail.com>", "Luis Aguirre <luisaguirre027@gmail.com>"]
 maintainers = ["Argenis Leon <argenisleon@gmail.com>", "Luis Aguirre <luisaguirre027@gmail.com>"]
