@@ -487,7 +487,8 @@ class BaseLoad:
                 "ascii": "csv",
                 "utf-8": "csv",
                 "UTF-8-SIG": "csv",
-                "Windows-1254": "csv"
+                "Windows-1254": "csv",
+                "MacRoman": "csv"
             }
 
             if file_ext in ext_to_type:
@@ -495,7 +496,7 @@ class BaseLoad:
             elif mime_encoding:
                 mime_type = mime_to_type.get(mime_encoding, None)
 
-            print(mime_type, mime_encoding, file_ext)
+            print("mime_type",mime_type, "mime_encoding",mime_encoding, "file_ext",file_ext)
 
             return {
                 "mime": mime_type,
